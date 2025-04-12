@@ -1,0 +1,7 @@
+{
+    "SYS_VERSION": "v1.0.1",
+    "DEBUG": "[ENV.APP_DEBUG]",
+    "APP_INDEX": "[ENV.APP_INDEX|bot/index/index]",
+    "SERVER_HOST": "localhost",
+    "SERVER_PORT": 9090
+}

@@ -1,0 +1,7 @@
+{
+    "default":  {
+        "key": "[ENV.DB_KEY_DEFAULT|wl_wx_core]",
+        "type": "[ENV.DB_TYPE_DEFAULT|sqlite]",
+        "path": "[ENV.DB_PATH_DEFAULT|data/database/sqlite/wx_core.db]"
+    }
+}

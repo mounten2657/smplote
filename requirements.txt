@@ -1,0 +1,14 @@
+openai
+wxauto
+loguru
+pyside6
+pyinstaller
+pyarmor
+wxpy
+markdown~=3.7
+imgkit~=1.2.3
+flask~=3.0.0
+requests~=2.32.3
+attrs~=25.3.0
+tqdm~=4.67.1
+pywxdump~=3.1.45

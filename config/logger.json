@@ -1,0 +1,6 @@
+{
+    "log_driver": "[ENV.LOG_DRIVER|file]",
+    "log_path": "[ENV.LOG_PATH|storage/logs]",
+    "log_name_default": "app",
+    "log_level": "INFO"
+}

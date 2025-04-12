@@ -1,0 +1,26 @@
+{
+    "account": {
+        "a1": {
+            "wxid": "[ENV.WX_WXID_A1]",
+            "name": "a1",
+            "save_dir": "data/file/account/a1"
+        },
+        "a2": {
+            "wxid": "[ENV.WX_WXID_A2]",
+            "name": "a2",
+            "save_dir": "data/file/account/a2"
+        }
+    },
+    "group": {
+        "g1": {
+            "wxid": "[ENV.WX_WXID_G1]",
+            "name": "g1",
+            "save_dir": "data/file/group/g1"
+        },
+        "g2": {
+            "wxid": "[ENV.WX_WXID_G2]",
+            "name": "g2",
+            "save_dir": "data/file/group/g2"
+        }
+    }
+}
