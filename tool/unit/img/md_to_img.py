@@ -1,6 +1,6 @@
 import os
 import imgkit
-from imgkit.config import Config
+from imgkit.config import Config as MdConfig
 from pathlib import Path
 from tool.unit.html.md_to_html import MDToHtml
 from tool.core import *
@@ -20,7 +20,7 @@ class MdToImg:
             return Api.error(f'文件不存在： {md_path}')
         # 配置exe程序路径
         html_exe_path = r'E:\ai\orgs\tool\wkhtmlbox\wkhtmltopdf\bin\wkhtmltoimage.exe'
-        config = Config(wkhtmltoimage=html_exe_path)
+        config = MdConfig(wkhtmltoimage=html_exe_path)
         # 读取MD内容
         # md_content = libPath(Dir.abs_dir(md_path)).read_text(encoding='utf-8')
         # full_html = markdown.markdown(md_content)
@@ -42,6 +42,7 @@ class MdToImg:
         md_obj = MDToHtml(md=md_path)
         html_path = Path(md_path).with_suffix('.html')
         full_html = Emoji.replace_emoji_to_img(md_obj.html)
+        # full_html = md_obj.html
         md_obj.save_html(html_path, full_html)
         return full_html
 

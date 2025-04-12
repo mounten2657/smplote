@@ -1,8 +1,7 @@
 import time
-from tool.core.config import Config
 from tool.router.base_app import BaseApp
-
-config = Config.app_config()
+from tool.core.config import Config
+from tool.unit.wechat.export_wechat_info import ExportWechatInfo
 
 
 class Index(BaseApp):
@@ -11,6 +10,7 @@ class Index(BaseApp):
         """首页入口"""
         current_timestamp = int(time.time())
         # self.logger.info({"user_name":"test123"})
+        config = Config.app_config()
         response = {
             "__doc__": "hello wechat tool",
             "timestamp": current_timestamp,
@@ -33,4 +33,5 @@ class Index(BaseApp):
 
     def daily_task(self):
         """每日自动化任务入口"""
-        return self.success()
+        res = ExportWechatInfo.daily_task(self.params)
+        return self.success(res)

@@ -15,6 +15,7 @@ class BaseApp:
     _wxid_dir = None
     _g_wxid = None
     _g_wxid_dir = None
+    _g_name = None
 
     def __new__(cls, **kwargs):
         with cls._instance_lock:
@@ -91,6 +92,12 @@ class BaseApp:
         wx_config = self.get_wx_config()
         self._g_wxid_dir = wx_config['group']['save_dir']
         return self._g_wxid_dir
+
+    @property
+    def g_name(self):
+        wx_config = self.get_wx_config()
+        self._g_name = wx_config['group']['name']
+        return self._g_name
 
     @classmethod
     def success(cls, data=None, msg='success', code=0):

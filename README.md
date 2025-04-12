@@ -32,7 +32,6 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```bash
 python main.py    # 启动 flask 通过接口激活各模块功能，访问： http://localhost:9090
 python main.py -m bot.index.index                                # 首页基本信息
-python main.py -m bot.index.daily_task                           # 每日任务入口（自动化完成一系列任务）
 python main.py -m bot.send_msg.auto_reply                        # 自动回复机器人（进程常驻+扫码登陆）
 python main.py -m db.refresh_chat_db.refresh_wx_info             # 刷新本地微信账户信息
 python main.py -m db.refresh_chat_db.refresh_wx_core_db          # 刷新本地微信解密数据库
@@ -44,7 +43,9 @@ python main.py -m db.get_chat_info.get_sessions                  # 获取所有�
 python main.py -m db.get_chat_info.get_rooms                     # 获取每个群聊的全部用户信息并保存
 python main.py -m db.export_chat.export_group_users              # 导出特定群成员信息
 python main.py -m db.export_chat.export_group_chats              # 导出特定群聊天记录
-python main.py -m summary.daily_summary.gen_summary              # 生成日报并发送
+python main.py -m report.daily_report.gen_report                 # 生成日报并保存md文件
+python main.py -m report.daily_report.gen_md_img                 # 基于md日报生成图片
+python main.py -m bot.index.daily_task                           # 每日任务入口（自动化完成一系列任务）
 ```
 
 ## 使用说明

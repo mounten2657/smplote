@@ -33,6 +33,8 @@ class Emoji:
             emoji_hex_list = [f"{ord(c):x}" for c in emoji_char]  # 有可能是组合表情 ['1f951']
             img_str = ''
             for eh in emoji_hex_list:
+                if eh == 'fe0f':  # 跳过连接符
+                    continue
                 emoji_path = Emoji.get_emoji_local_path(eh)
                 emoji_base64 = Emoji.image_to_base64(emoji_path)
                 # emoji_path = Emoji.path_to_file_uri(emoji_path)
@@ -41,9 +43,18 @@ class Emoji:
             return img_str
         # 匹配所有表情符号（包括Unicode 15.0新表情）
         emoji_pattern = re.compile(
-            r"[\U0001F300-\U0001FAD6"  # 常规表情范围
+            r"["
+            r"\U0001F300-\U0001FAD6"  # 常规表情范围
             r"\U0001F004-\U0001F0CF"
             r"\U0001F170-\U0001F251"
+            r'\U0001F680-\U0001F6FF'
+            r'\U0001F1E0-\U0001F1FF'
+            r'\U00002600-\U000026FF'
+            r'\U00002702-\U000027B0'
+            r'\U0000E000-\U0000F8FF'
+            # r'\U000024C2-\U0001F251'
+            r'\U0001F900-\U0001F9FF'
+            r'\U0001FA70-\U0001FAFF'
             r"\u200d"  # 零宽度连接符（用于组合表情）
             r"\uFE0F"  # 变体选择符
             r"]+",
@@ -82,7 +93,6 @@ class Emoji:
         :param emoji_hex: 简版 Unicode 码点，如 1f951
         :return: UTF - 8 编码的十六进制表示，如 %F0%9F%A5%91
         """
-        print(f'yyyy - {emoji_hex}')
         return Emoji.unicode_to_utf8_hex('0x' + emoji_hex.upper())
 
     @staticmethod
