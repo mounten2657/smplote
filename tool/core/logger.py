@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 import sys
 import json
 from flask import request
@@ -50,13 +51,35 @@ class Logger:
         console_handler.setLevel(getattr(logging, log_level))
 
         class JsonFormatter(logging.Formatter):
+            @staticmethod
+            def extract_runtime(input_str: str):
+                """
+                提取 [RT.{run_time}] 中的 run_time，并移除该部分
+                :param input_str: 输入字符串，如 "END[RT.12.34]"
+                :return: (清理后的字符串, run_time 的值) 如 ("END", "12.34")
+                """
+                # 匹配 [RT.xxx] 并提取 xxx
+                pattern = r'\[RT\.([^\]]+)\]'  # 匹配 [RT.xxx]，并捕获 xxx
+                match = re.search(pattern, input_str)
+                if match:
+                    run_time = match.group(1)  # 提取 run_time
+                    cleaned_str = re.sub(pattern, '', input_str)  # 移除 [RT.xxx]
+                    return cleaned_str.strip(), run_time
+                else:
+                    return input_str, None  # 如果没有匹配到，返回原字符串和 None
+
             def format(self, record):
+                msg = getattr(record, 'msg', '')
+                msg, run_time = self.extract_runtime(msg)
                 log_record = {
                     'timestamp': self.formatTime(record, '%Y-%m-%d %H:%M:%S'),
                     'level': record.levelname,
                     'uuid': getattr(record, 'uuid', None),
-                    'msg': getattr(record, 'msg', None)
+                    'msg': msg
                 }
+                if run_time:
+                    run_time = run_time if re.match(r"^-?\d+$",  run_time) else round(float(run_time), 13)
+                    log_record.update({"run_time": run_time})
                 if log_type == 'http':
                     log_record.update({
                         'ip': getattr(record, 'ip', None),

@@ -1,9 +1,6 @@
 import argparse
 import importlib
-from tool.core.logger import Logger
-from tool.core.http import Http
-from tool.core.attr import Attr
-from tool.core.error import Error
+from tool.core import *
 
 logger = Logger()
 
@@ -31,8 +28,9 @@ class ParseHandler:
 
     @staticmethod
     def execute_method(path, params):
+        start_time = Time.now(0)
         try:
-            not Http.is_http_request() and logger.info(data={"path": path, "params": params}, msg="START")
+            not Http.is_http_request() and logger.info(data={"path": path, "params": params}, msg=f"START[RT.{int(start_time)}]")
             # 分割路径为模块路径和方法名
             module_path, method_name = path.rsplit('.', 1)
             # 将模块名转换为大驼峰形式的类名
@@ -47,11 +45,13 @@ class ParseHandler:
             method = getattr(instance, method_name)
             # 执行方法
             result = method()
-            not Http.is_http_request() and logger.info(data=Attr.parse_json_ignore(result), msg="END")
+            run_time = Time.now(0) - start_time
+            not Http.is_http_request() and logger.info(data=Attr.parse_json_ignore(result), msg=f"END[RT.{run_time}]")
             return result
         except (ImportError, AttributeError, RuntimeError) as e:
+            run_time = Time.now(0) - start_time
             err = Error.handle_exception_info(e)
-            logger.error(data=err, msg="ERROR")
+            logger.error(data=err, msg=f"ERROR[RT.{run_time}]")
             return err
 
     @staticmethod

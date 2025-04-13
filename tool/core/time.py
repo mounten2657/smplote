@@ -5,12 +5,14 @@ from typing import Tuple, Union, Optional
 class Time:
 
     @staticmethod
-    def now():
+    def now(is_int=1):
         """
         获取当前时间戳
+        :param is_int: 是否返回整数，默认是
         :return: 时间戳（整数，如 1744247999）
         """
-        return int(datetime.now().timestamp())
+        timestamp = datetime.now().timestamp()
+        return int(timestamp) if is_int else timestamp
 
     @staticmethod
     def date(date_format="%Y-%m-%d %H:%M:%S"):

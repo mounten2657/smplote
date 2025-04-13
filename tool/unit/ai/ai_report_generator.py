@@ -70,7 +70,7 @@ class AIReportGenerator:
             # 详细版
             save_path[1] = out_path = Dir.abs_dir(base_dir + f'/{g_name}_{report_date}_detail.md')
             res[1] = AIReportGenerator.generate_report(content, out_path, 'prompt_detail')
-        return {"save_path": save_path, "answer": [res[0], res[1]]}
+        return {"save_path": save_path, "answer": [len(res[0]), len(res[1])]}
 
 
 

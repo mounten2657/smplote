@@ -23,7 +23,7 @@ class ExportWechatInfo:
         result = db.get_room_list(roomwxids=[g_wxid])
         date_dir = Time.dft(Time.now(), "/%Y%m%d")
         File.save_file(result, g_wxid_dir + date_dir + '/user_list.json', False)
-        return next(iter(result.values()))
+        return True
 
     @staticmethod
     def export_chats(g_wxid: str, db_config: dict, g_wxid_dir: str, params: dict = None):
@@ -130,7 +130,9 @@ class ExportWechatInfo:
         g_wxid_dir = all_params.get('g_wxid_dir')
         db_config = all_params.get('db_config')
         params = all_params.get('params')
-        task_res['wx_core_db'] = GetWechatInfo.decrypt_wx_core_db(wxid, params)
+        re_db = int(params.get('re_db', '1'))  # 默认每次刷新数据库
+        if re_db:
+            task_res['wx_core_db'] = GetWechatInfo.decrypt_wx_core_db(wxid, params)
         task_res['export_users'] = ExportWechatInfo.export_users(g_wxid, db_config, g_wxid_dir)
         task_res['export_chats'] = ExportWechatInfo.export_chats(g_wxid, db_config, g_wxid_dir, params)
         task_res['daily_report'] = AIReportGenerator.daily_report(g_wxid_dir, params)
