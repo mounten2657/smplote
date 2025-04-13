@@ -33,8 +33,9 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 python main.py    # 启动 flask 通过接口激活各模块功能，访问： http://localhost:9090
 python main.py -m bot.index.index                                # 首页基本信息
 python main.py -m bot.send_msg.auto_reply                        # 自动回复机器人（进程常驻+扫码登陆）
-python main.py -m db.refresh_chat_db.refresh_wx_info             # 刷新本地微信账户信息
-python main.py -m db.refresh_chat_db.refresh_wx_core_db          # 刷新本地微信解密数据库
+python main.py -m db.refresh_chat_db.refresh_wx_info             # 解密并刷新本地微信账户信息
+python main.py -m db.refresh_chat_db.refresh_wx_core_db          # 解密并刷新本地微信核心数据库
+python main.py -m db.refresh_chat_db.refresh_wx_real_time_db     # 解密并刷新本地微信实时数据库
 python main.py -m db.get_chat_info.check_info                    # 检查当前微信配置
 python main.py -m db.get_chat_info.get_wx_info                   # 获取本地保存的微信信息
 python main.py -m db.get_chat_info.get_users                     # 获取所有能见的微信用户信息并保存

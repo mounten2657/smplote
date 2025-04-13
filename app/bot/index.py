@@ -33,5 +33,13 @@ class Index(BaseApp):
 
     def daily_task(self):
         """每日自动化任务入口"""
-        res = ExportWechatInfo.daily_task(self.params)
+        # python main.py -m bot.index.daily_task -p "ac=a1&gr=g1&report_type=1&start_date=2025-04-01&end_date=2025-04-09"
+        all_params = {
+            "wxid": self.wxid,
+            "g_wxid": self.g_wxid,
+            "g_wxid_dir": self.g_wxid_dir,
+            "db_config": self.db_config,
+            "params": self.params,
+        }
+        res = ExportWechatInfo.daily_task(all_params)
         return self.success(res)

@@ -57,8 +57,8 @@ class BaseApp:
     @classmethod
     def get_wx_config(cls, account='a1', group='g1'):
         config = Config.wx_config()
-        account = cls.get_params().get('account', account)
-        group = cls.get_params().get('group', group)
+        account = cls.get_params().get('ac', account)
+        group = cls.get_params().get('gr', group)
         try:
             wx_config = {
                 "account": config['account'][account],

@@ -3,29 +3,18 @@ from tool.router.base_app import BaseApp
 from tool.unit.txt.replace_name import ReplaceName
 from tool.unit.img.md_to_img import MdToImg
 from tool.unit.ai.ai_report_generator import AIReportGenerator
-from tool.core import *
 
 
 class DailyReport(BaseApp):
 
     def gen_report(self):
         """生成md总结"""
-        start_time, end_time = Time.start_end_time_list(self.params)
-        report_date = Time.dft(end_time if end_time else Time.now(), '%Y%m%d')
-        report_type = int(self.params.get('report_type', '0'))
-        res = AIReportGenerator.daily_report(self.g_wxid_dir, report_date, report_type)
+        res = AIReportGenerator.daily_report(self.g_wxid_dir, self.params)
         return self.success(res)
 
     def gen_md_img(self):
         """md 转图片"""
-        start_time, end_time = Time.start_end_time_list(self.params)
-        report_date = Time.dft(end_time if end_time else Time.now(), '%Y%m%d')
-        g_name = os.path.basename(self.g_wxid_dir)
-        res = [False, False]
-        md_file = f'{self.g_wxid_dir}/{report_date}/{g_name}_{report_date}.md'
-        res[0] = MdToImg.gen_md_img(md_file)
-        md_file = f'{self.g_wxid_dir}/{report_date}/{g_name}_{report_date}_detail.md'
-        res[1] = MdToImg.gen_md_img(md_file)
+        res = MdToImg.gen_img(self.g_wxid_dir, self.params)
         return self.success(res)
 
     def replace_name(self):

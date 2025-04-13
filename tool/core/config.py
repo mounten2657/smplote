@@ -1,13 +1,11 @@
 import json
+import os
 from tool.core.env import Env
 from tool.core.dir import Dir
 from tool.core.file import File
 
 
 class Config:
-
-    WX_SQLITE_DIR = 'data/database/sqlite'
-    WX_INFO_JSON = 'data/file/account/wx_info.json'
 
     @staticmethod
     def load_config(config_path='config/app.json'):
@@ -45,10 +43,6 @@ class Config:
         return File.convert_to_abs_path(config, 'save_dir')
 
     @staticmethod
-    def wx_info_config():
-        return Config.load_config(Config.WX_INFO_JSON)
-
-    @staticmethod
     def db_config(db_name='default'):
         config = Config.load_config('config/db.json').get(db_name)
         config['path'] = Dir.abs_dir(config['path'])
@@ -59,5 +53,7 @@ class Config:
         config = Config.load_config('config/db.json').get(db_name)
         return Dir.abs_dir(config['path'])
 
-
+    @staticmethod
+    def db_dir(db_name='default'):
+        return os.path.dirname(Config.db_path(db_name))
 

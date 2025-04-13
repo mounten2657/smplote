@@ -47,14 +47,17 @@ class AIReportGenerator:
         return response
 
     @staticmethod
-    def daily_report(g_wxid_dir: str, report_date: str, report_type: int = 0):
+    def daily_report(g_wxid_dir: str, params: dict):
         """
-        静态方法生成日报 - 简略版 + 详细版
+        静态方法生成日报 - 简略版 | 详细版
         :param g_wxid_dir: 群聊目录
-        :param report_date: 报告日期 Ymd 格式
-        :param report_type: 报告类型 - 0:全部1:简略版|2:详细版
+        :param params: 请求入参，包含所有请求参数
         :return: 生成的报告内容
         """
+        # 默认今天
+        start_time, end_time = Time.start_end_time_list(params)
+        report_date = Time.dft(end_time if end_time else Time.now(), '%Y%m%d')
+        report_type = int(params.get('report_type', '1'))  # 默认生成简略版 - 0:全部1:简略版|2:详细版
         g_name = os.path.basename(g_wxid_dir)
         base_dir = g_wxid_dir + '/' + report_date
         content = Dir.abs_dir(base_dir + '/chat_list.txt')

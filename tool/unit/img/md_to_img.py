@@ -46,7 +46,18 @@ class MdToImg:
         md_obj.save_html(html_path, full_html)
         return full_html
 
-
+    @staticmethod
+    def gen_img(g_wxid_dir, params):
+        # 默认今天
+        start_time, end_time = Time.start_end_time_list(params)
+        report_date = Time.dft(end_time if end_time else Time.now(), '%Y%m%d')
+        g_name = os.path.basename(g_wxid_dir)
+        res = [False] * 2
+        md_file = f'{g_wxid_dir}/{report_date}/{g_name}_{report_date}.md'
+        res[0] = MdToImg.gen_md_img(md_file)
+        md_file = f'{g_wxid_dir}/{report_date}/{g_name}_{report_date}_detail.md'
+        res[1] = MdToImg.gen_md_img(md_file)
+        return res
 
 
 

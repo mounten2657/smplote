@@ -6,22 +6,15 @@ from tool.unit.wechat.get_wechat_info import GetWechatInfo
 class RefreshChatDb(BaseApp):
 
     def refresh_wx_info(self):
-        params = self.params()
-        wxid = params.get('wxid') if params else ''
-        res = GetWechatInfo.get_real_time_wx_info(wxid)
+        res = GetWechatInfo.get_real_time_wx_info(self.wxid)
         return self.success(res)
 
     def refresh_wx_core_db(self):
-        params = self.params()
-        wxid = params.get('wxid') if params else ''
-        start_time = params.get('start_time') if params else '0'
-        res = GetWechatInfo.decrypt_wx_core_db(wxid, Str.int(start_time))
+        res = GetWechatInfo.decrypt_wx_core_db(self.wxid, self.params)
         return self.success(res)
 
     def refresh_wx_real_time_db(self):
-        params = self.params()
-        wxid = params.get('wxid') if params else ''
-        res = GetWechatInfo.merge_wx_real_time_db(wxid)
+        res = GetWechatInfo.merge_wx_real_time_db(self.wxid)
         return self.success(res)
 
     def refresh_emoji(self):

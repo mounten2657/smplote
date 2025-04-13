@@ -17,7 +17,7 @@ class GetWechatInfo:
                               "key": key, "wx_dir": wx_dir}
         """
         try:
-            save_path = save_path if save_path else Dir.abs_dir(Config.WX_INFO_JSON)
+            save_path = save_path if save_path else f'{Config.db_dir()}/wx_sys_info.json'
             wx_info = get_wx_info(is_print=False, save_path=save_path)
             File.deduplicate_json_file(save_path, 'wxid')
             if wxid:
@@ -40,20 +40,25 @@ class GetWechatInfo:
                               "mobile": mobile, "nickname": nickname, "mail": mail, "wxid": wxid,
                               "key": key, "wx_dir": wx_dir}
         """
-        return Attr.select_item_by_where(Config.wx_info_config(), {'wxid': wxid})
+        wx_info = File.read_file(f'{Config.db_dir()}/wx_sys_info.json')
+        return Attr.select_item_by_where(wx_info, {'wxid': wxid})
 
     @staticmethod
-    def decrypt_wx_core_db(wxid: str, start_time: int = -1,  save_path: str = ''):
+    def decrypt_wx_core_db(wxid: str, params: dict,  save_path: str = ''):
         """
         解密合并数据库 msg.db, microMsg.db, media.db
         :param wxid: wxid，自己查看本地微信文件夹获取
         :param save_path: 数据库输出路径
-        :param start_time: 开始时间，小于0默认为昨天零点
+        :param params: 请求入参，包含所有请求参数
         :return: (true,解密后的数据库路径) or (false,错误信息)
         """
         try:
-            start_time = start_time if start_time > 0 else Time.tfd(Time.dft(Time.now() - 86400, '%Y-%m-%d 00:00:00'))
-            save_path = save_path if save_path else Dir.abs_dir(Config.WX_SQLITE_DIR)
+            # 时间处理，以便更好理解
+            start_time, end_time = Time.start_end_time_list(params)
+            # 没有时间参数，默认拉取最近七天的数据
+            if not start_time and not end_time:
+                start_time, end_time = (Time.now() - 7 * 86400, Time.now())
+            save_path = save_path if save_path else Config.db_dir()
             merge_save_path = os.path.join(save_path, 'wx_core.db' if start_time > 10 else 'wx_all_pass.db')
             wx_info = GetWechatInfo.get_local_wx_info(wxid)
             code, merge_save_path = decrypt_merge(
@@ -62,7 +67,7 @@ class GetWechatInfo:
                 outpath=save_path ,
                 merge_save_path=merge_save_path,
                 startCreateTime=start_time,
-                endCreateTime=Time.now()
+                endCreateTime=end_time
             )
             if code:
                 return merge_save_path
@@ -80,7 +85,7 @@ class GetWechatInfo:
         :return: (true,解密后的数据库路径) or (false,错误信息)
         """
         try:
-            merge_path = merge_path if merge_path else Dir.abs_dir(f'{Config.WX_SQLITE_DIR}/wx_real_time.db')
+            merge_path = merge_path if merge_path else f'{Config.db_dir()}/wx_real_time.db'
             wx_info = GetWechatInfo.get_local_wx_info(wxid)
             code, merge_path = all_merge_real_time_db(
                 key=wx_info.get('key'),

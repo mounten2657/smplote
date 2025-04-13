@@ -2,6 +2,9 @@ from datetime import datetime
 from collections import defaultdict
 from pywxdump import *
 from tool.core import *
+from tool.unit.ai.ai_report_generator import AIReportGenerator
+from tool.unit.img.md_to_img import MdToImg
+from tool.unit.wechat.get_wechat_info import GetWechatInfo
 from tool.unit.wechat.wechat_db_module import WechatDBModule
 
 
@@ -18,7 +21,8 @@ class ExportWechatInfo:
         """
         db = DBHandler(db_config, g_wxid)
         result = db.get_room_list(roomwxids=[g_wxid])
-        File.save_file(result, g_wxid_dir + '/user_list.json', False)
+        date_dir = Time.dft(Time.now(), "/%Y%m%d")
+        File.save_file(result, g_wxid_dir + date_dir + '/user_list.json', False)
         return next(iter(result.values()))
 
     @staticmethod
@@ -31,11 +35,11 @@ class ExportWechatInfo:
         :param params:  请求入参，如页码和起止时间等参数
         :return: 群成员列表
         """
-        if int(params.get('is_init', '0')) != 1 and not params.get('end_date'):
+        if not params.get('end_date'):
             params['end_date'] = Time.date("%Y-%m-%d")  # 默认导出今天的数据
         # 时间处理，以便更好理解
         start_time, end_time = Time.start_end_time_list(params)
-        date_dir = Time.dft(end_time, "/%Y%m%d") if end_time else ''
+        date_dir = Time.dft(end_time, "/%Y%m%d")
         db = DBHandler(db_config, g_wxid)
         msgs, users = db.get_msgs(
             wxids=[g_wxid],
@@ -46,13 +50,12 @@ class ExportWechatInfo:
         )
         if not msgs:
             return Api.error('没有聊天记录')
-        File.save_file(msgs, g_wxid_dir + date_dir + '/chat_list.json', False)
-        if date_dir:
-            # 有日期，说明是日报，继续生成 txt 文件
-            users = File.read_file(g_wxid_dir + '/user_list.json')
-            users = users.get(g_wxid, {}).get('wxid2userinfo', [])
-            txt_str = ExportWechatInfo.format_msgs(msgs, users, g_wxid)
-            File.save_file(txt_str, g_wxid_dir + date_dir + '/chat_list.txt', False)
+        base_dir = g_wxid_dir + date_dir
+        File.save_file(msgs, base_dir + '/chat_list.json', False)
+        users = File.read_file(base_dir + '/user_list.json')
+        users = users.get(g_wxid, {}).get('wxid2userinfo', [])
+        txt_str = ExportWechatInfo.format_msgs(msgs, users, g_wxid)
+        File.save_file(txt_str, base_dir + '/chat_list.txt', False)
         return True
 
     @staticmethod
@@ -112,13 +115,28 @@ class ExportWechatInfo:
         }
 
     @staticmethod
-    def daily_task(params):
+    def daily_task(all_params):
         """
-        每日任务自动化 - db -> list -> export -> txt -> ai -> md -> img
-        :param params: 请求入参，主要包含微信相关参数，日期不传默认今日
+        每日任务自动化 - wx core db -> user & chat list -> json to txt -> ai -> md -> img
+        完整参数：
+            - python main.py -m bot.index.daily_task -p "ac=a1&gr=g1&report_type=1&start_date=2025-04-01&end_date=2025-04-09"
+        :param all_params: 请求入参，主要包含微信相关参数，日期不传默认今日
         :return: 自动化每个步骤执行的结果
         """
-        return True
+        task_res = {}
+        now_timestamp = Time.now()
+        wxid = all_params.get('wxid')
+        g_wxid = all_params.get('g_wxid')
+        g_wxid_dir = all_params.get('g_wxid_dir')
+        db_config = all_params.get('db_config')
+        params = all_params.get('params')
+        task_res['wx_core_db'] = GetWechatInfo.decrypt_wx_core_db(wxid, params)
+        task_res['export_users'] = ExportWechatInfo.export_users(g_wxid, db_config, g_wxid_dir)
+        task_res['export_chats'] = ExportWechatInfo.export_chats(g_wxid, db_config, g_wxid_dir, params)
+        task_res['daily_report'] = AIReportGenerator.daily_report(g_wxid_dir, params)
+        task_res['gen_img'] = MdToImg.gen_img(g_wxid_dir, params)
+        task_res['run_time'] = Time.now() - now_timestamp
+        return task_res
 
 
 
