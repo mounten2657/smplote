@@ -2,6 +2,7 @@ from datetime import datetime
 from collections import defaultdict
 from pywxdump import *
 from tool.core import *
+from tool.unit.wechat.wechat_db_module import WechatDBModule
 
 
 class ExportWechatInfo:
@@ -50,15 +51,15 @@ class ExportWechatInfo:
             # 有日期，说明是日报，继续生成 txt 文件
             users = File.read_file(g_wxid_dir + '/user_list.json')
             users = users.get(g_wxid, {}).get('wxid2userinfo', [])
-            txt_str = ExportWechatInfo.format_msgs(msgs, users, g_wxid, db)
+            txt_str = ExportWechatInfo.format_msgs(msgs, users, g_wxid)
             File.save_file(txt_str, g_wxid_dir + date_dir + '/chat_list.txt', False)
         return True
 
     @staticmethod
-    def format_msgs(msgs, users, g_wxid, db):
-        sql = f'SELECT strNickName FROM Session WHERE strUsrName="{g_wxid}";'
-        ret = db.execute(sql)
-        room_name = ret[0][0] if ret else ''
+    def format_msgs(msgs, users, g_wxid):
+        db = WechatDBModule()
+        room_name = db.get_room_name(g_wxid)
+        # txt_str = f'微信群｢『 {room_name} 』｣聊天记录：\n'
         txt_str = f'微信群[{room_name}]聊天记录：\n'
         indent = '\t\t'
         # 创建用户映射字典
@@ -76,11 +77,11 @@ class ExportWechatInfo:
         return txt_str
 
     @staticmethod
-    def group_messages_by_time(msgs, interval_minutes=10):
+    def group_messages_by_time(msgs, interval_minutes=15):
         """
         按自定义时间间隔分组消息，使用组内第一个实际时间作为键名
         :param msgs: 消息列表
-        :param interval_minutes: 分组时间间隔（分钟），默认10
+        :param interval_minutes: 分组时间间隔（分钟），默认15
         :return: { "首个时间": [同组消息...], ... }
         """
         time_groups = defaultdict(list)

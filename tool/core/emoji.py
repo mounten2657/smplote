@@ -30,7 +30,7 @@ class Emoji:
         # 使用emoji库精确识别
         def replace_with_img(match):
             emoji_char = match.group()  # eg: emoji_char = 🥑 , preg matched \U0001F951
-            emoji_hex_list = [f"{ord(c):x}" for c in emoji_char]  # 有可能是组合表情 ['1f951']
+            emoji_hex_list = [f"{ord(c):x}" for c in emoji_char]  # 有可能是组合表情: ❤️-> ['2764', 'fe0f']
             img_str = ''
             for eh in emoji_hex_list:
                 if eh == 'fe0f':  # 跳过连接符
@@ -52,9 +52,9 @@ class Emoji:
             r'\U00002600-\U000026FF'
             r'\U00002702-\U000027B0'
             r'\U0000E000-\U0000F8FF'
-            # r'\U000024C2-\U0001F251'
             r'\U0001F900-\U0001F9FF'
             r'\U0001FA70-\U0001FAFF'
+            # r'\U000024C2-\U0001F251'  # 意义不明，暂时注释
             r"\u200d"  # 零宽度连接符（用于组合表情）
             r"\uFE0F"  # 变体选择符
             r"]+",

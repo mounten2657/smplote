@@ -1,3 +1,4 @@
+import openai
 from typing import Optional, Dict
 from openai import OpenAI
 from tool.core import *
@@ -29,4 +30,31 @@ class AIClientManager:
         """获取指定服务的客户端"""
         service = service or self.config['last_service']
         return self.clients.get(service)
+
+    def call_ai(self, text: str, prompt: str = 'prompt', service: Optional[str] = 'DeepSeek') -> str:
+        """
+        调用AI接口
+        :param text:  提问文本
+        :param prompt:  预设 prompt （用来设定角色）
+        :param service:  AI 服务商，默认 DeepSeek
+        :return:
+        """
+        logger = Logger()
+        logger.info({"service": service, "prompt": prompt, "content": text[0:100]}, 'CALL_AI_TXT', 'ai')
+        try:
+            client = self.clients.get(service)
+            response = client.chat.completions.create(
+                model=self.config['services'][service or self.config['last_service']]['model'],
+                messages=[
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": text}
+                ],
+                temperature=0.3
+            )
+            res = response.choices[0].message.content
+            logger.info({"service": service, "content": res}, 'CALL_AI_RES', 'ai')
+        except (Exception, openai.InternalServerError) as e:
+            res = Error.handle_exception_info(e)
+            logger.info({"service": service, "content": res}, 'CALL_AI_EXP', 'ai')
+        return res
 

@@ -54,7 +54,10 @@ class Config:
         config['path'] = Dir.abs_dir(config['path'])
         return config
 
-
+    @staticmethod
+    def db_path(db_name='default'):
+        config = Config.load_config('config/db.json').get(db_name)
+        return Dir.abs_dir(config['path'])
 
 
 
