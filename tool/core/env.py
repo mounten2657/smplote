@@ -1,12 +1,17 @@
 import re
 import os
 from typing import Union, Dict, Optional, Any
+from tool.core.dir import Dir
 
 
 class Env:
+
+    # 自定义 .env 文件路径
+    _env_path = Dir.abs_dir('.env')
+
     @staticmethod
     def load(
-            env_path: str = ".env",
+            env_path: str = _env_path,
             encoding: str = "utf-8",
             override: bool = False
     ) -> Dict[str, str]:
@@ -42,7 +47,7 @@ class Env:
     def get(
             key: str,
             default: Optional[Union[str, int, bool]] = None,
-            env_path: str = ".env"
+            env_path: str = _env_path
     ) -> Union[str, int, bool, None]:
         """
         获取配置值（优先从环境变量读取）

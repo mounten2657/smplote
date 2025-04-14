@@ -34,4 +34,6 @@ class Error:
     def has_exception(data):
         return Attr.has_keys(data, ['err_msg', 'err_cause'])
 
-
+    @staticmethod
+    def has_error(data):
+        return Attr.has_keys(data, ['code', 'msg', 'data']) and data['code']

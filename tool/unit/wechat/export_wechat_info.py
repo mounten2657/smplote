@@ -118,25 +118,27 @@ class ExportWechatInfo:
     def daily_task(all_params):
         """
         每日任务自动化 - wx core db -> user & chat list -> json to txt -> ai -> md -> img
-        完整参数：
-            - python main.py -m bot.index.daily_task -p "ac=a1&gr=g1&report_type=1&start_date=2025-04-01&end_date=2025-04-09"
         :param all_params: 请求入参，主要包含微信相关参数，日期不传默认今日
         :return: 自动化每个步骤执行的结果
         """
-        task_res = {}
         now_timestamp = Time.now()
-        wxid = all_params.get('wxid')
-        g_wxid = all_params.get('g_wxid')
-        g_wxid_dir = all_params.get('g_wxid_dir')
-        db_config = all_params.get('db_config')
-        params = all_params.get('params')
+        task_res = {"all_params": all_params}
+        wxid, g_wxid, g_wxid_dir, db_config, params = map(all_params.get, ['wxid', 'g_wxid', 'g_wxid_dir', 'db_config', 'params'])
         re_db = int(params.get('re_db', '1'))  # 默认每次刷新数据库
-        if re_db:
-            task_res['wx_core_db'] = GetWechatInfo.decrypt_wx_core_db(wxid, params)
-        task_res['export_users'] = ExportWechatInfo.export_users(g_wxid, db_config, g_wxid_dir)
-        task_res['export_chats'] = ExportWechatInfo.export_chats(g_wxid, db_config, g_wxid_dir, params)
-        task_res['daily_report'] = AIReportGenerator.daily_report(g_wxid_dir, params)
-        task_res['gen_img'] = MdToImg.gen_img(g_wxid_dir, params)
+        # 构建任务列表
+        tasks = [
+            ('wx_core_db', lambda: GetWechatInfo.decrypt_wx_core_db(wxid, params) if re_db else None),
+            ('export_users', lambda: ExportWechatInfo.export_users(g_wxid, db_config, g_wxid_dir)),
+            ('export_chats', lambda: ExportWechatInfo.export_chats(g_wxid, db_config, g_wxid_dir, params)),
+            ('daily_report', lambda: AIReportGenerator.daily_report(g_wxid_dir, params)),
+            ('gen_img', lambda: MdToImg.gen_img(g_wxid_dir, params))
+        ]
+        # 执行任务
+        for name, task in tasks:
+            res = task()
+            task_res[name] = res
+            if Error.has_error(res):
+                return task_res
         task_res['run_time'] = Time.now() - now_timestamp
         return task_res
 

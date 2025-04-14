@@ -74,7 +74,8 @@ class GetWechatInfo:
             else:
                 return Api.error(f"解密微信核心数据库失败: {merge_save_path}")
         except Exception as e:
-            return Api.error(f"解密微信核心数据库时出错: {e}")
+            err = Error.handle_exception_info(e)
+            return Api.error(f"解密微信核心数据库时出错: {e}", err)
 
     @staticmethod
     def merge_wx_real_time_db(wxid: str,  merge_path: str = ''):

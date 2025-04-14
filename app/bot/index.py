@@ -33,7 +33,6 @@ class Index(BaseApp):
 
     def daily_task(self):
         """每日自动化任务入口"""
-        # python main.py -m bot.index.daily_task -p "ac=a1&gr=g1&report_type=1&start_date=2025-04-01&end_date=2025-04-09"
         all_params = {
             "wxid": self.wxid,
             "g_wxid": self.g_wxid,
