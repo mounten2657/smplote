@@ -18,9 +18,10 @@ class AIClientManager:
         return Config.ai_config()
 
     def _init_clients(self):
-        """初始化所有AI服务客户端"""
+        """初始化AI服务客户端"""
+        last_service = self.config['last_service']
         for service, cfg in self.config['services'].items():
-            if cfg['api_key']:
+            if last_service == service and cfg['api_key']:
                 self.clients[service] = OpenAI(
                     api_key=cfg['api_key'],
                     base_url=cfg['base_url'].rstrip('/') + cfg['api_uri']
@@ -31,14 +32,15 @@ class AIClientManager:
         service = service or self.config['last_service']
         return self.clients.get(service)
 
-    def call_ai(self, text: str, prompt: str = 'prompt', service: Optional[str] = 'DeepSeek') -> str:
+    def call_ai(self, text: str, prompt: str = 'prompt', service: Optional[str] = '') -> str:
         """
         调用AI接口
         :param text:  提问文本
         :param prompt:  预设 prompt （用来设定角色）
-        :param service:  AI 服务商，默认 DeepSeek
+        :param service:  AI 服务商
         :return:
         """
+        service = service if service else self.config['last_service']  # 获取默认服务商
         logger = Logger()
         logger.info({"service": service, "prompt": prompt, "content": text[0:100]}, 'CALL_AI_TXT', 'ai')
         try:

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional, Union
 from tool.unit.ai.ai_client_manager import AIClientManager
 from tool.core import *
+from tool.unit.wechat.wechat_db_module import WechatDBModule
 
 
 class AIReportGenerator:
@@ -14,17 +15,19 @@ class AIReportGenerator:
 
     @staticmethod
     def generate_report(
+            g_wxid: str,
             content: Union[str, Path],
             output_path: Optional[str] = None,
             prompt: str = 'prompt',
-            service: Optional[str] = 'DeepSeek'
+            service: Optional[str] = ''
     ) -> str:
         """
         生成并保存报告
+        :param g_wxid: 群聊wxid
         :param content: 文本内容/文件路径
         :param output_path: 输出文件路径（.md格式）
         :param prompt: 指定AI prompt: prompt | prompt_detail
-        :param service: 指定AI服务，默认 DeepSeek
+        :param service: 指定AI服务
         :return: 生成的报告内容
         """
         # 1. 获取内容
@@ -34,6 +37,13 @@ class AIReportGenerator:
             text = content
         if not text:
             return "未获取到文本内容，请检查配置项"
+
+        ai_config = Config.ai_config()
+        if ai_config['last_service'] == 'DeepSeek':
+            text = Str.sub_str_len(text, 65435 - len(ai_config['report_template']), 1)
+        db = WechatDBModule()
+        room_name = db.get_room_name(g_wxid)
+        text = f"{ai_config['report_template']}\n\n微信群[{room_name}]聊天记录：\n\n{text}"
 
         # 2. 调用AI
         client = AIClientManager()
@@ -59,17 +69,18 @@ class AIReportGenerator:
         report_date = Time.dft(end_time if end_time else Time.now(), '%Y%m%d')
         report_type = int(params.get('report_type', '1'))  # 默认生成简略版 - 0:全部1:简略版|2:详细版
         g_name = os.path.basename(g_wxid_dir)
+        g_wxid = params.get('g_wxid')
         base_dir = g_wxid_dir + '/' + report_date
         content = Dir.abs_dir(base_dir + '/chat_list.txt')
         res = save_path = ['f1', 'f2']
         if report_type != 2:
             # 简略版
             save_path[0] = out_path = Dir.abs_dir(base_dir + f'/{g_name}_{report_date}.md')
-            res[0] = AIReportGenerator.generate_report(content, out_path)
+            res[0] = AIReportGenerator.generate_report(g_wxid, content, out_path)
         if report_type != 1:
             # 详细版
             save_path[1] = out_path = Dir.abs_dir(base_dir + f'/{g_name}_{report_date}_detail.md')
-            res[1] = AIReportGenerator.generate_report(content, out_path, 'prompt_detail')
+            res[1] = AIReportGenerator.generate_report(g_wxid, content, out_path, 'prompt_detail')
         return {"save_path": save_path, "answer": [len(res[0]), len(res[1])]}
 
 
