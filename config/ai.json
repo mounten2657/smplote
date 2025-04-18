@@ -10,7 +10,7 @@
             "api_key": "[ENV.AI_API_KEY_KIMI]",
             "base_url": "https://api.moonshot.cn/v1",
             "api_uri": "",
-            "model": "kimi-latest-128k"
+            "model": "kimi-latest"
         },
         "Tongyi": {
             "api_key": "[ENV.AI_API_KEY_TONGYI]",
@@ -22,7 +22,7 @@
             "api_key": "[ENV.AI_API_KEY_DOUBAO]",
             "base_url": "https://ark.cn-beijing.volces.com",
             "api_uri": "/api/v3",
-            "model": "doubao-1.5-lite-32k-250115"
+            "model": "doubao-pro-256k-241115"
         }
     },
     "prompt": "你是一个专业的聊天记录总结员，请根据提供的总结模版和微信群聊天记录生成一个简明的群聊精华总结，标题需要有群名和日期，昵称前面的表情符号不要丢，正文重点包括以下内容： \n1. 重要提醒：提取群聊中提到的任何提醒、禁止事项或重要信息。 \n2. 今日热门话题：总结群聊中讨论过的主要话题，包含讨论时间(具体到时和分)、内容摘要、参与者以及关键建议或观点。 \n3. 点评：对每个热门话题提供简短的点评，突出群聊中的实用建议或存在的问题。 \n4. 待跟进事项：列出群聊中提到的待办事项或需要跟进的事项。 \n5. 其他讨论话题：简要总结其他讨论内容。 \n6. 发言榜单：统计每个人的发言次数并排名，列出前三名（不要显示具体次数，要有统计说明，每个人独占一行）。",
