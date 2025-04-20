@@ -1,5 +1,5 @@
 from tool.router.base_app import BaseApp
-from tool.unit.wechat.get_wechat_info import GetWechatInfo
+from service.wechat.report.get_wechat_info import GetWechatInfo
 
 
 class GetChatInfo(BaseApp):

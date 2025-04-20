@@ -1,6 +1,7 @@
 {
     "log_driver": "[ENV.LOG_DRIVER|file]",
     "log_path": "[ENV.LOG_PATH|storage/logs]",
-    "log_name_default": "app",
-    "log_level": "INFO"
+    "log_name_default": "[ENV.LOG_LEVEL|app]",
+    "log_recode_debug": "[ENV.LOG_RECORD_DEBUG|0]",
+    "log_level": "[ENV.LOG_LEVEL|DEBUG]"
 }

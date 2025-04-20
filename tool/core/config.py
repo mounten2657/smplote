@@ -22,8 +22,11 @@ class Config:
             return {}
 
     @staticmethod
-    def account_config():
-        return Config.load_config('config/account.json')
+    def set_env(key: str, val, prefix=''):
+        if prefix:
+            prefix = prefix if prefix.endswith('_') else prefix + '_'
+        key = prefix + key.upper()
+        return Env.write_env(key, val)
 
     @staticmethod
     def ai_config():
@@ -32,15 +35,6 @@ class Config:
     @staticmethod
     def app_config():
         return Config.load_config('config/app.json')
-
-    @staticmethod
-    def logger_config():
-        return Config.load_config('config/logger.json')
-
-    @staticmethod
-    def wx_config():
-        config = Config.load_config('config/wx.json')
-        return File.convert_to_abs_path(config, 'save_dir')
 
     @staticmethod
     def db_config(db_name='default'):
@@ -56,4 +50,22 @@ class Config:
     @staticmethod
     def db_dir(db_name='default'):
         return os.path.dirname(Config.db_path(db_name))
+
+    @staticmethod
+    def gewechat_config():
+        return Config.load_config('config/gewechat.json')
+
+    @staticmethod
+    def logger_config():
+        return Config.load_config('config/logger.json')
+
+    @staticmethod
+    def voice_config():
+        return Config.load_config('config/voice.json')
+
+    @staticmethod
+    def wx_config():
+        config = Config.load_config('config/wx.json')
+        return File.convert_to_abs_path(config, 'save_dir')
+
 

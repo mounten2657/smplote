@@ -41,6 +41,8 @@ class Attr:
         :param keys: 要移除的键的列表
         :return: 移除指定键后的字典
         """
+        if not Attr.has_keys(dictionary, keys):
+            return dictionary
         return {key: value for key, value in dictionary.items() if key not in keys}
 
     @staticmethod

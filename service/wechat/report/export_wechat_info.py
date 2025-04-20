@@ -2,10 +2,10 @@ from datetime import datetime
 from collections import defaultdict
 from pywxdump import *
 from tool.core import *
-from tool.unit.ai.ai_report_generator import AIReportGenerator
+from service.ai.report.ai_report_generator import AIReportGenerator
 from tool.unit.img.md_to_img import MdToImg
-from tool.unit.wechat.get_wechat_info import GetWechatInfo
-from tool.unit.wechat.wechat_db_module import WechatDBModule
+from service.wechat.report.get_wechat_info import GetWechatInfo
+from service.wechat.model.wechat_db_module import WechatDBModule
 
 
 class ExportWechatInfo:

@@ -1,7 +1,7 @@
 import time
 from tool.router.base_app import BaseApp
-from tool.core.config import Config
-from tool.unit.wechat.export_wechat_info import ExportWechatInfo
+from tool.core import *
+from service.wechat.report.export_wechat_info import ExportWechatInfo
 
 
 class Index(BaseApp):

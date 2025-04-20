@@ -83,3 +83,11 @@ class File:
                 File.convert_to_abs_path(item, dir_key_name, base_dir)
         return data
 
+    @staticmethod
+    def is_safe_path(basedir, path):
+        """检查路径是否在允许的目录内"""
+        basedir = os.path.abspath(basedir)
+        request_path = os.path.abspath(os.path.join(basedir, path))
+        return os.path.commonpath([basedir, request_path]) == basedir
+
+

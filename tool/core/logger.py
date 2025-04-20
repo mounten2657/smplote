@@ -11,6 +11,7 @@ from tool.core.config import Config
 from tool.core.str import Str
 from tool.core.attr import Attr
 from tool.core.http import Http
+from tool.core.time import Time
 
 
 class Logger:
@@ -26,6 +27,8 @@ class Logger:
     def __init__(self):
         self.logger_dir = Dir.root_dir()
         self.config = Config.logger_config()
+        self.log_level = self.config.get('log_level', 'DEBUG')
+        self.recode_debug = int(self.config.get('log_recode_debug', '0'))
         self.uuid = Str.uuid()
 
     def setup_logger(self, log_type, log_name):
@@ -87,6 +90,7 @@ class Logger:
                         'method': getattr(record, 'method', None),
                         'status_code': getattr(record, 'status_code', None),
                         'user_agent': getattr(record, 'user_agent', None),
+                        'content_type': getattr(record, 'content_type', None),
                         'authcode': getattr(record, 'authcode', None),
                         'data': getattr(record, 'data', None),
                         'request_params': getattr(record, 'request_params', None),
@@ -118,6 +122,7 @@ class Logger:
             method = request.method
             headers = json.loads(json.dumps(dict(request.headers), ensure_ascii=False, indent=4))
             user_agent = Attr.get_attr(headers, 'User-Agent')
+            content_type = Attr.get_attr(headers, 'Content-Type')
             authcode = Attr.get_attr(headers, 'authcode', '')
             request_params = dict(request.args)
             response = Attr.get_attr(data, 'response')
@@ -130,6 +135,7 @@ class Logger:
                 'method': method,
                 'status_code': status_code,
                 'user_agent': user_agent,
+                'content_type': content_type,
                 'authcode': authcode,
                 'data': Attr.remove_keys(data, ['request', 'response']),
                 'request_params': request_params,
@@ -148,6 +154,8 @@ class Logger:
         return extra
 
     def write(self, data=None, msg="", log_name="app", log_level='info'):
+        if not self.recode_debug and log_level.upper() in ['DEBUG', 'INFO']:
+            return self.color_print(data, msg, log_level)
         extra = self.get_extra_data(data)
         log_type = 'http' if Http.is_http_request() else 'command'
         logger_handle = self.setup_logger(log_type, log_name)
@@ -169,4 +177,15 @@ class Logger:
     def exception(self, data=None, msg="NULL", log_name="app"):
         self.write(data, msg, log_name, 'exception')
 
-
+    def color_print(self, data, msg="NULL", log_level="debug"):
+        log_level = log_level.upper()
+        color = '31m'  # 31m - red | 32m - green | 33m - yellow | 34 blue | 36m cyan
+        if log_level == "DEBUG":
+            color = '32m'
+        if log_level == "WARNING":
+            color = '33m'
+        if log_level == "INFO":
+            color = '36m'
+        text = f"[{Time.date()}] - {log_level} - {msg} - {data}"[:383]
+        print(f"\033[{color}{text}\033[0m")
+        return True

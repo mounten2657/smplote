@@ -1,9 +1,9 @@
 import os.path
 from pathlib import Path
 from typing import Optional, Union
-from tool.unit.ai.ai_client_manager import AIClientManager
+from utils.ai.client.ai_client_manager import AIClientManager
+from service.wechat.model.wechat_db_module import WechatDBModule
 from tool.core import *
-from tool.unit.wechat.wechat_db_module import WechatDBModule
 
 
 class AIReportGenerator:

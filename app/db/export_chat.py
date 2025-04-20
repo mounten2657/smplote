@@ -1,5 +1,5 @@
 from tool.router.base_app import BaseApp
-from tool.unit.wechat.export_wechat_info import ExportWechatInfo
+from service.wechat.report.export_wechat_info import ExportWechatInfo
 
 
 class ExportChat(BaseApp):

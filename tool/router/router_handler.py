@@ -1,4 +1,4 @@
-from flask import Flask, request, send_from_directory
+from flask import Flask, request, send_from_directory, Response
 from .parse_handler import ParseHandler
 from tool.core.logger import Logger
 from tool.core.attr import Attr
@@ -6,11 +6,20 @@ from tool.core.api import Api
 from tool.core.dir import Dir
 from tool.core.config import Config
 from tool.core.error import Error
+from tool.core.http import Http
 
 logger = Logger()
 
 
 class RouterHandler:
+
+    # 路由忽略列表，适合回调和文件预览等
+    IGNORE_ROUTE_LIST = [
+        'bot/wx_callback/collect',
+        'src/preview/image',
+        'src/preview/office',
+    ]
+
     def __init__(self):
         self.app = Flask(__name__)
         self.config = Config.app_config()
@@ -49,21 +58,32 @@ class RouterHandler:
                 # 判断是否有异常
                 if Error.has_exception(result):
                     return Api.error(f"{result['err_msg'][0]}", Attr.remove_keys(result, ['err_msg', 'err_file_list']))
-                return Api.success(result)
-            except (ImportError, AttributeError) as e:
+                # 特定路由直接放行
+                if method_path in self.IGNORE_ROUTE_LIST:
+                    return result
+                else:
+                    return Api.success(result)
+            except (ImportError, AttributeError, TypeError) as e:
                 return f"Method Not Found! {e}", 500
 
         # 请求完成后的动作
         @self.app.after_request
         def after_request(response):
+            # response.direct_passthrough = False
             status_code = response.status_code
-            response_result = Attr.parse_json_ignore(response.get_data(as_text=True))
+            response_result = None
+            try:
+                response_result = Attr.parse_json_ignore(response.get_data(as_text=True))
+            except RuntimeError as e:
+                # err = Error.handle_exception_info(e)
+                # logger.info(data={"response": {"status_code": status_code, "response_result": err}}, msg="EXP")
+                pass
             logger.info(data={"response": {"status_code": status_code, "response_result": response_result}}, msg="END")
             return response
 
     @staticmethod
     def get_http_params():
-        return request.args.to_dict()
+        return Http.get_flask_params()
 
     def run_app(self):
         self.app.run(host=self.config.get("SERVER_HOST"), port=self.config.get("SERVER_PORT"),
