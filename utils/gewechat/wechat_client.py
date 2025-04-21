@@ -13,7 +13,12 @@ class WechatClient:
     def set_gewechat_callback(config=None):
         """设置回调地址 - 消息订阅的关键"""
         logger.debug("回调地址设置 - 请确保 Flask 处于运行中")
+        logger.info("ERR - 回调地址设置 - 请确保 Flask 处于运行中")
+        logger.warning("ERR - 回调地址设置 - 请确保 Flask 处于运行中")
+        logger.error("ERR - 回调地址设置 - 请确保 Flask 处于运行中")
+        logger.exception("ERR - 回调地址设置 - 请确保 Flask 处于运行中")
         config = config if config else Config.gewechat_config()
+        return config
         callback_url = Http.get_docker_inner_url(config['gewechat_callback_url'])
         try:
             client = WechatClient.get_gewechat_client(config)

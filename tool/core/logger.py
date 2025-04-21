@@ -3,7 +3,10 @@ import logging
 import re
 import sys
 import json
+import time
 from flask import request
+from queue import Queue, Empty
+from threading import Lock
 from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
 from tool.core.dir import Dir
@@ -11,12 +14,39 @@ from tool.core.config import Config
 from tool.core.str import Str
 from tool.core.attr import Attr
 from tool.core.http import Http
-from tool.core.time import Time
+
+# 全局日志队列和锁
+log_queue = Queue()
+log_lock = Lock()
+log_listener_active = 1
+
+# 限制日志队列大小（避免内存溢出）
+MAX_LOG_QUEUE_SIZE = 1000
 
 
 class Logger:
+
     _instance = None  # 单例模式，避免重复实例化
     _loggers = {}  # 用于缓存不同 log_name 的日志记录器
+
+    # 定义不同日志级别的颜色代码
+    # 低亮 31m - red | 32m - green | 33m - yellow | 34 blue | 36m cyan
+    # 高亮 91m - red | 92m - green | 93m - yellow | 94 blue | 96m cyan
+    COLORS_LOWER = {
+        'DEBUG': '\033[32m',
+        'INFO': '\033[36m',
+        'WARNING': '\033[33m',
+        'ERROR': '\033[31m',
+        'CRITICAL': '\033[41m'
+    }
+    COLORS_LIGHT = {
+        'DEBUG': '\033[92m',
+        'INFO': '\033[96m',
+        'WARNING': '\033[93m',
+        'ERROR': '\033[91m',
+        'CRITICAL': '\033[41m'
+    }
+    RESET = '\033[0m'
 
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
@@ -28,8 +58,12 @@ class Logger:
         self.logger_dir = Dir.root_dir()
         self.config = Config.logger_config()
         self.log_level = self.config.get('log_level', 'DEBUG')
-        self.recode_debug = int(self.config.get('log_recode_debug', '0'))
+        self.display_json = int(self.config.get('log_display_json', '0'))
+        self.display_light = int(self.config.get('log_display_light', '0'))
+        self.display_colors = self.COLORS_LIGHT if self.display_light else self.COLORS_LOWER
         self.uuid = Str.uuid()
+        self.log_queue = log_queue
+        self.log_lock = log_lock
 
     def setup_logger(self, log_type, log_name):
         logger_key = f"{log_type}_{log_name}"
@@ -39,6 +73,7 @@ class Logger:
         logger = logging.getLogger(f'{__name__}.{log_type}.{log_name}')
         log_level = self.config.get('log_level', 'DEBUG')
         logger.setLevel(getattr(logging, log_level))
+        display_colors = self.display_colors
 
         today = datetime.now().strftime('%Y%m%d')
         log_dir = os.path.join(self.logger_dir, self.config.get('log_path', 'storage/logs'), today)
@@ -48,10 +83,22 @@ class Logger:
         log_file = os.path.join(log_dir, f'{log_name}_{log_type}_{today}.log')
 
         file_handler = TimedRotatingFileHandler(log_file, when='midnight', backupCount=7, encoding='utf-8')
-        file_handler.setLevel(getattr(logging, log_level))
+        file_handler.setLevel(log_level)
 
         console_handler = logging.StreamHandler()
-        console_handler.setLevel(getattr(logging, log_level))
+        console_handler.setLevel(log_level)
+
+        class LogQueueHandler(logging.Handler):
+            def emit(self, record):
+                log_entry = self.format(record)
+                with log_lock:
+                    # 及时丢弃旧日志
+                    if log_queue.qsize() > MAX_LOG_QUEUE_SIZE:
+                        log_queue.get()
+                    log_queue.put(log_entry)  # 将日志消息放入队列
+
+        queue_handler = LogQueueHandler()
+        queue_handler.setLevel(log_level)
 
         class JsonFormatter(logging.Formatter):
             @staticmethod
@@ -103,13 +150,33 @@ class Logger:
                     })
                 return json.dumps(log_record, ensure_ascii=False)
 
+        class ColoredFormatter(logging.Formatter):
+            def format(self, record):
+                log_record = {
+                    'timestamp': self.formatTime(record, '%Y-%m-%d %H:%M:%S'),
+                    'level': record.levelname,
+                    'uuid': getattr(record, 'uuid', None),
+                    'msg': getattr(record, 'msg', ''),
+                    'data': getattr(record, 'data', None)
+                }
+                level_name = log_record['level']
+                log_str = (f"[{log_record['timestamp']}] - {log_record['uuid'][-6:]} - {level_name} - "
+                           f"{log_type} {log_record['msg']} - {log_record['data']}")[:511]
+
+                if level_name in display_colors:
+                    log_str = display_colors[level_name] + log_str + Logger.RESET
+                return log_str
+
         formatter = JsonFormatter()
+        console_formatter = formatter if self.display_json else ColoredFormatter()
         file_handler.setFormatter(formatter)
-        console_handler.setFormatter(formatter)
+        console_handler.setFormatter(console_formatter)
+        queue_handler.setFormatter(console_formatter)
 
         if not logger.handlers:
             logger.addHandler(file_handler)
             logger.addHandler(console_handler)
+            logger.addHandler(queue_handler)
 
         self._loggers[logger_key] = logger
         return logger
@@ -153,9 +220,10 @@ class Logger:
             }
         return extra
 
+    def get_log_queue(self):
+        return self.log_lock, self.log_queue
+
     def write(self, data=None, msg="", log_name="app", log_level='info'):
-        if not self.recode_debug and log_level.upper() in ['DEBUG', 'INFO']:
-            return self.color_print(data, msg, log_level)
         extra = self.get_extra_data(data)
         log_type = 'http' if Http.is_http_request() else 'command'
         logger_handle = self.setup_logger(log_type, log_name)
@@ -175,17 +243,6 @@ class Logger:
         self.write(data, msg, log_name, 'error')
 
     def exception(self, data=None, msg="NULL", log_name="app"):
-        self.write(data, msg, log_name, 'exception')
+        self.write(data, msg, log_name, 'critical')
 
-    def color_print(self, data, msg="NULL", log_level="debug"):
-        log_level = log_level.upper()
-        color = '31m'  # 31m - red | 32m - green | 33m - yellow | 34 blue | 36m cyan
-        if log_level == "DEBUG":
-            color = '32m'
-        if log_level == "WARNING":
-            color = '33m'
-        if log_level == "INFO":
-            color = '36m'
-        text = f"[{Time.date()}] - {log_level} - {msg} - {data}"[:383]
-        print(f"\033[{color}{text}\033[0m")
-        return True
+

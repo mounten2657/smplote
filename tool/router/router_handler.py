@@ -1,4 +1,6 @@
-from flask import Flask, request, send_from_directory, Response
+import logging
+from flask import Flask, request, send_from_directory
+from flask import Response
 from .parse_handler import ParseHandler
 from tool.core.logger import Logger
 from tool.core.attr import Attr
@@ -18,11 +20,18 @@ class RouterHandler:
         'bot/wx_callback/collect',
         'src/preview/image',
         'src/preview/office',
+        'src/terminal/output',
+    ]
+
+    # 日志忽略列表，屏蔽高频率且无用的接口
+    IGNORE_LOG_LIST = [
+        'src/terminal/output',
     ]
 
     def __init__(self):
-        self.app = Flask(__name__)
+        self.app = Flask(__name__, template_folder=Dir.abs_dir('data/static/html'))
         self.config = Config.app_config()
+        self.close_filter_log()
         self.setup_routes()
 
     def setup_routes(self):
@@ -31,7 +40,8 @@ class RouterHandler:
         def before_request():
             request_url = request.url
             request_params = dict(request.args)
-            logger.info(data={"request":{"url": request_url, "request_params": request_params}}, msg="START")
+            if not any(route in request_url for route in self.IGNORE_LOG_LIST):
+                logger.info(data={"request":{"url": request_url, "request_params": request_params}}, msg="START")
 
         # 定义首页默认路由
         @self.app.route('/', defaults={'path': ''})
@@ -72,19 +82,35 @@ class RouterHandler:
             # response.direct_passthrough = False
             status_code = response.status_code
             response_result = None
+            request_url = request.url
             try:
                 response_result = Attr.parse_json_ignore(response.get_data(as_text=True))
             except RuntimeError as e:
                 # err = Error.handle_exception_info(e)
                 # logger.info(data={"response": {"status_code": status_code, "response_result": err}}, msg="EXP")
                 pass
-            logger.info(data={"response": {"status_code": status_code, "response_result": response_result}}, msg="END")
+            if not any(route in request_url for route in self.IGNORE_LOG_LIST):
+                logger.info(data={"response": {"status_code": status_code, "response_result": response_result}}, msg="END")
             return response
 
     @staticmethod
     def get_http_params():
         return Http.get_flask_params()
 
+    def close_filter_log(self):
+        # 关闭 Werkzeug 默认的访问日志
+        werkzeug_log = logging.getLogger('werkzeug')
+        werkzeug_log.setLevel(logging.ERROR)
+        ignore_list = self.IGNORE_LOG_LIST
+
+        # 只对特定的路由进行日志屏蔽
+        class SSELogFilter(logging.Filter):
+            def filter(self, record):
+                return not any(route in record.getMessage() for route in ignore_list)
+
+        werkzeug_log.addFilter(SSELogFilter())
+        return True
+
     def run_app(self):
         self.app.run(host=self.config.get("SERVER_HOST"), port=self.config.get("SERVER_PORT"),
-                     debug=self.config.get("DEBUG"))
+                     debug=self.config.get("DEBUG"), threaded=True)

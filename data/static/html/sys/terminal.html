@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WTS实时日志</title>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --font-family: 'Courier New', monospace;
+            --prompt-color: #4e9a06;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            line-height: 1.4;
+        }
+
+        #terminal {
+            margin: 20px;
+            padding: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 14px;
+            overflow-y: auto;
+            height: 94vh;
+            box-sizing: border-box;
+            /*background-color: rgba(102, 146, 191, 0.44);*/
+            border: solid 1px rgba(102, 146, 191, 0.68);
+            border-radius: 10px;
+            -moz-box-shadow:2px 2px 5px #333333;
+            -webkit-box-shadow:2px 2px 5px #333333;
+            box-shadow: 7px 15px 30px #285a63;
+        }
+
+        #terminal div {
+            margin-bottom: 7px;
+        }
+
+        /* 终端提示符样式 */
+        .prompt {
+            color: var(--prompt-color);
+            user-select: none;
+        }
+
+        /* ANSI 颜色代码样式 */
+        .ansi-bold { font-weight: bold; }
+        .ansi-dim { opacity: 0.7; }
+        .ansi-italic { font-style: italic; }
+        .ansi-underline { text-decoration: underline; }
+
+        /* 前景色 */
+        .ansi-fg-black { color: #2e3436; }
+        .ansi-fg-red { color: #cc0000; }
+        .ansi-fg-green { color: #4e9a06; }
+        .ansi-fg-yellow { color: #c4a000; }
+        .ansi-fg-blue { color: #3465a4; }
+        .ansi-fg-magenta { color: #75507b; }
+        .ansi-fg-cyan { color: #06989a; }
+        .ansi-fg-white { color: #d3d7cf; }
+        .ansi-fg-bright-black { color: #555753; }
+        .ansi-fg-bright-red { color: #ef2929; }
+        .ansi-fg-bright-green { color: #8ae234; }
+        .ansi-fg-bright-yellow { color: #fce94f; }
+        .ansi-fg-bright-blue { color: #729fcf; }
+        .ansi-fg-bright-magenta { color: #ad7fa8; }
+        .ansi-fg-bright-cyan { color: #34e2e2; }
+        .ansi-fg-bright-white { color: #eeeeec; }
+
+        /* 背景色 */
+        .ansi-bg-black { background-color: #2e3436; }
+        .ansi-bg-red { background-color: #cc0000; }
+        .ansi-bg-green { background-color: #4e9a06; }
+        .ansi-bg-yellow { background-color: #c4a000; }
+        .ansi-bg-blue { background-color: #3465a4; }
+        .ansi-bg-magenta { background-color: #75507b; }
+        .ansi-bg-cyan { background-color: #06989a; }
+        .ansi-bg-white { background-color: #d3d7cf; }
+        .ansi-bg-bright-black { background-color: #555753; }
+        .ansi-bg-bright-red { background-color: #ef2929; }
+        .ansi-bg-bright-green { background-color: #8ae234; }
+        .ansi-bg-bright-yellow { background-color: #fce94f; }
+        .ansi-bg-bright-blue { background-color: #729fcf; }
+        .ansi-bg-bright-magenta { background-color: #ad7fa8; }
+        .ansi-bg-bright-cyan { background-color: #34e2e2; }
+        .ansi-bg-bright-white { background-color: #eeeeec; }
+    </style>
+</head>
+<body>
+    <div id="terminal"></div>
+
+    <script>
+
+        // 清理ANSI代码并添加终端前缀
+        function formatTerminalLine(text) {
+            // 移除所有ANSI重置代码
+            text = text.replace(/\033\[0m/g, '');
+
+            // 解析其他ANSI颜色代码
+            const ansiRegex = /\033\[([0-9;]+)m/g;
+            let lastIndex = 0;
+            let result = '';
+            let match;
+
+            while ((match = ansiRegex.exec(text)) !== null) {
+                result += text.substring(lastIndex, match.index);
+                lastIndex = ansiRegex.lastIndex;
+
+                const codes = match[1].split(';');
+                let classes = [];
+
+                for (const code of codes) {
+                    const num = parseInt(code, 10);
+                    if (isNaN(num)) continue;
+
+                    switch (num) {
+                        case 1: classes.push('ansi-bold'); break;
+                        case 2: classes.push('ansi-dim'); break;
+                        case 3: classes.push('ansi-italic'); break;
+                        case 4: classes.push('ansi-underline'); break;
+                        case 30: classes.push('ansi-fg-black'); break;
+                        case 31: classes.push('ansi-fg-red'); break;
+                        case 32: classes.push('ansi-fg-green'); break;
+                        case 33: classes.push('ansi-fg-yellow'); break;
+                        case 34: classes.push('ansi-fg-blue'); break;
+                        case 35: classes.push('ansi-fg-magenta'); break;
+                        case 36: classes.push('ansi-fg-cyan'); break;
+                        case 37: classes.push('ansi-fg-white'); break;
+                        case 90: classes.push('ansi-fg-bright-black'); break;
+                        case 91: classes.push('ansi-fg-bright-red'); break;
+                        case 92: classes.push('ansi-fg-bright-green'); break;
+                        case 93: classes.push('ansi-fg-bright-yellow'); break;
+                        case 94: classes.push('ansi-fg-bright-blue'); break;
+                        case 95: classes.push('ansi-fg-bright-magenta'); break;
+                        case 96: classes.push('ansi-fg-bright-cyan'); break;
+                        case 97: classes.push('ansi-fg-bright-white'); break;
+                        case 40: classes.push('ansi-bg-black'); break;
+                        case 41: classes.push('ansi-bg-red'); break;
+                        case 42: classes.push('ansi-bg-green'); break;
+                        case 43: classes.push('ansi-bg-yellow'); break;
+                        case 44: classes.push('ansi-bg-blue'); break;
+                        case 45: classes.push('ansi-bg-magenta'); break;
+                        case 46: classes.push('ansi-bg-cyan'); break;
+                        case 47: classes.push('ansi-bg-white'); break;
+                    }
+                }
+
+                if (classes.length > 0) {
+                    result += `<span class="${classes.join(' ')}">`;
+                    const endTagIndex = text.indexOf('\033[', lastIndex);
+                    if (endTagIndex !== -1) {
+                        result += text.substring(lastIndex, endTagIndex);
+                        lastIndex = endTagIndex;
+                        result += '</span>';
+                    }
+                }
+            }
+
+            result += text.substring(lastIndex);
+
+            // 添加终端前缀
+            return `<div><span class="prompt">(base)/root/wts&gt; </span>${result}</div>`;
+        }
+
+        const terminal = document.getElementById('terminal');
+        const es = new EventSource('/src/terminal/output?key=be9cb80c603519a7fdadc124e33954e0');
+
+        es.onmessage = (e) => {
+            if(e.data.startsWith(':')) return;
+            const formattedLine = formatTerminalLine(e.data);
+            terminal.innerHTML += formattedLine;
+            terminal.scrollTop = terminal.scrollHeight;
+        };
+
+    </script>
+</body>
+</html>
