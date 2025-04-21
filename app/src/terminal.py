@@ -20,7 +20,7 @@ class Terminal(BaseApp):
 
         def generate():
             yield "retry: 300\n\n"
-            for i in range(5):
+            for i in range(10):
                 if not log_queue.empty():
                     yield f"data: {log_queue.get()}\n\n"
                 else:
