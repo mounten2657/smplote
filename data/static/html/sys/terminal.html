@@ -189,6 +189,8 @@
 
     <script>
 
+        const terminal = document.getElementById('terminal');
+
         // 清理ANSI代码并添加终端前缀
         function formatTerminalLine(text) {
             // 移除所有ANSI重置代码
@@ -275,7 +277,6 @@
 
         // 封装逐行逐字显示方法
         async function typeLineWithCursor(lineElement, formattedHtml) {
-              // 在开始处创建光标（原先在循环内创建会被覆盖）
             const cursorDom = document.createElement('span');
             cursorDom.className = 'terminal-cursor';
             lineElement.appendChild(cursorDom); // 先添加到DOM
@@ -306,31 +307,41 @@
             lineElement.innerHTML = '';
             lineElement.appendChild(cursor);
 
-            for (let pos = 0; pos <= totalLength; pos++) {
-                // 构建当前状态
+            // 每次增加10个字符
+            const BATCH_SIZE = 10;
+            let pos = 0;
+
+            while (pos <= totalLength) {
+            //for (let pos = 0; pos <= totalLength; pos += 10) {
+            //for (let pos = 0; pos < totalLength + 10; pos = Math.min(pos + 10, totalLength)) {
                 const fragment = document.createDocumentFragment();
                 let accumulatedPos = 0;
 
                 textNodes.forEach((node, i) => {
                     const nodeStart = nodePositions[i];
-                    // const nodeEnd = nodeStart + node.textContent.length;
-                    const visibleLength = Math.max(0, Math.min(pos - nodeStart, node.textContent.length));
+                    const endPos = Math.min(pos + BATCH_SIZE, totalLength);
+                    const visibleLength = Math.max(0, Math.min(endPos - nodeStart, node.textContent.length));
 
                     if (visibleLength > 0) {
                         const clone = node.parentNode.cloneNode(false);
                         clone.textContent = node.textContent.substring(0, visibleLength);
                         fragment.appendChild(clone);
                     }
-
                     accumulatedPos += node.textContent.length;
-                    cursorDom.style.visibility = pos === totalLength ? 'visible' : 'hidden';
                 });
 
-                // 更新显示
                 lineElement.replaceChildren(fragment, cursor);
+                cursorDom.style.visibility = pos >= totalLength ? 'visible' : 'hidden';
+                // cursor.style.display = pos === totalLength ? 'inline' : 'none';
 
                 // 光标控制
-                cursor.style.display = pos === totalLength ? 'inline' : 'none';
+                if (autoScroll) {
+                    terminal.scrollTop = terminal.scrollHeight;
+                    void terminal.offsetHeight;
+                }
+
+                // 保持适当间隔 1ms/10 字
+                pos += BATCH_SIZE;
                 await new Promise(r => setTimeout(r, 1));
             }
         }
@@ -353,7 +364,6 @@
             await processQueue();
         }
 
-        const terminal = document.getElementById('terminal');
         const toggleScrollBtn = document.getElementById('toggleScroll');
         const toggleUpdateBtn = document.getElementById('toggleUpdate');
 
@@ -363,12 +373,12 @@
         let es = null;
         const MAX_LINES = 1000;  // 最大保留行数
         let lineCount = 0;
+        const DISPLAY_TYPE = 1;                                   // 显示方式：1 - 逐字显示 | 0 整块显示
 
         // 心跳检测
         let lastHeartbeat = Date.now();
         const HEARTBEAT_TIMEOUT = 300000;          // 5分钟无心跳就断开
         const HEARTBEAT_CHECK_TIME = 60000;     // 每分钟检查一次心跳
-        const DISPLAY_TYPE = 1;                                  // 显示方式：1 - 逐字显示 | 0 整块显示
 
         const checkHeartbeat = setInterval(() => {
             if (Date.now() - lastHeartbeat > HEARTBEAT_TIMEOUT) {

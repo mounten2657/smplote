@@ -121,7 +121,9 @@ class RouterHandler:
 
     def run_app(self):
         if self.config.get('APP_OPEN_URL'):
-            url = f'http://{self.config.get("SERVER_HOST")}:{self.config.get("SERVER_PORT")}/{self.config.get("APP_OPEN_URL")}'
+            host_name = self.config.get("SERVER_HOST")
+            host_name = 'localhost' if host_name == '0.0.0.0' else host_name
+            url = f'http://{host_name}:{self.config.get("SERVER_PORT")}/{self.config.get("APP_OPEN_URL")}'
             threading.Timer(1, lambda: self.open_browser(url)).start()
         self.app.run(host=self.config.get("SERVER_HOST"), port=self.config.get("SERVER_PORT"),
                      debug=self.config.get("DEBUG"), threaded=True)

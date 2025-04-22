@@ -31,7 +31,7 @@ class Terminal(BaseApp):
                 else:
                     break
             yield ":heartbeat\n\n"
-            time.sleep(0.2)
+            time.sleep(0.1)
 
         return Response(
             stream_with_context(generate()),
