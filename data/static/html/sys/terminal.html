@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WTS实时日志</title>
+    <title>WTS日志</title>
     <style>
         :root {
             --bg-color: #1e1e1e;
@@ -180,8 +180,9 @@
 <body>
 
     <div class="terminal-controls">
-      <button id="toggleScroll">⏸ 停止滚动</button>
-      <button id="toggleUpdate">⏸ 停止更新</button>
+        <button id="toggleRefresh" onclick="location.reload()">🔄 清屏</button>
+        <button id="toggleScroll">⏸ 停止滚动</button>
+        <button id="toggleUpdate">⏸ 停止更新</button>
     </div>
 
     <div id="terminal"></div>
