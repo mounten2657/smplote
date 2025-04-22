@@ -71,6 +71,35 @@
             margin-bottom: 7px;
         }
 
+        /* 终端光标样式 */
+        .terminal-cursor {
+            display: inline !important;
+            visibility: hidden;
+            width: auto;
+            height: auto;
+            background: transparent;
+            border-left: 2px solid #00ff00;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .line {
+            contain: content; /* 防止布局重排 */
+        }
+
+        /* 确保只有最后一行显示光标 */
+        .line:last-child .terminal-cursor {
+            visibility: visible !important;
+        }
+
         /* 终端提示符样式 */
         .prompt {
             color: var(--prompt-color);
@@ -230,6 +259,90 @@
             return `<div><span class="prompt">(base)/root/wts&gt; </span>${result}</div>`;
         }
 
+        // 全局变量
+        let isTyping = false;
+        const messageQueue = [];
+
+        // 封装逐行逐字显示方法
+        async function typeLineWithCursor(lineElement, formattedHtml) {
+              // 在开始处创建光标（原先在循环内创建会被覆盖）
+            const cursorDom = document.createElement('span');
+            cursorDom.className = 'terminal-cursor';
+            lineElement.appendChild(cursorDom); // 先添加到DOM
+            // 1. 创建静态副本避免重绘
+            const staticLine = lineElement.cloneNode();
+            staticLine.innerHTML = formattedHtml;
+
+            // 2. 获取文本节点和位置映射
+            const textNodes = [];
+            const nodePositions = [];
+            let totalLength = 0;
+
+            function scanNodes(node) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    textNodes.push(node);
+                    nodePositions.push(totalLength);
+                    totalLength += node.textContent.length;
+                } else if (node.childNodes) {
+                    Array.from(node.childNodes).forEach(scanNodes);
+                }
+            }
+
+            scanNodes(staticLine);
+
+            // 3. 逐字渲染（不再整体替换HTML）
+            const cursor = document.createElement('span');
+            cursor.className = 'terminal-cursor';
+            lineElement.innerHTML = '';
+            lineElement.appendChild(cursor);
+
+            for (let pos = 0; pos <= totalLength; pos++) {
+                // 构建当前状态
+                const fragment = document.createDocumentFragment();
+                let accumulatedPos = 0;
+
+                textNodes.forEach((node, i) => {
+                    const nodeStart = nodePositions[i];
+                    // const nodeEnd = nodeStart + node.textContent.length;
+                    const visibleLength = Math.max(0, Math.min(pos - nodeStart, node.textContent.length));
+
+                    if (visibleLength > 0) {
+                        const clone = node.parentNode.cloneNode(false);
+                        clone.textContent = node.textContent.substring(0, visibleLength);
+                        fragment.appendChild(clone);
+                    }
+
+                    accumulatedPos += node.textContent.length;
+                    cursorDom.style.visibility = pos === totalLength ? 'visible' : 'hidden';
+                });
+
+                // 更新显示
+                lineElement.replaceChildren(fragment, cursor);
+
+                // 光标控制
+                cursor.style.display = pos === totalLength ? 'inline' : 'none';
+                await new Promise(r => setTimeout(r, 1));
+            }
+        }
+
+        // 消息队列处理器
+        async function processQueue() {
+            if (isTyping || messageQueue.length === 0) return;
+
+            isTyping = true;
+            const {lineElement, formattedHtml} = messageQueue.shift();
+
+            // 移除前一行光标
+            const prevCursor = terminal.querySelector('.terminal-cursor');
+            if (prevCursor) prevCursor.remove();
+
+            await typeLineWithCursor(lineElement, formattedHtml);
+            isTyping = false;
+
+            // 继续处理下一行
+            await processQueue();
+        }
+
         const terminal = document.getElementById('terminal');
         const toggleScrollBtn = document.getElementById('toggleScroll');
         const toggleUpdateBtn = document.getElementById('toggleUpdate');
@@ -243,18 +356,20 @@
 
         // 心跳检测
         let lastHeartbeat = Date.now();
-        const HEARTBEAT_TIMEOUT = 120000; // 2分钟无心跳断开
+        const HEARTBEAT_TIMEOUT = 300000;          // 5分钟无心跳就断开
+        const HEARTBEAT_CHECK_TIME = 60000;     // 每分钟检查一次心跳
+        const DISPLAY_TYPE = 1;                                  // 显示方式：1 - 逐字显示 | 0 整块显示
 
         const checkHeartbeat = setInterval(() => {
             if (Date.now() - lastHeartbeat > HEARTBEAT_TIMEOUT) {
                 es.close();
-                pauseUpdates = false;
+                toggleUpdate()
                 // terminal.innerHTML += '<div class="error">连接超时已断开</div>';
                 terminal.innerHTML += `<div><span class="prompt">(base)/root/wts&gt; </span>` +
                     `<span class="ansi-fg-red">连接超时已断开</span></div>`;
                 clearInterval(checkHeartbeat);
             }
-        }, 60000); // 每分钟检查一次
+        }, HEARTBEAT_CHECK_TIME);
 
         // 初始化SSE连接
         function connectSSE() {
@@ -276,16 +391,26 @@
                     }
                 }
 
-                const line = document.createElement('div');
-                line.className = 'line';
-                line.innerHTML = formatTerminalLine(e.data);
-                terminal.appendChild(line);
+                if (DISPLAY_TYPE === 1) {
+                    // 逐字显示 - 加入队列 - 触发处理
+                    const line = document.createElement('div');
+                    line.className = 'line';
+                    terminal.appendChild(line);
+                    messageQueue.push({
+                        lineElement: line,
+                        formattedHtml: formatTerminalLine(e.data)
+                    });
+                    processQueue();
+                } else {
+                    // 整块显示
+                    const line = document.createElement('div');
+                    line.className = 'line';
+                    line.innerHTML = formatTerminalLine(e.data);
+                    terminal.appendChild(line);
+                }
 
                 lineCount++;
-
-                if(autoScroll) {
-                    terminal.scrollTop = terminal.scrollHeight;
-                }
+                if(autoScroll) terminal.scrollTop = terminal.scrollHeight;
             };
 
             es.onerror = () => {
@@ -305,16 +430,18 @@
         });
 
         // 更新控制按钮
-        toggleUpdateBtn.addEventListener('click', () => {
+        toggleUpdateBtn.addEventListener('click', () => {toggleUpdate()});
+
+        function toggleUpdate() {
             pauseUpdates = !pauseUpdates;
             toggleUpdateBtn.textContent = pauseUpdates ? "▶ 恢复更新" : "⏸ 停止更新";
 
-            if(!pauseUpdates && (!es || es.readyState === EventSource.CLOSED)) {
+            if (!pauseUpdates && (!es || es.readyState === EventSource.CLOSED)) {
                 connectSSE();
-            } else if(pauseUpdates && es) {
+            } else if (pauseUpdates && es) {
                 es.close();
             }
-        });
+        }
 
     </script>
 </body>
