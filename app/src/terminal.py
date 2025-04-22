@@ -1,6 +1,7 @@
+import time
+from datetime import datetime
 from tool.router.base_app import BaseApp
 from flask import render_template, stream_with_context, Response
-import time
 from tool.core import *
 
 
@@ -19,13 +20,17 @@ class Terminal(BaseApp):
         log_lock, log_queue = logger.get_log_queue()
 
         def generate():
+            last_active = datetime.now()
             yield "retry: 300\n\n"
             for i in range(10):
+                # 5分钟无客户端活动自动断开
+                if (datetime.now() - last_active).total_seconds() > 300:
+                    yield "event: timeout\ndata: 连接超时\n\n"
                 if not log_queue.empty():
                     yield f"data: {log_queue.get()}\n\n"
                 else:
-                    yield ":heartbeat\n\n"
                     break
+            yield ":heartbeat\n\n"
             time.sleep(0.2)
 
         return Response(

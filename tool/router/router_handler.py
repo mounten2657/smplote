@@ -1,4 +1,7 @@
+import os
 import logging
+import threading
+import webbrowser
 from flask import Flask, request, send_from_directory
 from flask import Response
 from .parse_handler import ParseHandler
@@ -111,6 +114,14 @@ class RouterHandler:
         werkzeug_log.addFilter(SSELogFilter())
         return True
 
+    @staticmethod
+    def open_browser(url):
+        if not os.environ.get("WERKZEUG_RUN_MAIN"):
+            webbrowser.open_new(url)
+
     def run_app(self):
+        if self.config.get('APP_OPEN_URL'):
+            url = f'http://{self.config.get("SERVER_HOST")}:{self.config.get("SERVER_PORT")}/{self.config.get("APP_OPEN_URL")}'
+            threading.Timer(1, lambda: self.open_browser(url)).start()
         self.app.run(host=self.config.get("SERVER_HOST"), port=self.config.get("SERVER_PORT"),
                      debug=self.config.get("DEBUG"), threaded=True)

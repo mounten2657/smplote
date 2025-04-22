@@ -101,6 +101,34 @@
         .ansi-fg-bright-cyan { color: #34e2e2; }
         .ansi-fg-bright-white { color: #eeeeec; }
 
+        .ansi-fg-black { color: #444c4e; }
+        .ansi-fg-red { color: #ff3333; }
+        .ansi-fg-green { color: #66b300; }
+        .ansi-fg-yellow { color: #e6c200; }
+        .ansi-fg-blue { color: #4d85e4; }
+        .ansi-fg-magenta { color: #95699c; }
+        .ansi-fg-cyan { color: #29b7b9; }
+        .ansi-fg-white { color: #e8e8e4; }
+
+        .ansi-fg-black { color: #555753; }
+        .ansi-fg-red { color: #ef2929; }
+        .ansi-fg-green { color: #8ae234; }
+        .ansi-fg-yellow { color: #fce94f; }
+        .ansi-fg-blue { color: #729fcf; }
+        .ansi-fg-magenta { color: #ad7fa8; }
+        .ansi-fg-cyan { color: #34e2e2; }
+        .ansi-fg-white { color: #eeeeec; }
+
+        .ansi-fg-bright-black { color: #777a73; }
+        .ansi-fg-bright-red { color: #ff5555; }
+        .ansi-fg-bright-green { color: #aaff55; }
+        .ansi-fg-bright-yellow { color: #ffff77; }
+        .ansi-fg-bright-blue { color: #98bcf2; }
+        .ansi-fg-bright-magenta { color: #c296bd; }
+        .ansi-fg-bright-cyan { color: #56ffff; }
+        .ansi-fg-bright-white { color: #ffffff; }
+
+
         /* 背景色 */
         .ansi-bg-black { background-color: #2e3436; }
         .ansi-bg-red { background-color: #cc0000; }
@@ -210,6 +238,23 @@
         let autoScroll = true;
         let pauseUpdates = false;
         let es = null;
+        const MAX_LINES = 1000;  // 最大保留行数
+        let lineCount = 0;
+
+        // 心跳检测
+        let lastHeartbeat = Date.now();
+        const HEARTBEAT_TIMEOUT = 120000; // 2分钟无心跳断开
+
+        const checkHeartbeat = setInterval(() => {
+            if (Date.now() - lastHeartbeat > HEARTBEAT_TIMEOUT) {
+                es.close();
+                pauseUpdates = false;
+                // terminal.innerHTML += '<div class="error">连接超时已断开</div>';
+                terminal.innerHTML += `<div><span class="prompt">(base)/root/wts&gt; </span>` +
+                    `<span class="ansi-fg-red">连接超时已断开</span></div>`;
+                clearInterval(checkHeartbeat);
+            }
+        }, 60000); // 每分钟检查一次
 
         // 初始化SSE连接
         function connectSSE() {
@@ -217,10 +262,26 @@
 
             es.onmessage = (e) => {
                 if(pauseUpdates) return;
-                if(e.data.startsWith(':')) return;
+                if (e.data.startsWith(':')) {
+                    lastHeartbeat = Date.now(); // 更新心跳时间
+                    return;
+                }
 
-                const formattedLine = formatTerminalLine(e.data);
-                terminal.innerHTML += formattedLine;
+                // 内存控制：删除早期行
+                if (lineCount >= MAX_LINES) {
+                    const lines = terminal.querySelectorAll('.line');
+                    if (lines.length > MAX_LINES * 0.8) { // 保留80%
+                        terminal.removeChild(lines[0]);
+                        lineCount--;
+                    }
+                }
+
+                const line = document.createElement('div');
+                line.className = 'line';
+                line.innerHTML = formatTerminalLine(e.data);
+                terminal.appendChild(line);
+
+                lineCount++;
 
                 if(autoScroll) {
                     terminal.scrollTop = terminal.scrollHeight;
