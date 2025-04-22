@@ -21,6 +21,35 @@
             line-height: 1.4;
         }
 
+        .terminal-controls {
+            position: fixed;
+            top: -1px;
+            right: 15px;
+            padding: 5px;
+            z-index: 100;
+        }
+
+        .terminal-controls button{
+            background-color: #285a63;
+            border: none;
+            border-radius: 12px;
+            color:white;
+            padding: 5px 14px 6px 14px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 11px;
+            margin: 4px 2px;
+            cursor: pointer;
+            transition-duration: 0.4s;
+            -webkit-transition-duration: 0.4s;
+        }
+
+        .terminal-controls button:hover{
+            box-shadow: 0 12px 16px 0 rgba(0,0,0,.24),
+            0 17px 50px 0 rgba(0,0,0,.19);
+        }
+
         #terminal {
             margin: 20px;
             padding: 14px;
@@ -92,6 +121,12 @@
     </style>
 </head>
 <body>
+
+    <div class="terminal-controls">
+      <button id="toggleScroll">⏸ 停止滚动</button>
+      <button id="toggleUpdate">⏸ 停止更新</button>
+    </div>
+
     <div id="terminal"></div>
 
     <script>
@@ -168,14 +203,57 @@
         }
 
         const terminal = document.getElementById('terminal');
-        const es = new EventSource('/src/terminal/output?key=be9cb80c603519a7fdadc124e33954e0');
+        const toggleScrollBtn = document.getElementById('toggleScroll');
+        const toggleUpdateBtn = document.getElementById('toggleUpdate');
 
-        es.onmessage = (e) => {
-            if(e.data.startsWith(':')) return;
-            const formattedLine = formatTerminalLine(e.data);
-            terminal.innerHTML += formattedLine;
-            terminal.scrollTop = terminal.scrollHeight;
-        };
+        // 状态控制变量
+        let autoScroll = true;
+        let pauseUpdates = false;
+        let es = null;
+
+        // 初始化SSE连接
+        function connectSSE() {
+            es = new EventSource('/src/terminal/output?key=be9cb80c603519a7fdadc124e33954e0');
+
+            es.onmessage = (e) => {
+                if(pauseUpdates) return;
+                if(e.data.startsWith(':')) return;
+
+                const formattedLine = formatTerminalLine(e.data);
+                terminal.innerHTML += formattedLine;
+
+                if(autoScroll) {
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
+            };
+
+            es.onerror = () => {
+                es.close();
+                if(!pauseUpdates) setTimeout(connectSSE, 3000);
+            };
+        }
+
+        // 初始连接
+        connectSSE();
+
+        // 滚动控制按钮
+        toggleScrollBtn.addEventListener('click', () => {
+              autoScroll = !autoScroll;
+              toggleScrollBtn.textContent = autoScroll ? "⏸ 停止滚动" : "▶ 恢复滚动";
+              if(autoScroll) terminal.scrollTop = terminal.scrollHeight;
+        });
+
+        // 更新控制按钮
+        toggleUpdateBtn.addEventListener('click', () => {
+            pauseUpdates = !pauseUpdates;
+            toggleUpdateBtn.textContent = pauseUpdates ? "▶ 恢复更新" : "⏸ 停止更新";
+
+            if(!pauseUpdates && (!es || es.readyState === EventSource.CLOSED)) {
+                connectSSE();
+            } else if(pauseUpdates && es) {
+                es.close();
+            }
+        });
 
     </script>
 </body>
