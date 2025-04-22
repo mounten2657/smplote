@@ -221,7 +221,7 @@ class Logger:
         return extra
 
     def get_log_queue(self):
-        return self.log_lock, self.log_queue
+        return self.log_queue
 
     def write(self, data=None, msg="", log_name="app", log_level='info'):
         extra = self.get_extra_data(data)
