@@ -256,7 +256,16 @@
             result += text.substring(lastIndex);
 
             // 添加终端前缀
-            return `<div><span class="prompt">(base)/root/wts&gt; </span>${result}</div>`;
+            return addLinksToText(`<div><span class="prompt">(base)/root/wts&gt; </span>${result}</div>`);
+        }
+
+        function addLinksToText(text) {
+            // 更宽松且能处理引号的 URL 匹配正则表达式
+            const urlRegex = /(['"]?)(https?:\/\/(?:[a-zA-Z0-9.-]+|localhost|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(?::\d+)?(?:\/[^\s]*)?)\1/g;
+
+            return text.replace(urlRegex, function (match, quote, url) {
+                return `<a href="${url}" target="_blank">${url}</a>`;
+            });
         }
 
         // 全局变量
