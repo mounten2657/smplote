@@ -1,5 +1,5 @@
 from utils.ai.client.ai_client_manager import AIClientManager
-from utils.gewechat.command.base_command import BaseCommand
+from utils.wechat.gewechat.command.base_command import BaseCommand
 from tool.core import Logger
 
 logging = Logger()

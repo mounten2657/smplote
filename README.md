@@ -1,6 +1,6 @@
-# 微信工具集
-[项目地址](https://github.com/mounten2657/wechat_tool/)
-一个基于python的个人微信小工具，如微信本地数据库解密、聊天记录导出、自动回复、总结微信群聊消息，智能问答，支持多种AI服务。
+# Smplote 工具集
+[项目地址](https://gitee.com/mounten2657/smplote/)
+一个基于python的个人小工具，如微信本地数据库解密、信息导出、聊天总结，自动回复，AI问答，消息通知，量化交易等服务。
 
 ## 功能特点
 
@@ -12,6 +12,7 @@
 - ✉️ 自动回话或通知
 - 🎨 最小化代码设计
 - 💾 API密钥安全存储
+- 📈 量化交易模型训练
 
 ## 安装说明
 
@@ -49,6 +50,7 @@ python main.py -m report.daily_report.gen_md_img                 # 基于md日�
 python main.py -m bot.index.daily_task                           # 每日任务入口（自动化完成一系列任务）
 # 完整参数示例： 
 # python main.py -m bot.index.daily_task -p "ac=a1&gr=g1&report_type=1&start_date=2025-04-08&end_date=2025-04-09"
+python main.py -m callback.gewe_callback.reset_callback          # 重设 gewe 回调地址
 ```
 
 ## 使用说明
@@ -75,12 +77,12 @@ WX_WXID_G2=
 ## 目录结构
 
 - `app`：应用入口文件夹
-- `config`：配置文件
+- `config`：配置文件夹
 - `data`：数据库文件夹
 - `service`：业务服务文件夹
 - `storage`：临时文件夹
 - `tool`：基础工具文件夹
-- `utils`：重型工具文件夹
+- `utils`：模型工具文件夹
 - `main.py`：主程序文件
 
 ## 免责声明

@@ -8,9 +8,11 @@ from.env import Env
 from.error import Error
 from.file import File
 from.http import Http
+from.ins import Ins
 from.logger import Logger
+from.que import Que
 from.str import Str
 from.time import Time
 
-__all__ = ['Api', 'Attr', 'Config', 'Dir', 'Emoji', 'Error', 'Env', 'Http', 'File', 'Logger', 'Str', 'Time']
+__all__ = ['Api', 'Attr', 'Config', 'Dir', 'Emoji', 'Error', 'Env', 'Http', 'Ins', 'File', 'Logger', 'Que', 'Str', 'Time']
 

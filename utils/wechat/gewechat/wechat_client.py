@@ -1,7 +1,7 @@
 import requests
 import json
 from typing import Optional
-from utils.gewechat.factory.gewechat_client_factory import GewechatClientFactory
+from utils.wechat.gewechat.factory.gewechat_client_factory import GewechatClientFactory
 from tool.core import *
 
 logger = Logger()

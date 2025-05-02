@@ -60,6 +60,10 @@ class Config:
         return Config.load_config('config/logger.json')
 
     @staticmethod
+    def qy_config():
+        return Config.load_config('config/qy.json')
+
+    @staticmethod
     def voice_config():
         return Config.load_config('config/voice.json')
 

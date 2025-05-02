@@ -3,9 +3,9 @@ import re
 import uuid
 import requests
 import xml.etree.ElementTree as ET
-from utils.gewechat.formater.chat_message import ChatMessage
-from utils.gewechat.bridge.context import ContextType
-from utils.gewechat.bridge.temp_dir import TmpDir
+from utils.wechat.gewechat.formatter.chat_message import ChatMessage
+from utils.wechat.gewechat.bridge.context import ContextType
+from utils.wechat.gewechat.bridge.temp_dir import TmpDir
 from tool.core import *
 
 logger = Logger()

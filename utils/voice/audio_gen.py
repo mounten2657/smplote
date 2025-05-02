@@ -2,7 +2,7 @@ import os
 import sys
 import requests
 import datetime
-from utils.gewechat.bridge.temp_dir import TmpDir
+from utils.wechat.gewechat.bridge.temp_dir import TmpDir
 from tool.core import Config
 
 # 添加项目根目录到Python路径

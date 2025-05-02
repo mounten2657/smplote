@@ -1,10 +1,10 @@
 from tool.router.base_app import BaseApp
-from utils.gewechat.wechat_callback_handler import WechatCallbackHandler
+from utils.wechat.gewechat.wechat_callback_handler import WechatCallbackHandler
 from service.wechat.reply.send_wechat_msg import SendWechatMsg
 from tool.core import *
 
 
-class WxCallback(BaseApp):
+class GeweCallback(BaseApp):
 
     def reset_callback(self):
         """重置回调地址"""

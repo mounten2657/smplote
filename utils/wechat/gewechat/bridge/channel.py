@@ -1,5 +1,5 @@
 from gewechat_client import GewechatClient
-from utils.gewechat.command.command_manager import CommandManager
+from utils.wechat.gewechat.command.command_manager import CommandManager
 from tool.core import *
 
 logger = Logger()

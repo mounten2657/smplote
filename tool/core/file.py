@@ -1,5 +1,7 @@
 import os
 import json
+import time
+from pathlib import Path
 from typing import Union, Any, Optional
 from tool.core.attr import Attr
 from tool.core.dir import Dir
@@ -89,5 +91,13 @@ class File:
         basedir = os.path.abspath(basedir)
         request_path = os.path.abspath(os.path.join(basedir, path))
         return os.path.commonpath([basedir, request_path]) == basedir
+
+    @staticmethod
+    def get_file_mtime(file_path):
+        """获取文件最近的修改时间 - 整数时间戳"""
+        file_path = Path(file_path)
+        if not file_path.exists():
+            return 0
+        return int(file_path.stat().st_mtime)
 
 

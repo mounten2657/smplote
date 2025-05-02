@@ -1,5 +1,5 @@
-from utils.gewechat.command.question_command import QuestionCommand
-from utils.gewechat.command.setting_command import SettingCommand
+from utils.wechat.gewechat.command.question_command import QuestionCommand
+from utils.wechat.gewechat.command.setting_command import SettingCommand
 from tool.core import Logger
 
 logging = Logger()

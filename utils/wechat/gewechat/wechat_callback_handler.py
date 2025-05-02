@@ -1,10 +1,10 @@
 import time
 import threading
 from service.src.preview.file_preview import FilePreview
-from utils.gewechat.bridge.channel import Channel
-from utils.gewechat.bridge.context import ContextType
-from utils.gewechat.formater.gewechat_message import GeWeChatMessage
-from utils.gewechat.wechat_client import WechatClient
+from utils.wechat.gewechat.bridge.channel import Channel
+from utils.wechat.gewechat.bridge.context import ContextType
+from utils.wechat.gewechat.formatter.gewechat_message import GeWeChatMessage
+from utils.wechat.gewechat.wechat_client import WechatClient
 from tool.core import *
 
 logger = Logger()

@@ -20,7 +20,9 @@ class RouterHandler:
 
     # 路由忽略列表，适合回调和文件预览等
     IGNORE_ROUTE_LIST = [
-        'bot/wx_callback/collect',
+        'callback/gewe_callback/collect',
+        'callback/qy_callback/collect',
+        'callback/qy_callback/init_verify',
         'src/preview/image',
         'src/preview/office',
         'src/terminal/output',

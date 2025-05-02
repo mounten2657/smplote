@@ -1,4 +1,4 @@
-from utils.gewechat.wechat_client import WechatClient
+from utils.wechat.gewechat.wechat_client import WechatClient
 from tool.core import *
 
 
