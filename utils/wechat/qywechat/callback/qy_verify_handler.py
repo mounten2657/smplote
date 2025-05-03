@@ -68,7 +68,6 @@ class  QyVerifyHandler:
         app_config = Config.qy_config()['app_list'][key]
         token = app_config.get('verify_token')
         encoding_aes_key = app_config.get('verify_aes_key')
-        logger.info(request.query_string, 'QY_VERIFY_QUERY')
         msg_signature = request.args.to_dict().get("msg_signature")
         timestamp = request.args.to_dict().get("timestamp")
         nonce = request.args.to_dict().get("nonce")
