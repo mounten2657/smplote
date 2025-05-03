@@ -1,7 +1,6 @@
 import time
 from tool.router.base_app import BaseApp
 from tool.core import *
-from service.wechat.report.export_wechat_info import ExportWechatInfo
 
 
 class Index(BaseApp):
@@ -12,7 +11,7 @@ class Index(BaseApp):
         # self.logger.info({"user_name":"test123"})
         config = Config.app_config()
         response = {
-            "__doc__": "hello wechat tool",
+            "__doc__": "Hello, Smplote tool",
             "timestamp": current_timestamp,
             "version": config.get('SYS_VERSION'),
             "params": self.params,
@@ -29,16 +28,4 @@ class Index(BaseApp):
             "logger": Config.logger_config(),
             "wx": Config.wx_config(),
         }
-        return self.success(res)
-
-    def daily_task(self):
-        """每日自动化任务入口"""
-        all_params = {
-            "wxid": self.wxid,
-            "g_wxid": self.g_wxid,
-            "g_wxid_dir": self.g_wxid_dir,
-            "db_config": self.db_config,
-            "params": self.params,
-        }
-        res = ExportWechatInfo.daily_task(all_params)
         return self.success(res)

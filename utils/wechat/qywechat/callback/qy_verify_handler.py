@@ -77,7 +77,7 @@ class  QyVerifyHandler:
         check_result = QyVerifyHandler.check_msg_signature(msg_signature, token, timestamp, nonce, echo_str)
         if check_result:
             decrypt_result = QyVerifyHandler.msg_base64_decrypt(echo_str, encoding_aes_key)
-            logger.info(check_result, 'QY_VERIFY_SUCCESS')
+            logger.info(decrypt_result, 'QY_VERIFY_SUCCESS')
             return decrypt_result
         else:
             logger.error(check_result, 'QY_VERIFY_FAILED')

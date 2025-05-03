@@ -1,6 +1,6 @@
 import xmltodict
 from flask.globals import request
-from qy_verify_handler import QyVerifyHandler
+from utils.wechat.qywechat.callback.qy_verify_handler import QyVerifyHandler
 from tool.core import *
 
 logger = Logger()

@@ -35,8 +35,10 @@ class BaseApp:
     @classmethod
     def get_params(cls) -> Dict[str, Any]:
         if not Http.is_http_request():
-            return ParseHandler.get_command_params()
-        return RouterHandler.get_http_params()
+            params = ParseHandler.get_command_params()
+        else:
+            params =  RouterHandler.get_http_params()
+        return  {} if not params else params
 
     @property
     def logger(self):

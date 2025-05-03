@@ -7,9 +7,12 @@ logger = Logger()
 @Ins.singleton
 class QyMsgSender(QyClientFactory, Que):
 
+    ARGS_UNIQUE_KEY = True
+
     _QY_API_MSG_SEND = '/cgi-bin/message/send'
 
     def __init__(self, app_key='a1'):
+        Que.__init__(self)
         QyClientFactory.__init__(self, app_key)
 
     def send_message(self, msg, msg_type='text', app_key='a1'):
@@ -21,9 +24,11 @@ class QyMsgSender(QyClientFactory, Que):
         msg = kwargs.get('msg')
         msg_type = kwargs.get('msg_type')
         app_key = kwargs.get('app_key')
+        if not msg:
+            return False
         if msg_type == 'text':
             return self._send_text_message(msg, app_key)
-        return None
+        return False
 
     def _send_text_message(self, msg, app_key):
         """
@@ -33,7 +38,7 @@ class QyMsgSender(QyClientFactory, Que):
         :return: bool 执行结果
         """
         self.refresh_config(app_key)
-        url = f'{self._QY_API_MSG_SEND}?access_token={self.access_token}'
+        url = f'{self._QY_API_MSG_SEND}?access_token={self.get_access_token()}'
         data = {
             "touser": self.user_list,
             "agentid": self.agent_id,

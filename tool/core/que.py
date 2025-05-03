@@ -33,15 +33,14 @@ class Que:
                         self.is_processing = True
                     try:
                         res = self._execute_with_timeout(task)
-                        logger.error(res, 'QUE_RES')
+                        logger.info(res, 'QUE_RES')
                         time.sleep(0.1)
                     except TimeoutError as e:
                         logger.error(f"[{self.__class__.__name__}] [Timeout] {e}", 'QUE_TIMEOUT')
                 except Exception as e:
                     logger.error(f"[{self.__class__.__name__}] Error: {e}", 'QUE_ERR')
-                finally:
-                    with self._queue_lock:
-                        self.message_queue.task_done()
+                with self._queue_lock:
+                    self.message_queue.task_done()
 
         thread = threading.Thread(target=consumer, daemon=True)
         thread.start()

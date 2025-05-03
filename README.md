@@ -47,9 +47,9 @@ python main.py -m db.export_chat.export_group_users              # 导出特定�
 python main.py -m db.export_chat.export_group_chats              # 导出特定群聊天记录
 python main.py -m report.daily_report.gen_report                 # 生成日报并保存md文件
 python main.py -m report.daily_report.gen_md_img                 # 基于md日报生成图片
-python main.py -m bot.index.daily_task                           # 每日任务入口（自动化完成一系列任务）
+python main.py -m bot.task.daily_task                            # 每日任务入口（自动化完成一系列任务）
 # 完整参数示例： 
-# python main.py -m bot.index.daily_task -p "ac=a1&gr=g1&report_type=1&start_date=2025-04-08&end_date=2025-04-09"
+# python main.py -m bot.task.daily_task -p "ac=a1&gr=g1&report_type=1&start_date=2025-04-08&end_date=2025-04-09"
 python main.py -m callback.gewe_callback.reset_callback          # 重设 gewe 回调地址
 ```
 

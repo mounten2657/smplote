@@ -4,10 +4,7 @@ from tool.core import *
 logger = Logger()
 
 
-@Ins.singleton
 class QyClientFactory:
-
-    ARGS_UNIQUE_KEY = True
 
     _QY_CACHE_FILE = Dir.abs_dir('storage/tmp/qy_cache.json')
     _QY_API_BASE = 'https://qyapi.weixin.qq.com'
@@ -19,12 +16,11 @@ class QyClientFactory:
         self.corp_id = self.config.get('corp_id')
         self.corp_name = self.config.get('corp_name')
         self.refresh_config(app_key)
-        self.access_token = self.get_access_token()
 
     def refresh_config(self, app_key):
         """刷新应用配置"""
         self.app_key = app_key
-        self.app_config = self.config.get(self.app_key)
+        self.app_config = self.config.get('app_list').get(self.app_key)
         self.agent_id = self.app_config.get('agent_id')
         self.app_secret = self.app_config.get('app_secret')
         self.user_list = self.app_config.get('user_list')
@@ -68,6 +64,6 @@ class QyClientFactory:
             logger.info({"url": url, "result": result}, 'QY_API__SUC')
             return result
         else:
-            logger.error(f'request qy api failed - {url} - {response}', 'QY_API__ERR')
-            return None
+            logger.error(f'request qy api failed - {url} - {result}', 'QY_API__ERR')
+            return False
 

@@ -121,6 +121,9 @@ class RouterHandler:
         if not os.environ.get("WERKZEUG_RUN_MAIN"):
             webbrowser.open_new(url)
 
+    def get_app(self):
+        return self.app
+
     def run_app(self):
         if self.config.get('APP_OPEN_URL'):
             host_name = self.config.get("SERVER_HOST")
