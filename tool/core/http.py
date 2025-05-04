@@ -86,9 +86,13 @@ class Http:
     def get_request_method():
         """
         获取当前 HTTP 请求的方式
-        :return: 如果是 HTTP 请求的方式 GET | POST
+        :return: 如果是 HTTP 请求的方式 GET | POST | COMMAND
         """
-        return "GET" if not has_request_context() else request.method
+        try:
+            # 尝试获取 Flask 请求的方法
+            return request.method.upper()
+        except RuntimeError:
+            return 'COMMAND'
 
     @staticmethod
     def replace_host(url: str, new_host: str) -> str:

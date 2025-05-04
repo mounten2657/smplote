@@ -22,9 +22,7 @@ class RouterHandler:
     IGNORE_ROUTE_LIST = [
         'callback/gewe_callback/collect',
         'callback/qy_callback/collect_wts',
-        'callback/qy_callback/init_verify_wts',
         'callback/qy_callback/collect_gpl',
-        'callback/qy_callback/init_verify_gpl',
         'src/preview/image',
         'src/preview/office',
         'src/terminal/output',

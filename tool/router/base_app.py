@@ -8,6 +8,7 @@ class BaseApp:
 
     _instance: Optional['BaseApp'] = None  # 单例模式，避免重复实例化
     _instance_lock = threading.Lock()           # 保证多线程环境下单例的唯一性，避免竞态条件
+    _http_method = None
     _logger = None
     _db_config = None
     _wx_config = None
@@ -37,8 +38,13 @@ class BaseApp:
         if not Http.is_http_request():
             params = ParseHandler.get_command_params()
         else:
-            params =  RouterHandler.get_http_params()
-        return  {} if not params else params
+            params = RouterHandler.get_http_params()
+        return {} if not params else params
+
+    @property
+    def http_method(self):
+        self._http_method = Http.get_request_method()
+        return self._http_method
 
     @property
     def logger(self):

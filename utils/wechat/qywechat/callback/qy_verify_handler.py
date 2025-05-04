@@ -6,7 +6,12 @@ from tool.core import *
 logger = Logger()
 
 
-class  QyVerifyHandler:
+class QyVerifyHandler:
+    """
+    企业微信验证类
+     - api doc - https://developer.work.weixin.qq.com/document/10514
+     - debug = https://open.work.weixin.qq.com/wwopen/devtool/interface/combine
+    """
 
     @staticmethod
     def check_base64_len(base64_str):
@@ -71,7 +76,7 @@ class  QyVerifyHandler:
         msg_signature = request.args.to_dict().get("msg_signature")
         timestamp = request.args.to_dict().get("timestamp")
         nonce = request.args.to_dict().get("nonce")
-        echo_str = request.args.to_dict().get("echostr")
+        echo_str = request.args.get("echostr", "").replace(" ", "+")
         # 获取消息体签名校验结果
         check_result = QyVerifyHandler.check_msg_signature(msg_signature, token, timestamp, nonce, echo_str)
         if check_result:
