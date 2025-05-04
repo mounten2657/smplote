@@ -9,10 +9,17 @@ logger = Logger()
 @Ins.singleton
 class QyCallbackHandler(Que):
 
-    def msg_handler(self, app_key):
+    def msg_handler(self, app_key, params=None):
         """对外提供的开放方法"""
+        logger.info(params, 'QY_MSG_CALL_PARAMS')
+        if Http.get_request_method() == 'GET':
+            # 初始化验证 - 一般只走一次
+            return QyVerifyHandler.verify(app_key)
         xml = request.get_data()
-        return self.que_submit(app_key=app_key, xml=xml)
+        if len(xml) == 0:
+            return 'invalid request'
+        res = self.que_submit(app_key=app_key, xml=xml)
+        return 'success' if res else 'error'
 
     def _que_exec(self, **kwargs):
         """队列执行方法入口"""
