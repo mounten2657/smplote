@@ -119,7 +119,8 @@ class RouterHandler:
     @staticmethod
     def open_browser(url):
         if not os.environ.get("WERKZEUG_RUN_MAIN"):
-            webbrowser.open_new(url)
+            #webbrowser.open_new(url)
+            return True
 
     def get_app(self):
         return self.app
