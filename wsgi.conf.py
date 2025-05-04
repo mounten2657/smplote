@@ -75,7 +75,7 @@ accesslog = f'/www/wwwlogs/gunicorn/app_access_{datetime.now().strftime("%Y-%m-%
 # 错误日志 (必填，'-' 代表标准输出)
 errorlog = '/www/wwwlogs/gunicorn/app_error.log'
 # 日志级别 (debug/info/warning/error/critical)
-loglevel = 'info'
+loglevel = 'debug'
 # 日志格式
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s'
 
