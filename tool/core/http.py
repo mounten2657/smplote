@@ -76,7 +76,14 @@ class Http:
 
     @staticmethod
     def get_flask_params():
-        return request.args.to_dict()
+        """GET + POST 参数"""
+        get_data = request.args.to_dict()
+        if request.headers.get('Content-Type') == 'application/json':
+            post_data = request.get_json()
+        else:
+            post_data = request.form.to_dict()
+        get_data.update(post_data)
+        return get_data
 
     @staticmethod
     def get_flask_json():

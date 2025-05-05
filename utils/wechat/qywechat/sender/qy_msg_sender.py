@@ -15,19 +15,19 @@ class QyMsgSender(QyClientFactory, Que):
         Que.__init__(self)
         QyClientFactory.__init__(self, app_key)
 
-    def send_message(self, msg, msg_type='text', app_key='a1'):
+    def send_message(self, content, msg_type='text', app_key='a1'):
         """对外提供的开放方法"""
-        return self.que_submit(msg=msg, msg_type=msg_type, app_key=app_key)
+        return self.que_submit(content=content, msg_type=msg_type, app_key=app_key)
 
     def _que_exec(self, **kwargs):
         """队列执行方法入口"""
-        msg = kwargs.get('msg')
+        content = kwargs.get('content')
         msg_type = kwargs.get('msg_type')
         app_key = kwargs.get('app_key')
-        if not msg:
+        if not content:
             return False
         if msg_type == 'text':
-            return self._send_text_message(msg, app_key)
+            return self._send_text_message(content, app_key)
         return False
 
     def _send_text_message(self, msg, app_key):
