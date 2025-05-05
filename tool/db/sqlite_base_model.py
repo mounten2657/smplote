@@ -3,13 +3,13 @@ from typing import Union, List, Dict, Optional, Any
 from tool.core import Logger, Error, Config
 
 
-class SqliteDBHandler:
+class SqliteBaseModel:
     """
     Sqlite db handler
     ### 使用示例
       **>查询类**
          # 初始化数据库连接
-          db = SqliteDBHandler('/root/sqlite/wx_app.db')  # 需要绝对路径
+          db = SqliteBaseModel('/root/sqlite/wx_app.db')  # 需要绝对路径
          # 获取单条记录
           msg_one = db.table('Msg') \
              .select(['id', 'msg']) \
@@ -91,15 +91,15 @@ class SqliteDBHandler:
         self._limit_offset = None
         self._limit_count = None
 
-    def table(self, table_name: str) -> 'SqliteDBHandler':
+    def table(self, table_name: str) -> 'SqliteBaseModel':
         self._table = table_name
         return self
 
-    def select(self, columns: List[str]) -> 'SqliteDBHandler':
+    def select(self, columns: List[str]) -> 'SqliteBaseModel':
         self._select = columns
         return self
 
-    def where(self, conditions: Dict) -> 'SqliteDBHandler':
+    def where(self, conditions: Dict) -> 'SqliteBaseModel':
         for field, condition in conditions.items():
             if isinstance(condition, dict):
                 operator = condition['opt'].upper()
@@ -109,13 +109,13 @@ class SqliteDBHandler:
                 self._wheres.append((field, '=', condition))
         return self
 
-    def where_in(self, key: str, values: List[Any]) -> 'SqliteDBHandler':
+    def where_in(self, key: str, values: List[Any]) -> 'SqliteBaseModel':
         """IN条件查询方法"""
         if values:
             self._where_ins.append((key, values))
         return self
 
-    def limit(self, offset: int, count: int) -> 'SqliteDBHandler':
+    def limit(self, offset: int, count: int) -> 'SqliteBaseModel':
         self._limit_offset = offset
         self._limit_count = count
         return self

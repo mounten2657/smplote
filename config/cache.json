@@ -1,0 +1,9 @@
+{
+    "redis":  {
+        "host": "[ENV.REDIS_HOST|127.0.0.1]",
+        "port": "[ENV.REDIS_PORT|6379]",
+        "password": "[ENV.REDIS_PASSWORD]",
+        "db": "[ENV.REDIS_DB|0]",
+        "max_connections": "[ENV.REDIS_MAX_CONNECTIONS|50]"
+    }
+}

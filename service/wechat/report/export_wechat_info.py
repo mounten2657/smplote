@@ -5,7 +5,7 @@ from tool.core import *
 from service.ai.report.ai_report_generator import AIReportGenerator
 from tool.unit.img.md_to_img import MdToImg
 from service.wechat.report.get_wechat_info import GetWechatInfo
-from service.wechat.model.wechat_db_module import WechatDBModule
+from service.wechat.model.wechat_db_model import WechatDBModel
 
 
 class ExportWechatInfo:
@@ -60,7 +60,7 @@ class ExportWechatInfo:
 
     @staticmethod
     def format_msgs(msgs, users, g_wxid):
-        db = WechatDBModule()
+        db = WechatDBModel()
         room_name = db.get_room_name(g_wxid)
         # txt_str = f'微信群｢『 {room_name} 』｣聊天记录：\n'
         txt_str = f'微信群[{room_name}]聊天记录：\n'

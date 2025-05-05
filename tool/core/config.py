@@ -37,6 +37,14 @@ class Config:
         return Config.load_config('config/app.json')
 
     @staticmethod
+    def cache_config():
+        return Config.load_config('config/cache.json')
+
+    @staticmethod
+    def redis_config():
+        return Config.cache_config()['redis']
+
+    @staticmethod
     def db_config(db_name='default'):
         config = Config.load_config('config/db.json').get(db_name)
         config['path'] = Dir.abs_dir(config['path'])

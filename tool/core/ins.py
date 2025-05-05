@@ -2,6 +2,7 @@ import time
 import hashlib
 import threading
 from functools import wraps
+from tool.db.cache.redis_client import RedisClient
 
 
 class Ins:
@@ -38,8 +39,8 @@ class Ins:
         def decorator(func):
             @wraps(func)
             def wrapper(self, *args, **kwargs):
-                # 动态获取当前实例的锁
-                lock = getattr(self, lock_name)
+                # 使用 redis 分布式锁
+                lock = RedisClient().client.lock(f'ts_lock_{lock_name}', timeout=10)
                 with lock:
                     return func(self, *args, **kwargs)
             return wrapper

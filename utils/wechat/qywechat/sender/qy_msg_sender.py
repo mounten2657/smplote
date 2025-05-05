@@ -16,6 +16,7 @@ class QyMsgSender(QyClientFactory, Que):
         QyClientFactory.__init__(self, app_key)
 
     def send_message(self, content, msg_type='text', app_key='a1'):
+        logger.debug([app_key, msg_type, content], 'QY_MSG_SEND_SUB')
         """对外提供的开放方法"""
         return self.que_submit(content=content, msg_type=msg_type, app_key=app_key)
 

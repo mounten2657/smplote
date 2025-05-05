@@ -2,7 +2,7 @@ import os.path
 from pathlib import Path
 from typing import Optional, Union
 from utils.ai.client.ai_client_manager import AIClientManager
-from service.wechat.model.wechat_db_module import WechatDBModule
+from service.wechat.model.wechat_db_model import WechatDBModel
 from tool.core import *
 
 
@@ -41,7 +41,7 @@ class AIReportGenerator:
         ai_config = Config.ai_config()
         if ai_config['last_service'] == 'DeepSeek':
             text = Str.sub_str_len(text, 65435 - len(ai_config['report_template']), 1)
-        db = WechatDBModule()
+        db = WechatDBModel()
         room_name = db.get_room_name(g_wxid)
         text = f"{ai_config['report_template']}\n\n微信群[{room_name}]聊天记录：\n\n{text}"
 

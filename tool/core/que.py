@@ -1,6 +1,7 @@
 import time
 import queue
 import threading
+from multiprocessing import Lock
 from tool.core.ins import Ins
 from tool.core.logger import Logger
 
@@ -12,8 +13,8 @@ class Que:
     MAX_QUEUE_SIZE = 9999      # 队列最大长度，超过会直接丢弃
 
     def __init__(self):
-        self._send_lock = threading.Lock()  # 发送操作锁
-        self._queue_lock = threading.Lock()  # 队列操作锁
+        self._send_lock = Lock()  # 发送操作锁
+        self._queue_lock = Lock()  # 队列操作锁
         self.message_queue = queue.Queue(maxsize=self.MAX_QUEUE_SIZE)
         self.is_processing = False
         self.last_exec_time = 0
@@ -60,6 +61,7 @@ class Que:
     @Ins.synchronized('_queue_lock')
     def que_submit(self, **kwargs):
         """提交任务到队列"""
+        logger.debug(f"[{self.__class__.__name__}] Queue Process - {kwargs}", "QUE_ENT")
         if self.message_queue.qsize() >= self.MAX_QUEUE_SIZE:
             logger.warning(f"[{self.__class__.__name__}] Queue full, dropped: {kwargs}", "QUE_FULL")
             return False
