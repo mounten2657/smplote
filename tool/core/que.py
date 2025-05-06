@@ -22,6 +22,7 @@ class Que:
 
     def _start_consumer(self):
         """使用队列进行消费，不同子类不同锁，互不影响"""
+        logger.debug(f"[{self.__class__.__name__}] Queue Consumer Listening", "QUE_CSM")
         def consumer():
             while True:
                 try:
@@ -33,6 +34,7 @@ class Que:
                         task = self.message_queue.get_nowait()
                         self.is_processing = True
                     try:
+                        logger.debug(f"[{self.__class__.__name__}] Queue Consumer Listening", "QUE_EXC")
                         res = self._execute_with_timeout(task)
                         logger.info(res, 'QUE_RES')
                         time.sleep(0.1)

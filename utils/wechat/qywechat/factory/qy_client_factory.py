@@ -54,16 +54,16 @@ class QyClientFactory:
     def qy_http_request(self, url, data=None):
         """请求企业微信接口"""
         url = f'{self._QY_API_BASE}{url}'
-        logger.info({"url":url, "data": data}, 'QY_API__STA')
+        logger.info({"url":url, "data": data}, 'QY_API_STA')
         if not data:
             response = requests.get(url)
         else:
             response = requests.post(url, json=data)
         result = response.json()
         if result.get('errcode') == 0:
-            logger.info({"url": url, "result": result}, 'QY_API__SUC')
+            logger.info({"url": url, "result": result}, 'QY_API_SUC')
             return result
         else:
-            logger.error(f'request qy api failed - {url} - {result}', 'QY_API__ERR')
+            logger.error(f'request qy api failed - {url} - {result}', 'QY_API_ERR')
             return False
 

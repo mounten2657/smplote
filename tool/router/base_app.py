@@ -118,10 +118,11 @@ class BaseApp:
         validate = Validator()
         rule_list = Attr.get(self._rule_list, self.method_name, {})
         method_allow_list = Attr.get(rule_list, 'method', ['GET', 'POST'])
+        method_allow_list.append('COMMAND')
         message = Attr.get(rule_list, 'message', None)
         # 验证请求方式
         if rule_list and self.http_method not in method_allow_list:
-            Error.throw_exception('Method Not Allow', 405)
+            Error.throw_exception(f'Method Not Allow - {self.http_method}', 405)
         # 验证参数正确性
         if rule_list and not validate.check(self.params, rule_list['rule'], message):
             Error.throw_exception(validate.err_msg, validate.err_code)
