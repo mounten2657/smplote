@@ -21,16 +21,6 @@
             "wxid": "[ENV.WX_WXID_G2]",
             "name": "g2",
             "save_dir": "data/file/group/g2"
-        },
-        "g3": {
-            "wxid": "[ENV.WX_WXID_G3]",
-            "name": "g3",
-            "save_dir": "data/file/group/g3"
-        },
-        "g4": {
-            "wxid": "[ENV.WX_WXID_G4]",
-            "name": "g4",
-            "save_dir": "data/file/group/g4"
         }
     }
 }
