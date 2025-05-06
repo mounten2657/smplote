@@ -18,7 +18,7 @@ class ParseHandler:
     @staticmethod
     def parse_params(param_str):
         params = {}
-        if Attr.get_attr(param_str, 'params'):
+        if Attr.get(param_str, 'params'):
             pairs = param_str.params.split('&')
             for pair in pairs:
                 if '=' in pair:
@@ -48,7 +48,7 @@ class ParseHandler:
             run_time = Time.now(0) - start_time
             not Http.is_http_request() and logger.info(data=Attr.parse_json_ignore(result), msg=f"END[RT.{run_time}]")
             return result
-        except (ImportError, AttributeError, RuntimeError) as e:
+        except (ImportError, AttributeError, RuntimeError, Exception) as e:
             run_time = Time.now(0) - start_time
             err = Error.handle_exception_info(e)
             logger.error(data=err, msg=f"ERROR[RT.{run_time}]")
@@ -57,7 +57,13 @@ class ParseHandler:
     @staticmethod
     def get_command_method():
         args = ParseHandler.parse_args()
-        return Attr.get_attr(args, 'method')
+        return Attr.get(args, 'method')
+
+    @staticmethod
+    def get_method_name():
+        """获取当前请求的接口方法名"""
+        module, method_name = ParseHandler.get_command_method().rsplit('.', 1)
+        return method_name
 
     @staticmethod
     def get_command_params():

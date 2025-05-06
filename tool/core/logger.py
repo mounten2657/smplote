@@ -188,13 +188,13 @@ class Logger:
             route = request.path
             method = request.method
             headers = json.loads(json.dumps(dict(request.headers), ensure_ascii=False, indent=4))
-            user_agent = Attr.get_attr(headers, 'User-Agent')
-            content_type = Attr.get_attr(headers, 'Content-Type')
-            authcode = Attr.get_attr(headers, 'authcode', '')
+            user_agent = Attr.get(headers, 'User-Agent')
+            content_type = Attr.get(headers, 'Content-Type')
+            authcode = Attr.get(headers, 'authcode', '')
             request_params = dict(request.args)
-            response = Attr.get_attr(data, 'response')
-            status_code = Attr.get_attr(response, 'status_code', 100)
-            response_result = Attr.get_attr(response, 'response_result')
+            response = Attr.get(data, 'response')
+            status_code = Attr.get(response, 'status_code', 100)
+            response_result = Attr.get(response, 'response_result')
             extra = {
                 'uuid': self.uuid,
                 'ip': ip,

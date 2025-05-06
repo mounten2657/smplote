@@ -1,9 +1,10 @@
 import json
 from collections import OrderedDict
 
+
 class Attr:
     @staticmethod
-    def get_attr(data, key, default=None):
+    def get(data, key, default=None):
         try:
             # 尝试以对象属性的方式获取值
             return getattr(data, key)

@@ -9,6 +9,8 @@ class BaseApp:
     _instance: Optional['BaseApp'] = None  # 单例模式，避免重复实例化
     _instance_lock = threading.Lock()           # 保证多线程环境下单例的唯一性，避免竞态条件
     _http_method = None
+    _method_name = None
+    _rule_list = None
     _logger = None
     _db_config = None
     _wx_config = None
@@ -29,6 +31,7 @@ class BaseApp:
         self.args = kwargs
         self.root_dir = Dir.root_dir()
         self.params = self.get_params()
+        self.validate()
 
     def __reduce__(self):
         return self.__class__, ()
@@ -36,15 +39,19 @@ class BaseApp:
     @classmethod
     def get_params(cls) -> Dict[str, Any]:
         if not Http.is_http_request():
-            params = ParseHandler.get_command_params()
-        else:
-            params = RouterHandler.get_http_params()
-        return {} if not params else params
+            return ParseHandler.get_command_params()
+        return RouterHandler.get_http_params()
 
     @property
     def http_method(self):
         self._http_method = Http.get_request_method()
         return self._http_method
+
+    @property
+    def method_name(self):
+        if not Http.is_http_request():
+            return ParseHandler.get_method_name()
+        return RouterHandler.get_method_name()
 
     @property
     def logger(self):
@@ -106,6 +113,18 @@ class BaseApp:
         wx_config = self.get_wx_config()
         self._g_name = wx_config['group']['name']
         return self._g_name
+
+    def validate(self):
+        validate = Validator()
+        rule_list = Attr.get(self._rule_list, self.method_name, {})
+        method_allow_list = Attr.get(rule_list, 'method', ['GET', 'POST'])
+        message = Attr.get(rule_list, 'message', None)
+        # 验证请求方式
+        if rule_list and self.http_method not in method_allow_list:
+            Error.throw_exception('Method Not Allow', 405)
+        # 验证参数正确性
+        if rule_list and not validate.check(self.params, rule_list['rule'], message):
+            Error.throw_exception(validate.err_msg, validate.err_code)
 
     @classmethod
     def success(cls, data=None, msg='success', code=0):

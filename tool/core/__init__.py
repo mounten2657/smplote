@@ -13,6 +13,7 @@ from.logger import Logger
 from.que import Que
 from.str import Str
 from.time import Time
+from.validator import Validator
 
-__all__ = ['Api', 'Attr', 'Config', 'Dir', 'Emoji', 'Error', 'Env', 'Http', 'Ins', 'File', 'Logger', 'Que', 'Str', 'Time']
+__all__ = ['Api', 'Attr', 'Config', 'Dir', 'Emoji', 'Error', 'Env', 'Http', 'Ins', 'File', 'Logger', 'Que', 'Str', 'Time', 'Validator']
 

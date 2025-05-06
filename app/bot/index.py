@@ -1,4 +1,3 @@
-import time
 from tool.router.base_app import BaseApp
 from tool.core import *
 
@@ -7,7 +6,7 @@ class Index(BaseApp):
 
     def index(self, **kwargs):
         """首页入口"""
-        current_timestamp = int(time.time())
+        current_timestamp = Time.now()
         # self.logger.info({"user_name":"test123"})
         config = Config.app_config()
         response = {

@@ -44,7 +44,7 @@ class RouterHandler:
         @self.app.before_request
         def before_request():
             request_url = request.url
-            request_params = dict(request.args)
+            request_params = self.get_http_params()
             if not any(route in request_url for route in self.IGNORE_LOG_LIST):
                 logger.info(data={"request":{"url": request_url, "request_params": request_params}}, msg="START")
 
@@ -63,7 +63,7 @@ class RouterHandler:
                                        mimetype='image/vnd.microsoft.icon')
 
         # 定义路由解析
-        @self.app.route('/<path:method_path>', methods=['GET', 'POST'])
+        @self.app.route('/<path:method_path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
         def http_execute_method(method_path):
             try:
                 module_name, method_name = method_path.rsplit('/', 1)
@@ -101,6 +101,12 @@ class RouterHandler:
     @staticmethod
     def get_http_params():
         return Http.get_flask_params()
+
+    @staticmethod
+    def get_method_name():
+        """获取当前请求的接口方法名"""
+        module, method_name = request.base_url.rsplit('/', 1)
+        return method_name
 
     def close_filter_log(self):
         # 关闭 Werkzeug 默认的访问日志

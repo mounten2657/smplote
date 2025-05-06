@@ -37,3 +37,7 @@ class Error:
     @staticmethod
     def has_error(data):
         return Attr.has_keys(data, ['code', 'msg', 'data']) and data['code']
+
+    @staticmethod
+    def throw_exception(msg, code=None):
+        raise Exception(msg, code)
