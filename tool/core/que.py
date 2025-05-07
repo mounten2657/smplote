@@ -2,6 +2,7 @@ import time
 import queue
 import threading
 from multiprocessing import Lock
+from tool.core.http import Http
 from tool.core.ins import Ins
 from tool.core.logger import Logger
 
@@ -22,7 +23,6 @@ class Que:
 
     def _start_consumer(self):
         """使用队列进行消费，不同子类不同锁，互不影响"""
-        logger.debug(f"[{self.__class__.__name__}] Queue Consumer Listening", "QUE_CSM")
         def consumer():
             while True:
                 try:
@@ -69,6 +69,10 @@ class Que:
             return False
         self.message_queue.put(kwargs)
         logger.debug(f"[{self.__class__.__name__}] Queued (size: {self.message_queue.qsize()})", "QUE_SUB")
+        # 如果是命令行模式，需等待队列处理完成
+        if Http.get_request_method() == 'COMMAND':
+            while not self.message_queue.empty():
+                time.sleep(0.2)
         return True
 
 
