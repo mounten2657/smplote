@@ -65,7 +65,7 @@ class GiteeWebhookMd:
                     md_message += f"     - {file}\r\n"
                 md_message += f"     - [{commit['id'][:7]}]({commit['url']}): {commit['message']}"
                 md_message += f"    ⏱️️ {str(commit['timestamp']).replace('T', ' ')[:19]}\r\n"
-                md_message += f"    👨‍💻️ {commit['author']['name']}123\r\n"
+                md_message += f"    👨‍💻️ {commit['author']['name']}\r\n"
 
             if len(commits) > 3:
                 md_message += f"\r\n    ...等 {len(commits) - 3}个提交\r\n"
