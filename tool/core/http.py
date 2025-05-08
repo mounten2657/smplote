@@ -102,21 +102,30 @@ class Http:
         except RuntimeError:
             return 'COMMAND'
 
-    @staticmethod
     def get_client_ip():
-        """获取客户端真实的IP地址"""
-        # 尝试从 X-Forwarded-For 头中获取客户端 IP 地址
+        """获取客户端真实的IP地址（优先返回IPv4）"""
+        # 1. 首先尝试从X-Forwarded-For获取IP
         x_forwarded_for = request.headers.get('X-Forwarded-For')
         if x_forwarded_for:
-            # X-Forwarded-For 头可能包含多个 IP 地址，第一个是客户端的真实 IP 地址
-            client_ip = x_forwarded_for.split(',')[0].strip()
-        else:
-            # 如果没有 X-Forwarded-For 头，尝试从 X-Real-IP 头中获取客户端 IP 地址
-            client_ip = request.headers.get('X-Real-IP')
-        if not client_ip:
-            # 如果仍然没有获取到客户端 IP 地址，使用 request.remote_addr
-            client_ip = request.remote_addr
-        return client_ip
+            # 检查所有IP，返回第一个IPv4
+            for ip in x_forwarded_for.split(','):
+                ip = ip.strip()
+                if '.' in ip:  # 简单判断IPv4
+                    return ip
+        # 2. 尝试从X-Real-IP获取
+        real_ip = request.headers.get('X-Real-IP')
+        if real_ip and '.' in real_ip:
+            return real_ip
+        # 3. 最后使用remote_addr，如果是IPv6则尝试获取前面的IPv4
+        remote_ip = request.remote_addr
+        if ':' in remote_ip:  # 简单判断IPv6
+            # 再次检查X-Forwarded-For是否有IPv4（有些代理会把IPv6放在remote_addr）
+            if x_forwarded_for:
+                for ip in x_forwarded_for.split(','):
+                    ip = ip.strip()
+                    if '.' in ip:
+                        return ip
+        return remote_ip  # 实在没有IPv4则返回原IP（可能是IPv6）
 
     @staticmethod
     def replace_host(url: str, new_host: str) -> str:
