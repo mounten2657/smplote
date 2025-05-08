@@ -21,19 +21,19 @@ class LogErrorMd:
         if isinstance(error_message, str):
             error_message = [error_message]
 
-        # 生成 Markdown 内容
-        markdown = f"""🚨 **系统异常告警**  
+        # 生成 Markdown 内容 ⚡🔥✈️💣⚠️❌
+        markdown = f"""🔥 **系统异常告警**  
 
-    🛠 **错误描述**  
+    ⚠️ **错误描述**  
     {"\r\n".join(error_message)}
 
-    🔍 **错误溯源**  
+    ⛔ **错误溯源**  
     ```
     {result.get('err_cause', ['', ''])[0]} (触发异常)  
     └─ {result.get('err_cause', ['', ''])[1]} (原始异常)  
     ```
 
-    📂 **代码位置**  
+    🗂️ **代码位置**  
 """
 
         # 添加文件位置列表
@@ -52,7 +52,7 @@ class LogErrorMd:
 
         # 可选日志ID
         if log_id:
-            markdown += f"3. 查看完整日志追踪ID: <{log_id}>\r\n\r\n"
+            markdown += f"3. 查看完整日志追踪ID: <{log_id[:24]}>\r\n"
 
         return markdown
 
