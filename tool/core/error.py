@@ -19,7 +19,8 @@ class Error:
         tb = exc_traceback
         while tb:
             frame_summary = traceback.extract_tb(tb, limit=1)[0]
-            file_line = f"{frame_summary.filename}:{frame_summary.lineno}"
+            file_name = frame_summary.filename.split('smplote')[1].replace('\\', '/')[1:]
+            file_line = f"{file_name}:{frame_summary.lineno}"
             file_line_list.append(file_line)
             tb = tb.tb_next
 
