@@ -7,9 +7,14 @@ logger = Logger()
 @Ins.singleton
 class QyClient:
 
-    def __init__(self, app_key='a1'):
-        self.msg_client = QyMsgSender(app_key)
+    ARGS_UNIQUE_KEY = True
 
-    def send_msg(self, content, msg_type, app_key):
+    APP_KEY = None
+
+    def __init__(self, app_key='a1'):
+        self.APP_KEY = app_key
+        self.msg_client = QyMsgSender(self.APP_KEY)
+
+    def send_msg(self, content, msg_type='text'):
         """发送消息"""
-        return self.msg_client.send_message(content, msg_type, app_key)
+        return self.msg_client.send_message(content, msg_type, self.APP_KEY)

@@ -7,16 +7,14 @@ logger = Logger()
 @Ins.singleton
 class QyMsgSender(QyClientFactory, Que):
 
-    ARGS_UNIQUE_KEY = True
-
     _QY_API_MSG_SEND = '/cgi-bin/message/send'
 
-    def __init__(self, app_key='a1'):
+    def __init__(self, app_key):
         Que.__init__(self)
         QyClientFactory.__init__(self, app_key)
 
-    def send_message(self, content, msg_type='text', app_key='a1'):
-        """对外提供的开放方法"""
+    def send_message(self, content, msg_type, app_key):
+        """给 QyClient 提供的调用方法"""
         return self.que_submit(content=content, msg_type=msg_type, app_key=app_key)
 
     def _que_exec(self, **kwargs):
@@ -28,24 +26,54 @@ class QyMsgSender(QyClientFactory, Que):
             return False
         if msg_type == 'text':
             return self._send_text_message(content, app_key)
+        if msg_type == 'markdown':
+            return self._send_md_message(content, app_key)
         return False
 
-    def _send_text_message(self, msg, app_key):
+    def _send_text_message(self, content, app_key):
         """
-        发送文本消息
-        :param msg: 文本内容
+        发送文本消息 - 支持 a标签 和 换行符
+        :param content: 消息内容
+        :param app_key:  APP 账号 - a1 | a2 | ...
+        :return: bool 执行结果
+        """
+        data = {
+            "msgtype": 'text',
+            "text": {
+                "content": content
+            }
+        }
+        return self._send_message(data, app_key)
+
+    def _send_md_message(self, content, app_key):
+        """
+        发送 markdown 消息 - 目前只能在企业微信中查看
+        :param content: 消息内容
+        :param app_key:  APP 账号 - a1 | a2 | ...
+        :return: bool 执行结果
+        """
+        data = {
+            "msgtype": 'markdown',
+            "markdown": {
+                "content": content
+            }
+        }
+        return self._send_message(data, app_key)
+
+    def _send_message(self, data, app_key):
+        """
+        发送应用消息的底层方法
+        :param data: 消息内容字典
         :param app_key:  APP 账号 - a1 | a2 | ...
         :return: bool 执行结果
         """
         self.refresh_config(app_key)
         url = f'{self._QY_API_MSG_SEND}?access_token={self.get_access_token()}'
-        data = {
+        post_data = {
             "touser": self.user_list,
             "agentid": self.agent_id,
-            "msgtype": 'text',
-            "text": {
-                "content": msg
-            },
             "safe": 0
         }
-        return self.qy_http_request(url, data)
+        post_data.update(data)
+        return self.qy_http_request(url, post_data)
+

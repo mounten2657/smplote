@@ -19,6 +19,6 @@ class QyMsg(BaseApp):
         content = self.params.get('content')
         msg_type = self.params.get('msg_type', 'text')
         app_key = self.params.get('app_key', 'a1')
-        res = QyClient(app_key).send_msg(content, msg_type, app_key)
+        res = QyClient(app_key).send_msg(content, msg_type)
         return self.success(res)
 
