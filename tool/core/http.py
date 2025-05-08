@@ -110,7 +110,7 @@ class Http:
             # 检查所有IP，返回第一个IPv4
             for ip in x_forwarded_for.split(','):
                 ip = ip.strip()
-                if '.' in ip:  # 简单判断IPv4
+                if '.' in ip and ip != '127.0.0.1':  # 简单判断IPv4
                     return ip
         # 2. 尝试从X-Real-IP获取
         real_ip = request.headers.get('X-Real-IP')
@@ -123,7 +123,7 @@ class Http:
             if x_forwarded_for:
                 for ip in x_forwarded_for.split(','):
                     ip = ip.strip()
-                    if '.' in ip:
+                    if '.' in ip and ip != '127.0.0.1':
                         return ip
         return remote_ip  # 实在没有IPv4则返回原IP（可能是IPv6）
 
