@@ -68,7 +68,8 @@ class Http:
         判断当前是否处于 HTTP 请求上下文中
         :return: 如果是 HTTP 请求返回 True，否则返回 False
         """
-        return has_request_context()
+        # return has_request_context()
+        return Http.get_request_method() != 'COMMAND'
 
     @staticmethod
     def is_flask_request():
@@ -100,6 +101,22 @@ class Http:
             return request.method.upper()
         except RuntimeError:
             return 'COMMAND'
+
+    @staticmethod
+    def get_client_ip():
+        """获取客户端真实的IP地址"""
+        # 尝试从 X-Forwarded-For 头中获取客户端 IP 地址
+        x_forwarded_for = request.headers.get('X-Forwarded-For')
+        if x_forwarded_for:
+            # X-Forwarded-For 头可能包含多个 IP 地址，第一个是客户端的真实 IP 地址
+            client_ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            # 如果没有 X-Forwarded-For 头，尝试从 X-Real-IP 头中获取客户端 IP 地址
+            client_ip = request.headers.get('X-Real-IP')
+        if not client_ip:
+            # 如果仍然没有获取到客户端 IP 地址，使用 request.remote_addr
+            client_ip = request.remote_addr
+        return client_ip
 
     @staticmethod
     def replace_host(url: str, new_host: str) -> str:

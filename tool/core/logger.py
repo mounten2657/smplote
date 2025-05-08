@@ -184,7 +184,7 @@ class Logger:
     def get_extra_data(self, data=None):
         if Http.is_http_request():
             # 尝试获取 HTTP 请求信息，如果能获取到说明是 HTTP 请求
-            ip = request.remote_addr
+            ip = Http.get_client_ip()
             route = request.path
             method = request.method
             headers = json.loads(json.dumps(dict(request.headers), ensure_ascii=False, indent=4))
