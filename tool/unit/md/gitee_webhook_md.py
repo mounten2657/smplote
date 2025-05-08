@@ -68,7 +68,7 @@ class GiteeWebhookMd:
                 md_message += f"    👨‍💻️ {commit['author']['name']}\r\n"
 
             if len(commits) > 3:
-                md_message += f"\r\n...等 {len(commits) - 3}个提交\r\n"
+                md_message += f"\r\n    ...等 {len(commits) - 3}个提交\r\n"
 
             return 200, {
                 "markdown": md_message,
