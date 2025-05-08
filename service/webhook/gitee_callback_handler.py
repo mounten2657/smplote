@@ -16,7 +16,6 @@ class GiteeCallbackHandler:
         logger.debug(status, 'GITEE_PUSH_STU')
         if status == 200 and 'markdown' in data:
             # 发送企业应用消息
-            # print(data['markdown'])
             res['app_msg'] = QyClient().send_msg(data['markdown'])
             # 其它异步流程
         return res
