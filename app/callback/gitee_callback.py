@@ -8,6 +8,7 @@ class GiteeCallback(BaseApp):
         "smplote": {
             "method": ["POST"],
             "rule": {
+                "hook_name": "required",
                 "repository": "required",
                 "ref": "required",
                 "pusher": "required",

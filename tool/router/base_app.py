@@ -122,7 +122,7 @@ class BaseApp:
         message = Attr.get(rule_list, 'message', None)
         # 验证请求方式
         if rule_list and self.http_method not in method_allow_list:
-            Error.throw_exception(f'Method Not Allow - {self.http_method}', 405)
+            Error.throw_exception(f'Method Not Allow - [{self.http_method}]', 405)
         # 验证参数正确性
         if rule_list and not validate.check(self.params, rule_list['rule'], message):
             Error.throw_exception(validate.err_msg, validate.err_code)

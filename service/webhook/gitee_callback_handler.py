@@ -11,10 +11,12 @@ class GiteeCallbackHandler:
     def push_handler(params):
         """推送事件处理"""
         res = {}
-        logger.debug(params, 'GITEE_PUSH_PAR')
+        logger.debug(params.get('hook_name'), 'GITEE_PUSH_PAR')
         status, data = GiteeWebhookMd.get_push_md()
+        logger.debug(status, 'GITEE_PUSH_STU')
         if status == 200 and 'markdown' in data:
             # 发送企业应用消息
+            # print(data['markdown'])
             res['app_msg'] = QyClient().send_msg(data['markdown'])
             # 其它异步流程
         return res
