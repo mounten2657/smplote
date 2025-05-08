@@ -54,7 +54,7 @@ class GiteeWebhookMd:
 
     📦 仓库: [{repo}]({payload['repository']['html_url']})  
     🌿 分支: {branch}
-    🦸‍♂️ 人员: {pusher}
+    🦸‍♂️ 成员: {pusher}
 
     📝 **提交记录** ({len(commits)}个):  
     {compare_url}
@@ -62,9 +62,10 @@ class GiteeWebhookMd:
             # 添加每个提交的详细信息
             for commit in commits[:3]:  # 最多显示3个提交
                 for file in commit['modified']:
-                    md_message += f"     - <{file}>\r\n"
+                    md_message += f"     - {file}\r\n"
                 md_message += f"""     - [{commit['id'][:7]}]({commit['url']}): {commit['message']}
-    🦸‍♂️ {commit['author']['name']}  
+    ⏱️️ {str(commit['timestamp']).replace('T', ' ')[:19]}  
+    👨‍💻️ {commit['author']['name']}  
 """
 
             if len(commits) > 3:
