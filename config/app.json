@@ -1,5 +1,6 @@
 {
     "SYS_VERSION": "v1.0.1",
+    "APP_NAME": "[ENV.APP_NAME|smplote]",
     "DEBUG": "[ENV.APP_DEBUG|false]",
     "APP_INDEX": "[ENV.APP_INDEX|bot/index/index]",
     "APP_OPEN_URL": "[ENV.APP_OPEN_URL]",
