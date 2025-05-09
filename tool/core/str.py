@@ -1,3 +1,4 @@
+import re
 import time
 import random
 import hashlib
@@ -86,7 +87,20 @@ class Str:
             # 极端情况保底处理
             return s[:max_len] if position == 0 else s[-max_len:]
 
+    @staticmethod
+    def extract_ip(text):
+        """
+        从文本中提取IP地址
 
+        参数:
+        text (str): 包含IP地址的文本
+
+        返回:
+        list: 提取到的IP地址列表，如果没有则返回空列表
+        """
+        # 匹配IPv4地址的正则表达式
+        ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
+        return re.findall(ip_pattern, text)
 
 
 

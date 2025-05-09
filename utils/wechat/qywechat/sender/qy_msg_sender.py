@@ -7,7 +7,7 @@ logger = Logger()
 @Ins.singleton
 class QyMsgSender(QyClientFactory, Que):
 
-    _QY_API_MSG_SEND = '/cgi-bin/message/send'
+    _QY_API_MSG_SEND = '/cgi-bin/message/send'  # https://developer.work.weixin.qq.com/document/path/94677
 
     def __init__(self, app_key):
         Que.__init__(self)

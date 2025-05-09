@@ -8,9 +8,8 @@ class QyClientFactory:
 
     _QY_CACHE_FILE = Dir.abs_dir('storage/tmp/qy_cache.json')
 
-    # _QY_API_BASE = 'https://qyapi.weixin.qq.com'  # 弃用直接请求，官方有ip限制，得进行转发处理
-    _QY_API_BASE = 'https://app.smplote.com/qyapi'
-    _QY_API_ACCESS_TOKEN = '/cgi-bin/gettoken'
+    _QY_API_BASE = 'https://qyapi.weixin.qq.com'
+    _QY_API_ACCESS_TOKEN = '/cgi-bin/gettoken'  # https://developer.work.weixin.qq.com/document/path/91039
 
     def __init__(self, app_key):
         self.app_key = app_key
@@ -65,6 +64,11 @@ class QyClientFactory:
         if result.get('errcode') == 0:
             logger.info({"url": url, "result": result}, 'QY_API_SUC')
             return result
+        elif result.get('errcode') == 60020:
+            # 刷新可信任IP
+            ip = Str.extract_ip(result.get('errmsg')[0])
+            print(ip)
+            return False
         else:
             logger.error(f'request qy api failed - {url} - {result}', 'QY_API_ERR')
             return False
