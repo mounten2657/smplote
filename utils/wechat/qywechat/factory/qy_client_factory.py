@@ -7,7 +7,9 @@ logger = Logger()
 class QyClientFactory:
 
     _QY_CACHE_FILE = Dir.abs_dir('storage/tmp/qy_cache.json')
-    _QY_API_BASE = 'https://qyapi.weixin.qq.com'
+
+    # _QY_API_BASE = 'https://qyapi.weixin.qq.com'  # 弃用直接请求，官方有ip限制，得进行转发处理
+    _QY_API_BASE = 'https://app.smplote.com/open/wechat/qy'
     _QY_API_ACCESS_TOKEN = '/cgi-bin/gettoken'
 
     def __init__(self, app_key):
