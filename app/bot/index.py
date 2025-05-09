@@ -7,15 +7,13 @@ class Index(BaseApp):
     def index(self, **kwargs):
         """首页入口"""
         current_timestamp = Time.now()
-        # self.logger.info({"user_name":"test123"})
-        config = Config.app_config()
         response = {
             "__doc__": "Hello, Smplote tool",
             "timestamp": current_timestamp,
-            "version": config.get('SYS_VERSION'),
+            "version": Config.app_config().get('SYS_VERSION'),
             "params": self.params,
+            "is_prod": Config.is_prod(),
             "wxid": self.wxid,
-            "args": kwargs
         }
         return self.success(response)
 

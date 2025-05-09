@@ -29,6 +29,10 @@ class Config:
         return Env.write_env(key, val)
 
     @staticmethod
+    def is_prod():
+        return os.environ.get('IS_PROD', False)
+
+    @staticmethod
     def ai_config():
         return Config.load_config('config/ai.json')
 
