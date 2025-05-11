@@ -26,13 +26,15 @@ class QyMsgSender(QyClientFactory, Que):
         if not content:
             return False
         if msg_type == 'text':
+            # 改为通过 vps 的 gRpc 发送
             return self._send_text_message_rpc(content, app_key)
         if msg_type == 'markdown':
+            # 弃用 - 只能在企业微信中查看
             return self._send_md_message(content, app_key)
         return False
 
     def _send_text_message_rpc(self, content, app_key):
-        """改为通过 vps 的 gRpc 发送"""
+        """通过 vps  发送文本消息"""
         return OpenNatClient.send_text_msg(content, app_key)
 
     def _send_text_message(self, content, app_key):

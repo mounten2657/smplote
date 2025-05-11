@@ -1,4 +1,5 @@
 from datetime import datetime
+from tool.core import Env
 
 
 class LogErrorMd:
@@ -18,11 +19,12 @@ class LogErrorMd:
         """
         # 处理可能为字符串类型的 err_msg
         error_message = result.get("err_msg", [])
+        app_name = Env.get('APP_NAME', 'Error')
         if isinstance(error_message, str):
             error_message = [error_message]
 
         # 生成 Markdown 内容 ⚡🔥✈️💣⚠️❌
-        markdown = f"""🔥 **系统异常告警**  
+        markdown = f"""🔥 **{str(app_name).capitalize()} 系统异常告警**  
 
     ⚠️ **错误描述**  
     {"\r\n".join(error_message)}
