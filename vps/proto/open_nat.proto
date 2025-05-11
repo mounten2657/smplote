@@ -2,8 +2,10 @@ syntax = "proto3";
 
 package open_nat;
 
-service OpenNatService {
-  rpc SendWeChatText (WeChatTextRequest) returns (WeChatResponse);
+message CommonResponse {
+  int32 code = 1;
+  string msg = 2;
+  string data = 3;
 }
 
 message WeChatTextRequest {
@@ -12,8 +14,7 @@ message WeChatTextRequest {
   optional string user_list = 3;
 }
 
-message WeChatResponse {
-  bool success = 1;
-  string message = 2;
-  string data = 3;
+service OpenNatService {
+  rpc SendWeChatText (WeChatTextRequest) returns (CommonResponse);
 }
+

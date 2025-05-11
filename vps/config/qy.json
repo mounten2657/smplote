@@ -1,24 +1,24 @@
 {
-    "corp_id": "[ENV.QY_CORP_ID]",
-    "corp_name": "[ENV.QY_CORP_Name|Smplote]",
+    "corp_id": "zMwmdL7JjkgaFOqHgtzI5nYnrt3Qo2zW+L830rkt2Jg=",
+    "corp_name": "JGDLtP3/bWWPTlDjdtD61A==",
     "app_list": {
         "a1": {
-            "app_key": "a1",
-            "app_name": "WTS",
-            "agent_id": "[ENV.QY_APP_AGENT_ID_A1]",
-            "app_secret": "[ENV.QY_APP_SECRET_A1]",
-            "verify_token": "[ENV.QY_APP_VERIFY_TOKEN_A1]",
-            "verify_aes_key": "[ENV.QY_APP_VERIFY_AES_KEY_A1]",
-            "user_list": "[ENV.QY_APP_USER_LIST_A1]"
+            "app_key": "fHRvNotadx6CJNeKoWULSg==",
+            "app_name": "08/qaGFgyRmXJtnyS4MkQA==",
+            "agent_id": "5qTQEpbqoXwxXJxFLLfESA==",
+            "app_secret": "tBJLXBJ39anoimQhVBcIyZe44DFVgzPXYKZ5uZOkrpT/mwQXLjpEFhTnG8lZ8zP1",
+            "verify_token": "n3w58sk+aTWOFay8DY+DwRHFb5DGKjEoRAcnXma259s=",
+            "verify_aes_key": "hSkAUCfPgNtNvgALWpVuzleo5PtgT3xgfVonfYDzbhxSpeG3wTFq2Z2ZwWBFgWa4",
+            "user_list": "dxog/LUbJg8Yf+Pwww30Xw=="
         },
         "a2": {
-            "app_key": "a2",
-            "app_name": "GPL",
-            "agent_id": "[ENV.QY_APP_AGENT_ID_A2]",
-            "app_secret": "[ENV.QY_APP_SECRET_A2]",
-            "verify_token": "[ENV.QY_APP_VERIFY_TOKEN_A2]",
-            "verify_aes_key": "[ENV.QY_APP_VERIFY_AES_KEY_A2]",
-            "user_list": "[ENV.QY_APP_USER_LIST_A2]"
+            "app_key": "ydoT9nGiYDg5zxSAD0Os5g==",
+            "app_name": "Ai4ldO9B7gc+tWD1Is9Rtg==",
+            "agent_id": "wm9TooD3BpswFpBxdZt7qw==",
+            "app_secret": "To00ttAn80LRbfunQ1tfMg==",
+            "verify_token": "RAkCTiBUciJk/SSCcodvpfvd0md+7UTqzTGTndvAJ7Q=",
+            "verify_aes_key": "l0zvQlyfjHM+pjm+v1uYmiUpDCRNE7Q8/xx5Zd3m6Pp6F4yqHH/kcoGwNU+Xloyc",
+            "user_list": "dxog/LUbJg8Yf+Pwww30Xw=="
         }
     }
 }

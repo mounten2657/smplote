@@ -1,0 +1,4 @@
+grpcio==1.71.0
+grpcio-tools==1.71.0
+pycryptodome==3.22.0
+crypto==1.4.1

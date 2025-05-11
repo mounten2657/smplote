@@ -22,7 +22,12 @@ class Error:
             frame_summary = traceback.extract_tb(tb, limit=1)[0]
             # 过滤前面的绝对路径，只保留项目的相对路径
             app_name = Env.get('APP_NAME', 'smplote')
-            file_name = frame_summary.filename.split(app_name)[1].replace('\\', '/')[1:]
+            if app_name not in frame_summary.filename:
+                app_name = 'envs'
+            if '<frozen' in frame_summary.filename:
+                file_name = frame_summary.filename
+            else:
+                file_name = frame_summary.filename.split(app_name)[1].replace('\\', '/')[1:]
             file_line = f"{file_name}:{frame_summary.lineno}"
             file_line_list.append(file_line)
             tb = tb.tb_next

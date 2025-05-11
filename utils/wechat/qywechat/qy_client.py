@@ -1,5 +1,6 @@
 from tool.core import *
 from utils.wechat.qywechat.sender.qy_msg_sender import QyMsgSender
+from utils.grpc.open_nat.open_nat_client import OpenNatClient
 
 logger = Logger()
 
@@ -17,4 +18,6 @@ class QyClient:
 
     def send_msg(self, content, msg_type='text'):
         """发送消息"""
-        return self.msg_client.send_message(content, msg_type, self.APP_KEY)
+        # return self.msg_client.send_message(content, msg_type, self.APP_KEY)
+        # 改为通过 vps 的 gRpc 发送
+        return OpenNatClient.send_text_msg(content, self.APP_KEY)

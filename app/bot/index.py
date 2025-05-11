@@ -1,5 +1,6 @@
 from tool.router.base_app import BaseApp
 from tool.core import *
+from utils.grpc.open_nat.open_nat_client import OpenNatClient
 
 
 class Index(BaseApp):
@@ -18,6 +19,7 @@ class Index(BaseApp):
         return self.success(response)
 
     def check_config(self):
+        """检查常规配置"""
         res = {
             "ai": Config.ai_config(),
             "app": Config.app_config(),
@@ -26,3 +28,9 @@ class Index(BaseApp):
             "wx": Config.wx_config(),
         }
         return self.success(res)
+
+    def init_vps_config(self):
+        """初始化vps上的配置文件 - 加密处理"""
+        res = OpenNatClient.init_config_qy()
+        return self.success(res)
+

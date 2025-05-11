@@ -11,6 +11,6 @@ class Config:
             return json.load(f)
 
     @staticmethod
-    def get_qy_config():
+    def qy_config():
         return Config.get_config('qy')
 

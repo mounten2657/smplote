@@ -1,15 +1,14 @@
-from concurrent import futures
-import grpc
-from vps.proto.open_nat_pb2 import *
-from vps.proto.open_nat_pb2_grpc import *
-from vps.api.wechat.qy_api.qy_msg_send import QYWeChatService
 import os
+from concurrent import futures
+from vps.proto.generated.open_nat_pb2 import *
+from vps.proto.generated.open_nat_pb2_grpc import *
+from vps.api.wechat.qy_api.qy_msg_send import QYWeChatService
 
 
 class OpenNatService(OpenNatServiceServicer):
 
     def __init__(self):
-        self.wechat_service = QYWeChatService(os.getenv('CONFIG_MASTER_KEY'))
+        self.wechat_service = QYWeChatService(os.getenv('APP_CONFIG_MASTER_KEY'))
 
     def SendWeChatText(self, request, context):
         try:
@@ -18,16 +17,17 @@ class OpenNatService(OpenNatServiceServicer):
                 app_key=request.app_key,
                 user_list=request.user_list or None
             )
-            return WeChatResponse(
-                success=True,
-                message="OK",
+            return CommonResponse(
+                code=int(result.get('errcode', 0)),
+                msg=result.get('errormsg', 'success'),
                 data=str(result)
             )
         except Exception as e:
             context.set_code(grpc.StatusCode.INTERNAL)
-            return WeChatResponse(
-                success=False,
-                message=str(e)
+            return CommonResponse(
+                code=9999,
+                msg=str(e),
+                data='Null',
             )
 
     @staticmethod
@@ -40,7 +40,7 @@ class OpenNatService(OpenNatServiceServicer):
             ]
         )
         add_OpenNatServiceServicer_to_server(OpenNatService(), server)
-        server.add_insecure_port('[::]:30390')
+        server.add_insecure_port('0.0.0.0:30390')
         server.start()
         print("gRPC Server is running")
         server.wait_for_termination()

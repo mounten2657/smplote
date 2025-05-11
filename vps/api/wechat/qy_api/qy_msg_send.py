@@ -11,7 +11,7 @@ class QYWeChatService:
         self.token_cache = {}
 
     def _load_config(self):
-        raw_config = Config.get_qy_config()
+        raw_config = Config.qy_config()
         return {
             'corp_id': self.crypto.decrypt(raw_config['corp_id']),
             'apps': {
