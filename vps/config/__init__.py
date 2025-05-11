@@ -12,5 +12,5 @@ class Config:
 
     @staticmethod
     def qy_config():
-        return Config.get_config('qy')
+        return Config.get_config('qy.enc')
 
