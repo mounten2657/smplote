@@ -1,5 +1,6 @@
 from tool.core import *
 from utils.wechat.qywechat.factory.qy_client_factory import QyClientFactory
+from utils.grpc.open_nat.open_nat_client import OpenNatClient
 
 logger = Logger()
 
@@ -25,10 +26,14 @@ class QyMsgSender(QyClientFactory, Que):
         if not content:
             return False
         if msg_type == 'text':
-            return self._send_text_message(content, app_key)
+            return self._send_text_message_rpc(content, app_key)
         if msg_type == 'markdown':
             return self._send_md_message(content, app_key)
         return False
+
+    def _send_text_message_rpc(self, content, app_key):
+        """改为通过 vps 的 gRpc 发送"""
+        return OpenNatClient.send_text_msg(content, app_key)
 
     def _send_text_message(self, content, app_key):
         """

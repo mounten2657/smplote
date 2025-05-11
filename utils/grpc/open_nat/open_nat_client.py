@@ -43,7 +43,7 @@ class OpenNatClient:
         return True
 
     @staticmethod
-    def send_text_msg(content, app_key='a1', host='hba2.wch1.top', port=30390):
+    def send_text_msg(content, app_key='a1', host=Env.get('GRPC_HOST_ZGY'), port=Env.get('GRPC_PORT_ZGY')):
         """发送文本消息 - 对外方法"""
         client = OpenNatClient(host, port)
         return client.send_wechat_text(content, app_key)
