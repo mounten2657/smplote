@@ -1,0 +1,24 @@
+{
+    "corp_id": "[ENV.QY_CORP_ID]",
+    "corp_name": "[ENV.QY_CORP_Name|Smplote]",
+    "app_list": {
+        "a1": {
+            "app_key": "a1",
+            "app_name": "WTS",
+            "agent_id": "[ENV.QY_APP_AGENT_ID_A1]",
+            "app_secret": "[ENV.QY_APP_SECRET_A1]",
+            "verify_token": "[ENV.QY_APP_VERIFY_TOKEN_A1]",
+            "verify_aes_key": "[ENV.QY_APP_VERIFY_AES_KEY_A1]",
+            "user_list": "[ENV.QY_APP_USER_LIST_A1]"
+        },
+        "a2": {
+            "app_key": "a2",
+            "app_name": "GPL",
+            "agent_id": "[ENV.QY_APP_AGENT_ID_A2]",
+            "app_secret": "[ENV.QY_APP_SECRET_A2]",
+            "verify_token": "[ENV.QY_APP_VERIFY_TOKEN_A2]",
+            "verify_aes_key": "[ENV.QY_APP_VERIFY_AES_KEY_A2]",
+            "user_list": "[ENV.QY_APP_USER_LIST_A2]"
+        }
+    }
+}

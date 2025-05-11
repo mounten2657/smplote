@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package open_nat;
+
+service OpenNatService {
+  rpc SendWeChatText (WeChatTextRequest) returns (WeChatResponse);
+}
+
+message WeChatTextRequest {
+  string content = 1;
+  string app_key = 2;
+  optional string user_list = 3;
+}
+
+message WeChatResponse {
+  bool success = 1;
+  string message = 2;
+  string data = 3;
+}
