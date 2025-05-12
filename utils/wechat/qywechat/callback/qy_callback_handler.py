@@ -76,14 +76,14 @@ class QyCallbackHandler(Que):
         elif msg_type == 'event' and msg_event == 'click':
             # 菜单点击事件
             msg_key = data.get('EventKey', '').split('#')
-            if len(msg_key) == 3 and msg_key[1]:
-                msk = msg_key[1].split('_')
-                method = f"exec{msg_key[1]}"
-                if msk[1] == '0':  # AI 菜单
+            if len(msg_key) == 4 and msg_key[2]:
+                msk = msg_key[2].split('_')
+                method = f"exec{msg_key[2]}"
+                if msk[2] == '0':  # AI 菜单
                     handler = AiCommand()
-                elif msk[1] == '1':  # GPL 菜单
+                elif msk[2] == '1':  # GPL 菜单
                     handler = GplCommand()
-                elif msk[1] == '2':  # SMP 菜单
+                elif msk[2] == '2':  # SMP 菜单
                     handler = SmpCommand()
                 else:
                     pass  # 未识别的菜单放行

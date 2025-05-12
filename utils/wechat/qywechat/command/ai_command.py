@@ -21,7 +21,7 @@ class AiCommand(BaseCommand):
     def exec_0_3(self):
         """AI 提问"""
         content = str(self.content).replace('#提问', '').strip()
-        if not content:
+        if not content or content == 'None':
             txt = '请按 "#提问" 开头进行AI聊天，如：\r\n#提问 请推荐三首纯音乐'
             return self.send_content(txt)
         client = AIClientManager()
@@ -33,7 +33,7 @@ class AiCommand(BaseCommand):
     def exec_0_4(self):
         """AI 百科"""
         content = str(self.content).replace('#百科', '').strip()
-        if not content:
+        if not content or content == 'None':
             txt = '请按 "#百科" 开头进行AI科普，如：\r\n#百科 熊猫'
             return self.send_content(txt)
         client = AIClientManager()
