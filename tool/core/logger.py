@@ -223,8 +223,26 @@ class Logger:
     def get_log_queue(self):
         return self.log_queue
 
+    @staticmethod
+    def _make_serializable(data):
+        """递归处理数据，确保所有内容都是JSON可序列化的"""
+        if isinstance(data, bytes):
+            try:
+                return data.decode('utf-8')
+            except UnicodeDecodeError:
+                return data.hex()
+        elif isinstance(data, dict):
+            return {k: Logger._make_serializable(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [Logger._make_serializable(item) for item in data]
+        elif isinstance(data, (int, float, str, bool, type(None))):
+            return data
+        else:
+            return str(data)
+
     def write(self, data=None, msg="", log_name="app", log_level='info'):
         extra = self.get_extra_data(data)
+        extra = Logger._make_serializable(extra)
         log_type = 'http' if Http.is_http_request() else 'command'
         logger_handle = self.setup_logger(log_type, log_name)
         method = getattr(logger_handle, log_level.lower())
