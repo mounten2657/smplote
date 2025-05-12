@@ -43,5 +43,6 @@ class QyCallbackHandler(Que):
         decrypt_result = QyVerifyHandler.msg_base64_decrypt(xml_data['xml']['Encrypt'], encoding_aes_key)
         decrypt_result = xmltodict.parse(decrypt_result)
         logger.info(decrypt_result, 'QY_MSG_CALL_DES')
+        # {'xml': {'ToUserName': 'ww36b39b33bbf1b2f0', 'FromUserName': 'WuJun', 'CreateTime': '1747014396', 'MsgType': 'event', 'AgentID': '1000002', 'Event': 'click', 'EventKey': '#sendmsg#_2_0#7599826077209668'}}
         # do something ...
         return "success"

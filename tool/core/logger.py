@@ -155,13 +155,16 @@ class Logger:
                 log_record = {
                     'timestamp': self.formatTime(record, '%Y-%m-%d %H:%M:%S'),
                     'level': record.levelname,
+                    'ip': getattr(record, 'ip', ''),
+                    'method': getattr(record, 'method', None),
                     'uuid': getattr(record, 'uuid', None),
                     'msg': getattr(record, 'msg', ''),
                     'data': getattr(record, 'data', None)
                 }
                 level_name = log_record['level']
+                log_ext = '' if not log_record['method'] else f"[{log_record['method']}|{log_record['ip']}]"
                 log_str = (f"[{log_record['timestamp']}] - {log_record['uuid'][-6:]} - {level_name} - "
-                           f"{log_type} {log_record['msg']} - {log_record['data']}")[:511]
+                           f"{log_type}{log_ext} {log_record['msg']} - {log_record['data']}")[:768]
 
                 if level_name in display_colors:
                     log_str = display_colors[level_name] + log_str + Logger.RESET
