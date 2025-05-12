@@ -1,6 +1,8 @@
 {
     "corp_id": "[ENV.QY_CORP_ID]",
     "corp_name": "[ENV.QY_CORP_Name|Smplote]",
+    "command_list": "[ENV.QY_COMMAND_LIST]",
+    "admin_list": "[ENV.QY_ADMIN_LIST]",
     "app_list": {
         "a1": {
             "app_key": "a1",

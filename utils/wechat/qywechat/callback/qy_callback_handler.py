@@ -1,7 +1,10 @@
 import xmltodict
 from flask.globals import request
-from utils.wechat.qywechat.callback.qy_verify_handler import QyVerifyHandler
 from tool.core import *
+from utils.wechat.qywechat.callback.qy_verify_handler import QyVerifyHandler
+from utils.wechat.qywechat.command.ai_command import AiCommand
+from utils.wechat.qywechat.command.gpl_command import GplCommand
+from utils.wechat.qywechat.command.smp_command import SmpCommand
 
 logger = Logger()
 
@@ -43,6 +46,51 @@ class QyCallbackHandler(Que):
         decrypt_result = QyVerifyHandler.msg_base64_decrypt(xml_data['xml']['Encrypt'], encoding_aes_key)
         decrypt_result = xmltodict.parse(decrypt_result)
         logger.info(decrypt_result, 'QY_MSG_CALL_DES')
-        # {'xml': {'ToUserName': 'ww36b39b33bbf1b2f0', 'FromUserName': 'WuJun', 'CreateTime': '1747014396', 'MsgType': 'event', 'AgentID': '1000002', 'Event': 'click', 'EventKey': '#sendmsg#_2_0#7599826077209668'}}
-        # do something ...
-        return "success"
+        # 点击事件 # {'xml': {'ToUserName': 'ww36b39b33bbf1b2f0', 'FromUserName': 'WuJun', 'CreateTime': '1747014396', 'MsgType': 'event', 'AgentID': '1000002', 'Event': 'click', 'EventKey': '#sendmsg#_2_0#7599826077209668'}}
+        # 文本消息 # {'xml': {'ToUserName': 'ww36b39b33bbf1b2f0', 'FromUserName': 'WuJun', 'CreateTime': '1747017605', 'MsgType': 'text', 'Content': '123456789', 'MsgId': '7503383482518056014', 'AgentID': '1000002'}}
+        data = decrypt_result.get('xml', {})
+        res = QyCallbackHandler._dispatch(data)
+        return res
+
+    @staticmethod
+    def _dispatch(data):
+        """回调任务自动分配"""
+        msg_type = data.get('MsgType')
+        msg_event = data.get('Event')
+        msg_user = data.get('FromUserName')
+        content = data.get('Content')
+        qy_config = Config.qy_config()
+        handler = AiCommand()
+        method = 'exec_null'
+        logger.debug([msg_type, msg_event, msg_user, content], 'QY_MSG_DIS_STA')
+        if msg_type == 'text':
+            # 用户回复消息
+            commands = qy_config['command_list'].split(',')
+            admins = qy_config['admin_list'].split(',')
+            if msg_user in admins:
+                # 仅管理员可用
+                for k,v in enumerate(commands):
+                    if content.lower().startswith(v):
+                        method = f"exec_0_{k}"
+                        break
+        elif msg_type == 'event' and msg_event == 'click':
+            # 菜单点击事件
+            msg_key = data.get('EventKey', '').split('#')
+            if len(msg_key) == 3 and msg_key[1]:
+                msk = msg_key[1].split('_')
+                method = f"exec{msg_key[1]}"
+                if msk[1] == '0':  # AI 菜单
+                    handler = AiCommand()
+                elif msk[1] == '1':  # GPL 菜单
+                    handler = GplCommand()
+                elif msk[1] == '2':  # SMP 菜单
+                    handler = SmpCommand()
+                else:
+                    pass  # 未识别的菜单放行
+        else:
+            pass  # 未识别的消息放行
+        handler.set_content(content)
+        action = getattr(handler, method)
+        logger.debug([handler.__class__, method], 'QY_MSG_DIS_END')
+        return action()
+
