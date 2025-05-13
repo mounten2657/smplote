@@ -1,10 +1,10 @@
 import time
 import threading
-from service.src.preview.file_preview import FilePreview
+from service.source.preview.file_preview import FilePreview
 from utils.wechat.gewechat.bridge.channel import Channel
 from utils.wechat.gewechat.bridge.context import ContextType
 from utils.wechat.gewechat.formatter.gewechat_message import GeWeChatMessage
-from utils.wechat.gewechat.wechat_client import WechatClient
+from utils.wechat.gewechat.ge_client import GeClient
 from tool.core import *
 
 logger = Logger()
@@ -25,7 +25,7 @@ class WechatCallbackHandler:
         if not self._initialized:
             # 使用_initialized=True创建配置，表示只初始化配置，不执行登录
             self.config = Config.gewechat_config()
-            self.client = WechatClient.get_gewechat_client(self.config)
+            self.client = GeClient.get_gewechat_client(self.config)
             self.commands = self.config.get('gewechat_command_list').split(',')
             # 创建通道对象
             self.channel = Channel(self.client, self.config)

@@ -5,7 +5,7 @@ from utils.wechat.qywechat.qy_client import QyClient
 logger = Logger()
 
 
-class GiteeCallbackHandler:
+class GiteeWebhook:
 
     @staticmethod
     def push_handler(params):

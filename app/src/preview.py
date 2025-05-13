@@ -1,5 +1,5 @@
 from tool.router.base_app import BaseApp
-from service.src.preview.file_preview import FilePreview
+from service.source.preview.file_preview import FilePreview
 
 
 class Preview(BaseApp):

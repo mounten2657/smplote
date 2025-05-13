@@ -7,7 +7,7 @@ from tool.core import *
 logger = Logger()
 
 
-class WechatClient:
+class GeClient:
 
     @staticmethod
     def set_gewechat_callback(config=None):
@@ -16,7 +16,7 @@ class WechatClient:
         config = config if config else Config.gewechat_config()
         callback_url = Http.get_docker_inner_url(config['gewechat_callback_url'])
         try:
-            client = WechatClient.get_gewechat_client(config)
+            client = GeClient.get_gewechat_client(config)
             callback_resp = client.set_callback(config['gewechat_token'], callback_url)
         except RuntimeError as e:
             callback_resp = Attr.parse_json_ignore(str(e))
@@ -65,7 +65,7 @@ class WechatClient:
         config = config if config else Config.gewechat_config()
         # 检查token是否存在，如果不存在则获取
         if not config.get('gewechat_token'):
-            WechatClient.get_token(config)
+            GeClient.get_token(config)
         # 使用工厂获取客户端实例
         client = GewechatClientFactory.get_client(config)
         # 如果不是初始化模式，并且没有app_id，则登录

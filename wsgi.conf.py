@@ -4,6 +4,7 @@ Gunicorn 生产环境配置
 https://docs.gunicorn.org/en/stable/configure.html
 gunicorn -c /www/server/gunicorn/conf/smplote.conf.py wsgi:app >/dev/null 2>&1 &
 """
+import os
 from datetime import datetime
 from pathlib import Path
 from gevent import monkey
@@ -111,9 +112,10 @@ check_config = False
 # ---------------------------
 def post_fork(server, worker):
     """worker启动后执行"""
-    import os
     os.environ.setdefault('PYTHON_RUN_MAIN', 'true')
     os.environ.setdefault('IS_PROD', 'true')
+    os.environ.setdefault('DB_MYSQL_HOST_DEFAULT', 'localhost')
+    os.environ.setdefault('DB_MYSQL_PORT_DEFAULT', '3306')
     server.log.info("Service has been successfully started, Worker is running ... ")
 
 

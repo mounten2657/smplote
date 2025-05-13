@@ -50,7 +50,7 @@ python main.py -m report.daily_report.gen_md_img                 # 基于md日�
 python main.py -m bot.task.daily_task                            # 每日任务入口（自动化完成一系列任务）
 # 完整参数示例： 
 # python main.py -m bot.task.daily_task -p "ac=a1&gr=g1&report_type=1&start_date=2025-04-08&end_date=2025-04-09"
-python main.py -m callback.gewe_callback.reset_callback          # 重设 gewe 回调地址
+python main.py -m callback.ge_callback.reset_callback            # 重设 gewe 回调地址
 ```
 
 ## 使用说明
@@ -78,7 +78,8 @@ WX_WXID_G2=
 
 - `app`：应用入口文件夹
 - `config`：配置文件夹
-- `data`：数据库文件夹
+- `data`：数据文件夹
+- `model`：数据库模型文件夹
 - `service`：业务服务文件夹
 - `storage`：临时文件夹
 - `tool`：基础工具文件夹

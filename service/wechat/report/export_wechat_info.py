@@ -5,20 +5,20 @@ from tool.core import *
 from service.ai.report.ai_report_generator import AIReportGenerator
 from tool.unit.img.md_to_img import MdToImg
 from service.wechat.report.get_wechat_info import GetWechatInfo
-from service.wechat.model.wechat_db_model import WechatDBModel
+from model.wechat.sqlite.wx_core_sqlite_model import WxCoreSqliteModel
 
 
 class ExportWechatInfo:
 
     @staticmethod
-    def export_users(g_wxid: str, db_config: dict, g_wxid_dir: str):
+    def export_users(g_wxid: str, g_wxid_dir: str):
         """
         导出某个群聊的群成员信息
         :param g_wxid: 群 wxid
-        :param db_config:  数据库配置，来自 config/db.json
         :param g_wxid_dir:  数据保存位置，来自 config/wx.json
         :return: 群成员列表
         """
+        db_config = Config.sqlite_db_config()
         db = DBHandler(db_config, g_wxid)
         result = db.get_room_list(roomwxids=[g_wxid])
         date_dir = Time.dft(Time.now(), "/%Y%m%d")
@@ -26,11 +26,10 @@ class ExportWechatInfo:
         return True
 
     @staticmethod
-    def export_chats(g_wxid: str, db_config: dict, g_wxid_dir: str, params: dict = None):
+    def export_chats(g_wxid: str, g_wxid_dir: str, params: dict = None):
         """
         导出某个群聊的群成员信息
         :param g_wxid: 群 wxid
-        :param db_config:  数据库配置，来自 config/db.json
         :param g_wxid_dir:  数据保存位置，来自 config/wx.json
         :param params:  请求入参，如页码和起止时间等参数
         :return: 群成员列表
@@ -40,6 +39,7 @@ class ExportWechatInfo:
         # 时间处理，以便更好理解
         start_time, end_time = Time.start_end_time_list(params)
         date_dir = Time.dft(end_time, "/%Y%m%d")
+        db_config = Config.sqlite_db_config()
         db = DBHandler(db_config, g_wxid)
         msgs, users = db.get_msgs(
             wxids=[g_wxid],
@@ -60,7 +60,7 @@ class ExportWechatInfo:
 
     @staticmethod
     def format_msgs(msgs, users, g_wxid):
-        db = WechatDBModel()
+        db = WxCoreSqliteModel()
         room_name = db.get_room_name(g_wxid)
         # txt_str = f'微信群｢『 {room_name} 』｣聊天记录：\n'
         txt_str = f'微信群[{room_name}]聊天记录：\n'
@@ -123,13 +123,13 @@ class ExportWechatInfo:
         """
         now_timestamp = Time.now()
         task_res = {"all_params": all_params}
-        wxid, g_wxid, g_wxid_dir, db_config, params = map(all_params.get, ['wxid', 'g_wxid', 'g_wxid_dir', 'db_config', 'params'])
+        wxid, g_wxid, g_wxid_dir, params = map(all_params.get, ['wxid', 'g_wxid', 'g_wxid_dir', 'params'])
         re_db = int(params.get('re_db', '1'))  # 默认每次刷新数据库
         # 构建任务列表
         tasks = [
             ('wx_core_db', lambda: GetWechatInfo.decrypt_wx_core_db(wxid, params) if re_db else None),
-            ('export_users', lambda: ExportWechatInfo.export_users(g_wxid, db_config, g_wxid_dir)),
-            ('export_chats', lambda: ExportWechatInfo.export_chats(g_wxid, db_config, g_wxid_dir, params)),
+            ('export_users', lambda: ExportWechatInfo.export_users(g_wxid, g_wxid_dir)),
+            ('export_chats', lambda: ExportWechatInfo.export_chats(g_wxid, g_wxid_dir, params)),
             ('daily_report', lambda: AIReportGenerator.daily_report(g_wxid_dir, params)),
             ('gen_img', lambda: MdToImg.gen_img(g_wxid_dir, params))
         ]

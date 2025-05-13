@@ -1,9 +1,9 @@
-from tool.router.base_app import BaseApp
+from tool.router.base_app_wx import BaseAppWx
 from tool.unit.img.md_to_img import MdToImg
 from service.ai.report.ai_report_generator import AIReportGenerator
 
 
-class DailyReport(BaseApp):
+class DailyReport(BaseAppWx):
 
     def gen_report(self):
         """生成md总结"""

@@ -14,3 +14,4 @@ xmltodict~=0.14.2
 pilk~=0.2.4
 pydub~=0.25.1
 gevent~=25.4.2
+mysql-connector-python~=9.3.0

@@ -49,19 +49,18 @@ class Config:
         return Config.cache_config()['redis']
 
     @staticmethod
-    def db_config(db_name='default'):
-        config = Config.load_config('config/db.json').get(db_name)
+    def mysql_db_config(db_name='default'):
+        return Config.load_config('config/db.json').get('mysql', {}).get(db_name)
+
+    @staticmethod
+    def sqlite_db_config(db_name='default'):
+        config = Config.load_config('config/db.json').get('sqlite', {}).get(db_name)
         config['path'] = Dir.abs_dir(config['path'])
         return config
 
     @staticmethod
-    def db_path(db_name='default'):
-        config = Config.load_config('config/db.json').get(db_name)
-        return Dir.abs_dir(config['path'])
-
-    @staticmethod
-    def db_dir(db_name='default'):
-        return os.path.dirname(Config.db_path(db_name))
+    def sqlite_db_dir(db_name='default'):
+        return os.path.dirname(Config.sqlite_db_config(db_name)['path'])
 
     @staticmethod
     def gewechat_config():

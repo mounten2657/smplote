@@ -1,7 +1,19 @@
 {
-    "default":  {
-        "key": "[ENV.DB_KEY_DEFAULT|wl_wx_core]",
-        "type": "[ENV.DB_TYPE_DEFAULT|sqlite]",
-        "path": "[ENV.DB_PATH_DEFAULT|data/database/sqlite/wx_core.db]"
+    "sqlite": {
+        "default": {
+            "key": "[ENV.DB_SQLITE_KEY_DEFAULT|wl_wx_core]",
+            "type": "[ENV.DB_SQLITE_TYPE_DEFAULT|sqlite]",
+            "path": "[ENV.DB_SQLITE_PATH_DEFAULT|data/database/sqlite/wx_core.db]"
+        }
+    },
+    "mysql": {
+        "default": {
+            "host": "[ENV.DB_MYSQL_HOST_DEFAULT]",
+            "port": "[ENV.DB_MYSQL_PORT_DEFAULT]",
+            "user": "[ENV.DB_MYSQL_USER_DEFAULT]",
+            "password": "[ENV.DB_MYSQL_PASSWORD_DEFAULT]",
+            "database": "[ENV.DB_MYSQL_DATABASE_DEFAULT]",
+            "prefix": "[ENV.DB_MYSQL_PREFIX_DEFAULT]"
+        }
     }
 }

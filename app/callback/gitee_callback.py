@@ -1,5 +1,5 @@
 from tool.router.base_app import BaseApp
-from service.webhook.gitee_callback_handler import GiteeCallbackHandler
+from service.gitee.gitee_webhook import GiteeWebhook
 
 
 class GiteeCallback(BaseApp):
@@ -20,5 +20,5 @@ class GiteeCallback(BaseApp):
 
     def smplote(self):
         """gitee 项目代码推送回调处理 - smplote"""
-        res = GiteeCallbackHandler.push_handler(self.params)
+        res = GiteeWebhook.push_handler(self.params)
         return self.success(res)

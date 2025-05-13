@@ -1,11 +1,11 @@
-from tool.router.base_app import BaseApp
+from tool.router.base_app_wx import BaseAppWx
 from tool.core import *
 from utils.grpc.open_nat.open_nat_client import OpenNatClient
 
 
-class Index(BaseApp):
+class Index(BaseAppWx):
 
-    def index(self, **kwargs):
+    def index(self):
         """首页入口"""
         current_timestamp = Time.now()
         response = {
@@ -21,9 +21,7 @@ class Index(BaseApp):
     def check_config(self):
         """检查常规配置"""
         res = {
-            "ai": Config.ai_config(),
             "app": Config.app_config(),
-            "db": Config.db_config(),
             "logger": Config.logger_config(),
             "wx": Config.wx_config(),
         }
