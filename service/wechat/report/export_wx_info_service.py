@@ -2,13 +2,13 @@ from datetime import datetime
 from collections import defaultdict
 from pywxdump import *
 from tool.core import *
-from service.ai.report.ai_report_generator import AIReportGenerator
 from tool.unit.img.md_to_img import MdToImg
-from service.wechat.report.get_wechat_info import GetWechatInfo
+from service.ai.report.ai_report_gen_service import AIReportGenService
+from service.wechat.report.get_wx_info_service import GetWxInfoService
 from model.wechat.sqlite.wx_core_sqlite_model import WxCoreSqliteModel
 
 
-class ExportWechatInfo:
+class ExportWxInfoService:
 
     @staticmethod
     def export_users(g_wxid: str, g_wxid_dir: str):
@@ -54,7 +54,7 @@ class ExportWechatInfo:
         File.save_file(msgs, base_dir + '/chat_list.json', False)
         users = File.read_file(base_dir + '/user_list.json')
         users = users.get(g_wxid, {}).get('wxid2userinfo', [])
-        txt_str = ExportWechatInfo.format_msgs(msgs, users, g_wxid)
+        txt_str = ExportWxInfoService.format_msgs(msgs, users, g_wxid)
         File.save_file(txt_str, base_dir + '/chat_list.txt', False)
         return True
 
@@ -72,7 +72,7 @@ class ExportWechatInfo:
             msg['msg'] = str(msg['msg']).replace('\n', f'{indent}') \
                 if msg['type_name'] in ['文本', '引用回复', '系统通知'] \
                 else f'[{msg['type_name']}]'
-        msgs = ExportWechatInfo.group_messages_by_time(msgs)
+        msgs = ExportWxInfoService.group_messages_by_time(msgs)
         for m_time in msgs:
             txt_str += f'\n{indent}{indent}[系统消息] {m_time}\n\n'
             for m in msgs[m_time]:
@@ -127,10 +127,10 @@ class ExportWechatInfo:
         re_db = int(params.get('re_db', '1'))  # 默认每次刷新数据库
         # 构建任务列表
         tasks = [
-            ('wx_core_db', lambda: GetWechatInfo.decrypt_wx_core_db(wxid, params) if re_db else None),
-            ('export_users', lambda: ExportWechatInfo.export_users(g_wxid, g_wxid_dir)),
-            ('export_chats', lambda: ExportWechatInfo.export_chats(g_wxid, g_wxid_dir, params)),
-            ('daily_report', lambda: AIReportGenerator.daily_report(g_wxid_dir, params)),
+            ('wx_core_db', lambda: GetWxInfoService.decrypt_wx_core_db(wxid, params) if re_db else None),
+            ('export_users', lambda: ExportWxInfoService.export_users(g_wxid, g_wxid_dir)),
+            ('export_chats', lambda: ExportWxInfoService.export_chats(g_wxid, g_wxid_dir, params)),
+            ('daily_report', lambda: AIReportGenService.daily_report(g_wxid_dir, params)),
             ('gen_img', lambda: MdToImg.gen_img(g_wxid_dir, params))
         ]
         # 执行任务

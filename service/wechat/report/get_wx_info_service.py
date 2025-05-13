@@ -3,7 +3,7 @@ from pywxdump import *
 from tool.core import *
 
 
-class GetWechatInfo:
+class GetWxInfoService:
 
     @staticmethod
     def get_real_time_wx_info(wxid: str = '', index: int = 0, save_path: str = ''):
@@ -60,7 +60,7 @@ class GetWechatInfo:
                 start_time, end_time = (Time.now() - 7 * 86400, Time.now())
             save_path = save_path if save_path else Config.sqlite_db_dir()
             merge_save_path = os.path.join(save_path, 'wx_core.db' if start_time > 10 else 'wx_all_pass.db')
-            wx_info = GetWechatInfo.get_local_wx_info(wxid)
+            wx_info = GetWxInfoService.get_local_wx_info(wxid)
             code, merge_save_path = decrypt_merge(
                 key=wx_info.get('key'),
                 wx_path=wx_info.get('wx_dir'),
@@ -87,7 +87,7 @@ class GetWechatInfo:
         """
         try:
             merge_path = merge_path if merge_path else f'{Config.sqlite_db_dir()}/wx_real_time.db'
-            wx_info = GetWechatInfo.get_local_wx_info(wxid)
+            wx_info = GetWxInfoService.get_local_wx_info(wxid)
             code, merge_path = all_merge_real_time_db(
                 key=wx_info.get('key'),
                 wx_path=wx_info.get('wx_dir'),

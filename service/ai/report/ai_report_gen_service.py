@@ -6,7 +6,7 @@ from model.wechat.sqlite.wx_core_sqlite_model import WxCoreSqliteModel
 from tool.core import *
 
 
-class AIReportGenerator:
+class AIReportGenService:
     """AI报告生成器"""
 
     def __init__(self):
@@ -76,11 +76,11 @@ class AIReportGenerator:
         if report_type != 2:
             # 简略版
             save_path[0] = out_path = Dir.abs_dir(base_dir + f'/{g_name}_{report_date}.md')
-            res[0] = AIReportGenerator.generate_report(g_wxid, content, out_path)
+            res[0] = AIReportGenService.generate_report(g_wxid, content, out_path)
         if report_type != 1:
             # 详细版
             save_path[1] = out_path = Dir.abs_dir(base_dir + f'/{g_name}_{report_date}_detail.md')
-            res[1] = AIReportGenerator.generate_report(g_wxid, content, out_path, 'prompt_detail')
+            res[1] = AIReportGenService.generate_report(g_wxid, content, out_path, 'prompt_detail')
         return {"save_path": save_path, "answer": [len(res[0]), len(res[1])]}
 
 

@@ -1,6 +1,6 @@
 from tool.router.base_app_wx import BaseAppWx
 from tool.core import *
-from utils.grpc.open_nat.open_nat_client import OpenNatClient
+from service.vps.open_nat_service import OpenNatService
 
 
 class Index(BaseAppWx):
@@ -29,6 +29,6 @@ class Index(BaseAppWx):
 
     def init_vps_config(self):
         """初始化vps上的配置文件 - 加密处理"""
-        res = OpenNatClient.init_config_qy()
+        res = OpenNatService.init_vps_config_qy()
         return self.success(res)
 

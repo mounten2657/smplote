@@ -1,6 +1,6 @@
 import time
 import threading
-from service.source.preview.file_preview import FilePreview
+from service.source.preview.file_preview_service import FilePreviewService
 from utils.wechat.gewechat.bridge.channel import Channel
 from utils.wechat.gewechat.bridge.context import ContextType
 from utils.wechat.gewechat.formatter.gewechat_message import GeWeChatMessage
@@ -48,7 +48,7 @@ class WechatCallbackHandler:
         if file_path:
             # 安全检查
             params['path'] = file_path
-            return FilePreview.office(params)
+            return FilePreviewService.office(params)
         return "gewechat callback server is running"
 
     def POST(self):

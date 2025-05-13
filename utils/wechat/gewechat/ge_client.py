@@ -75,5 +75,8 @@ class GeClient:
             GewechatClientFactory.login_if_needed(client, config.get('gewechat_app_id'))
         return client
 
-
+    @staticmethod
+    def send_text_msg(msg: str, wxid: str = None):
+        """发送文本消息 - 可以是私聊，也可以是群聊，支持艾特"""
+        return True
 

@@ -189,4 +189,5 @@ class Emoji:
                 total=len(emoji_hexes),
                 desc="Downloading Emojis"
             ))
+        return True
 

@@ -1,5 +1,5 @@
 from tool.router.base_app_wx import BaseAppWx
-from service.wechat.report.export_wechat_info import ExportWechatInfo
+from service.wechat.report.export_wx_info_service import ExportWxInfoService
 
 
 class Task(BaseAppWx):
@@ -12,5 +12,5 @@ class Task(BaseAppWx):
             "g_wxid_dir": self.g_wxid_dir,
             "params": self.params,
         }
-        res = ExportWechatInfo.daily_task(all_params)
+        res = ExportWxInfoService.daily_task(all_params)
         return self.success(res)
