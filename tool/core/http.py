@@ -87,10 +87,6 @@ class Http:
         return get_data
 
     @staticmethod
-    def get_flask_json():
-        return request.get_json()
-
-    @staticmethod
     def get_request_method():
         """
         获取当前 HTTP 请求的方式

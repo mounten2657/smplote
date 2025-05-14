@@ -5,7 +5,7 @@ from tool.core import *
 from tool.unit.img.md_to_img import MdToImg
 from service.ai.report.ai_report_gen_service import AIReportGenService
 from service.wechat.report.get_wx_info_service import GetWxInfoService
-from model.wechat.sqlite.wx_core_sqlite_model import WxCoreSqliteModel
+from model.wechat.sqlite.wx_core_model import WxCoreModel
 
 
 class ExportWxInfoService:
@@ -60,7 +60,7 @@ class ExportWxInfoService:
 
     @staticmethod
     def format_msgs(msgs, users, g_wxid):
-        db = WxCoreSqliteModel()
+        db = WxCoreModel()
         room_name = db.get_room_name(g_wxid)
         # txt_str = f'微信群｢『 {room_name} 』｣聊天记录：\n'
         txt_str = f'微信群[{room_name}]聊天记录：\n'

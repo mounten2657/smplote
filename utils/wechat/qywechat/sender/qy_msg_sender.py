@@ -19,7 +19,7 @@ class QyMsgSender(QyClientFactory, Que):
         return self.que_submit(content=content, msg_type=msg_type, app_key=app_key)
 
     def _que_exec(self, **kwargs):
-        """队列执行方法入口"""
+        """队列执行入口"""
         content = kwargs.get('content')
         msg_type = kwargs.get('msg_type')
         app_key = kwargs.get('app_key')

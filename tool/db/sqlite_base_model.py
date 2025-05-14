@@ -1,6 +1,6 @@
 import sqlite3
 from typing import Union, List, Dict, Optional, Any
-from tool.core import Logger, Error
+from tool.core import Logger, Error, Config, Str
 
 
 class SqliteBaseModel:
@@ -9,7 +9,7 @@ class SqliteBaseModel:
     ### 使用示例
       **>查询类**
          # 初始化数据库连接
-          db = SqliteBaseModel('/root/sqlite/wx_app.db')  # 需要绝对路径
+          db = TestSqliteModel()  # 子类中指定表名
          # 获取单条记录
           msg_one = db.table('Msg') \
              .select(['id', 'msg']) \
@@ -75,20 +75,20 @@ class SqliteBaseModel:
 
     """
 
-    def __init__(self, db_path: str):
-        # 根据自己的需求指定数据库绝对路径
-        self.db_path = db_path
+    _db_config = Config.sqlite_db_config()
+    _table = None   # 表名，子类继承时指定
+
+    def __init__(self):
         self.logger = Logger()
-        self.connection = sqlite3.connect(self.db_path)
+        self.connection = sqlite3.connect(self._db_config['path'])
         self.connection.row_factory = sqlite3.Row
-        self._table = None
         self._reset_query()
 
     def _reset_query(self):
-        self._table = None
         self._select = ['*']
         self._wheres = []
         self._where_ins = []
+        self._where_sqls = []
         self._limit_offset = None
         self._limit_count = None
 
@@ -114,6 +114,12 @@ class SqliteBaseModel:
         """IN条件查询方法"""
         if values:
             self._where_ins.append((key, values))
+        return self
+
+    def where_sql(self, sql: str) -> 'SqliteBaseModel':
+        """custom sql condition query method"""
+        if sql:
+            self._where_sqls.append(sql)
         return self
 
     def limit(self, offset: int, count: int) -> 'SqliteBaseModel':
@@ -150,6 +156,9 @@ class SqliteBaseModel:
 
         where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
 
+        for values in self._where_sqls:
+            where_clause += f" {values} "
+
         # LIMIT 部分
         limit_clause = ''
         if self._limit_count is not None:
@@ -167,6 +176,7 @@ class SqliteBaseModel:
         cursor.execute(sql, params)
         results = [dict(row) for row in cursor.fetchall()]
         self._reset_query()
+        results = Str.convert_to_json_dict(results)
         return results
 
     def first(self) -> Optional[Dict]:
@@ -221,6 +231,7 @@ class SqliteBaseModel:
             raise ValueError("No table specified")
 
         cursor = self.connection.cursor()
+        update_data = Str.convert_to_json_string(update_data)
         affected_rows = 0
 
         try:
@@ -281,6 +292,61 @@ class SqliteBaseModel:
         self.logger.info({"sql": sql.strip(), "params": set_params + where_params}, 'DB_SQL_UPDATE', 'sqlite')
         return sql, set_params + where_params
 
+    def insert(self, insert_data: Union[Dict, List[Dict]]) -> int:
+        """
+        添加单条或多条数据
+        :param insert_data: 单条数据字典或多条数据列表
+        :return: 插入成功的记录数
+        """
+        if not self._table:
+            raise ValueError("No table specified")
+
+        cursor = self.connection.cursor()
+        insert_data = Str.convert_to_json_string(insert_data)
+
+        try:
+            # 单条插入
+            if isinstance(insert_data, dict):
+                columns = ', '.join(insert_data.keys())
+                placeholders = ', '.join(['?'] * len(insert_data))
+                values = list(insert_data.values())
+
+                sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
+                cursor.execute(sql, values)
+                inserted_rows = cursor.rowcount
+
+            # 批量插入
+            elif isinstance(insert_data, list) and all(isinstance(item, dict) for item in insert_data):
+                if not insert_data:
+                    return 0
+
+                # 所有字典的键必须相同
+                first_keys = set(insert_data[0].keys())
+                if not all(set(item.keys()) == first_keys for item in insert_data):
+                    raise ValueError("All dictionaries in the list must have the same keys")
+
+                columns = ', '.join(first_keys)
+                placeholders = ', '.join(['?'] * len(first_keys))
+                value_groups = [tuple(item.values()) for item in insert_data]
+
+                sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
+                cursor.executemany(sql, value_groups)
+                inserted_rows = cursor.rowcount
+
+            else:
+                raise TypeError("add_data must be a dictionary or a list of dictionaries")
+
+            self.connection.commit()
+            return inserted_rows
+
+        except Exception as e:
+            self.connection.rollback()
+            err = Error.handle_exception_info(e)
+            self.logger.exception(err, 'DB_EXP_INSERT', 'sqlite')
+            return 0
+        finally:
+            self._reset_query()
+
     def delete(self, conditions: Dict) -> int:
         """
         删除记录
@@ -323,4 +389,9 @@ class SqliteBaseModel:
         finally:
             self._reset_query()
 
+    def close(self):
+        """关闭数据库连接"""
+        if self.connection:
+            self.connection.close()
+            self.logger.info("SQLite connection closed", 'DB_CONN', 'sqlite')
 

@@ -1,6 +1,6 @@
 import mysql.connector
 from typing import Union, List, Dict, Optional, Any
-from tool.core import Logger, Error, Config
+from tool.core import Logger, Error, Config, Str
 
 
 class MysqlBaseModel:
@@ -9,7 +9,7 @@ class MysqlBaseModel:
     ### Usage examples
       **> Query classes**
          # Initialize the database connection
-          db = MysqlBaseModel('localhost', 'user', 'password', 'database')
+          db = TestMysqlModel()  # 子类中指定表名
          # Get a single record
           msg_one = db.table('Msg') \
              .select(['id', 'msg']) \
@@ -74,26 +74,27 @@ class MysqlBaseModel:
           print(f"Deleted {deleted} old records")
     """
 
-    def __init__(self, host: str, user: str, password: str, database: str):
-        self.host = host
-        self.user = user
-        self.password = password
-        self.database = database
+    _db_config = Config.mysql_db_config()
+    _table = None   # 表名，子类继承时指定
+
+    def __init__(self):
         self.logger = Logger()
         self.connection = mysql.connector.connect(
-            host=self.host,
-            user=self.user,
-            password=self.password,
-            database=self.database
+            host=self._db_config['host'],
+            port=self._db_config['port'],
+            user=self._db_config['user'],
+            password=self._db_config['password'],
+            database=self._db_config['database']
         )
-        self._table = None
+        self.prefix = self._db_config['prefix']
+        self._table = self.prefix + self._table
         self._reset_query()
 
     def _reset_query(self):
-        self._table = None
         self._select = ['*']
         self._wheres = []
         self._where_ins = []
+        self._where_sqls = []
         self._limit_offset = None
         self._limit_count = None
 
@@ -119,6 +120,12 @@ class MysqlBaseModel:
         """IN condition query method"""
         if values:
             self._where_ins.append((key, values))
+        return self
+
+    def where_sql(self, sql: str) -> 'MysqlBaseModel':
+        """custom sql condition query method"""
+        if sql:
+            self._where_sqls.append(sql)
         return self
 
     def limit(self, offset: int, count: int) -> 'MysqlBaseModel':
@@ -155,6 +162,9 @@ class MysqlBaseModel:
 
         where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
 
+        for values in self._where_sqls:
+            where_clause += f" {values} "
+
         # LIMIT part
         limit_clause = ''
         if self._limit_count is not None:
@@ -173,6 +183,7 @@ class MysqlBaseModel:
         cursor.execute(sql, params)
         results = cursor.fetchall()
         self._reset_query()
+        results = Str.convert_to_json_dict(results)
         return results
 
     def first(self) -> Optional[Dict]:
@@ -227,6 +238,7 @@ class MysqlBaseModel:
             raise ValueError("No table specified")
 
         cursor = self.connection.cursor()
+        update_data = Str.convert_to_json_string(update_data)
         affected_rows = 0
 
         try:
@@ -287,6 +299,61 @@ class MysqlBaseModel:
         self.logger.info({"sql": sql.strip(), "params": set_params + where_params}, 'DB_SQL_UPDATE', 'mysql')
         return sql, set_params + where_params
 
+    def insert(self, insert_data: Union[Dict, List[Dict]]) -> int:
+        """
+        添加单条或多条数据
+        :param insert_data: 单条数据字典或多条数据列表
+        :return: 插入成功的记录数
+        """
+        if not self._table:
+            raise ValueError("No table specified")
+
+        cursor = self.connection.cursor()
+        insert_data = Str.convert_to_json_string(insert_data)
+
+        try:
+            # 单条插入
+            if isinstance(insert_data, dict):
+                columns = ', '.join(insert_data.keys())
+                placeholders = ', '.join(['%s'] * len(insert_data))
+                values = list(insert_data.values())
+
+                sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
+                cursor.execute(sql, values)
+                inserted_rows = cursor.lastrowid
+
+            # 批量插入
+            elif isinstance(insert_data, list) and all(isinstance(item, dict) for item in insert_data):
+                if not insert_data:
+                    return 0
+
+                # 所有字典的键必须相同
+                first_keys = set(insert_data[0].keys())
+                if not all(set(item.keys()) == first_keys for item in insert_data):
+                    raise ValueError("All dictionaries in the list must have the same keys")
+
+                columns = ', '.join(first_keys)
+                placeholders = ', '.join(['%s'] * len(first_keys))
+                value_groups = [tuple(item.values()) for item in insert_data]
+
+                sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
+                cursor.executemany(sql, value_groups)
+                inserted_rows = cursor.lastrowid
+
+            else:
+                raise TypeError("add_data must be a dictionary or a list of dictionaries")
+
+            self.connection.commit()
+            return inserted_rows
+
+        except Exception as e:
+            self.connection.rollback()
+            err = Error.handle_exception_info(e)
+            self.logger.exception(err, 'DB_EXP_INSERT', 'mysql')
+            return 0
+        finally:
+            self._reset_query()
+
     def delete(self, conditions: Dict) -> int:
         """
         Delete records
@@ -328,3 +395,10 @@ class MysqlBaseModel:
             return 0
         finally:
             self._reset_query()
+
+    def close(self):
+        """关闭数据库连接"""
+        if self.connection and self.connection.is_connected():
+            self.connection.close()
+            self.logger.info("MySQL connection closed", 'DB_CONN', 'mysql')
+

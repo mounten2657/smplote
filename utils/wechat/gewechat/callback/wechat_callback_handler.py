@@ -60,7 +60,7 @@ class WechatCallbackHandler:
         global is_callback_success
         data = Http.get_flask_params()
         if not data:
-            data = Http.get_flask_json()
+            data = Http.get_flask_params()
         logger.debug(f"处理微信回调消息[DATA]==={data}".replace('\n', ' '))
 
         # gewechat服务发送的回调测试消息

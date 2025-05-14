@@ -25,7 +25,7 @@ class QyCallbackHandler(Que):
         return 'success' if res else 'error'
 
     def _que_exec(self, **kwargs):
-        """队列执行方法入口"""
+        """队列执行入口"""
         app_key = kwargs.get('app_key')
         xml = kwargs.get('xml')
         return self._msg_handler(app_key, xml)

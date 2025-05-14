@@ -20,5 +20,5 @@ class GiteeCallback(BaseApp):
 
     def smplote(self):
         """gitee 项目代码推送回调处理 - smplote"""
-        res = GiteeWebhookService.push_handler(self.params)
+        res = GiteeWebhookService().push_handler(self.params)
         return self.success(res)

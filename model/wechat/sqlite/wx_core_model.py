@@ -1,12 +1,12 @@
 from tool.db.sqlite_base_model import SqliteBaseModel
-from tool.core import *
+from tool.core import Ins
 
 
-class WxCoreSqliteModel(SqliteBaseModel):
+@Ins.singleton
+class WxCoreModel(SqliteBaseModel):
+    """微信本地核心数据库模型"""
 
-    def __init__(self, db_path: str = ''):
-        self.db_path = db_path if db_path else Config.sqlite_db_config()['path']
-        super().__init__(db_path)
+    _table = None   # 不指定全库可查
 
     def get_room_name(self, g_wxid):
         """
