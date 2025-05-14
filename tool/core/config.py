@@ -46,11 +46,17 @@ class Config:
 
     @staticmethod
     def redis_config():
-        return Config.cache_config()['redis']
+        config = Config.cache_config()['redis']
+        port = os.environ.get('REDIS_PORT_PROD', False)
+        config['port'] = int(port) if port else config['port']
+        return config
 
     @staticmethod
     def mysql_db_config(db_name='default'):
-        return Config.load_config('config/db.json').get('mysql', {}).get(db_name)
+        config = Config.load_config('config/db.json').get('mysql', {}).get(db_name)
+        port = os.environ.get('DB_MYSQL_PORT_PROD', False)
+        config['port'] = int(port) if port else config['port']
+        return config
 
     @staticmethod
     def sqlite_db_config(db_name='default'):
