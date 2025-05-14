@@ -114,8 +114,6 @@ def post_fork(server, worker):
     """worker启动后执行"""
     os.environ.setdefault('PYTHON_RUN_MAIN', 'true')
     os.environ.setdefault('IS_PROD', 'true')
-    os.environ.setdefault('DB_MYSQL_HOST_DEFAULT', 'localhost')
-    os.environ.setdefault('DB_MYSQL_PORT_DEFAULT', '3306')
     server.log.info("Service has been successfully started, Worker is running ... ")
 
 
