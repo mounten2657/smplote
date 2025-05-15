@@ -18,8 +18,12 @@ class QyCallbackService(Que):
         res['insert_db'] = pid = db.add_queue('qyapi', params)
         logger.debug(res, 'QYAPI_CALL_IDB')
         if Http.get_request_method() == 'GET':
-            # 初始化验证 - 一般只走一次
-            return QyVerifyHandler.verify(app_key)
+            # 初始化验证 - 一般只走一次 - 验证就不走队列了，需要实时返回
+            res['verify'] = QyVerifyHandler.verify(app_key)
+            if res['verify']:
+                update_data = {"process_result": res, "is_processed": 1, "is_succeed": 1}
+                db.update_process(int(pid), update_data)
+            return res['verify']
         xml = request.get_data()
         logger.debug(xml, 'QYAPI_CALL_XML')
         # 更新处理数据
