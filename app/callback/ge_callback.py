@@ -11,5 +11,5 @@ class GeweCallback(BaseApp):
 
     def collect(self):
         """微信回调入口"""
-        return GeCallbackService.callback_handler()
+        return GeCallbackService().callback_handler(self.params)
 
