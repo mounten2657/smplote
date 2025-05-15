@@ -45,7 +45,7 @@ class GiteeWebhookService(Que):
             # 其它异步流程
             if Config.is_prod():
                 # 拉取最新代码并重启 flask
-                res['git_pull'] = Sys.run_with_alias('gugs')
+                res['git_pull'] = Sys.run_command('/opt/shell/init/init_flask.sh')
             # 更新处理结果
             update_data = {"process_result": res}
             if res['send_msg']:
