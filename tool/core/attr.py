@@ -137,7 +137,7 @@ class Attr:
     @staticmethod
     def convert_to_json_string(obj):
         """
-        将对象中的字典转换为JSON字符串
+        将对象中的字典转换为JSON字符串，并处理bytes类型数据
 
         参数:
             obj: 待处理的对象（字典、列表或其他类型）
@@ -145,39 +145,38 @@ class Attr:
         返回:
             处理后的对象
         """
+        def process_value(value):
+            """递归处理值"""
+            if isinstance(value, bytes):
+                try:
+                    return value.decode('utf-8')
+                except UnicodeDecodeError:
+                    return str(value)
+            elif isinstance(value, dict):
+                return {k: process_value(v) for k, v in value.items()}
+            elif isinstance(value, (list, tuple)):
+                return [process_value(item) for item in value]
+            return value
+
         try:
             # 处理字典
             if isinstance(obj, dict):
                 new_dict = {}
                 for key, value in obj.items():
-                    if isinstance(value, (dict, list, tuple)):
+                    processed_value = process_value(value)
+                    if isinstance(processed_value, (dict, list, tuple)):
                         try:
-                            new_dict[key] = json.dumps(value, ensure_ascii=False)
+                            new_dict[key] = json.dumps(processed_value, ensure_ascii=False)
                         except (json.JSONDecodeError, TypeError):
-                            new_dict[key] = value
+                            new_dict[key] = processed_value
                     else:
-                        new_dict[key] = value
+                        new_dict[key] = processed_value
                 return new_dict
 
             # 处理列表或元组
             if isinstance(obj, (list, tuple)):
-                new_list = []
-                for item in obj:
-                    if isinstance(item, dict):
-                        # 处理列表中的字典
-                        new_item = {}
-                        for key, value in item.items():
-                            if isinstance(value, (dict, list, tuple)):
-                                try:
-                                    new_item[key] = json.dumps(value, ensure_ascii=False)
-                                except (json.JSONDecodeError, TypeError):
-                                    new_item[key] = value
-                            else:
-                                new_item[key] = value
-                        new_list.append(new_item)
-                    else:
-                        new_list.append(item)
-                return new_list if isinstance(obj, list) else tuple(new_list)
+                processed_list = [process_value(item) for item in obj]
+                return processed_list if isinstance(obj, list) else tuple(processed_list)
 
             # 其他类型直接返回
             return obj

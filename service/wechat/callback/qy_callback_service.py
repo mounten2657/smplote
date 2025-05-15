@@ -49,8 +49,9 @@ class QyCallbackService(Que):
         db = CallbackQueueModel()
         db.set_processed(pid)
         res['msg_handler'] = QyCallbackHandler.msg_handler(app_key, xml)
-        if res['msg_handler'] == 'success':
-            update_data = {"process_result": res, "is_succeed": 1}
-            res['update_db'] = db.update_process(int(pid), update_data)
+        update_data = {"process_result": res}
+        if res['msg_handler']:
+            update_data.update({"is_succeed": 1})
+        res['update_db'] = db.update_process(int(pid), update_data)
         return res
 
