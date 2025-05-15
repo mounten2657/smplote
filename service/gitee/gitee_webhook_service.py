@@ -41,11 +41,11 @@ class GiteeWebhookService(Que):
         db.set_processed(pid)
         if status == 200 and 'markdown' in data:
             # 发送企业应用消息
-            res['app_msg'] = QyClient().send_msg(data['markdown'])
+            res['send_msg'] = QyClient().send_msg(data['markdown'])
             # 其它异步流程
             # do something
             # 更新处理结果
-            if res['app_msg']:
+            if res['send_msg']:
                 update_data = {"process_result": res, "is_succeed": 1}
                 res['update_db'] = db.update_process(int(pid), update_data)
         return res

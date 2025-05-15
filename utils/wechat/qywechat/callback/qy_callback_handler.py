@@ -1,5 +1,4 @@
 import xmltodict
-from flask.globals import request
 from tool.core import *
 from utils.wechat.qywechat.callback.qy_verify_handler import QyVerifyHandler
 from utils.wechat.qywechat.command.ai_command import AiCommand
@@ -9,29 +8,10 @@ from utils.wechat.qywechat.command.smp_command import SmpCommand
 logger = Logger()
 
 
-@Ins.singleton
-class QyCallbackHandler(Que):
-
-    def msg_handler(self, app_key, params=None):
-        """对外提供的开放方法"""
-        logger.info(params, 'QY_MSG_CALL_PARAMS')
-        if Http.get_request_method() == 'GET':
-            # 初始化验证 - 一般只走一次
-            return QyVerifyHandler.verify(app_key)
-        xml = request.get_data()
-        if len(xml) == 0:
-            return 'invalid request'
-        res = self.que_submit(app_key=app_key, xml=xml)
-        return 'success' if res else 'error'
-
-    def _que_exec(self, **kwargs):
-        """队列执行入口"""
-        app_key = kwargs.get('app_key')
-        xml = kwargs.get('xml')
-        return self._msg_handler(app_key, xml)
+class QyCallbackHandler:
 
     @staticmethod
-    def _msg_handler(app_key, xml):
+    def msg_handler(app_key, xml):
         """
         企业微信消息回调处理
         :param app_key:  APP 账号 - a1 | a2 | ...
