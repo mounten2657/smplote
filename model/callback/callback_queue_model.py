@@ -40,8 +40,9 @@ class CallbackQueueModel(MysqlBaseModel):
         """数据入队列"""
         headers = custom = Http.get_request_headers()
         custom.update(custom_params if custom_params else {})
-        h_event = custom.get('h_event', Attr.get_value_by_key_like(custom, 'event'))
-        h_value = custom.get('h_value', Attr.get_value_by_key_like(custom, 'timestamp'))
+        # 先尝试有没有直接的键值，没有再看有没有指定键名，再没有，才读取默认的键名从header头中获取
+        h_event = custom.get('h_event', Attr.get_value_by_key_like(custom, custom.get('h_event_key', 'event')))
+        h_value = custom.get('h_value', Attr.get_value_by_key_like(custom, custom.get('h_value_key', 'timestamp')))
         insert_data = {
             "callback_type": callback_type,
             "source_url": request.url,
