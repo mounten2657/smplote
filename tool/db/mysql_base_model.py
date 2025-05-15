@@ -1,6 +1,6 @@
 import mysql.connector
 from typing import Union, List, Dict, Optional, Any
-from tool.core import Logger, Error, Config, Str
+from tool.core import Logger, Error, Config, Attr
 
 
 class MysqlBaseModel:
@@ -183,7 +183,7 @@ class MysqlBaseModel:
         cursor.execute(sql, params)
         results = cursor.fetchall()
         self._reset_query()
-        results = Str.convert_to_json_dict(results)
+        results = Attr.convert_to_json_dict(results)
         return results
 
     def first(self) -> Optional[Dict]:
@@ -238,7 +238,7 @@ class MysqlBaseModel:
             raise ValueError("No table specified")
 
         cursor = self.connection.cursor()
-        update_data = Str.convert_to_json_string(update_data)
+        update_data = Attr.convert_to_json_string(update_data)
         affected_rows = 0
 
         try:
@@ -309,7 +309,7 @@ class MysqlBaseModel:
             raise ValueError("No table specified")
 
         cursor = self.connection.cursor()
-        insert_data = Str.convert_to_json_string(insert_data)
+        insert_data = Attr.convert_to_json_string(insert_data)
 
         try:
             # 单条插入

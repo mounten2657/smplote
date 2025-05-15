@@ -68,5 +68,122 @@ class Attr:
         """列表搜索"""
         return next((item for item in data_list if all(item.get(key) == value for key, value in where.items())), None)
 
+    @staticmethod
+    def get_value_by_key_like(d: dict, search_key: str, default='') -> any:
+        """
+        遍历字典，查找键名包含指定字符串（忽略大小写）的项，并返回对应的值。
+
+        参数:
+            d: 需要遍历的字典
+            search_key: 需要查找的键名字符串（忽略大小写）
+            default: 查找不到时返回的默认值
+
+        返回:
+            第一个匹配的键对应的值，如果没有匹配则返回None
+        """
+        if not isinstance(d, dict) or not isinstance(search_key, str):
+            return default
+
+        lower_search_key = search_key.lower()
+        result = default
+
+        for key, value in d.items():
+            if isinstance(key, str) and lower_search_key in key.lower():
+                result = value
+                break
+
+        return result
+
+    @staticmethod
+    def convert_to_json_dict(obj):
+        """
+        递归遍历对象，将里面的值对应的JSON字符串转换为字典/列表
+
+        参数:
+            obj: 任意类型的对象
+
+        返回:
+            处理后的对象，如果无法处理则返回原值
+        """
+        try:
+            # 处理None
+            if obj is None:
+                return None
+            # 处理字符串
+            if isinstance(obj, str):
+                # 尝试解析JSON
+                try:
+                    # 检查是否是JSON字符串（简单判断，避免解析普通字符串）
+                    if (obj.startswith(('{', '[')) and obj.endswith(('}', ']'))):
+                        return json.loads(obj)
+                    return obj
+                except (json.JSONDecodeError, TypeError):
+                    return obj
+            # 处理列表
+            if isinstance(obj, list):
+                return [Attr.convert_to_json_dict(item) for item in obj]
+            # 处理元组（转换为列表以保持可变性）
+            if isinstance(obj, tuple):
+                return tuple(Attr.convert_to_json_dict(item) for item in obj)
+            # 处理字典
+            if isinstance(obj, dict):
+                return {key: Attr.convert_to_json_dict(value) for key, value in obj.items()}
+            # 其他类型（数字、布尔值等）直接返回
+            return obj
+        except Exception:
+            # 捕获所有异常，返回原值
+            return obj
+
+    @staticmethod
+    def convert_to_json_string(obj):
+        """
+        将对象中的字典转换为JSON字符串
+
+        参数:
+            obj: 待处理的对象（字典、列表或其他类型）
+
+        返回:
+            处理后的对象
+        """
+        try:
+            # 处理字典
+            if isinstance(obj, dict):
+                new_dict = {}
+                for key, value in obj.items():
+                    if isinstance(value, (dict, list, tuple)):
+                        try:
+                            new_dict[key] = json.dumps(value, ensure_ascii=False)
+                        except (json.JSONDecodeError, TypeError):
+                            new_dict[key] = value
+                    else:
+                        new_dict[key] = value
+                return new_dict
+
+            # 处理列表或元组
+            if isinstance(obj, (list, tuple)):
+                new_list = []
+                for item in obj:
+                    if isinstance(item, dict):
+                        # 处理列表中的字典
+                        new_item = {}
+                        for key, value in item.items():
+                            if isinstance(value, (dict, list, tuple)):
+                                try:
+                                    new_item[key] = json.dumps(value, ensure_ascii=False)
+                                except (json.JSONDecodeError, TypeError):
+                                    new_item[key] = value
+                            else:
+                                new_item[key] = value
+                        new_list.append(new_item)
+                    else:
+                        new_list.append(item)
+                return new_list if isinstance(obj, list) else tuple(new_list)
+
+            # 其他类型直接返回
+            return obj
+
+        except Exception:
+            return obj
+
 
 
