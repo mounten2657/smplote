@@ -55,15 +55,8 @@ class ParseHandler:
             err = Error.handle_exception_info(e)
             logger.error(data=err, msg=f"ERROR[RT.{run_time}]")
             # 发送告警消息
-            ParseHandler.send_error_msg(err, logger.uuid)
+            QyClient().send_error_msg((err, logger.uuid))
             return err
-
-    @staticmethod
-    def send_error_msg(result, log_id=None):
-        """发送错误日志告警消息 - 仅生产环境"""
-        if Config.is_prod():
-            md = LogErrorMd.get_error_markdown(result, log_id)
-            return QyClient().send_msg(md)
 
     @staticmethod
     def get_command_method():

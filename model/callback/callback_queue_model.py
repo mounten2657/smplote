@@ -45,7 +45,7 @@ class CallbackQueueModel(MysqlBaseModel):
         insert_data = {
             "callback_type": callback_type,
             "source_url": request.url,
-            "route": request.path.lstrip('/'),
+            "route": Http.get_request_route(),
             "ip": Http.get_client_ip(),
             "ua": headers.get('User-Agent', ''),
             "method": request.method,

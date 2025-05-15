@@ -95,6 +95,13 @@ class Http:
             return 'COMMAND'
 
     @staticmethod
+    def get_request_route(strip=False):
+        """获取所有请求头 - 字典形式"""
+        if strip:
+            return request.path.lstrip('/')
+        return request.path
+
+    @staticmethod
     def get_request_headers():
         """获取所有请求头 - 字典形式"""
         return json.loads(json.dumps(dict(request.headers), ensure_ascii=False, indent=4))

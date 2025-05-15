@@ -1,5 +1,6 @@
+import json
 from datetime import datetime
-from tool.core import Env
+from tool.core import Env, Http
 
 
 class LogErrorMd:
@@ -22,6 +23,11 @@ class LogErrorMd:
         app_name = Env.get('APP_NAME', 'Error')
         if isinstance(error_message, str):
             error_message = [error_message]
+        http_url = http_method = http_data = 'None'
+        if Http.is_http_request():
+            http_url = Http.get_request_route()
+            http_method = Http.get_request_method()
+            http_data = json.dumps(Http.get_request_params())
 
         # 生成 Markdown 内容 ⚡🔥✈️💣⚠️❌
         markdown = f"""🔥 **{str(app_name).capitalize()} 系统异常告警**  
@@ -33,6 +39,8 @@ class LogErrorMd:
     ```
     {result.get('err_cause', ['', ''])[0]} (触发异常)  
     └─ {result.get('err_cause', ['', ''])[1]} (原始异常)  
+    HTTP/2.0 - {http_method} - {http_url}
+    └─ {http_data[:256]}
     ```
 
     🗂️ **代码位置**  
