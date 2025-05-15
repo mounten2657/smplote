@@ -12,7 +12,7 @@ class CallbackQueueModel(MysqlBaseModel):
       `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
       `callback_type` varchar(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '回调类型: gewechat|qyapi|gitee',
       `source_url` varchar(512) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '源地址',
-      `route` varchar(128) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '路由地址',
+      `route` varchar(64) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '路由地址',
       `ip` varchar(64) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'ip地址',
       `method` varchar(10) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'POST' COMMENT '请求方式',
       `params` longtext COLLATE utf8mb4_general_ci NOT NULL COMMENT '请求参数',
