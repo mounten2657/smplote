@@ -100,7 +100,7 @@ class RouterHandler:
 
     @staticmethod
     def get_http_params():
-        return Http.get_flask_params()
+        return Http.get_request_params()
 
     @staticmethod
     def get_method_name():

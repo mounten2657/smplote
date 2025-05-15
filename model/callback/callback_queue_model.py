@@ -1,6 +1,6 @@
 from flask import request
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins
+from tool.core import Ins, Http
 
 
 @Ins.singleton
@@ -12,6 +12,8 @@ class CallbackQueueModel(MysqlBaseModel):
       `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
       `callback_type` varchar(32) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '回调类型: gewechat|qyapi|gitee',
       `source_url` varchar(512) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '源地址',
+      `route` varchar(128) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '路由地址',
+      `ip` varchar(64) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'ip地址',
       `method` varchar(10) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'POST' COMMENT '请求方式',
       `params` longtext COLLATE utf8mb4_general_ci NOT NULL COMMENT '请求参数',
       `headers` text COLLATE utf8mb4_general_ci NOT NULL COMMENT '请求头',
@@ -35,9 +37,11 @@ class CallbackQueueModel(MysqlBaseModel):
         insert_data = {
             "callback_type": callback_type,
             "source_url": request.url,
+            "route": request.path.lstrip('/'),
+            "ip": Http.get_client_ip(),
             "method": request.method,
             "params": params,
-            "headers": headers if headers else {},
+            "headers": headers if headers else Http.get_request_headers(),
             "process_params": process_params if process_params else {},
             "process_result": {},
         }

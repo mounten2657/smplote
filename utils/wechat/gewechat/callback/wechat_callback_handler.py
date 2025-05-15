@@ -41,7 +41,7 @@ class WechatCallbackHandler:
         logger.debug(f"处理微信回调消息[GET]===")
         if not Http.is_http_request():
             return 'success'
-        params = Http.get_flask_params()
+        params = Http.get_request_params()
         logger.debug(f"处理微信回调消息[PAR]==={params}")
 
         file_path = params.get('file')
@@ -58,9 +58,9 @@ class WechatCallbackHandler:
             return 'success'
 
         global is_callback_success
-        data = Http.get_flask_params()
+        data = Http.get_request_params()
         if not data:
-            data = Http.get_flask_params()
+            data = Http.get_request_params()
         logger.debug(f"处理微信回调消息[DATA]==={data}".replace('\n', ' '))
 
         # gewechat服务发送的回调测试消息

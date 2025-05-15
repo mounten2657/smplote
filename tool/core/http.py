@@ -72,12 +72,8 @@ class Http:
         return Http.get_request_method() != 'COMMAND'
 
     @staticmethod
-    def is_flask_request():
-        return has_request_context() and hasattr(request, 'headers')
-
-    @staticmethod
-    def get_flask_params():
-        """GET + POST 参数"""
+    def get_request_params():
+        """获取请求参数 - GET + POST"""
         get_data = request.args.to_dict()
         if request.headers.get('Content-Type') == 'application/json':
             post_data = request.get_json()
@@ -97,6 +93,11 @@ class Http:
             return request.method.upper()
         except RuntimeError:
             return 'COMMAND'
+
+    @staticmethod
+    def get_request_headers():
+        """获取所有请求头 - 字典形式"""
+        return json.loads(json.dumps(dict(request.headers), ensure_ascii=False, indent=4))
 
     @staticmethod
     def get_client_ip():

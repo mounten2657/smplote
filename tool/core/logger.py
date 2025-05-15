@@ -190,7 +190,7 @@ class Logger:
             ip = Http.get_client_ip()
             route = request.path
             method = request.method
-            headers = json.loads(json.dumps(dict(request.headers), ensure_ascii=False, indent=4))
+            headers = Http.get_request_headers()
             user_agent = Attr.get(headers, 'User-Agent')
             content_type = Attr.get(headers, 'Content-Type')
             authcode = Attr.get(headers, 'authcode', '')
