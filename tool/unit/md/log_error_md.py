@@ -40,7 +40,7 @@ class LogErrorMd:
     {result.get('err_cause', ['', ''])[0]} (触发异常)  
     └─ {result.get('err_cause', ['', ''])[1]} (原始异常)  
     HTTP/2.0 - {http_method} - {http_url}
-    └─ {http_data[:256]}
+    └─ {http_data[:768]}
     ```
 
     🗂️ **代码位置**  
