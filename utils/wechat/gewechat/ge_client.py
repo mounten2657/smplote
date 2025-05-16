@@ -74,7 +74,7 @@ class GeClient:
         except RuntimeError as e:
             callback_resp = Attr.parse_json_ignore(str(e))
         ret = False
-        if callback_resp.get("ret") == 200:
+        if not isinstance(callback_resp, str) and callback_resp.get("ret") == 200:
             logger.info("回调地址设置成功")
             ret = True
         else:
