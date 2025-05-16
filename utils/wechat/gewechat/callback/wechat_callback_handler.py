@@ -36,7 +36,7 @@ class WechatCallbackHandler:
             self._initialized = True
             logger.debug("WechatCallbackHandler类初始化完成")
 
-    def GET(self):
+    def get(self):
         # 搭建简单的文件服务器，用于向gewechat服务传输语音等文件，但只允许访问tmp目录下的文件
         logger.debug(f"处理微信回调消息[GET]===")
         if not Http.is_http_request():
@@ -51,7 +51,7 @@ class WechatCallbackHandler:
             return FilePreviewService.office(params)
         return "gewechat callback server is running"
 
-    def POST(self):
+    def post(self):
         """处理微信回调消息"""
         logger.debug(f"处理微信回调消息[POST]===")
         if not Http.is_http_request():

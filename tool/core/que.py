@@ -13,9 +13,12 @@ class Que:
 
     MAX_QUEUE_SIZE = 9999      # 队列最大长度，超过会直接丢弃
 
+    _lock_name = None          # 使用类名作为线程同步锁名
+
     def __init__(self):
         self._send_lock = Lock()  # 发送操作锁
         self._queue_lock = Lock()  # 队列操作锁
+        self._lock_name = self.__class__.__name__
         self.message_queue = queue.Queue(maxsize=self.MAX_QUEUE_SIZE)
         self.is_processing = False
         self.last_exec_time = 0

@@ -44,7 +44,7 @@ class GeCallbackService(Que):
         db = CallbackQueueModel()
         db.set_processed(pid)
         callback_handler = WechatCallbackHandler()
-        method = getattr(callback_handler, method)
+        method = getattr(callback_handler, str(method).lower())
         res['msg_handler'] = method()
         update_data = {"process_result": res}
         if res['msg_handler'] == 'success':

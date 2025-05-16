@@ -40,7 +40,8 @@ class Ins:
             @wraps(func)
             def wrapper(self, *args, **kwargs):
                 # 使用 redis 分布式锁
-                lock = RedisClient().client.lock(f'ts_lock_{lock_name}', timeout=10)
+                lock_key = f'sync_lock_{self._lock_name}{lock_name}'.lower()
+                lock = RedisClient().client.lock(lock_key, timeout=15)
                 with lock:
                     return func(self, *args, **kwargs)
             return wrapper
