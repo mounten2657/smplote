@@ -80,4 +80,11 @@ class Sys:
         """查询任务状态"""
         return _task_registry.get(task_id, {"status": "not_found"})
 
+    @staticmethod
+    def delay_git_pull():
+        """延迟三秒后，拉取最新代码，并重启 flask """
+        def pull_code():
+            Sys.run_command('sudo /opt/shell/init/reload_flask.sh >>/tmp/reload_flask.log 2>&1')
+        return Sys.delayed_task(3, pull_code)
+
 
