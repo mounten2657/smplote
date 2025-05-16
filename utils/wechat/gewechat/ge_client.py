@@ -54,7 +54,9 @@ class GeClient:
         config = self.config
         # 检查token是否存在，如果不存在则获取
         if not config.get('gewechat_token'):
-            self.get_token()
+            token = self.get_token()
+            if token:
+                config.update({"gewechat_token": token})
         client = GewechatClientFactory.get_client(config)
         # 请关闭代理再执行登陆操作
         logger.info(f"尝试登录: {config.get('gewechat_app_id')}")
