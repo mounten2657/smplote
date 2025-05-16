@@ -1,4 +1,5 @@
 import json
+import types
 from collections import OrderedDict
 
 
@@ -52,6 +53,18 @@ class Attr:
             return json.loads(data)
         except (json.JSONDecodeError, TypeError) as e:
             return data
+
+    @staticmethod
+    def dict_to_obj(d):
+        """字典转对象"""
+        if isinstance(d, dict):
+            for k, v in d.items():
+                d[k] = Attr.dict_to_obj(v)
+            return types.SimpleNamespace(**d)
+        elif isinstance(d, list):
+            return [Attr.dict_to_obj(x) for x in d]
+        else:
+            return d
 
     @staticmethod
     def deduplicate_list(data, key):

@@ -1,4 +1,4 @@
-from gewechat_client import GewechatClient
+from utils.wechat.gewechat.ge_client import GeClient
 from utils.wechat.gewechat.command.command_manager import CommandManager
 from tool.core import *
 
@@ -6,16 +6,14 @@ logger = Logger()
 
 
 class Channel:
-    def __init__(self, client: GewechatClient, config):
+    def __init__(self, config):
         """
         初始化通信通道
         
         Args:
-            client: 微信客户端API
             config: 配置字典
         """
         self.config = config
-        self.client = client
         self.app_id = config.get('gewechat_app_id')
         self.commands = self.config.get('gewechat_command_list').split(',')
         self.admins = self.config.get('gewechat_admin_list').split(',')
@@ -36,9 +34,9 @@ class Channel:
         """
         self.msg = message
         logger.debug(f"队列处理消息 - {message}".replace('\n', ' '))
-        if not message.is_group:
-            message.other_user_id = message.to_user_id
-            message.other_user_nickname = message.to_user_nickname
+        # if not message.is_group:
+        #     message.other_user_id = message.to_user_id
+        #     message.other_user_nickname = message.to_user_nickname
         logger.info(f"消息ID - {message.msg_id}")
         logger.info(f"消息类型 - {message.ctype}")
         logger.info(f"消息时间 - {message.create_time}")
@@ -73,24 +71,25 @@ class Channel:
             else:
                 result = False
             logger.info(f"命令处理结果: {result}")
-            return result
         else:
-            # 处理普通消息
-            logger.debug("处理普通消息")
-            result = True
+            logger.debug("处理文本消息")
+            result = False
+            # 是否 ai 提问
             if message.is_at and message.other_user_id in self.rooms:
                 result = self.command_manager.execute_question_command(message.content)
-            return result
+            logger.info(f"消息处理结果: {result}")
+
+        # 返回消息结构体以供上层应用处理
+        return self.msg
 
     def send_sys_msg(self, text):
         """发送系统消息"""
-        message = self.msg
         # 从哪里来的消息就发送到哪里去
-        ats = ""
+        message = self.msg
+        ats = None
         if not message.my_msg or not message.is_group:
-            ats = message.actual_user_id
-            text = f'@{message.actual_user_nickname} \n{text}'
-        self.client.post_text(self.app_id, message.other_user_id, text, ats)
+            ats = {"wxid": message.actual_user_id, "nickname": message.actual_user_nickname}
+        GeClient().send_text_msg(text, message.other_user_id, ats)
         return text
 
 

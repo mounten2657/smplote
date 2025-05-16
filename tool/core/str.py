@@ -1,5 +1,6 @@
 import re
 import time
+import json
 import random
 import hashlib
 
@@ -42,6 +43,16 @@ class Str:
             return int(str_val) if (str_val and str(str_val).strip()) else 0
         except (ValueError, TypeError):
             return 0
+
+    @staticmethod
+    def parse_json_string_ignore(value):
+        # 尝试将值序列化为JSON
+        try:
+            serialized_value = json.dumps(value, ensure_ascii=False)
+        except (TypeError, ValueError):
+            # 无法序列化为JSON，使用原始值
+            serialized_value = value
+        return serialized_value
 
     @staticmethod
     def sub_str_len(s, max_len=65535, position=0,  encoding = 'utf-8'):

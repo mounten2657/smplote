@@ -1,6 +1,9 @@
 import redis
 from typing import Dict, Any
+from tool.db.cache.redis_keys import RedisKeys
 from tool.core.config import Config
+from tool.core.attr import Attr
+from tool.core.str import Str
 
 
 class RedisClient:
@@ -79,3 +82,47 @@ class RedisClient:
         """退出上下文时自动关闭连接"""
         self.close()
 
+    def get(self, key_name, args=None):
+        """
+        获取Redis缓存值
+
+        Args:
+            key_name: 缓存键名称（如"GE_FRD_INFO"）
+            args: 格式化键所需的参数列表（可为None或空列表）
+
+        Returns:
+            缓存值（如果是JSON字符串会自动解析为对象）
+        """
+        if key_name not in RedisKeys.CACHE_KEY_STRING:
+            raise ValueError(f"未定义缓存键: {key_name}")
+        key_template = RedisKeys.CACHE_KEY_STRING[key_name]["key"]
+        args = args or []  # 默认为空列表
+        # 格式化键（如果有参数的话）
+        formatted_key = key_template % tuple(args) if args else key_template
+        value = self.client.get(formatted_key)
+        if value is None:
+            return None
+        return Attr.parse_json_ignore(value)
+
+    def set(self, key_name, value, args=None):
+        """
+        设置Redis缓存值（使用setex）
+
+        Args:
+            key_name: 缓存键名称（如"GE_FRD_INFO"）
+            value: 要缓存的值（如果是对象会自动转为JSON字符串）
+            args: 格式化键所需的参数列表（可为None或空列表）
+
+        Returns:
+            Redis操作结果
+        """
+        if key_name not in RedisKeys.CACHE_KEY_STRING:
+            raise ValueError(f"未定义缓存键: {key_name}")
+        key_info = RedisKeys.CACHE_KEY_STRING[key_name]
+        args = args or []  # 默认为空列表
+        # 格式化键（如果有参数的话）
+        formatted_key = key_info["key"] % tuple(args) if args else key_info["key"]
+        ttl = key_info["ttl"]
+        # 尝试将值序列化为JSON
+        value = Str.parse_json_string_ignore(value)
+        return self.client.setex(formatted_key, ttl, value)

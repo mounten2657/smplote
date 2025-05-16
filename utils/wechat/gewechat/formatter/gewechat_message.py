@@ -5,7 +5,6 @@ import requests
 import xml.etree.ElementTree as ET
 from utils.wechat.gewechat.formatter.chat_message import ChatMessage
 from utils.wechat.gewechat.bridge.context import ContextType
-from utils.wechat.gewechat.bridge.temp_dir import TmpDir
 from tool.core import *
 
 logger = Logger()
@@ -53,14 +52,14 @@ class GeWeChatMessage(ChatMessage):
             if 'ImgBuf' in msg['Data'] and 'buffer' in msg['Data']['ImgBuf'] and msg['Data']['ImgBuf']['buffer']:
                 silk_data = base64.b64decode(msg['Data']['ImgBuf']['buffer'])
                 silk_file_name = f"voice_{str(uuid.uuid4())}.silk"
-                silk_file_path = TmpDir().path() + silk_file_name
+                silk_file_path = Dir.abs_dir('storage/tmp/') + silk_file_name
                 with open(silk_file_path, "wb") as f:
                     f.write(silk_data)
                 # TODO: silk2mp3
                 self.content = silk_file_path
         elif msg_type == 3:  # Image message
             self.ctype = ContextType.IMAGE
-            self.content = TmpDir().path() + str(self.msg_id) + ".png"
+            self.content = Dir.abs_dir('storage/tmp/') + str(self.msg_id) + ".png"
             self._prepare_fn = self.download_image
         elif msg_type == 49:  # 引用消息，小程序，公众号等
             # After getting content_xml

@@ -2,8 +2,7 @@ import os
 import sys
 import requests
 import datetime
-from utils.wechat.gewechat.bridge.temp_dir import TmpDir
-from tool.core import Config
+from tool.core import Config, Dir
 
 # 添加项目根目录到Python路径
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -18,12 +17,12 @@ class AudioGen:
         self.config = Config.voice_config()
         self.voice_url = self.config.get("GPT-SoVITS_url")
         self.language = self.config.get("text_language")
-        self.tmp_dir = TmpDir()
+        self.tmp_dir = Dir.abs_dir('storage/tmp/')
 
 
     def generate_voice(self, text):
         # 获取tmp文件夹路径
-        temp_dir = self.tmp_dir.path()
+        temp_dir = self.tmp_dir
         # 生成语音文件名
         timestamp = self.get_current_timestamp()
         relative_voice_file = f"voice_{timestamp}.wav"
@@ -52,6 +51,7 @@ class AudioGen:
     @staticmethod
     def get_current_timestamp():
         return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
 
 if __name__ == '__main__':
     gen_audio = AudioGen()
