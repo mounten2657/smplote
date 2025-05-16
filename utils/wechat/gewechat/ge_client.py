@@ -66,8 +66,8 @@ class GeClient:
         config = self.config
         logger.debug("回调地址设置 - 请确保 Flask 处于运行中")
         callback_url = config['gewechat_callback_url']
-        if not Config.is_prod():
-            callback_url = Http.get_docker_inner_url(callback_url)
+        # if not Config.is_prod():
+        #     callback_url = Http.get_docker_inner_url(callback_url)
         try:
             client = self.client
             callback_resp = client.set_callback(config['gewechat_token'], callback_url)
