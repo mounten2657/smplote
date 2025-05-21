@@ -1,12 +1,12 @@
 from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
 from model.callback.callback_queue_model import CallbackQueueModel
-from tool.core import Logger, Que
+from tool.core import Logger
 
 logger = Logger()
 
 
-class VpCallbackService(Que):
+class VpCallbackService():
 
     @staticmethod
     def online_status(app_key):
@@ -25,7 +25,7 @@ class VpCallbackService(Que):
         return VpClient(app_key).close_websocket()
 
     def callback_handler(self, params):
-        """推送事件入队列"""
+        """推送事件预处理"""
         res = {}
         logger.info(params['message'], 'VP_CALL_PAR')
         app_key = params.get('app_key')
@@ -42,15 +42,9 @@ class VpCallbackService(Que):
         # 更新处理数据
         update_data = {"process_params": {"params": "[PAR]", "app_key": app_key}}
         res['update_db'] = db.update_process(int(pid), update_data)
-        # 入队列
-        res['que_sub'] = self.que_submit(pid=pid, params=params)
+        # 实际处理逻辑
+        res['que_sub'] = self._callback_handler(pid=pid, params=params)
         return 'success' if res['que_sub'] else 'error'
-
-    def _que_exec(self, **kwargs):
-        """队列执行入口"""
-        pid = kwargs.get('pid')
-        params = kwargs.get('params')
-        return self._callback_handler(pid, params)
 
     @staticmethod
     def _callback_handler(pid, params):
