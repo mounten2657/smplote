@@ -79,8 +79,10 @@ class RouterHandler:
                     return result
                 else:
                     return Api.success(result)
-            except (ImportError, AttributeError, TypeError) as e:
-                return f"Method Not Found! {e}", 500
+            except Exception as e:
+                err = Error.handle_exception_info(e)
+                logger.error(err, 'APP_PARSE_ROUTE_ERR')
+                return Api.error(f"Method Not Found!", None, 500)
 
         # 请求完成后的动作
         @self.app.after_request
