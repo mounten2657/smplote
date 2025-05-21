@@ -30,9 +30,13 @@ class VpClient(VpBaseFactory):
 
     def close_websocket(self):
         """关闭 websocket"""
-        logger.debug('websocket starting', 'WS_STA')
-        ws = VpSocketFactory(self.socket_uri, self.socket_handler, self.app_key)
-        return ws.close()
+        def ws_close():
+            logger.debug('websocket starting', 'WS_CED')
+            ws = VpSocketFactory(self.socket_uri, self.socket_handler , self.app_key)
+            return ws.close()
+        res = Sys.delayed_task(2, ws_close)
+        logger.debug(f'websocket start done - {res}', 'WS_END')
+        return res
 
     def send_msg(self, content, to_wxid, ats=None):
         """发送文本消息"""

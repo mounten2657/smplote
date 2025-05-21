@@ -86,17 +86,20 @@ class Attr:
             return data
 
     @staticmethod
-    def get_action_by_path(path, *args, **kwargs):
+    def get_action_by_path(path, ins=0, *args, **kwargs):
         """
         通过路径自动加载类文件
         :param path: 类路径，如: from_path@class_name.action_name
-        :return: 返回的一个可执行的类属性 - action()
+        :param ins: 是否返回实例
+        :return: 默认返回的一个可执行的类属性 - action()
         """
         module_path, method_fullname = path.split('@')
         class_name, method_name = method_fullname.split('.')
         module = importlib.import_module(module_path)
         cls = getattr(module, class_name)
-        return Attr.get(cls(*args, **kwargs), method_name)
+        obj = cls(*args, **kwargs)
+        action = Attr.get(obj, method_name)
+        return action if not ins else (action, obj)
 
     @staticmethod
     def dict_to_obj(d):
