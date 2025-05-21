@@ -33,7 +33,8 @@ class RedisTaskQueue:
         Args:
             queue_name: Base name for all Redis keys
         """
-        self.redis = RedisClient().client
+        self.client = RedisClient()
+        self.redis = self.client.client
         self.queue_name = queue_name
         self.processing_queue = f"{queue_name}:processing"
         self.delayed_queue = f"{queue_name}:delayed"
@@ -235,6 +236,11 @@ class RedisTaskQueue:
     def run_consumer(self):
         """异步延迟启动消费"""
         def run():
+            # 确保只能有一个消费者
+            cache_key = 'LOCK_RTQ_CNS'
+            if self.client.get(cache_key):
+                return False
+            self.client.set(cache_key, 1)
             uid = Str.uuid()
             logger.debug('redis task queue starting', 'RTQ_STA')
             return self.consume(uid)

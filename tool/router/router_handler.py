@@ -12,6 +12,7 @@ from tool.core.dir import Dir
 from tool.core.config import Config
 from tool.core.error import Error
 from tool.core.http import Http
+from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.vpwechat.vp_client import VpClient
 
@@ -134,6 +135,9 @@ class RouterHandler:
     def init_app(self):
         """初始化app"""
         res = {}
+        # 程序开始前先释放锁
+        key_list = ['LOCK_RTQ_CNS', 'LOCK_SQL_CNT']
+        list(map(lambda key: RedisClient().delete(key), key_list))
         if Config.is_prod():  # 仅正式环境执行的操作
             res['ws_start'] = VpClient().start_websocket()          # 启动 wechatpad ws
         res['que_start'] = RedisTaskQueue().run_consumer()   # 启动 redis task queue
