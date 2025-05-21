@@ -1,5 +1,6 @@
 import json
 import os
+import platform
 from tool.core.env import Env
 from tool.core.dir import Dir
 from tool.core.file import File
@@ -30,7 +31,8 @@ class Config:
 
     @staticmethod
     def is_prod():
-        return os.environ.get('IS_PROD', False)
+        # return os.environ.get('IS_PROD', False)
+        return platform.system().lower() == 'linux'
 
     @staticmethod
     def ai_config():
@@ -49,14 +51,14 @@ class Config:
     @staticmethod
     def redis_config():
         config = Config.cache_config()['redis']
-        port = os.environ.get('REDIS_PORT_PROD', False)
+        port = config['port'] if not Config.is_prod() else 6379
         config['port'] = int(port) if port else config['port']
         return config
 
     @staticmethod
     def mysql_db_config(db_name='default'):
         config = Config.load_config('config/db.json').get('mysql', {}).get(db_name)
-        port = os.environ.get('DB_MYSQL_PORT_PROD', False)
+        port = config['port'] if not Config.is_prod() else 3306
         config['port'] = int(port) if port else config['port']
         return config
 
