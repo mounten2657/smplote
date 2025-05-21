@@ -6,8 +6,15 @@ class VpCallback(BaseApp):
 
     def online_status(self):
         """获取在线状态"""
-        app_key = self.params.get('app_key', 'a1')
-        res = VpCallbackService.online_status(app_key)
+        res = VpCallbackService.online_status(self.app_key)
         return self.success(res)
 
+    def start_ws(self):
+        """启动 ws"""
+        res = VpCallbackService.start_ws(self.app_key)
+        return self.success(res)
 
+    def close_ws(self):
+        """关闭 ws"""
+        res = VpCallbackService.close_ws(self.app_key)
+        return self.success(res)

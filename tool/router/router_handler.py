@@ -135,7 +135,7 @@ class RouterHandler:
         """初始化app"""
         res = {}
         if Config.is_prod():  # 仅正式环境执行的操作
-            res['ws_start'] = VpClient().start_web_socket()          # 启动 wechatpad ws
+            res['ws_start'] = VpClient().start_websocket()          # 启动 wechatpad ws
         res['que_start'] = RedisTaskQueue().run_consumer()   # 启动 redis task queue
         return res
 

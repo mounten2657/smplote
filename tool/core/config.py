@@ -51,15 +51,14 @@ class Config:
     @staticmethod
     def redis_config():
         config = Config.cache_config()['redis']
-        port = config['port'] if not Config.is_prod() else 6379
-        config['port'] = int(port) if port else config['port']
+        config['db'] = config['db'] if not Config.is_prod() else 0
+        config['port'] = config['port'] if not Config.is_prod() else 6379
         return config
 
     @staticmethod
     def mysql_db_config(db_name='default'):
         config = Config.load_config('config/db.json').get('mysql', {}).get(db_name)
-        port = config['port'] if not Config.is_prod() else 3306
-        config['port'] = int(port) if port else config['port']
+        config['port'] = config['port'] if not Config.is_prod() else 3306
         return config
 
     @staticmethod

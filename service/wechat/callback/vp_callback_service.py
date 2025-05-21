@@ -1,3 +1,4 @@
+from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
 from model.callback.callback_queue_model import CallbackQueueModel
 from tool.core import Logger, Que
@@ -10,8 +11,18 @@ class VpCallbackService(Que):
     @staticmethod
     def online_status(app_key):
         """获取在线状态"""
-        res = VpCallbackHandler.online_status(app_key)
+        res = VpClient(app_key).get_login_status()
         return res.get('Data') if res.get('Code') == 200 else False
+
+    @staticmethod
+    def start_ws(app_key):
+        """启动 ws"""
+        return VpClient(app_key).start_websocket()
+
+    @staticmethod
+    def close_ws(app_key):
+        """关闭 ws"""
+        return VpClient(app_key).close_websocket()
 
     def callback_handler(self, params):
         """推送事件入队列"""

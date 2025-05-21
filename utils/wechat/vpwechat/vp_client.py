@@ -14,19 +14,25 @@ class VpClient(VpBaseFactory):
     def __init__(self, app_key='a1'):
         super().__init__(app_key)
         self.client = VpClientFactory(self.config)
+        self.socket_uri = f"ws://{self.config['ws_host']}:{self.config['ws_port']}/ws/GetSyncMsg?key={self.config['token_key']}"
+        # utils.wechat.vpwechat.callback.vp_callback_handler@VpCallbackHandler.on_message
+        self.socket_handler = self.config['ws_callback_path'] + '@VpCallbackHandler'
 
-    def start_web_socket(self):
-        """延迟启动 socket"""
+    def start_websocket(self):
+        """延迟启动 websocket"""
         def ws_start():
             logger.debug('websocket starting', 'WS_STA')
-            uri = f"ws://{self.config['ws_host']}:{self.config['ws_port']}/ws/GetSyncMsg?key={self.config['token_key']}"
-            # utils.wechat.vpwechat.callback.vp_callback_handler@VpCallbackHandler.on_message
-            handler = self.config['ws_callback_path'] + '@VpCallbackHandler'
-            ws = VpSocketFactory(uri, handler, self.app_key)
-            return ws
+            ws = VpSocketFactory(self.socket_uri, self.socket_handler , self.app_key)
+            return ws.start()
         res = Sys.delayed_task(3, ws_start)
         logger.debug(f'websocket start done - {res}', 'WS_END')
         return res
+
+    def close_websocket(self):
+        """关闭 websocket"""
+        logger.debug('websocket starting', 'WS_STA')
+        ws = VpSocketFactory(self.socket_uri, self.socket_handler, self.app_key)
+        return ws.close()
 
     def send_msg(self, content, to_wxid, ats=None):
         """发送文本消息"""

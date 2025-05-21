@@ -10,11 +10,6 @@ logger = Logger()
 
 class VpCallbackHandler(VpBaseFactory):
 
-    @staticmethod
-    def online_status(app_key):
-        """获取在线状态"""
-        return VpClient(app_key).get_login_status()
-
     def on_message(self, data):
         """监听来自 ws 的回调消息"""
         time.sleep(1)  # 避免太快了，处理不过来

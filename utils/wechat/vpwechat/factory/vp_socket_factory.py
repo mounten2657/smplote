@@ -1,11 +1,12 @@
 import websocket
 from threading import Thread
 import time
-from tool.core import Logger, Attr
+from tool.core import Logger, Attr, Ins
 
 logger = Logger()
 
 
+@Ins.singleton
 class VpSocketFactory:
     def __init__(self, uri, handler, app_key):
         self.ws = None
@@ -14,7 +15,7 @@ class VpSocketFactory:
         self.app_key = app_key
         self.thread = None
         self.is_running = False
-        self.start()
+        self._stop_event = False
 
     def _handler_exec(self, method, ext=None):
         """所有方法交由回调器处理"""
@@ -50,55 +51,47 @@ class VpSocketFactory:
         self._handler_exec('on_open', {})
 
     def _connect(self):
-        while not self.is_running:  # 处理重连
-            time.sleep(5)  # 连接前等待
-            try:
-                self.ws = websocket.WebSocketApp(
-                    self.uri,
-                    on_open=self._on_open,
-                    on_message=self._on_message,
-                    on_error=self._on_error,
-                    on_close=self._on_close,
-                )
-                self.ws.run_forever()
-            except Exception as e:
-                logger.error(f"连接异常: {e}", "VP_ERR")
-                time.sleep(5)  # 重连前等待
+        while not self._stop_event:
+            if not self.is_running:
+                time.sleep(1)  # 连接前等待
+                try:
+                    self.ws = websocket.WebSocketApp(
+                        self.uri,
+                        on_open=self._on_open,
+                        on_message=self._on_message,
+                        on_error=self._on_error,
+                        on_close=self._on_close,
+                    )
+                    self.ws.run_forever()
+                except Exception as e:
+                    logger.error(f"连接异常: {e}", "VP_ERR")
+                    time.sleep(5)  # 重连前等待
 
     def start(self):
         """启动 WebSocket 连接"""
         if not self.thread or not self.thread.is_alive():
+            self._stop_event = False
             self.thread = Thread(target=self._connect, daemon=True)
             self.thread.start()
             logger.info("正在启动 WebSocket 连接...", "VP_STA")
-
-    def send(self, message):
-        """发送消息（带重连机制）"""
-        if not self.is_running:
-            logger.warning("连接未建立，尝试重新连接", "VP_TRY")
-            self.start()
-            time.sleep(1)  # 等待连接建立
-
-        if self.is_running and self.ws and self.ws.sock and self.ws.sock.connected:
-            try:
-                self.ws.send(message)
-                return True
-            except Exception as e:
-                logger.error(f"发送消息失败: {e}", "VP_ERR")
-                self.is_running = False
-        return False
+        else:
+            logger.warning("WebSocket 已启动，无需重复操作", "VP_STA")
+        return True
 
     def close(self):
         """安全关闭 WebSocket 连接"""
         if self.is_running and self.ws:
             logger.info("正在关闭 WebSocket 连接...", "VP_CST")
+            self._stop_event = True
             self.is_running = False
             self.ws.close()
-
             if self.thread and self.thread.is_alive():
                 self.thread.join(timeout=2.0)
-
             self.ws = None
             logger.info("WebSocket 连接已关闭", "VP_CED")
+        else:
+            logger.warning("WebSocket 已关闭，无需重复操作", "VP_CED")
+        return True
 
-
+    def __del__(self):
+        self.close()

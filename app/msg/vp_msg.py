@@ -17,7 +17,6 @@ class VpMsg(BaseApp):
     def send_msg(self):
         """通过链接发送微信消息"""
         content = self.params.get('content')
-        app_key = self.params.get('app_key', 'a1')
-        res = SendWxMsgService.send_vp_msg(app_key, content)
+        res = SendWxMsgService.send_vp_msg(self.app_key, content)
         return self.success(res)
 

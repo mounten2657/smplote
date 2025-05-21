@@ -12,6 +12,7 @@ class BaseApp:
     _method_name = None
     _rule_list = None
     _logger = None
+    _app_key = None
 
     def __new__(cls, **kwargs):
         with cls._instance_lock:
@@ -51,6 +52,11 @@ class BaseApp:
         if not self._logger:
             self._logger = Logger()
         return self._logger
+
+    @property
+    def app_key(self):
+        self._app_key = self.params.get('app_key', 'a1')
+        return self._app_key
 
     def validate(self):
         validate = Validator()
