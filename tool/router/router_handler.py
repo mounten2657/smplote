@@ -12,12 +12,13 @@ from tool.core.dir import Dir
 from tool.core.config import Config
 from tool.core.error import Error
 from tool.core.http import Http
+from tool.db.cache.redis_task_queue import RedisTaskQueue
+from utils.wechat.vpwechat.vp_client import VpClient
 
 logger = Logger()
 
 
 class RouterHandler:
-
     # 路由忽略列表，适合回调和文件预览等
     IGNORE_ROUTE_LIST = [
         'callback/gewe_callback/collect',
@@ -46,7 +47,7 @@ class RouterHandler:
             request_url = request.url
             request_params = self.get_http_params()
             if not any(route in request_url for route in self.IGNORE_LOG_LIST):
-                logger.info(data={"request":{"url": request_url, "request_params": request_params}}, msg="START")
+                logger.info(data={"request": {"url": request_url, "request_params": request_params}}, msg="START")
 
         # 定义首页默认路由
         @self.app.route('/', defaults={'path': ''})
@@ -125,13 +126,25 @@ class RouterHandler:
     @staticmethod
     def open_browser(url):
         if not os.environ.get("WERKZEUG_RUN_MAIN"):
-            #webbrowser.open_new(url)
+            # webbrowser.open_new(url)
             return True
 
-    def get_app(self):
+    def init_app(self):
+        """初始化app"""
+        res = {}
+        if Config.is_prod():  # 仅正式环境执行的操作
+            res['ws_start'] = VpClient().start_web_socket()          # 启动 wechatpad ws
+        res['que_start'] = RedisTaskQueue().run_consumer()   # 启动 redis task queue
+        return res
+
+    def prod_app(self):
+        """正式环境启动"""
+        self.init_app()
         return self.app
 
     def run_app(self):
+        """本地环境启动"""
+        self.init_app()
         if self.config.get('APP_OPEN_URL'):
             host_name = self.config.get("SERVER_HOST")
             host_name = 'localhost' if host_name == '0.0.0.0' else host_name

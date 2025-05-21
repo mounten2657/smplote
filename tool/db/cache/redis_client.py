@@ -82,23 +82,47 @@ class RedisClient:
         """退出上下文时自动关闭连接"""
         self.close()
 
+    def _format_key(self, key_name, args=None):
+        """
+        获取Redis缓存key信息（键名 + 过期时间）
+
+        Args:
+            key_name: 缓存键名称（如"VP_USER_INFO"）
+            args: 格式化键所需的参数列表（可为None或空列表）
+
+        Returns:
+            key, ttl
+        """
+        if key_name not in RedisKeys.CACHE_KEY_STRING:
+            raise ValueError(f"未定义缓存键: {key_name}")
+        key_info = RedisKeys.CACHE_KEY_STRING[key_name]
+        args = args or []  # 默认为空列表
+        # 计算key中'%s'的数量
+        placeholders_count = key_info["key"].count('%s')
+        # 根据占位符数量调整args的长度
+        if len(args) > placeholders_count:
+            # 如果args元素过多，截取前placeholders_count个元素
+            args = args[:placeholders_count]
+        elif len(args) < placeholders_count:
+            # 如果args元素不足，用 'null' 字符串补齐
+            args.extend(['null'] * (placeholders_count - len(args)))
+        # 格式化键（如果有参数的话）
+        formatted_key = key_info["key"] % tuple(args) if args else key_info["key"]
+        ttl = key_info["ttl"]
+        return formatted_key, ttl
+
     def get(self, key_name, args=None):
         """
         获取Redis缓存值
 
         Args:
-            key_name: 缓存键名称（如"GE_FRD_INFO"）
+            key_name: 缓存键名称（如"VP_USER_INFO"）
             args: 格式化键所需的参数列表（可为None或空列表）
 
         Returns:
             缓存值（如果是JSON字符串会自动解析为对象）
         """
-        if key_name not in RedisKeys.CACHE_KEY_STRING:
-            raise ValueError(f"未定义缓存键: {key_name}")
-        key_template = RedisKeys.CACHE_KEY_STRING[key_name]["key"]
-        args = args or []  # 默认为空列表
-        # 格式化键（如果有参数的话）
-        formatted_key = key_template % tuple(args) if args else key_template
+        formatted_key, ttl = self._format_key(key_name, args)
         value = self.client.get(formatted_key)
         if value is None:
             return None
@@ -109,20 +133,30 @@ class RedisClient:
         设置Redis缓存值（使用setex）
 
         Args:
-            key_name: 缓存键名称（如"GE_FRD_INFO"）
+            key_name: 缓存键名称（如"VP_USER_INFO"）
             value: 要缓存的值（如果是对象会自动转为JSON字符串）
             args: 格式化键所需的参数列表（可为None或空列表）
 
         Returns:
             Redis操作结果
         """
-        if key_name not in RedisKeys.CACHE_KEY_STRING:
-            raise ValueError(f"未定义缓存键: {key_name}")
-        key_info = RedisKeys.CACHE_KEY_STRING[key_name]
-        args = args or []  # 默认为空列表
-        # 格式化键（如果有参数的话）
-        formatted_key = key_info["key"] % tuple(args) if args else key_info["key"]
-        ttl = key_info["ttl"]
+        formatted_key, ttl = self._format_key(key_name, args)
         # 尝试将值序列化为JSON
         value = Str.parse_json_string_ignore(value)
         return self.client.setex(formatted_key, ttl, value)
+
+    def delete(self, key_name, args=None):
+        """
+        删除Redis缓存值
+
+        Args:
+            key_name: 缓存键名称（如"VP_USER_INFO"）
+            args: 格式化键所需的参数列表（可为None或空列表）
+
+        Returns:
+            删除结果
+        """
+        formatted_key, ttl = self._format_key(key_name, args)
+        return self.client.delete(formatted_key)
+
+

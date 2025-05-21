@@ -1,7 +1,7 @@
 {
     "corp_id": "[ENV.QY_CORP_ID]",
     "corp_name": "[ENV.QY_CORP_Name|Smplote]",
-    "command_list": "[ENV.QY_COMMAND_LIST]",
+    "command_list": "#设置,#天气,#点歌,#提问,#百科",
     "admin_list": "[ENV.QY_ADMIN_LIST]",
     "app_list": {
         "a1": {

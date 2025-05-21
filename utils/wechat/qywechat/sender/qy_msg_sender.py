@@ -1,8 +1,6 @@
-from tool.core import *
 from utils.wechat.qywechat.factory.qy_client_factory import QyClientFactory
 from utils.grpc.open_nat.open_nat_client import OpenNatClient
-
-logger = Logger()
+from tool.core import Que, Ins
 
 
 @Ins.singleton

@@ -10,15 +10,20 @@ class QyClient:
 
     ARGS_UNIQUE_KEY = True
 
-    APP_KEY = None
+    app_key = None
 
     def __init__(self, app_key='a1'):
-        self.APP_KEY = app_key
-        self.msg_client = QyMsgSender(self.APP_KEY)
+        self.app_key = app_key
+        self.msg_client = QyMsgSender(self.app_key)
+
+    def set_app_key(self, app_key):
+        """切换账号"""
+        self.app_key = app_key
+        return self
 
     def send_msg(self, content, msg_type='text'):
         """发送消息"""
-        return self.msg_client.send_message(content, msg_type, self.APP_KEY)
+        return self.msg_client.send_message(content, msg_type, self.app_key)
 
     def send_error_msg(self, result, log_id=None):
         """发送错误日志告警消息 - 仅生产环境"""

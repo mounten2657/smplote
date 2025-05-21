@@ -1,5 +1,4 @@
 from tool.core import *
-from flask.globals import request
 from utils.wechat.qywechat.callback.qy_verify_handler import QyVerifyHandler
 from utils.wechat.qywechat.callback.qy_callback_handler import QyCallbackHandler
 from model.callback.callback_queue_model import CallbackQueueModel
@@ -24,10 +23,9 @@ class QyCallbackService(Que):
                 update_data = {"process_result": res, "is_processed": 1, "is_succeed": 1}
                 db.update_process(int(pid), update_data)
             return res['verify']
-        xml = request.get_data()
-        logger.debug(xml, 'QY_CALL_XML')
+        xml = params.get('xml')
         # 更新处理数据
-        update_data = {"process_params": {"app_key": app_key, "xml": xml}}
+        update_data = {"process_params": {"app_key": app_key, "xml": '[XML]'}}
         res['update_db'] = db.update_process(int(pid), update_data)
         if len(xml) == 0:
             return 'invalid request'
@@ -48,8 +46,8 @@ class QyCallbackService(Que):
         res = {}
         db = CallbackQueueModel()
         db.set_processed(pid)
-        res['msg_handler'] = QyCallbackHandler.msg_handler(app_key, xml)
-        update_data = {"process_result": res}
+        res['msg_handler'], data = QyCallbackHandler.msg_handler(app_key, xml)
+        update_data = {"process_result": res, "process_params": data}
         if res['msg_handler']:
             update_data.update({"is_succeed": 1})
         res['update_db'] = db.update_process(int(pid), update_data)

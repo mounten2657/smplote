@@ -38,7 +38,9 @@ class Config:
 
     @staticmethod
     def app_config():
-        return Config.load_config('config/app.json')
+        config = Config.load_config('config/app.json')
+        config['DEBUG'] = str(config['DEBUG']).lower() != 'false'
+        return config
 
     @staticmethod
     def cache_config():
@@ -83,6 +85,10 @@ class Config:
     @staticmethod
     def voice_config():
         return Config.load_config('config/voice.json')
+
+    @staticmethod
+    def vp_config():
+        return Config.load_config('config/vp.json')
 
     @staticmethod
     def wx_config():

@@ -31,8 +31,16 @@ class Http:
         """
         # 参数校验
         method = method.upper()
-        if method not in ('GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'):
+        if method not in ('GET', 'POST', 'JSON', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'):
             raise ValueError(f"Unsupported HTTP method: {method}")
+
+        # 初始化请求参数
+        request_kwargs = {
+            'method': method,
+            'url': url,
+            'headers': headers or {},
+            'timeout': 10,
+        }
 
         # 处理params参数
         params_str = None
@@ -41,15 +49,23 @@ class Http:
         elif isinstance(params, str):
             params_str = params if '=' in params else None
 
+        if 'GET' == method:
+            request_kwargs.update({
+                'params': params_str
+            })
+        elif 'JSON' == method:
+            request_kwargs.update({
+                'method': 'POST',
+                'json': params,
+            })
+        else:
+            request_kwargs.update({
+                'data': params_str
+            })
+
         # 发送请求
         try:
-            rep = requests.request(
-                method=method,
-                url=url,
-                params=params_str,
-                headers=headers or {},
-                timeout=10
-            )
+            rep = requests.request(**request_kwargs)
             rep.raise_for_status()  # 检查HTTP错误
 
             # 自动处理JSON响应
@@ -77,6 +93,8 @@ class Http:
         get_data = request.args.to_dict()
         if request.headers.get('Content-Type') == 'application/json':
             post_data = request.get_json()
+        elif request.headers.get('Content-Type') == 'text/xml':
+            post_data = request.get_data()
         else:
             post_data = request.form.to_dict()
         get_data.update(post_data)

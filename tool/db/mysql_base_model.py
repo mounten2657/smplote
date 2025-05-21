@@ -2,6 +2,8 @@ import mysql.connector
 from typing import Union, List, Dict, Optional, Any
 from tool.core import Logger, Error, Config, Attr
 
+_mysql_connection = None
+
 
 class MysqlBaseModel:
     """
@@ -79,16 +81,23 @@ class MysqlBaseModel:
 
     def __init__(self):
         self.logger = Logger()
-        self.connection = mysql.connector.connect(
-            host=self._db_config['host'],
-            port=self._db_config['port'],
-            user=self._db_config['user'],
-            password=self._db_config['password'],
-            database=self._db_config['database']
-        )
+        self.connection = self._get_connet()
         self.prefix = self._db_config['prefix']
         self._table = self.prefix + self._table
         self._reset_query()
+
+    def _get_connet(self):
+        global _mysql_connection
+        if not _mysql_connection:
+            print(' ----------------MySQL is connecting! ----------------')
+            _mysql_connection = mysql.connector.connect(
+                host=self._db_config['host'],
+                port=self._db_config['port'],
+                user=self._db_config['user'],
+                password=self._db_config['password'],
+                database=self._db_config['database']
+            )
+        return _mysql_connection
 
     def _reset_query(self):
         self._select = ['*']

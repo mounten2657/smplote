@@ -1,5 +1,6 @@
 import json
 import types
+import importlib
 from collections import OrderedDict
 
 
@@ -19,6 +20,7 @@ class Attr:
 
     @staticmethod
     def has_keys(data, keys):
+        keys = keys if isinstance(keys, list) else [keys]
         for key in keys:
             try:
                 if isinstance(data, dict):
@@ -48,11 +50,53 @@ class Attr:
         return {key: value for key, value in dictionary.items() if key not in keys}
 
     @staticmethod
+    def get_by_point(data, path, default = None):
+        """
+        通过点表示法路径访问嵌套数据结构中的值
+
+        参数:
+            data: 嵌套的字典或列表
+            path: 点表示法路径，如 "aaa.bbb.ccc"
+
+        返回:
+            指定路径的值，若路径不存在则返回 None
+        """
+        if not path:
+            return data
+        # 分割路径为组件列表
+        components = path.split('.')
+        try:
+            # 逐级访问数据结构
+            current = data
+            for component in components:
+                # 处理索引（如 "0" 转换为整数 0）
+                if component.isdigit():
+                    current = current[int(component)]
+                else:
+                    current = current[component]
+            return current
+        except (KeyError, IndexError, TypeError, ValueError):
+            return default
+
+    @staticmethod
     def parse_json_ignore(data):
         try:
             return json.loads(data)
         except (json.JSONDecodeError, TypeError) as e:
             return data
+
+    @staticmethod
+    def get_action_by_path(path, *args, **kwargs):
+        """
+        通过路径自动加载类文件
+        :param path: 类路径，如: from_path@class_name.action_name
+        :return: 返回的一个可执行的类属性 - action()
+        """
+        module_path, method_fullname = path.split('@')
+        class_name, method_name = method_fullname.split('.')
+        module = importlib.import_module(module_path)
+        cls = getattr(module, class_name)
+        return Attr.get(cls(*args, **kwargs), method_name)
 
     @staticmethod
     def dict_to_obj(d):

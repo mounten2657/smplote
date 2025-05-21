@@ -2,6 +2,7 @@ import time
 import hashlib
 import threading
 from functools import wraps
+from tool.core.attr import Attr
 from tool.db.cache.redis_client import RedisClient
 
 
@@ -66,6 +67,35 @@ class Ins:
                     raise TimeoutError(f"Timeout after {seconds} seconds")
                 self.last_exec_time = time.time()
                 return result
+            return wrapper
+        return decorator
+
+    @staticmethod
+    def cached(cache_key: str):
+        """缓存装饰器"""
+        def decorator(method):
+            def wrapper(self, *args, **kwargs):
+                redis = RedisClient()
+                # 尝试从缓存获取
+                if cache := redis.get(cache_key, tuple(args)):
+                    return cache
+                # 调用原始方法获取数据
+                data = method(self, *args, **kwargs)
+                if data:
+                    save_cache = True
+                    # 判断数据是否有效的规则列表
+                    rules = [
+                        {"key": "code", "val": 0},
+                        {"key": "Code", "val": 200},
+                    ]
+                    for rule in rules:
+                        if Attr.has_keys(data, rule['key']):
+                            if Attr.get(data, rule['key']) != rule['val']:
+                                save_cache = False
+                                break
+                    if save_cache:
+                        redis.set(cache_key, data, tuple(args))
+                return data
             return wrapper
         return decorator
 

@@ -30,7 +30,7 @@ class QyCallbackHandler:
         # 文本消息 # {'xml': {'ToUserName': 'ww36b39b33bbf1b2f0', 'FromUserName': 'WuJun', 'CreateTime': '1747017605', 'MsgType': 'text', 'Content': '123456789', 'MsgId': '7503383482518056014', 'AgentID': '1000002'}}
         data = decrypt_result.get('xml', {})
         res = QyCallbackHandler._dispatch(data)
-        return res
+        return res, data
 
     @staticmethod
     def _dispatch(data):

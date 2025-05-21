@@ -1,0 +1,26 @@
+{
+    "ws_host": "[ENV.VP_WS_HOST]",
+    "ws_port": "[ENV.VP_WS_PORT]",
+    "ws_callback_path": "utils.wechat.vpwechat.callback.vp_callback_handler",
+    "ws_service_path": "service.wechat.callback.vp_callback_service",
+    "admin_key": "[ENV.VP_ADMIN_KEY]",
+    "token_key": "[ENV.VP_TOKEN_KEY]",
+    "command_list": "#设置,#天气,#点歌,#提问,#百科",
+    "admin_list": "[ENV.VP_ADMIN_LIST]",
+    "app_list": {
+        "a1": {
+            "app_key": "a1",
+            "app_name": "ZQY",
+            "wxid": "[ENV.VP_WXID_A1]",
+            "g_wxid": "[ENV.VP_WXID_G1]",
+            "g_wxid_exc": "[ENV.VP_WXID_G2_EXC]"
+        },
+        "a2": {
+            "app_key": "a2",
+            "app_name": "CI",
+            "wxid": "[ENV.VP_WXID_A2]",
+            "g_wxid": "[ENV.VP_WXID_G2]",
+            "g_wxid_exc": "[ENV.VP_WXID_G2_EXC]"
+        }
+    }
+}
