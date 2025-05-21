@@ -2,19 +2,22 @@ import time
 import hashlib
 import threading
 from functools import wraps
+from typing import TypeVar, Type, Any
 from tool.core.attr import Attr
 from tool.db.cache.redis_client import RedisClient
+
+T = TypeVar('T')
 
 
 class Ins:
 
     @staticmethod
-    def singleton(cls):
+    def singleton(cls: Type[T]) -> Type[T]:
         """单例模式装饰器"""
         instances = {}
 
         @wraps(cls)
-        def get_instance(*args, **kwargs):
+        def get_instance(*args: Any, **kwargs: Any) -> T:
             def arg_to_str(arg):
                 if hasattr(arg, "__str__"):
                     return str(arg)
