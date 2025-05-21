@@ -2,16 +2,10 @@ import os
 import logging
 import threading
 import webbrowser
-from flask import Flask, request, send_from_directory
 from flask import Response
-from .parse_handler import ParseHandler
-from tool.core.logger import Logger
-from tool.core.attr import Attr
-from tool.core.api import Api
-from tool.core.dir import Dir
-from tool.core.config import Config
-from tool.core.error import Error
-from tool.core.http import Http
+from flask import Flask, request, send_from_directory
+from tool.router.parse_handler import ParseHandler
+from tool.core import Logger, Attr, Api, Dir, Config, Error, Http
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.vpwechat.vp_client import VpClient

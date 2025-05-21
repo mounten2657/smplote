@@ -1,9 +1,10 @@
 import argparse
 import importlib
-from tool.core import *
-from tool.unit.md.log_error_md import LogErrorMd
+from tool.core import Logger, Time, Http, Error, Attr
 from utils.wechat.qywechat.qy_client import QyClient
+from gevent import monkey
 
+monkey.patch_all(ssl=False)
 logger = Logger()
 
 

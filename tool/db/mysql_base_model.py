@@ -1,8 +1,12 @@
+import time
+import threading
 import mysql.connector
 from typing import Union, List, Dict, Optional, Any
 from tool.core import Logger, Error, Config, Attr
+from mysql.connector import pooling
 
-_mysql_connection = None
+_mysql_pool = None
+_pool_lock = threading.Lock()
 
 
 class MysqlBaseModel:
@@ -81,23 +85,50 @@ class MysqlBaseModel:
 
     def __init__(self):
         self.logger = Logger()
-        self.connection = self._get_connet()
+        self.connection = self._get_connection()
         self.prefix = self._db_config['prefix']
         self._table = self.prefix + self._table
         self._reset_query()
 
-    def _get_connet(self):
-        global _mysql_connection
-        if not _mysql_connection:
-            print(' ----------------MySQL is connecting! ----------------')
-            _mysql_connection = mysql.connector.connect(
-                host=self._db_config['host'],
-                port=self._db_config['port'],
-                user=self._db_config['user'],
-                password=self._db_config['password'],
-                database=self._db_config['database']
-            )
-        return _mysql_connection
+    def _get_connection(self):
+        """获取线程安全的数据库连接"""
+        global _mysql_pool
+
+        # 双重检查锁定初始化连接池
+        if _mysql_pool is None:
+            with _pool_lock:
+                if _mysql_pool is None:
+                    self.logger.warning("----Initializing MySQL connection pool----", 'DB_CONN', 'mysql')
+                    _mysql_pool = pooling.MySQLConnectionPool(
+                        pool_name="smplote_pool",
+                        pool_size=self._db_config['pool_size'],
+                        host=self._db_config['host'],
+                        port=self._db_config['port'],
+                        user=self._db_config['user'],
+                        password=self._db_config['password'],
+                        database=self._db_config['database'],
+                        connect_timeout=self._db_config['connect_timeout'],
+                        autocommit=False,
+                        pool_reset_session=True
+                    )
+
+        # 从连接池获取连接
+        try:
+            conn = _mysql_pool.get_connection()
+            if not conn.is_connected():
+                conn.reconnect(attempts=3, delay=1)
+            return conn
+        except mysql.connector.Error as e:
+            self.logger.error(f"Failed to get DB connection: {e}", 'DB_CONN', 'mysql')
+            raise
+
+    def _release_connection(self, conn):
+        """安全释放连接回连接池"""
+        try:
+            if conn.is_connected():
+                conn.close()
+        except Exception as e:
+            self.logger.warning(f"Error releasing connection: {e}", 'DB_CONN', 'mysql')
 
     def _reset_query(self):
         self._select = ['*']
@@ -200,15 +231,41 @@ class MysqlBaseModel:
         results = self.get()
         return results[0] if results else None
 
+    def _execute_with_retry(self, operation, max_retries=3, *args, **kwargs):
+        """带重试机制的数据库操作"""
+        last_exception = None
+        for attempt in range(max_retries):
+            try:
+                return operation(*args, **kwargs)
+            except (mysql.connector.Error, AttributeError) as e:
+                last_exception = e
+                if "Connection" in str(e) or not self.connection.is_connected():
+                    self.logger.warning(f"DB connection error (attempt {attempt + 1}): {e}", 'DB_CONN', 'mysql')
+                    try:
+                        self.connection.reconnect(attempts=1, delay=1)
+                    except:
+                        self.connection = self._get_connection()
+                time.sleep(0.5 * (attempt + 1))
+
+        self.logger.error(f"DB operation failed after {max_retries} attempts: {last_exception}", 'DB_CONN', 'mysql')
+        raise last_exception
+
     def query_sql(self, sql: str) -> List[Dict]:
         """Execute a query SQL statement"""
-        cursor = self.connection.cursor(dictionary=True)
+
+        def _query():
+            cursor = self.connection.cursor(dictionary=True)
+            try:
+                self.logger.info({"sql": sql.strip(), "params": {}}, 'DB_SQL_QUERY', 'mysql')
+                cursor.execute(sql)
+                if sql.lstrip().upper().startswith('SELECT'):
+                    return cursor.fetchall()
+                return []
+            finally:
+                cursor.close()
+
         try:
-            self.logger.info({"sql": sql.strip(), "params": {}}, 'DB_SQL_QUERY', 'mysql')
-            cursor.execute(sql)
-            if sql.lstrip().upper().startswith('SELECT'):
-                return cursor.fetchall()
-            return []
+            return self._execute_with_retry(_query)
         except Exception as e:
             err = Error.handle_exception_info(e)
             self.logger.exception(err, 'DB_EXP_QUERY_SQL', 'mysql')
@@ -232,10 +289,6 @@ class MysqlBaseModel:
         finally:
             self._reset_query()
 
-    def __del__(self):
-        if hasattr(self, 'connection'):
-            self.connection.close()
-
     def update(self, conditions: Union[Dict, List[Dict]], update_data: Union[Dict, List[Dict]]) -> int:
         """
         Update records (supports single and batch updates)
@@ -246,35 +299,42 @@ class MysqlBaseModel:
         if not self._table:
             raise ValueError("No table specified")
 
-        cursor = self.connection.cursor()
-        update_data = Attr.convert_to_json_string(update_data)
-        affected_rows = 0
+        def _update():
+            cursor = self.connection.cursor()
+            try:
+                update_data_converted = Attr.convert_to_json_string(update_data)
+                affected_rows = 0
+
+                # Batch update mode
+                if isinstance(conditions, list) and isinstance(update_data_converted, list):
+                    if len(conditions) != len(update_data_converted):
+                        raise ValueError("Conditions and update data lists must have the same length")
+
+                    for cond, data in zip(conditions, update_data_converted):
+                        sql, params = self._build_update_query(cond, data)
+                        cursor.execute(sql, params)
+                        affected_rows += cursor.rowcount
+
+                # Single update mode
+                else:
+                    if isinstance(conditions, list) or isinstance(update_data_converted, list):
+                        raise ValueError("Mixed single/batch update parameters")
+
+                    sql, params = self._build_update_query(conditions, update_data_converted)
+                    cursor.execute(sql, params)
+                    affected_rows = cursor.rowcount
+
+                self.connection.commit()
+                return affected_rows
+            except:
+                self.connection.rollback()
+                raise
+            finally:
+                cursor.close()
 
         try:
-            # Batch update mode
-            if isinstance(conditions, list) and isinstance(update_data, list):
-                if len(conditions) != len(update_data):
-                    raise ValueError("Conditions and update data lists must have the same length")
-
-                for cond, data in zip(conditions, update_data):
-                    sql, params = self._build_update_query(cond, data)
-                    cursor.execute(sql, params)
-                    affected_rows += cursor.rowcount
-
-            # Single update mode
-            else:
-                if isinstance(conditions, list) or isinstance(update_data, list):
-                    raise ValueError("Mixed single/batch update parameters")
-
-                sql, params = self._build_update_query(conditions, update_data)
-                cursor.execute(sql, params)
-                affected_rows = cursor.rowcount
-
-            self.connection.commit()
-            return affected_rows
-
+            return self._execute_with_retry(_update)
         except Exception as e:
-            self.connection.rollback()
             err = Error.handle_exception_info(e)
             self.logger.exception(err, 'DB_EXP_UPDATE', 'mysql')
             return 0
@@ -405,9 +465,14 @@ class MysqlBaseModel:
         finally:
             self._reset_query()
 
+    def __del__(self):
+        """对象销毁时自动释放连接"""
+        if hasattr(self, 'connection') and self.connection:
+            self._release_connection(self.connection)
+
     def close(self):
-        """关闭数据库连接"""
-        if self.connection and self.connection.is_connected():
-            self.connection.close()
+        """显式关闭数据库连接"""
+        if hasattr(self, 'connection') and self.connection:
+            self._release_connection(self.connection)
             self.logger.info("MySQL connection closed", 'DB_CONN', 'mysql')
 

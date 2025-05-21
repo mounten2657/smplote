@@ -1,4 +1,4 @@
-from tool.router import *
+from tool.router import ParseHandler, RouterHandler
 
 """
 两种执行方式，命令行 和 http 请求：
