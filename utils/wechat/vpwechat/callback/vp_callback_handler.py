@@ -11,10 +11,10 @@ class VpCallbackHandler(VpBaseFactory):
 
     def on_message(self, data):
         """监听来自 ws 的回调消息"""
-        data = self.on_message_filter(data)  # 消息过滤器，不必要的内容就不要入库
+        data = self.on_message_filter(data)  # 消息过滤
         if not data:
             return False
-        time.sleep(1)  # 避免太快了，处理不过来
+        time.sleep(1)  # 避免太快了，队列一秒一个
         # 先入队列，再由队列发起回调处理
         # service.wechat.callback.vp_callback_service@VpCallbackService.callback_handler
         service = self.config['ws_service_path'] + '@VpCallbackService.callback_handler'
@@ -34,6 +34,8 @@ class VpCallbackHandler(VpBaseFactory):
         a_g_wxid = self.a_g_wxid
         msg_id = message.get('new_msg_id', 0)
         msg_type = message.get('msg_type', 0)
+        msg_source = message.get('msg_source', '')
+        contents = message.get('content', {}).get('str', '')
         f_wxid = message.get('from_user_name', {}).get('str', '')
         t_wxid = message.get('to_user_name', {}).get('str', '')
         is_group = int('@chatroom' in f_wxid)
@@ -46,6 +48,9 @@ class VpCallbackHandler(VpBaseFactory):
                 return False
             if 'gh_' in f_wxid:  # 公众号
                 logger.warning(f"on message: 忽略消息[T2]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
+            if all(key in msg_source for key in ('bizmsg', 'bizclientmsgid')):  # 隐蔽公众号
+                logger.warning(f"on message: 忽略消息[T21]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
             if f_wxid in str(app_config['g_wxid_exc']).split(','):  # 无用群
                 logger.warning(f"on message: 忽略消息[T3]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')

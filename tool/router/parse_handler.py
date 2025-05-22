@@ -23,8 +23,9 @@ class ParseHandler:
         key_list = ['LOCK_RTQ_CNS', 'LOCK_SQL_CNT']
         list(map(lambda key: RedisClient().delete(key), key_list))
         # 程序预热
-        if Config.is_prod():  # 仅正式环境执行的操作
-            res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
+        # if Config.is_prod():  # 仅正式环境执行的操作
+        #     res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
+        #     pass  # 暂时关闭 ws
         res['que_start'] = RedisTaskQueue().run_consumer()   # 启动 redis task queue
         return res
 
