@@ -1,14 +1,42 @@
 import argparse
 import importlib
-from tool.core import Logger, Time, Http, Error, Attr
+import signal
+import logging
+from tool.core import Logger, Time, Http, Error, Attr, Config
+from tool.db.cache.redis_client import RedisClient
+from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.qywechat.qy_client import QyClient
-from gevent import monkey
+from utils.wechat.vpwechat.vp_client import VpClient
 
-monkey.patch_all(ssl=False)
 logger = Logger()
 
 
 class ParseHandler:
+
+    @staticmethod
+    def init_program():
+        """初始化程序"""
+        res = {}
+        # 注册结束处理
+        signal.signal(signal.SIGINT, ParseHandler.shutdown_handler)
+        # 程序开始前先释放锁
+        key_list = ['LOCK_RTQ_CNS', 'LOCK_SQL_CNT']
+        list(map(lambda key: RedisClient().delete(key), key_list))
+        # 程序预热
+        if Config.is_prod():  # 仅正式环境执行的操作
+            res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
+        res['que_start'] = RedisTaskQueue().run_consumer()   # 启动 redis task queue
+        return res
+
+    @staticmethod
+    def shutdown_handler(signum, frame):
+        """优雅退出"""
+        print("正在清理资源，请稍候...")
+        # 清理资源
+        logging.shutdown()
+        print("清理完成，主程序结束")
+        exit(0)
+
     @staticmethod
     def parse_args():
         parser = argparse.ArgumentParser(description='微信工具集，提供各种个人微信号的玩法')

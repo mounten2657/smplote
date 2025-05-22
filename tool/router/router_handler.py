@@ -6,9 +6,6 @@ from flask import Response
 from flask import Flask, request, send_from_directory
 from tool.router.parse_handler import ParseHandler
 from tool.core import Logger, Attr, Api, Dir, Config, Error, Http
-from tool.db.cache.redis_client import RedisClient
-from tool.db.cache.redis_task_queue import RedisTaskQueue
-from utils.wechat.vpwechat.vp_client import VpClient
 
 logger = Logger()
 
@@ -128,14 +125,7 @@ class RouterHandler:
 
     def init_app(self):
         """初始化app"""
-        res = {}
-        # 程序开始前先释放锁
-        key_list = ['LOCK_RTQ_CNS', 'LOCK_SQL_CNT']
-        list(map(lambda key: RedisClient().delete(key), key_list))
-        if Config.is_prod():  # 仅正式环境执行的操作
-            res['ws_start'] = VpClient().start_websocket()          # 启动 wechatpad ws
-        res['que_start'] = RedisTaskQueue().run_consumer()   # 启动 redis task queue
-        return res
+        return ParseHandler.init_program()
 
     def prod_app(self):
         """正式环境启动"""
