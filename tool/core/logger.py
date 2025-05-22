@@ -3,9 +3,8 @@ import logging
 import re
 import sys
 import json
-import time
 from flask import request
-from queue import Queue, Empty
+from queue import Queue
 from threading import Lock
 from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
@@ -124,6 +123,7 @@ class Logger:
                 log_record = {
                     'timestamp': self.formatTime(record, '%Y-%m-%d %H:%M:%S'),
                     'level': record.levelname,
+                    'pid': os.getpid(),
                     'uuid': getattr(record, 'uuid', None),
                     'msg': msg
                 }
@@ -157,13 +157,14 @@ class Logger:
                     'level': record.levelname,
                     'ip': getattr(record, 'ip', ''),
                     'method': getattr(record, 'method', None),
+                    'pid': os.getpid(),
                     'uuid': getattr(record, 'uuid', None),
                     'msg': getattr(record, 'msg', ''),
                     'data': getattr(record, 'data', None)
                 }
                 level_name = log_record['level']
                 log_ext = '' if not log_record['method'] else f"[{log_record['method']}|{log_record['ip']}]"
-                log_str = (f"[{log_record['timestamp']}] - {log_record['uuid'][-6:]} - {level_name} - "
+                log_str = (f"[{log_record['timestamp']}] - {log_record['pid']} - {log_record['uuid'][-6:]} - {level_name} - "
                            f"{log_type}{log_ext} {log_record['msg']} - {log_record['data']}")[:768]
 
                 if level_name in display_colors:

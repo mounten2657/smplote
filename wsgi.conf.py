@@ -7,9 +7,6 @@ gunicorn -c /www/server/gunicorn/conf/smplote.conf.py wsgi:app >/dev/null 2>&1 &
 import os
 from datetime import datetime
 from pathlib import Path
-from gevent import monkey
-
-monkey.patch_all()
 
 # ---------------------------
 # 基础配置
@@ -26,7 +23,7 @@ workers = 4
 worker_class = 'gevent'  # 异步IO应用推荐: gevent/eventlet, CPU密集型: sync/gthread
 
 # 每个worker的线程数 (仅对gthread/同步worker有效)
-threads = 2
+threads = 1
 
 # 进程名称 (ps/top显示)
 proc_name = 'gunicorn_app'
@@ -51,7 +48,7 @@ max_requests = 1000
 max_requests_jitter = 50  # 随机抖动范围
 
 # 预加载应用 (减少内存占用，但worker间不共享内存)
-preload_app = True
+preload_app = False
 
 # ---------------------------
 # 安全配置

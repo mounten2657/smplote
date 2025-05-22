@@ -1,3 +1,4 @@
+import os
 import argparse
 import importlib
 import signal
@@ -32,10 +33,11 @@ class ParseHandler:
     @staticmethod
     def shutdown_handler(signum, frame):
         """优雅退出"""
-        print("正在清理资源，请稍候...")
+        pid = os.getpid()
+        print(f"PID[{pid}]: 正在清理资源，请稍候...")
         # 清理资源
         logging.shutdown()
-        print("清理完成，主程序结束")
+        print(f"PID[{pid}]: 清理完成，主程序结束")
         exit(0)
 
     @staticmethod
