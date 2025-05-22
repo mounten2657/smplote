@@ -7,19 +7,51 @@ logger = Logger
 
 
 class VpMsgFormatter(VpBaseFactory):
+    """Vp 消息格式器"""
+
+    def __init__(self, app_key=None):
+        super().__init__(app_key)
+        self.is_my = None
+        self.is_sl = None
+        self.g_wxid = None
+        # 消息结构预览
+        self.msg = {
+            "msg_id": 0,
+            "msg_type": 0,
+            "from_wxid": '',
+            "from_wxid_name": '',
+            "to_wxid": '',
+            "to_wxid_name": '',
+            "send_wxid": '',
+            "send_wxid_name": '',
+            "content": '',
+            "app_key": '',
+            "self_wxid": '',
+            "is_my": 0,
+            "is_sl": 0,
+            "is_group": 0,
+            "g_wxid": '',
+            "at_user": '',
+            "is_at": 0,
+        }
 
     def context(self, params):
         """消息格式化"""
-        app_key = params['app_key']
-        self_wxid = params['self_wxid']
-        g_wxid = params['g_wxid']
-        is_my = params['is_my']
-        is_sl = params['is_sl']
-        client = VpClient(app_key)
-        # 微信回调的源信息
+        self.is_my = params['is_my']
+        self.is_sl = params['is_sl']
+        self.g_wxid = params['g_wxid']
+        client = VpClient(self.app_key)
         message = params['message']
-        msg_source = message.get('msg_source', '')
-        push_content = message.get('push_content', '')
+        # 消息分发处理
+        self.msg = self.dispatch(message, client)
+        # 处理at
+        self.msg = self.handler_at_user(message)
+        # 处理昵称
+        self.msg = self.handler_nickname(self.g_wxid, client)
+        return self.msg
+
+    def dispatch(self, message, client):
+        """消息分类处理"""
         contents = message.get('content', {}).get('str', '')
         f_wxid = message.get('from_user_name', {}).get('str', '')
         t_wxid = message.get('to_user_name', {}).get('str', '')
@@ -29,42 +61,48 @@ class VpMsgFormatter(VpBaseFactory):
         elif 'pattedusername' in contents:  # 拍一拍 - "{g_wxid}:\n{<pat_xml>}" | "{<pat_xml>}"
             pat = self.extract_pat_info(contents, t_wxid, client)
             if pat:
-                f_wxid, t_wxid, g_wxid, content = pat
+                f_wxid, t_wxid, self.g_wxid, content = pat
                 send_wxid = f_wxid
             else:
                 send_wxid, content = [f_wxid, str(contents).strip()]
-        elif is_my or is_sl:  # 自己的消息 或 私聊消息 - "{content}"
+        elif self.is_my or self.is_sl:  # 自己的消息 或 私聊消息 - "{content}"
             send_wxid, content = [f_wxid, str(contents).strip()]
         elif ':\n' in contents: # 普通消息 - "{s_wxid}:\n{content}"
             send_wxid, content = str(contents).split(':\n', 1)
         else:  # 未识别 - 不放行
             send_wxid, content = ['', '']
-        msg = {
+        self.msg = {
             "msg_id": message.get('new_msg_id', 0),
             "msg_type": message.get('msg_type', 0),
             "from_wxid": f_wxid,
-            "from_wxid_name": '',
             "to_wxid": t_wxid,
-            "to_wxid_name": '',
             "send_wxid": send_wxid if send_wxid else f_wxid,
-            "send_wxid_name": '',
             "content": content,
-            "app_key": app_key,
-            "self_wxid": self_wxid,
-            "is_my": is_my,
-            "is_sl": is_sl,
-            "is_group": 1 if g_wxid else 0,
-            "g_wxid": g_wxid,
+            "app_key": self.app_key,
+            "self_wxid": self.self_wxid,
+            "is_my": self.is_my,
+            "is_sl": self.is_sl,
+            "is_group": 1 if self.g_wxid else 0,
+            "g_wxid": self.g_wxid,
         }
-        # 判断是否at
+        return self.msg
+
+    def handler_at_user(self, message):
+        """处理at信息"""
+        msg_source = message.get('msg_source', '')
+        push_content = message.get('push_content', '')
         at_user = self.extract_at_user(msg_source)
         # is_at = 1 if self_wxid in str(at_user).split(',') else 0
         is_at = 1 if '在群聊中@了你' in push_content else 0
-        msg.update({
+        self.msg.update({
             "at_user": at_user,
             "is_at": is_at,
         })
-        # 补全昵称
+        return self.msg
+
+    def handler_nickname(self, g_wxid, client):
+        """处理昵称"""
+        msg = self.msg
         if g_wxid:  # 群聊 - 优先群备注名
             room = client.get_room(g_wxid)
             send_user = Attr.select_item_by_where(room['member_list'], {'wxid': msg['send_wxid']})
@@ -78,7 +116,8 @@ class VpMsgFormatter(VpBaseFactory):
             msg['send_wxid_name'] = send_user.get('remark_name') if len( send_user.get('remark_name')) else send_user.get('nickname', 'null')
             msg['to_wxid_name'] = to_user.get('remark_name') if len( to_user.get('remark_name')) else to_user.get('nickname', 'null')
             msg['from_wxid_name'] = msg['send_wxid_name']
-        return msg
+        self.msg = msg
+        return self.msg
 
     @staticmethod
     def extract_at_user(msg_source):
