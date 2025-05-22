@@ -1,6 +1,6 @@
 from flask import request
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins, Http, Attr, Config
+from tool.core import Ins, Http, Attr, Config, Time
 
 
 @Ins.singleton
@@ -49,7 +49,7 @@ class CallbackQueueModel(MysqlBaseModel):
                 "method": 'COMMAND',
                 "params": params,
                 "headers": {},
-                "h_event": 'on_message',
+                "h_event": Time.dft(params.get('message', {}).get('create_time', 0)),
                 "h_value": params.get('message', {}).get('new_msg_id', 0),
                 "process_params": process_params if process_params else {},
                 "process_result": {},

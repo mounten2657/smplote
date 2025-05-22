@@ -214,7 +214,7 @@ class MysqlBaseModel:
                 limit_clause = f"LIMIT {self._limit_count}"
 
         sql = f"SELECT {select_clause} FROM {self._table} WHERE {where_clause} {limit_clause}"
-        self.logger.info({"sql": sql.strip(), "params": params}, 'DB_SQL', 'mysql')
+        self.logger.debug({"sql": sql.strip(), "params": params}, 'DB_SQL_SELECT', 'mysql')
         return sql.strip(), params
 
     def get(self) -> List[Dict]:
@@ -256,7 +256,7 @@ class MysqlBaseModel:
         def _query():
             cursor = self.connection.cursor(dictionary=True)
             try:
-                self.logger.info({"sql": sql.strip(), "params": {}}, 'DB_SQL_QUERY', 'mysql')
+                self.logger.debug({"sql": sql.strip(), "params": {}}, 'DB_SQL_QUERY', 'mysql')
                 cursor.execute(sql)
                 if sql.lstrip().upper().startswith('SELECT'):
                     return cursor.fetchall()
@@ -388,6 +388,7 @@ class MysqlBaseModel:
                 values = list(insert_data.values())
 
                 sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
+                self.logger.info({"sql": sql.strip(), "params": values}, 'DB_SQL_INSERT', 'mysql')
                 cursor.execute(sql, values)
                 inserted_rows = cursor.lastrowid
 
@@ -406,6 +407,7 @@ class MysqlBaseModel:
                 value_groups = [tuple(item.values()) for item in insert_data]
 
                 sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
+                self.logger.info({"sql": sql.strip(), "params": value_groups}, 'DB_SQL_INSERT', 'mysql')
                 cursor.executemany(sql, value_groups)
                 inserted_rows = cursor.lastrowid
 

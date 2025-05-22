@@ -23,15 +23,9 @@ class VpSocketFactory:
         action, ins = Attr.get_action_by_path(handler, 1, self.app_key)
         if action:
             try:
-                if 'on_message' == method:  # 消息过滤
-                    msg_filter = Attr.get(ins, f'{method}_filter')
-                    res = msg_filter(ext)
-                    if not res:
-                        return res
-                    ext = res
                 logger.debug(f"已发送至回调: {handler}", "VP_HD_STA")
                 res = action(ext)
-                logger.info(f"回调处理结果: {res}", "VP_HD_RES")
+                res and logger.info(f"回调处理结果: {res}", "VP_HD_RES")
                 return True
             except Exception as e:
                 logger.error(f"回调处理失败: {e}", "VP_HD_ERR")

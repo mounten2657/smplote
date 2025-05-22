@@ -6,7 +6,7 @@ from tool.core import Logger
 logger = Logger()
 
 
-class VpCallbackService():
+class VpCallbackService:
 
     @staticmethod
     def online_status(app_key):
@@ -24,21 +24,34 @@ class VpCallbackService():
         """关闭 ws"""
         return VpClient(app_key).close_websocket()
 
+    @staticmethod
+    def retry_handler(app_key, params):
+        """消息回放 - 多用于调试"""
+        # vp_callback -> vp_callback_service -> vp_callback_handler -> vp_callback_service.callback_handler
+        params['is_retry'] = 1
+        return VpCallbackHandler(app_key).on_message(params)
+
     def callback_handler(self, params):
         """推送事件预处理"""
         res = {}
         logger.info(params['message'], 'VP_CALL_PAR')
+        is_retry = params.get('is_retry', 0)  # 消息回放
+        is_force = params.get('is_force', 0)  # 强制更新
         app_key = params.get('app_key')
         msg_id = params.get('message', {}).get('new_msg_id', 0)
         db = CallbackQueueModel()
-        # msg_id 唯一 - 已入库就跳过
         info = db.get_by_msg_id(msg_id)
         if info:
-            logger.warning(f"消息已入库 - 跳过 - {msg_id}", 'VP_CALL_SKP')
-            return 'success'
-        # 数据入库
-        res['insert_db'] = pid = db.add_queue('wechatpad', params)
-        logger.debug(res, 'VP_CALL_IDB')
+            # msg_id 唯一 - 已入库且处理成功就跳过
+            if not (is_force or (is_retry and not info['is_succeed'])):
+                logger.warning(f"消息已入库 - 跳过 - {msg_id}", 'VP_CALL_SKP')
+                return 'success'
+            res['insert_db'] = pid = info['id']
+            logger.warning(f"消息重试 - {info['id']} - {msg_id}", 'VP_CALL_RTY')
+        else:
+            # 数据入库
+            res['insert_db'] = pid = db.add_queue('wechatpad', params)
+            logger.debug(res, 'VP_CALL_IDB')
         # 更新处理数据
         update_data = {"process_params": {"params": "[PAR]", "app_key": app_key}}
         res['update_db'] = db.update_process(int(pid), update_data)
