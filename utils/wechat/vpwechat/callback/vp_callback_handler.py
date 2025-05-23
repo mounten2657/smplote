@@ -43,6 +43,9 @@ class VpCallbackHandler(VpBaseFactory):
         is_my = int(f_wxid == self_wxid)
         is_sl = int(t_wxid == self_wxid and not is_group)
         if f_wxid:
+            if 'a2' == self.app_key and f_wxid != self.config['app_list']['a1']['wxid']:  # 小号只接收来自主账号的消息
+                logger.warning(f"on message: 忽略消息[T0]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
             if msg_type == 51:  # 同步消息
                 logger.warning(f"on message: 忽略消息[T1]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False

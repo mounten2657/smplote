@@ -23,32 +23,32 @@ class VpSocketFactory:
         action, ins = Attr.get_action_by_path(handler, 1, self.app_key)
         if action:
             try:
-                logger.debug(f"已发送至回调: {handler}", "VP_HD_STA")
+                logger.debug(f"[{self.app_key}]已发送至回调: {handler}", "VP_HD_STA")
                 res = action(ext)
-                res and logger.info(f"回调处理结果: {res}", "VP_HD_RES")
+                res and logger.info(f"[{self.app_key}]回调处理结果: {res}", "VP_HD_RES")
                 return True
             except Exception as e:
-                logger.error(f"回调处理失败: {e}", "VP_HD_ERR")
+                logger.error(f"[{self.app_key}]回调处理失败: {e}", "VP_HD_ERR")
         return False
 
     def _on_message(self, ws, message):
         message = Attr.parse_json_ignore(message)  # 尝试转json
-        contents = str(message.get('content', {}).get('str', '')).replace('\n', ' ')[:64]
+        contents = str(message.get('content', {}).get('str', '')).replace('\n', ' ')[:32]
         m_type = message.get('msg_type', 0)
-        logger.debug(f"收到消息[T{m_type}]: {contents}", "VP_REV")
+        logger.debug(f"[{self.app_key}]收到消息[T{m_type}]: {contents}", "VP_REV")
         self._handler_exec('on_message', {"message": message})
 
     def _on_error(self, ws, error):
-        logger.error(f"连接错误: {error}", "VP_ERR")
+        logger.error(f"[{self.app_key}]连接错误: {error}", "VP_ERR")
         self._handler_exec('on_error', {"message": error})
 
     def _on_close(self, ws, close_status_code, close_msg):
-        logger.info(f"连接关闭: {close_status_code} {close_msg}", "VP_CLD")
+        logger.info(f"[{self.app_key}]连接关闭: {close_status_code} {close_msg}", "VP_CLD")
         self.is_running = False
         self._handler_exec('on_close', {"message": close_msg, "code": close_status_code})
 
     def _on_open(self, ws):
-        logger.info("连接已建立", "VP_OPE")
+        logger.info(f"[{self.app_key}]连接已建立 - {self.uri}", "VP_OPE")
         self.is_running = True
         self._handler_exec('on_open', {})
 
@@ -66,7 +66,7 @@ class VpSocketFactory:
                     )
                     self.ws.run_forever()
                 except Exception as e:
-                    logger.error(f"连接异常: {e}", "VP_ERR")
+                    logger.error(f"[{self.app_key}]连接异常: {e}", "VP_ERR")
                     time.sleep(5)  # 重连前等待
 
     def start(self):
@@ -75,24 +75,24 @@ class VpSocketFactory:
             self._stop_event = False
             self.thread = Thread(target=self._connect, daemon=True)
             self.thread.start()
-            logger.info("正在启动 WebSocket 连接...", "VP_STA")
+            logger.info(f"[{self.app_key}]正在启动 WebSocket 连接...", "VP_STA")
         else:
-            logger.warning("WebSocket 已启动，无需重复操作", "VP_STA")
+            logger.warning(f"[{self.app_key}]WebSocket 已启动，无需重复操作", "VP_STA")
         return True
 
     def close(self):
         """安全关闭 WebSocket 连接"""
         if self.is_running and self.ws:
-            logger.info("正在关闭 WebSocket 连接...", "VP_CST")
+            logger.info(f"[{self.app_key}]正在关闭 WebSocket 连接...", "VP_CST")
             self._stop_event = True
             self.is_running = False
             self.ws.close()
             if self.thread and self.thread.is_alive():
                 self.thread.join(timeout=2.0)
             self.ws = None
-            logger.info("WebSocket 连接已关闭", "VP_CED")
+            logger.info(f"[{self.app_key}]WebSocket 连接已关闭", "VP_CED")
         else:
-            logger.warning("WebSocket 已关闭，无需重复操作", "VP_CED")
+            logger.warning(f"[{self.app_key}]WebSocket 已关闭，无需重复操作", "VP_CED")
         return True
 
     def __del__(self):

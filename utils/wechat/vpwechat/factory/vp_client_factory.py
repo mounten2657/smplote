@@ -6,9 +6,10 @@ logger = Logger()
 
 class VpClientFactory:
 
-    def __init__(self, config):
+    def __init__(self, config, app_key):
         self.base_url = f"http://{config['ws_host']}:{config['ws_port']}"
-        self.key = config['token_key']
+        self.app_key = app_key
+        self.key = config['app_list'][self.app_key]['token_key']
 
     def _api_call(self, method: str, uri: str, body: dict = None, biz_code: str = 'NULL'):
         """
@@ -21,6 +22,7 @@ class VpClientFactory:
         """
         start_time = Time.now(0)
         url = f"{self.base_url}{uri}?key={self.key}"
+        body.update({"app_key": self.app_key})
         logger.debug(f'VP API 请求参数:  {biz_code} - {method}[{uri}] - {body}', 'VP_API_CALL_STA')
         # 请求数据入库
         db = WechatApiLog()
@@ -44,7 +46,7 @@ class VpClientFactory:
         {"Code":200,"Data":{"loginState":1,"expiryTime":"2026-05-17","loginErrMsg":"账号在线状态良好！","loginJournal":{"count":0,"logs":[]},"loginTime":"2025-05-17 05:38:56","onlineDays":0,"onlineTime":"本次在线: 0天0时7分","proxyUrl":"","targetIp":"223.152.206.237:8849","totalOnline":"总计在线: 0天0时8分"},"Text":""}
         """
         api = '/login/GetLoginStatus'
-        return self._api_call('GET', api, None, 'VP_LGS')
+        return self._api_call('GET', api, {}, 'VP_LGS')
 
     def send_text_message(self, content, to_wxid, ats=None):
         """
@@ -150,6 +152,6 @@ class VpClientFactory:
         {"Code":200,"Data":{"labelCount":14,"labelPairList":[{"labelName":"xxx","labelId":2}]},"Text":""}
         """
         api = '/label/GetContactLabelList'
-        return self._api_call('GET', api, None, 'VP_FRD')
+        return self._api_call('GET', api, {}, 'VP_FRD')
 
 

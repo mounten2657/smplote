@@ -9,12 +9,13 @@ logger = Logger()
 
 @Ins.singleton
 class VpClient(VpBaseFactory):
+
     ARGS_UNIQUE_KEY = True
 
     def __init__(self, app_key='a1'):
         super().__init__(app_key)
-        self.client = VpClientFactory(self.config)
-        self.socket_uri = f"ws://{self.config['ws_host']}:{self.config['ws_port']}/ws/GetSyncMsg?key={self.config['token_key']}"
+        self.client = VpClientFactory(self.config, self.app_key)
+        self.socket_uri = f"ws://{self.config['ws_host']}:{self.config['ws_port']}/ws/GetSyncMsg?key={self.app_config['token_key']}"
         # utils.wechat.vpwechat.callback.vp_callback_handler@VpCallbackHandler.on_message
         self.socket_handler = self.config['ws_callback_path'] + '@VpCallbackHandler'
 

@@ -12,6 +12,7 @@ class SendWxMsgService:
     @staticmethod
     def send_vp_msg(app_key, content):
         config = Config.vp_config()
-        to_wxid = str(config['app_list'][app_key]['g_wxid']).split(',')[0]  # 发送到固定群
-        return VpClient(app_key).send_msg(content, to_wxid)
+        to_wxid = config['app_list'][app_key]['wxid']
+        # 使用小号给主账号发消息
+        return VpClient('a2').send_msg(content, to_wxid)
 
