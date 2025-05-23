@@ -6,6 +6,7 @@ from flask import Response
 from flask import Flask, request, send_from_directory
 from tool.router.parse_handler import ParseHandler
 from tool.core import Logger, Attr, Api, Dir, Config, Error, Http
+from utils.wechat.qywechat.qy_client import QyClient
 
 logger = Logger()
 
@@ -74,6 +75,7 @@ class RouterHandler:
             except Exception as e:
                 err = Error.handle_exception_info(e)
                 logger.error(err, 'APP_PARSE_ROUTE_ERR')
+                QyClient().send_error_msg(err, logger.uuid)   # 发送告警消息
                 return Api.error(f"Method Not Found!", None, 500)
 
         # 请求完成后的动作

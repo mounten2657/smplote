@@ -86,8 +86,7 @@ class ParseHandler:
             run_time = Time.now(0) - start_time
             err = Error.handle_exception_info(e)
             logger.error(data=err, msg=f"ERROR[RT.{run_time}]")
-            # 发送告警消息
-            QyClient().send_error_msg(err, logger.uuid)
+            QyClient().send_error_msg(err, logger.uuid)  # 发送告警消息
             return err
 
     @staticmethod
