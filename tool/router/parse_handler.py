@@ -25,9 +25,8 @@ class ParseHandler:
         key_list = ['LOCK_RTQ_CNS', 'LOCK_SQL_CNT']
         list(map(lambda key: RedisClient().delete(key), key_list))
         # 程序预热
-        # if Config.is_prod():  # 仅正式环境执行的操作
-        #     res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
-        #     pass  # 暂时关闭 ws
+        if Config.is_prod():  # 仅正式环境执行的操作
+            res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
         res['que_start'] = RedisTaskQueue().run_consumer()   # 启动 redis task queue
         return res
 
@@ -40,8 +39,7 @@ class ParseHandler:
         logging.shutdown()
         # 清理vp资源
         if Config.is_prod():
-            VpClient('a1').close_websocket()
-            VpClient('a2').close_websocket()
+            VpClient().close_websocket(is_all=1)
             # 等待资源释放完毕
             time.sleep(3)
         print(f"PID[{pid}]: 清理完成，主程序结束")

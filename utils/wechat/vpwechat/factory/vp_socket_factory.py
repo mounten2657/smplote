@@ -1,20 +1,20 @@
+import time
 import websocket
 from threading import Thread
-import time
-from tool.core import Logger, Attr, Ins, Config
+from tool.core import Logger, Attr, Ins
+from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 
 logger = Logger()
 
 
 @Ins.singleton
-class VpSocketFactory:
-    def __init__(self, uri, handler, app_key):
+class VpSocketFactory(VpBaseFactory):
+    def __init__(self, app_key):
+        super().__init__(app_key)
         self.ws = None
-        self.uri = uri
-        self.handler = handler
-        self.app_key = app_key
-        self.config = Config.vp_config()
-        self.app_config = self.config['app_list'][self.app_key]
+        self.uri = f"ws://{self.config['ws_host']}:{self.config['ws_port']}/ws/GetSyncMsg?key={self.app_config['token_key']}"
+        # utils.wechat.vpwechat.callback.vp_callback_handler@VpCallbackHandler.on_message
+        self.handler = self.config['ws_callback_path'] + '@VpCallbackHandler'
         self.thread = None
         self.is_running = False
         self._stop_event = False
@@ -35,7 +35,7 @@ class VpSocketFactory:
 
     def _on_message(self, ws, message):
         if any(key in message for key in str(self.app_config['g_wxid_exc']).split(',')):
-            return False  # 无用的消息日志都不需要打印
+            return  # 无用的消息日志都不需要打印
         message = Attr.parse_json_ignore(message)  # 尝试转json
         contents = str(message.get('content', {}).get('str', '')).replace('\n', ' ')[:32]
         m_type = message.get('msg_type', 0)
@@ -79,7 +79,7 @@ class VpSocketFactory:
             self._stop_event = False
             self.thread = Thread(target=self._connect, daemon=True)
             self.thread.start()
-            logger.info(f"[{self.app_key}]正在启动 WebSocket 连接...", "VP_STA")
+            logger.info(f"[{self.app_key}]正在启动 WebSocket ...", "VP_STA")
         else:
             logger.warning(f"[{self.app_key}]WebSocket 已启动，无需重复操作", "VP_STA")
         return True
@@ -87,7 +87,7 @@ class VpSocketFactory:
     def close(self):
         """安全关闭 WebSocket 连接"""
         if self.is_running and self.ws:
-            logger.info(f"[{self.app_key}]正在关闭 WebSocket 连接...", "VP_CST")
+            logger.info(f"[{self.app_key}]正在关闭 WebSocket ...", "VP_CST")
             self._stop_event = True
             self.is_running = False
             self.ws.close()
