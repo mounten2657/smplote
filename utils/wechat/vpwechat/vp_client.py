@@ -21,7 +21,7 @@ class VpClient(VpBaseFactory):
         def ws_start():
             # 确保只能有一个 socket
             redis = RedisClient()
-            cache_key = 'LOCK_WSS_CNS'
+            cache_key = 'LOCK_WSS_CNT'
             if redis.get(cache_key):
                 return False
             redis.set(cache_key, 1)
