@@ -15,10 +15,16 @@ class VpClient(VpBaseFactory):
     def __init__(self, app_key='a1'):
         super().__init__(app_key)
         self.client = VpClientFactory(self.config, self.app_key)
+        self.redis = RedisClient()
 
     def start_websocket(self):
         """延迟启动 websocket"""
         def ws_start():
+            # 确保只能有一个 socket
+            cache_key = 'LOCK_WSS_CNS'
+            if self.redis.get(cache_key):
+                return False
+            self.redis.set(cache_key, 1)
             logger.debug('websocket starting', 'WS_STA')
             ws = VpSocketFactory(self.app_key)
             return ws.start()
