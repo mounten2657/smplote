@@ -28,7 +28,7 @@ class VpClient(VpBaseFactory):
             logger.debug('websocket starting', 'WS_STA')
             ws = VpSocketFactory(self.app_key)
             return ws.start()
-        res = Sys.delayed_task(1, ws_start)
+        res = Sys.delayed_task(3, ws_start)
         logger.debug(f'websocket start done - {res}', 'WS_END')
         return res
 
