@@ -156,18 +156,6 @@ class VpMsgFormatter(VpBaseFactory):
             content_str = f"[转账消息] [{content_link['title']}-{content_link['pay_memo']}-{content_link['fee_desc']}]"
             send_str = f"({s_name} 转给 {t_name})" if has_sender else f"({t_name} 已收款)"
             send_wxid, content = [s_wxid, f"{content_str}{send_str}"]
-        elif all(key in content_text for key in ('appmsg', 'title', 'des', 'dataurl', 'songalbumurl',
-                                                 'songlyric', 'appname')):  # 点歌 - "{s_wxid}:\n{<song_xml>}"
-            content_type = 'song'
-            content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "des": Str.extract_xml_attr(content_text, 'des'),
-                "data_url": Str.extract_xml_attr(content_text, 'dataurl').replace('&amp;', '&'),
-                "img_url": Str.extract_xml_attr(content_text, 'songalbumurl'),
-                "song_lyric": Str.extract_xml_attr(content_text, 'songlyric'),
-                "appname": Str.extract_xml_attr(content_text, 'appname'),
-            }
-            send_wxid, content = [s_wxid, f"[点歌消息] {content_link['title']}-{content_link['des']}.mp3"]
         elif all(key in content_text for key in ('appmsg', 'title', 'url', 'sourceusername', 'sourcedisplayname',
                                                  'weappiconurl', 'weapppagethumbrawurl')):  # 小程序 - "{s_wxid}:\n{<mini_xml>}"
             content_type = 'mini'
@@ -220,6 +208,18 @@ class VpMsgFormatter(VpBaseFactory):
             self.is_my_protect = 0
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, 0, client)
             send_wxid, content = [s_wxid, f"[拍一拍消息] {s_name} 拍了拍 {t_name} {content_link['pat_suffix']}"]
+        elif all(key in content_text for key in ('appmsg', 'title', 'des', 'dataurl', 'songalbumurl',
+                                                 'songlyric', 'appname')):  # 点歌 - "{s_wxid}:\n{<song_xml>}"
+            content_type = 'song'
+            content_link = {
+                "title": Str.extract_xml_attr(content_text, 'title'),
+                "des": Str.extract_xml_attr(content_text, 'des'),
+                "data_url": Str.extract_xml_attr(content_text, 'dataurl').replace('&amp;', '&'),
+                "img_url": Str.extract_xml_attr(content_text, 'songalbumurl'),
+                "song_lyric": Str.extract_xml_attr(content_text, 'songlyric'),
+                "appname": Str.extract_xml_attr(content_text, 'appname'),
+            }
+            send_wxid, content = [s_wxid, f"[点歌消息] {content_link['title']}-{content_link['des']}.mp3"]
         elif all(key in content_text for key in ('appmsg', 'title', 'url', 'webviewshared')):  # 分享 - "{s_wxid}:\n{<share_xml>}"
             content_type = 'share'
             content_link = {
