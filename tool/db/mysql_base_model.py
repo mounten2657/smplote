@@ -467,10 +467,10 @@ class MysqlBaseModel:
         finally:
             self._reset_query()
 
-    def __del__(self):
-        """对象销毁时自动释放连接"""
-        if hasattr(self, 'connection') and self.connection:
-            self._release_connection(self.connection)
+    # def __del__(self):
+    #     """对象销毁时自动释放连接"""
+    #     if hasattr(self, 'connection') and self.connection:
+    #         self._release_connection(self.connection)
 
     def close(self):
         """显式关闭数据库连接"""
