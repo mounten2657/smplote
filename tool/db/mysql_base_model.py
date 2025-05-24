@@ -128,7 +128,7 @@ class MysqlBaseModel:
             if conn.is_connected():
                 conn.close()
         except Exception as e:
-            self.logger.warning(f"Error releasing connection: {e}", 'DB_CONN', 'mysql')
+            self.logger.warning(f"Error releasing connection: {str(e)}", 'DB_CONN', 'mysql')
 
     def _reset_query(self):
         self._select = ['*']

@@ -216,7 +216,7 @@ class Logger:
             # 若获取不到 HTTP 请求信息，说明是命令行执行
             # command_parts = [sys.executable] + sys.argv  # 这获取的是绝对路径
             # command = " ".join(command_parts)                # 太长了， 直接写死成 python
-            command = "python " + " ".join(sys.argv)
+            command = "python " + " ".join(sys.argv if hasattr(sys, 'argv') else 'null')
             extra = {
                 'uuid': self.uuid,
                 'command': command,
