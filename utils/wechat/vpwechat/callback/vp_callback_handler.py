@@ -51,6 +51,9 @@ class VpCallbackHandler(VpBaseFactory):
             if msg_type == 51:  # 同步消息
                 logger.warning(f"on message: 忽略消息[T1]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
+            if 'weixin' == f_wxid:  # 微信团队
+                logger.warning(f"on message: 忽略消息[T11]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
             if 'gh_' in f_wxid:  # 公众号
                 logger.warning(f"on message: 忽略消息[T2]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False

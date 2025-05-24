@@ -168,6 +168,16 @@ class VpMsgFormatter(VpBaseFactory):
             title_str = Str.extract_xml_attr(content_text, 'content').split('有', 1)
             content_link['title'] = Str.remove_html_tags(f"{t_name} 有{title_str[1]}")
             send_wxid, content = [s_wxid, f"[转账到期消息] {content_link['title']}"]
+        elif all(key in content_text for key in ('sysmsg', 'PayMsgType', 'paymsgid', 'transferid')):  # 转账退回提醒 - "{s_wxid}:\n{<transfer_back_xml>}"
+            content_type = 'transfer_back'
+            content_link = {
+                "PayMsgType": Str.extract_xml_attr(content_text, 'PayMsgType'),  # 25 退回
+                "from_username": Str.extract_xml_attr(content_text, 'fromusername'),
+                "to_username": Str.extract_xml_attr(content_text, 'tousername'),
+                "pay_msg_id": Str.extract_xml_attr(content_text, 'paymsgid'),
+                "tid": Str.extract_xml_attr(content_text, 'transferid'),
+            }
+            send_wxid, content = [s_wxid, f"[转账退回消息] 转账已自动退回，交易流水号[{content_link['pay_msg_id']}]"]  # 用假的
         elif all(key in content_text for key in ('appmsg', 'title', 'url', 'sourceusername', 'sourcedisplayname',
                                                  'weappiconurl', 'weapppagethumbrawurl')):  # 小程序 - "{s_wxid}:\n{<mini_xml>}"
             content_type = 'mini'
