@@ -28,8 +28,21 @@ class VpCallbackService:
     def retry_handler(app_key, params):
         """消息回放 - 多用于调试"""
         # vp_callback -> vp_callback_service -> vp_callback_handler -> vp_callback_service.callback_handler
-        params['is_retry'] = 1
-        return VpCallbackHandler(app_key).on_message(params)
+        if params.get('ids'):  # 通过ID批量重试， 多个英文逗号隔开
+            res = {}
+            db = CallbackQueueModel()
+            id_list = str(params.get('ids')).split(',')
+            queue_list = db.get_list_by_id(id_list)
+            for queue in queue_list:
+                queue['params'].update({
+                    'is_retry': 1,
+                    'is_force': params.get('is_force', 0),
+                })
+                res[queue['id']] = VpCallbackHandler(app_key).on_message(queue['params'])
+            return res
+        else:  # 单个更新
+            params.update({'is_retry': 1})
+            return VpCallbackHandler(app_key).on_message(params)
 
     def callback_handler(self, params):
         """推送事件预处理"""
@@ -63,6 +76,7 @@ class VpCallbackService:
     def _callback_handler(pid, params):
         """微信回调真正处理逻辑"""
         res = {}
+        is_force = params.get('is_force', 0)
         db = CallbackQueueModel()
         db.set_processed(pid)
         # 消息数据格式化
@@ -73,7 +87,7 @@ class VpCallbackService:
         update_data = {"process_result": res, "process_params": data}
         if res['rev_handler']:
             update_data.update({"is_succeed": 1})
-        res['update_db'] = db.update_process(int(pid), update_data)
+        res['update_db'] = db.update_process(int(pid), update_data, is_force)
         return res
 
 

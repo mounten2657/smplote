@@ -35,17 +35,19 @@ class VpCallbackHandler(VpBaseFactory):
         msg_id = message.get('new_msg_id', 0)
         msg_type = message.get('msg_type', 0)
         msg_source = message.get('msg_source', '')
-        contents = message.get('content', {}).get('str', '')
         f_wxid = message.get('from_user_name', {}).get('str', '')
         t_wxid = message.get('to_user_name', {}).get('str', '')
-        is_group = int('@chatroom' in f_wxid)
-        g_wxid = f_wxid if is_group else ''
+        g_wxid = f_wxid if '@chatroom' in f_wxid else (t_wxid if '@chatroom' in t_wxid else '')
         is_my = int(f_wxid == self_wxid)
-        is_sl = int(t_wxid == self_wxid and not is_group)
+        is_sl = int(t_wxid == self_wxid and not g_wxid)
         if f_wxid:
             if 'a2' == self.app_key and f_wxid != self.config['app_list']['a1']['wxid']:  # 小号只接收来自主账号的消息
                 logger.warning(f"on message: 忽略消息[T0]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
+            # 临时测试 - 只接收指定群
+            # if 'a1' == self.app_key and (g_wxid != self.config['app_list']['a2']['g_wxid'] and t_wxid != self.config['app_list']['a2']['g_wxid']):
+            #     logger.warning(f"on message: 忽略消息[T0]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+            #     return False
             if msg_type == 51:  # 同步消息
                 logger.warning(f"on message: 忽略消息[T1]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False

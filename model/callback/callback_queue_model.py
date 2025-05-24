@@ -84,12 +84,13 @@ class CallbackQueueModel(MysqlBaseModel):
         """更新为已处理成功"""
         return self.update({'id': pid}, {'is_succeed': is_succeed})
 
-    def update_process(self, pid, data):
+    def update_process(self, pid, data, is_force=0):
         """更新处理数据"""
         info = self.where({"id": pid}).first()
         if not info:
             return False
-        if data.get('process_params'):
+        if data.get('process_params') and not is_force:
+            info['process_params'] = info['process_params'] if info['process_params'] else {}
             info['process_params'].update(data['process_params'])
             data['process_params'] = info['process_params']
         return self.update({'id': pid}, data)
@@ -98,6 +99,10 @@ class CallbackQueueModel(MysqlBaseModel):
         """获取未处理的队列"""
         condition = {'callback_type': callback_type, 'is_processed': 0}
         return self.where(condition).get()
+
+    def get_list_by_id(self, id_list):
+        """获取特定ID组的队列"""
+        return self.where_in('id', id_list).get()
 
     def get_by_msg_id(self, msg_id):
         """wechatpad 专用 - 通过消息ID获取，主要用于消息去重"""

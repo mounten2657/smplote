@@ -1,7 +1,7 @@
 import websocket
 from threading import Thread
 import time
-from tool.core import Logger, Attr, Ins
+from tool.core import Logger, Attr, Ins, Config
 
 logger = Logger()
 
@@ -13,6 +13,8 @@ class VpSocketFactory:
         self.uri = uri
         self.handler = handler
         self.app_key = app_key
+        self.config = Config.vp_config()
+        self.app_config = self.config['app_list'][self.app_key]
         self.thread = None
         self.is_running = False
         self._stop_event = False
@@ -32,6 +34,8 @@ class VpSocketFactory:
         return False
 
     def _on_message(self, ws, message):
+        if any(key in message for key in str(self.app_config['g_wxid_exc']).split(',')):
+            return False  # 无用的消息日志都不需要打印
         message = Attr.parse_json_ignore(message)  # 尝试转json
         contents = str(message.get('content', {}).get('str', '')).replace('\n', ' ')[:32]
         m_type = message.get('msg_type', 0)

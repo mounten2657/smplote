@@ -55,7 +55,7 @@ class Str:
         return serialized_value
 
     @staticmethod
-    def sub_str_len(s, max_len=65535, position=0,  encoding = 'utf-8'):
+    def sub_str_len(s, max_len=65535, position=0, encoding='utf-8'):
         """
         安全截取包含中文的字符串（防止乱码）
         :param s: 输入内容（非字符串类型将返回空字符串）
@@ -113,3 +113,49 @@ class Str:
         ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
         return re.findall(ip_pattern, text)
 
+    @staticmethod
+    def extract_attr(contents, key_name, position=1):
+        """
+        从普通文本中提取特定的属性
+          - \\s*=\\s*：匹配等号=，允许等号前后有任意数量的空白字符（如空格、制表符）。
+          - ["\']：匹配单引号或双引号。
+          - ([^"\']+)：捕获组，匹配除单引号和双引号之外的任意字符（至少一个）。
+          - ["\']：再次匹配单引号或双引号，与前面的引号类型对应。
+
+        :param contents:  普通文本 - 'xxx k1="v1" xxx k2=\'v2\' xxx'
+        :param key_name:  匹配的标签名
+        :param position:  匹配第几个标签
+        :return: 匹配结果
+        """
+        """"""
+        pattern = re.compile(fr'{key_name}\s*=\s*["\']([^"\']+)["\']')
+        matches = pattern.finditer(contents)
+        results = [match.group(1) for match in matches]
+        if 1 <= position <= len(results):
+            return results[position - 1]
+        return ''
+
+    @staticmethod
+    def extract_xml_attr(contents, key_name, position=1):
+        """
+        从xml文本中提取特定的属性
+          - 使用非贪婪匹配 ([^<]+?) 确保只匹配到下一个闭合标签
+          - 添加 CDATA 处理：(?:<!\\[CDATA\\[)?` 和 `(?:\\]\\]>)? 分别匹配 CDATA 的开始和结束标记
+          - 使用 (.*?) 非贪婪匹配捕获标签内的所有内容，包括嵌套标签和 CDATA 标记
+          - 使用 \\s* 处理标签内可能的空白字符
+
+        :param contents:  xml 文本 - "xxx<k1>v1</k1> xxx <k2><![CDATA[v2]]></k2> xxx"
+        :param key_name:  匹配的标签名
+        :param position:  匹配第几个标签
+        :return: 匹配结果
+        """
+        """"""
+        pattern = re.compile(
+            fr'<{key_name}>\s*(?:<!\[CDATA\[)?(.*?)(?:]]>)?\s*</{key_name}>',
+            re.DOTALL  # 使 . 匹配包括换行符在内的所有字符
+        )
+        matches = pattern.finditer(contents)
+        results = [match.group(1) for match in matches]
+        if 1 <= position <= len(results):
+            return results[position - 1]
+        return ''
