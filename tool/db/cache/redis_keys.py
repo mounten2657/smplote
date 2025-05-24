@@ -6,9 +6,9 @@ class RedisKeys:
     # 字符串类型
     CACHE_KEY_STRING = {
         # 锁相关
-        "LOCK_RTQ_CNS": {"key": "lock_redis_consumer", "ttl": 86400},
-        "LOCK_SQL_CNT": {"key": "lock_mysql_connection", "ttl": 86400},
-        "LOCK_WSS_CNT": {"key": "lock_wss_connection", "ttl": 86400},
+        "LOCK_RTQ_CNS": {"key": "lock_redis_consumer", "ttl": 87400},
+        "LOCK_SQL_CNT": {"key": "lock_mysql_connection", "ttl": 87400},
+        "LOCK_WSS_CNT": {"key": "lock_wss_connection", "ttl": 87400},
         # 微信用户相关
         "VP_USER_INFO": {"key": "wechatpad:user:base_info:%s", "ttl": 3600},
         "VP_USER_FRD_INF": {"key": "wechatpad:user:frd_info:%s", "ttl": 3600},
