@@ -144,7 +144,8 @@ class VpMsgFormatter(VpBaseFactory):
                 "fee_desc": Str.extract_xml_attr(content_text, 'feedesc'),
                 "payer_username": Str.extract_xml_attr(content_text, 'payer_username'),
                 "receiver_username": Str.extract_xml_attr(content_text, 'receiver_username'),
-                "tid": Str.extract_xml_attr(content_text, 'transcationid'),
+                "tc_id": Str.extract_xml_attr(content_text, 'transcationid'),
+                "tid": Str.extract_xml_attr(content_text, 'transferid'),
                 "invalid_time": Str.extract_xml_attr(content_text, 'invalidtime'),
             }
             content_link['invalid_date'] = Time.dft(int(content_link['invalid_time']) if content_link['invalid_time'] else 0)
@@ -156,6 +157,17 @@ class VpMsgFormatter(VpBaseFactory):
             content_str = f"[转账消息] [{content_link['title']}-{content_link['pay_memo']}-{content_link['fee_desc']}]"
             send_str = f"({s_name} 转给 {t_name})" if has_sender else f"({t_name} 已收款)"
             send_wxid, content = [s_wxid, f"{content_str}{send_str}"]
+        elif all(key in content_text for key in ('sysmsg', '待', '转账', '过期')):  # 转账到期提醒 - "{g_wxid}:\n{<transfer_invalid_xml>}"
+            content_type = 'transfer_invalid'
+            content_link = {
+                "title": '',
+                "url": Str.extract_attr(content_text, 'href'),
+                "tid": Str.extract_xml_attr(content_text, 'transferid'),
+            }
+            s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, self.is_my_protect, client)
+            title_str = Str.extract_xml_attr(content_text, 'content').split('有', 1)
+            content_link['title'] = Str.remove_html_tags(f"{t_name} 有{title_str[1]}")
+            send_wxid, content = [s_wxid, f"[转账到期消息] {content_link['title']}"]
         elif all(key in content_text for key in ('appmsg', 'title', 'url', 'sourceusername', 'sourcedisplayname',
                                                  'weappiconurl', 'weapppagethumbrawurl')):  # 小程序 - "{s_wxid}:\n{<mini_xml>}"
             content_type = 'mini'
@@ -187,7 +199,7 @@ class VpMsgFormatter(VpBaseFactory):
             }
             u_content = content_link['u_content']
             # 判断是否多重引用
-            if u_content.startswith('&lt;?xml') or u_content.startswith('<?xml'):
+            if any(u_content.startswith(prefix) for prefix in ('&lt;?xml', '<?xml', '&lt;msg', '<msg')):
                 u_content = Str.html_unescape(u_content)
                 u_content = Str.extract_xml_attr(u_content, 'title')
                 content_link['u_content'] = u_content
@@ -208,6 +220,17 @@ class VpMsgFormatter(VpBaseFactory):
             self.is_my_protect = 0
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, 0, client)
             send_wxid, content = [s_wxid, f"[拍一拍消息] {s_name} 拍了拍 {t_name} {content_link['pat_suffix']}"]
+        elif all(key in content_text for key in ('sysmsg', 'newmsgid', 'revokemsg', 'replacemsg')):  # 撤回 - "{s_wxid}:\n{<revoke_xml>}"
+            content_type = 'revoke'
+            content_link = {
+                "msg_id": Str.extract_xml_attr(content_text, 'msgid'),
+                "p_new_msg_id": Str.extract_xml_attr(content_text, 'newmsgid'),
+                "title": '',
+            }
+            s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, self.is_my_protect, client)
+            title_str = Str.extract_xml_attr(content_text, 'replacemsg').split('撤回', 1)
+            content_link['title'] = f"{s_name} 撤回{title_str[1]}"
+            send_wxid, content = [s_wxid, f"[撤回消息] {content_link['title']}"]
         elif all(key in content_text for key in ('appmsg', 'title', 'des', 'dataurl', 'songalbumurl',
                                                  'songlyric', 'appname')):  # 点歌 - "{s_wxid}:\n{<song_xml>}"
             content_type = 'song'
@@ -292,6 +315,8 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid_name = send_user.get('display_name', s_wxid) if send_user else s_wxid
             to_wxid_name = room.get('nickname', g_wxid) if is_my_protect else to_user.get('display_name', t_wxid) if to_user else t_wxid
             from_wxid_name = send_wxid_name if is_my_protect else room.get('nickname', g_wxid)
+            if "@chatroom" in s_wxid:
+                send_wxid_name = room.get('nickname', g_wxid)
         else:  # 私聊 - 优先备注名
             send_user = client.get_user(s_wxid)
             to_user = client.get_user(t_wxid)

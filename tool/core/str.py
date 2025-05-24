@@ -123,6 +123,14 @@ class Str:
             return ''
 
     @staticmethod
+    def remove_html_tags(s):
+        """去除字符串中的标签"""
+        try:
+            return re.sub(r'<[^>]*>', '', s)
+        except:
+            return s
+
+    @staticmethod
     def extract_attr(contents, key_name, position=1):
         """
         从普通文本中提取特定的属性
