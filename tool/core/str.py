@@ -1,6 +1,7 @@
 import re
 import time
 import json
+import html
 import random
 import hashlib
 
@@ -112,6 +113,14 @@ class Str:
         # 匹配IPv4地址的正则表达式
         ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
         return re.findall(ip_pattern, text)
+
+    @staticmethod
+    def html_unescape(s):
+        """字符串实体转义"""
+        try:
+            return html.unescape(s)
+        except:
+            return ''
 
     @staticmethod
     def extract_attr(contents, key_name, position=1):

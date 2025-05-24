@@ -3,6 +3,7 @@ import argparse
 import importlib
 import signal
 import logging
+import time
 from tool.core import Logger, Time, Http, Error, Attr, Config
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
@@ -35,8 +36,14 @@ class ParseHandler:
         """优雅退出"""
         pid = os.getpid()
         print(f"PID[{pid}]: 正在清理资源，请稍候...")
-        # 清理资源
+        # 清理日志资源
         logging.shutdown()
+        # 清理vp资源
+        if Config.is_prod():
+            VpClient('a1').close_websocket()
+            VpClient('a2').close_websocket()
+            # 等待资源释放完毕
+            time.sleep(3)
         print(f"PID[{pid}]: 清理完成，主程序结束")
         exit(0)
 

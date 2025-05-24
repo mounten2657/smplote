@@ -13,7 +13,7 @@
             "token_key": "[ENV.VP_TOKEN_KEY_A1]",
             "wxid": "[ENV.VP_WXID_A1]",
             "g_wxid": "[ENV.VP_WXID_G1]",
-            "g_wxid_exc": "[ENV.VP_WXID_G2_EXC]"
+            "g_wxid_exc": "[ENV.VP_WXID_G1_EXC]"
         },
         "a2": {
             "app_key": "a2",

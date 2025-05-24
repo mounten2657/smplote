@@ -25,7 +25,7 @@ class VpClient(VpBaseFactory):
             logger.debug('websocket starting', 'WS_STA')
             ws = VpSocketFactory(self.socket_uri, self.socket_handler , self.app_key)
             return ws.start()
-        res = Sys.delayed_task(3, ws_start)
+        res = Sys.delayed_task(1, ws_start)
         logger.debug(f'websocket start done - {res}', 'WS_END')
         return res
 
@@ -35,7 +35,7 @@ class VpClient(VpBaseFactory):
             logger.debug('websocket starting', 'WS_CED')
             ws = VpSocketFactory(self.socket_uri, self.socket_handler , self.app_key)
             return ws.close()
-        res = Sys.delayed_task(2, ws_close)
+        res = Sys.delayed_task(1, ws_close)
         logger.debug(f'websocket start done - {res}', 'WS_END')
         return res
 

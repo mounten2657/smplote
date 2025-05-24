@@ -188,23 +188,22 @@ class VpMsgFormatter(VpBaseFactory):
                 "join_info": Str.extract_xml_attr(content_text, 'solitaire_info'),
             }
             send_wxid, content = [s_wxid, f"[接龙消息] {content_link['title']}"]
-        elif all(key in content_text for key in ('appmsg', 'title', 'url', 'webviewshared')):  # 分享 - "{s_wxid}:\n{<share_xml>}"
-            content_type = 'share'
-            content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "des": Str.extract_xml_attr(content_text, 'des'),
-                "url": Str.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
-                "publisher_id": Str.extract_xml_attr(content_text, 'publisherId'),
-                "publisher_req_id": Str.extract_xml_attr(content_text, 'publisherReqId'),
-            }
-            send_wxid, content = [s_wxid, f"[分享消息] [{content_link['title']}]({content_link['url']})"]
         elif all(key in content_text for key in ('appmsg', 'title', 'svrid', 'displayname', 'content')):  # 引用 - "{s_wxid}:\n{<yy_xml>}"
             content_type = 'quote'
-            content_link = Str.extract_xml_attr(content_text, 'svrid')  # 引用消息的 new_msg_id
-            s_content = Str.extract_xml_attr(content_text, 'title')
-            u_name = Str.extract_xml_attr(content_text, 'displayname')
-            u_content = Str.extract_xml_attr(content_text, 'content')
-            send_wxid, content = [s_wxid, f"[引用消息] {u_name}: {u_content}\n----------\n{s_content}"]
+            content_link = {
+                "title": Str.extract_xml_attr(content_text, 'title'),
+                "p_new_msg_id": Str.extract_xml_attr(content_text, 'svrid'),  # 源消息的 new_msg_id
+                "u_wxid": Str.extract_xml_attr(content_text, 'chatusr'),
+                "u_name": Str.extract_xml_attr(content_text, 'displayname'),
+                "u_content": Str.extract_xml_attr(content_text, 'content'),
+            }
+            u_content = content_link['u_content']
+            # 判断是否多重引用
+            if u_content.startswith('&lt;?xml') or u_content.startswith('<?xml'):
+                u_content = Str.html_unescape(u_content)
+                u_content = Str.extract_xml_attr(u_content, 'title')
+                content_link['u_content'] = u_content
+            send_wxid, content = [s_wxid, f"[引用消息] {content_link['u_name']}: {u_content}\n----------\n{content_link['title']}"]
         elif all(key in content_text for key in ('sysmsg', 'fromusername', 'pattedusername',
                                                  'patsuffix', 'template')):  # 拍一拍 - "{g_wxid}:\n{<pat_xml>}" || "{<pat_xml>}"
             content_type = 'pat'
@@ -221,6 +220,16 @@ class VpMsgFormatter(VpBaseFactory):
             self.is_my_protect = 0
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, 0, client)
             send_wxid, content = [s_wxid, f"[拍一拍消息] {s_name} 拍了拍 {t_name} {content_link['pat_suffix']}"]
+        elif all(key in content_text for key in ('appmsg', 'title', 'url', 'webviewshared')):  # 分享 - "{s_wxid}:\n{<share_xml>}"
+            content_type = 'share'
+            content_link = {
+                "title": Str.extract_xml_attr(content_text, 'title'),
+                "des": Str.extract_xml_attr(content_text, 'des'),
+                "url": Str.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
+                "publisher_id": Str.extract_xml_attr(content_text, 'publisherId'),
+                "publisher_req_id": Str.extract_xml_attr(content_text, 'publisherReqId'),
+            }
+            send_wxid, content = [s_wxid, f"[分享消息] [{content_link['title']}]({content_link['url']})"]
         elif self.is_my or self.is_sl:  # 自己的消息 或 私聊消息 - "{content}"
             content_type = 'text'
             content_link = ''

@@ -75,7 +75,7 @@ class VpCallbackService:
     @staticmethod
     def _callback_handler(pid, params):
         """微信回调真正处理逻辑"""
-        res = {}
+        res = {"pid": pid}
         is_force = params.get('is_force', 0)
         db = CallbackQueueModel()
         db.set_processed(pid)
