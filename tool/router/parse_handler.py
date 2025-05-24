@@ -22,7 +22,7 @@ class ParseHandler:
         # 注册结束处理
         signal.signal(signal.SIGINT, ParseHandler.shutdown_handler)
         # 程序开始前先释放锁
-        key_list = ['LOCK_RTQ_CNS', 'LOCK_SQL_CNT']
+        key_list = ['LOCK_RTQ_CNS', 'LOCK_SQL_CNT', 'LOCK_WSS_CNT']
         list(map(lambda key: RedisClient().delete(key), key_list))
         # 程序预热
         if Config.is_prod():  # 仅正式环境执行的操作
