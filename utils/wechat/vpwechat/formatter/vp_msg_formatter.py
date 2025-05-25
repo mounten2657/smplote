@@ -69,7 +69,29 @@ class VpMsgFormatter(VpBaseFactory):
             s_wxid, content_text = [f_wxid, contents]
             has_sender = 0
         # 消息分类处理
-        if all(key in content_text for key in ('msg', 'emoji', 'cdnurl')):  # 表情 - "{s_wxid}:\n{<emoji_xml>}"
+        if all(key in content_text for key in ('appmsg', 'title', 'svrid', 'displayname', 'content')):  # 引用 - "{s_wxid}:\n{<yy_xml>}"
+            # 引用消息优先 - 因为它可能包含所有类型的消息
+            content_type = 'quote'
+            content_link = {
+                "title": Str.extract_xml_attr(content_text, 'title'),
+                "p_new_msg_id": Str.extract_xml_attr(content_text, 'svrid'),  # 源消息的 new_msg_id
+                "u_wxid": Str.extract_xml_attr(content_text, 'chatusr'),
+                "u_name": Str.extract_xml_attr(content_text, 'displayname'),
+                "u_content": Str.extract_xml_attr(content_text, 'content'),
+            }
+            u_content = content_link['u_content']
+            # 判断是否多重引用
+            if any(u_content.startswith(prefix) for prefix in ('&lt;?xml', '<?xml', '&lt;msg', '<msg')):
+                u_content = Str.html_unescape(u_content)
+                u_content_str = Str.extract_xml_attr(u_content, 'title')
+                if not u_content_str:
+                    if all(key in u_content for key in ('msg', 'img', 'aeskey', 'cdnmidimgurl')):  # 引用图片
+                        u_content_str = f"[图片消息] {p_msg_id}.png"  # 没有拿到图片链接，暂时用消息id代替
+                    else:  # 有其它类型再说
+                        u_content_str = f"[富文本消息] {p_msg_id}.text"
+                content_link['u_content'] = u_content_str
+            send_wxid, content = [s_wxid, f"[引用消息] {content_link['u_name']}: {content_link['u_content']}\n----------\n{content_link['title']}"]
+        elif all(key in content_text for key in ('msg', 'emoji', 'cdnurl')):  # 表情 - "{s_wxid}:\n{<emoji_xml>}"
             content_type = 'gif'
             # 仅保存下载链接，不进行下载
             content_link = {
@@ -198,22 +220,6 @@ class VpMsgFormatter(VpBaseFactory):
                 "join_info": Str.extract_xml_attr(content_text, 'solitaire_info'),
             }
             send_wxid, content = [s_wxid, f"[接龙消息] {content_link['title']}"]
-        elif all(key in content_text for key in ('appmsg', 'title', 'svrid', 'displayname', 'content')):  # 引用 - "{s_wxid}:\n{<yy_xml>}"
-            content_type = 'quote'
-            content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "p_new_msg_id": Str.extract_xml_attr(content_text, 'svrid'),  # 源消息的 new_msg_id
-                "u_wxid": Str.extract_xml_attr(content_text, 'chatusr'),
-                "u_name": Str.extract_xml_attr(content_text, 'displayname'),
-                "u_content": Str.extract_xml_attr(content_text, 'content'),
-            }
-            u_content = content_link['u_content']
-            # 判断是否多重引用
-            if any(u_content.startswith(prefix) for prefix in ('&lt;?xml', '<?xml', '&lt;msg', '<msg')):
-                u_content = Str.html_unescape(u_content)
-                u_content = Str.extract_xml_attr(u_content, 'title')
-                content_link['u_content'] = u_content
-            send_wxid, content = [s_wxid, f"[引用消息] {content_link['u_name']}: {u_content}\n----------\n{content_link['title']}"]
         elif all(key in content_text for key in ('sysmsg', 'fromusername', 'pattedusername',
                                                  'patsuffix', 'template')):  # 拍一拍 - "{g_wxid}:\n{<pat_xml>}" || "{<pat_xml>}"
             content_type = 'pat'
