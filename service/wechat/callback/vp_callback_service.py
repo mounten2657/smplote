@@ -52,15 +52,16 @@ class VpCallbackService:
         is_force = params.get('is_force', 0)  # 强制更新
         app_key = params.get('app_key')
         msg_id = params.get('message', {}).get('new_msg_id', 0)
+        p_msg_id = params.get('message', {}).get('msg_id', 0)
         db = CallbackQueueModel()
         info = db.get_by_msg_id(msg_id)
         if info:
             # msg_id 唯一 - 已入库且处理成功就跳过
             if not (is_force or (is_retry and not info['is_succeed'])):
-                logger.warning(f"消息已入库 - 跳过 - {msg_id}", 'VP_CALL_SKP')
+                logger.warning(f"消息已入库 - 跳过 - [{p_msg_id}-{msg_id}]", 'VP_CALL_SKP')
                 return 'success'
             res['insert_db'] = pid = info['id']
-            logger.warning(f"消息重试 - {info['id']} - {msg_id}", 'VP_CALL_RTY')
+            logger.warning(f"消息重试 - {info['id']} - [{p_msg_id}-{msg_id}]", 'VP_CALL_RTY')
         else:
             # 数据入库
             res['insert_db'] = pid = db.add_queue('wechatpad', params)

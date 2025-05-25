@@ -14,7 +14,7 @@ class VpCallbackHandler(VpBaseFactory):
         data = self.on_message_filter(data)  # 消息过滤
         if not data:
             return False
-        time.sleep(0.1)  # 避免太快了，队列一秒一个
+        time.sleep(0.01)  # 避免满载
         # 先入队列，再由队列发起回调处理
         # service.wechat.callback.vp_callback_service@VpCallbackService.callback_handler
         service = self.config['ws_service_path'] + '@VpCallbackService.callback_handler'
@@ -32,7 +32,9 @@ class VpCallbackHandler(VpBaseFactory):
         app_config = self.app_config
         self_wxid = self.self_wxid
         a_g_wxid = self.a_g_wxid
-        msg_id = message.get('msg_id', message.get('new_msg_id', 0))
+        msg_id = message.get('new_msg_id', 0)
+        p_msg_id = message.get('msg_id', 0)
+        msg_id = f"{p_msg_id}-{msg_id}"  # 展示用
         msg_type = message.get('msg_type', 0)
         msg_source = message.get('msg_source', '')
         f_wxid = message.get('from_user_name', {}).get('str', '')
