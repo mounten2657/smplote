@@ -161,4 +161,5 @@ class VpClient(VpBaseFactory):
     def get_room_grp_usl(self, g_wxid):
         return self.client.get_room_user_list(g_wxid)
 
-
+    def download_img(self, msg_id):
+        return self.client.download_image(msg_id)

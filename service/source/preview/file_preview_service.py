@@ -8,12 +8,12 @@ class FilePreviewService:
 
     BASE_STORAGE_DIR = Dir.abs_dir('storage/upload')
     ALLOW_IMAGE_EXT = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'}
-    ALLOW_FILE_EXT = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv'}
+    ALLOW_FILE_EXT = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv', 'mp4', 'mp3'}
 
     @staticmethod
-    def image(params):
+    def image(file_path):
         """图片预览"""
-        file_path, full_path = FilePreviewService._check_path(params)
+        file_path, full_path = FilePreviewService._check_path(file_path)
 
         # 检查文件类型（仅允许图片）
         allowed_extensions = FilePreviewService.ALLOW_IMAGE_EXT
@@ -26,9 +26,9 @@ class FilePreviewService:
         return send_from_directory(directory, filename)
 
     @staticmethod
-    def office(params):
+    def office(file_path):
         """office文件预览"""
-        file_path, full_path = FilePreviewService._check_path(params)
+        file_path, full_path = FilePreviewService._check_path(file_path)
 
         file_ext = os.path.splitext(file_path)[1].lower()
         if file_ext not in FilePreviewService.ALLOW_FILE_EXT:
@@ -42,8 +42,7 @@ class FilePreviewService:
         )
 
     @staticmethod
-    def _check_path(params):
-        file_path = params.get('path')
+    def _check_path(file_path):
         if not file_path:
             abort(400, description="Missing path parameter")
 

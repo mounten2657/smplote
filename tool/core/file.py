@@ -30,12 +30,13 @@ class File:
             return None
 
     @staticmethod
-    def save_file(content: Any, save_path: str, file_append: bool = False, encoding: str = 'utf-8') -> bool:
+    def save_file(content: Any, save_path: str, file_append: bool = False, new_line = True, encoding: str = 'utf-8') -> bool:
         """
         保存内容到文件，自动处理多种数据类型
         :param content: 要保存的内容（支持dict/list/str等）
         :param save_path: 保存路径
         :param file_append: 是否追加模式，默认False
+        :param new_line: 是否换行模式，默认True
         :param encoding: 文件编码，默认utf-8
         :return: 成功返回True，失败返回False
         """
@@ -50,7 +51,7 @@ class File:
                 content = json.dumps(content, ensure_ascii=False, indent=4)
             with open(save_path, mode, encoding=encoding) as f:
                 f.write(str(content))
-                if not content.endswith('\n'):  # 确保内容以换行结尾
+                if new_line and not content.endswith('\n'):  # 确保内容以换行结尾
                     f.write('\n')
             return True
         except Exception as e:

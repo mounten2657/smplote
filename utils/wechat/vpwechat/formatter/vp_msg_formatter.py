@@ -61,7 +61,8 @@ class VpMsgFormatter(VpBaseFactory):
     def dispatch(self, message, client):
         """消息分类处理"""
         contents = message.get('content', {}).get('str', '')
-        p_msg_id = message.get('new_msg_id', message.get('msg_id', 0))
+        o_msg_id = message.get('msg_id', 0)
+        p_msg_id = message.get('new_msg_id', o_msg_id)
         f_wxid = message.get('from_user_name', {}).get('str', '')
         t_wxid = message.get('to_user_name', {}).get('str', '')
         has_sender = self.has_sender
@@ -162,7 +163,7 @@ class VpMsgFormatter(VpBaseFactory):
             "content": content,
             "content_type": content_type,
             "content_link": content_link,
-            "p_msg_id": p_msg_id,
+            "p_msg_id": o_msg_id,
             "app_key": self.app_key,
             "self_wxid": self.self_wxid,
             "is_my": self.is_my,
@@ -187,49 +188,40 @@ class VpMsgFormatter(VpBaseFactory):
             }
         elif all(key in content_text for key in ('msg', 'emoji', 'cdnurl')):  # 表情 - "{s_wxid}:\n{<emoji_xml>}"
             content_type = 'gif'
-            # 仅保存下载链接，不进行下载
+            # 仅保存下载链接，先不进行下载
             content_link = {
                 "url": Str.extract_attr(content_text, 'cdnurl').replace('&amp;', '&'),
                 "md5": Str.extract_attr(content_text, 'md5'),
             }
         elif all(key in content_text for key in ('msg', 'img', 'aeskey', 'cdnmidimgurl')):  # 图片 - "{s_wxid}:\n{<image_xml>}"
             content_type = 'png'
-            # 下载链接暂时还没有研究出来，先贴上  aeskey 和 cdnmidimgurl
+            # 仅保存md5，先不进行下载
             content_link = {
-                "aes_key": Str.extract_attr(content_text, 'aeskey'),
-                "url": Str.extract_attr(content_text, 'cdnmidimgurl'),
                 "md5": Str.extract_attr(content_text, 'md5'),
             }
         elif all(key in content_text for key in ('xml', 'videomsg', 'aeskey', 'cdnvideourl')):  # 视频 - "{s_wxid}:\n<video_xml>}"
             content_type = 'mp4'
-            # 下载链接暂时还没有研究出来，先贴上  aeskey 和 cdnvideourl
+            # 仅保存md5，先不进行下载
             content_link = {
-                "aes_key": Str.extract_attr(content_text, 'aeskey'),
-                "url": Str.extract_attr(content_text, 'cdnvideourl'),
                 "md5": Str.extract_attr(content_text, 'md5'),
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'fileuploadtoken', 'fileext')):  # 文件 - "{s_wxid}:\n{<file_xml>}"
             content_type = 'file'
-            # 下载链接暂时还没有研究出来，先贴上  aeskey 和 cdnattachurl
+            # 仅保存md5，先不进行下载
             content_link = {
                 "title": Str.extract_xml_attr(content_text, 'title'),
-                "fileext": Str.extract_xml_attr(content_text, 'fileext'),
+                "file_ext": Str.extract_xml_attr(content_text, 'fileext'),
                 "md5": Str.extract_xml_attr(content_text, 'md5'),
                 "tag": "FILE_START",
             }
             # 文件传输有两条信息（开始和结束），现在只接收文件传输完成的消息
             if all(key in content_text for key in ('cdnattachurl', 'aeskey')):
                 # 下载链接暂时还没有研究出来，先贴上  aeskey 和 cdnattachurl
-                content_link.update({
-                    "aes_key": Str.extract_xml_attr(content_text, 'aeskey'),
-                    "url": Str.extract_xml_attr(content_text, 'cdnattachurl'),
-                    "tag": "FILE_END",
-                })
+                content_link.update({"tag": "FILE_END",})
         elif all(key in content_text for key in ('voicemsg', 'aeskey', 'voiceurl', 'clientmsgid')):  # 语音 - "{s_wxid}:\n{<voice_xml>}"
             content_type = 'voice'
+            # 仅保存c_msg_id，先不进行下载
             content_link = {
-                "aes_key": Str.extract_attr(content_text, 'aeskey'),
-                "url": Str.extract_attr(content_text, 'voiceurl'),
                 "client_msg_id": Str.extract_attr(content_text, 'clientmsgid'),
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'sendertitle', 'nativeurl', 'templateid', 'iconurl')):  # 红包 - "{s_wxid}:\n{<red_xml>}"

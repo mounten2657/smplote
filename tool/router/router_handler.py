@@ -7,6 +7,7 @@ from flask import Flask, request, send_from_directory
 from tool.router.parse_handler import ParseHandler
 from tool.core import Logger, Attr, Api, Dir, Config, Error, Http
 from utils.wechat.qywechat.qy_client import QyClient
+from service.source.preview.file_preview_service import FilePreviewService
 
 logger = Logger()
 
@@ -17,8 +18,8 @@ class RouterHandler:
         'callback/gewe_callback/collect',
         'callback/qy_callback/collect_wts',
         'callback/qy_callback/collect_gpl',
-        'src/preview/image',
-        'src/preview/office',
+        'src/static/image',
+        'src/static/office',
         'src/terminal/output',
     ]
 
@@ -49,6 +50,18 @@ class RouterHandler:
             if path in ('', 'index', 'index.html', 'index.php', 'index.py'):
                 path = self.config.get('APP_INDEX')
             return http_execute_method(path)
+
+        # 图片资源访问
+        @self.app.route('/src/static/image/<path:path>')
+        def image_file(path):
+            return FilePreviewService.image(path)
+
+        # 文件资源访问
+        @self.app.route('/src/static/office/<path:path>')
+        @self.app.route('/src/static/mp4/<path:path>')
+        @self.app.route('/src/static/mp3/<path:path>')
+        def office_file(path):
+            return FilePreviewService.office(path)
 
         # 定义图标路径
         @self.app.route('/favicon.ico')

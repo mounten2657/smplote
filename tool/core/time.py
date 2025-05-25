@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from typing import Tuple, Union, Optional
 
@@ -22,6 +23,15 @@ class Time:
         :return: 默认格式 "YYYY-MM-DD HH:MM:SS"（如 "2025-04-10 09:19:59"）
         """
         return datetime.now().strftime(date_format)
+
+    @staticmethod
+    def sleep(f):
+        """
+        休眠一定时间
+        :param f:  休眠时间 - 可以是整数或小数
+        :return:
+        """
+        time.sleep(f)
 
     @staticmethod
     def tfd(date_str):

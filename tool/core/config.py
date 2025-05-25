@@ -1,6 +1,5 @@
-import json
 import os
-import platform
+import json
 from tool.core.env import Env
 from tool.core.dir import Dir
 from tool.core.file import File
@@ -31,8 +30,16 @@ class Config:
 
     @staticmethod
     def is_prod():
-        # return os.environ.get('IS_PROD', False)
-        return platform.system().lower() == 'linux'
+        return int(os.environ.get('IS_PROD', 0))
+
+    @staticmethod
+    def base_url(is_prod=0):
+        app = Config.app_config()
+        if Config.is_prod() or is_prod:
+            domain = Env.get('APP_SERVER_HOST', '', '.env.prod', True)
+            not Config.is_prod() and Env.get('APP_SERVER_HOST', '', '.env', True)  # 恢复原样
+            return f"https://{domain}"
+        return f"http://{app['SERVER_HOST']}:{app['SERVER_PORT']}"
 
     @staticmethod
     def ai_config():
@@ -50,16 +57,11 @@ class Config:
 
     @staticmethod
     def redis_config():
-        config = Config.cache_config()['redis']
-        config['db'] = config['db'] if not Config.is_prod() else 0
-        config['port'] = config['port'] if not Config.is_prod() else 6379
-        return config
+        return Config.cache_config()['redis']
 
     @staticmethod
     def mysql_db_config(db_name='default'):
-        config = Config.load_config('config/db.json').get('mysql', {}).get(db_name)
-        config['port'] = config['port'] if not Config.is_prod() else 3306
-        return config
+        return Config.load_config('config/db.json').get('mysql', {}).get(db_name)
 
     @staticmethod
     def sqlite_db_config(db_name='default'):

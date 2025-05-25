@@ -1,4 +1,5 @@
-from tool.core import Logger, Http, Time
+import base64
+from tool.core import Logger, Http, Time, Attr
 from model.wechat.wechat_api_log_model import WechatApiLog
 
 logger = Logger()
@@ -154,4 +155,46 @@ class VpClientFactory:
         api = '/label/GetContactLabelList'
         return self._api_call('GET', api, {}, 'VP_FRD')
 
-
+    def download_image(self, msg_id):
+        """
+        下载图片并返回本地文件保存位置
+        :param msg_id: 消息ID， 注意是 msg_id ，不是 new_msg_id
+        :return: str - 图片的base64编码
+        {"Code":200,"Data":{"Data":{"iLen":12,"Buffer":"sIsldOGVe7kt1qaM"},"MsgId":123456,"FromUserName":{},"ToUserName":{},"TotalLen":431292,"StartPos":431280,"DataLen":12,"NewMsgId":0},"Text":""}
+        """
+        if not msg_id:
+            return ''
+        api = '/message/GetMsgBigImg'
+        # 初始化变量
+        image_data = bytearray()
+        start_pos = 0
+        total_len = chunk_size = 65536
+        while start_pos < total_len:
+            # 循环请求直到结束
+            body = {
+                "CompressType": 0,
+                "FromUserName": "",
+                "MsgId": msg_id,
+                "Section": {
+                    "DataLen": min(chunk_size, total_len - start_pos),
+                    "StartPos": start_pos
+                },
+                "ToUserName": "",
+                "TotalLen": total_len if start_pos else 0
+            }
+            res = self._api_call('POST', api, body, 'VP_IMG')
+            buffer = Attr.get_by_point(res, 'Data.Data.Buffer', '')
+            t_len = Attr.get_by_point(res, 'Data.TotalLen', 0)
+            if not int(t_len):  # 总长度为0，说明接口报错了
+                return ''
+            if not start_pos:  # 总长度以接口返回的为准
+                total_len = t_len
+            # 解码当前片段并追加
+            chunk_data = base64.b64decode(buffer)
+            image_data.extend(chunk_data)
+            # 更新起始位置
+            start_pos += len(chunk_data)
+            Time.sleep(0.1)
+        # 最终Base64编码
+        full_base64 = base64.b64encode(image_data).decode('utf-8')
+        return f"data:image/jpeg;base64,{full_base64}"    # jpeg | png | gif | webp | svg
