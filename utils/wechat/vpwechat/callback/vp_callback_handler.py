@@ -48,7 +48,7 @@ class VpCallbackHandler(VpBaseFactory):
             # if 'a1' == self.app_key and (g_wxid != self.config['app_list']['a2']['g_wxid'] and t_wxid != self.config['app_list']['a2']['g_wxid']):
             #     logger.warning(f"on message: 忽略消息[T0]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
             #     return False
-            if msg_type == 51:  # 同步消息
+            if 51 == msg_type:  # 同步消息
                 logger.warning(f"on message: 忽略消息[T1]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
             if 'weixin' == f_wxid:  # 微信团队
