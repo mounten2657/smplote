@@ -20,7 +20,7 @@ class LogErrorMd:
         """
         # 处理可能为字符串类型的 err_msg
         error_message = result.get("err_msg", [])
-        app_name = Env.get('APP_NAME', 'Error')
+        app_name = Env.get('APP_NAME', 'SMP')
         if isinstance(error_message, str):
             error_message = [error_message]
         http_url = http_method = http_data = 'None'

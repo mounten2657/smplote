@@ -44,13 +44,14 @@ class GiteeWebhookMd:
             pusher = payload['pusher']['name']
             compare_url = payload['compare']
             commits = payload['commits']
+            app_name = Env.get('APP_NAME', 'SMP')
 
             # 只处理 push 事件
             if hook_name != 'push_hooks':
                 return 200, {"message": "Ignored non-push event"}
 
             # 生成 Markdown 消息
-            md_message = f"""🚀 **Gitee 代码推送通知**  
+            md_message = f"""🚀 **Gitee {str(app_name).capitalize()} 代码推送通知**  
 
     📦 仓库: [{repo}]({payload['repository']['html_url']})  
     🌿 分支: {branch}
