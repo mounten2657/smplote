@@ -32,7 +32,7 @@ class VpCallbackHandler(VpBaseFactory):
         app_config = self.app_config
         self_wxid = self.self_wxid
         a_g_wxid = self.a_g_wxid
-        msg_id = message.get('new_msg_id', 0)
+        msg_id = message.get('msg_id', message.get('new_msg_id', 0))
         msg_type = message.get('msg_type', 0)
         msg_source = message.get('msg_source', '')
         f_wxid = message.get('from_user_name', {}).get('str', '')
