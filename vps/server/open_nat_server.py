@@ -2,7 +2,7 @@ import os
 from concurrent import futures
 from vps.proto.generated.open_nat_pb2 import *
 from vps.proto.generated.open_nat_pb2_grpc import *
-from vps.api.wechat.qy_api.qy_msg_api import QYMsgApi
+from vps.api.wechat.qy.qy_msg_api import QYMsgApi
 
 
 class OpenNatServer(OpenNatServerServicer):
