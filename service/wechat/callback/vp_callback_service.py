@@ -77,7 +77,6 @@ class VpCallbackService:
     def _callback_handler(pid, params):
         """微信回调真正处理逻辑"""
         res = {"pid": pid}
-        is_force = params.get('is_force', 0)
         db = CallbackQueueModel()
         db.set_processed(pid)
         # 消息数据格式化
@@ -88,7 +87,7 @@ class VpCallbackService:
         update_data = {"process_result": res, "process_params": data}
         if res['rev_handler']:
             update_data.update({"is_succeed": 1})
-        res['update_db'] = db.update_process(int(pid), update_data, is_force)
+        res['update_db'] = db.update_process(int(pid), update_data)
         return res
 
 

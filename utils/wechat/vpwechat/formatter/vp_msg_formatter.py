@@ -131,6 +131,17 @@ class VpMsgFormatter(VpBaseFactory):
             self.is_my_protect = 0
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, 0, client)
             send_wxid, content = [s_wxid, f"[拍一拍消息] {s_name} 拍了拍 {t_name} {content_link['pat_suffix']}"]
+        elif 'invited' == content_type:  # 邀请
+            self.g_wxid = s_wxid if has_sender else self.g_wxid
+            s_wxid = content_link['u_wxid']
+            t_wxid = content_link['i_wxid']
+            f_wxid = self.g_wxid if self.g_wxid else s_wxid
+            self.is_my_protect = 0
+            s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, 0, client)
+            t_name = t_name if t_name != t_wxid else content_link['i_name']
+            self.msg['send_wxid_name'], self.msg['to_wxid_name'], self.msg['from_wxid_name'] = s_name, t_name, f_name
+            print(111, self.msg['to_wxid_name'])
+            send_wxid, content = [s_wxid, f"[邀请消息] {s_name} 邀请 {t_name} 加入了群聊"]
         elif 'revoke' == content_type:  # 撤回
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, self.is_my_protect, client)
             title_str = Str.extract_xml_attr(content_text, 'replacemsg').split('撤回', 1)
@@ -154,7 +165,7 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, '']
 
         # 更新消息数据
-        self.msg = {
+        self.msg.update({
             "msg_id": message.get('new_msg_id', 0),
             "msg_type": message.get('msg_type', 0),
             "send_wxid": send_wxid if send_wxid else f_wxid,
@@ -170,7 +181,7 @@ class VpMsgFormatter(VpBaseFactory):
             "is_sl": self.is_sl,
             "is_group": int(bool(self.g_wxid)),
             "g_wxid": self.g_wxid,
-        }
+        })
 
         return self.msg
 
@@ -186,6 +197,15 @@ class VpMsgFormatter(VpBaseFactory):
                 "u_name": Str.extract_xml_attr(content_text, 'displayname'),
                 "u_content": Str.extract_xml_attr(content_text, 'content'),
             }
+        elif all(key in content_text for key in ('sysmsg', '邀请', '加入', '群聊')):  # 邀请 - "{g_wxid}:\n{<invited_xml>}"
+            content_type = 'invited'
+            content_link = {
+                "template": Str.extract_xml_attr(content_text, 'template'),
+                "u_wxid": Str.extract_xml_attr(content_text, 'username', 1),
+                "u_name": Str.extract_xml_attr(content_text, 'nickname', 1).replace('\\', ''),
+                "i_wxid": Str.extract_xml_attr(content_text, 'username', 2),
+                "i_name": Str.extract_xml_attr(content_text, 'nickname', 2).replace('\\', ''),
+            }
         elif all(key in content_text for key in ('msg', 'emoji', 'cdnurl')):  # 表情 - "{s_wxid}:\n{<emoji_xml>}"
             content_type = 'gif'
             # 仅保存下载链接，先不进行下载
@@ -197,12 +217,16 @@ class VpMsgFormatter(VpBaseFactory):
             content_type = 'png'
             # 仅保存md5，先不进行下载
             content_link = {
+                "aes_key": Str.extract_attr(content_text, 'aeskey'),
+                "url": Str.extract_attr(content_text, 'cdnmidimgurl'),
                 "md5": Str.extract_attr(content_text, 'md5'),
             }
         elif all(key in content_text for key in ('xml', 'videomsg', 'aeskey', 'cdnvideourl')):  # 视频 - "{s_wxid}:\n<video_xml>}"
             content_type = 'mp4'
             # 仅保存md5，先不进行下载
             content_link = {
+                "aes_key": Str.extract_attr(content_text, 'aeskey'),
+                "url": Str.extract_attr(content_text, 'cdnvideourl'),
                 "md5": Str.extract_attr(content_text, 'md5'),
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'fileuploadtoken', 'fileext')):  # 文件 - "{s_wxid}:\n{<file_xml>}"
@@ -217,11 +241,18 @@ class VpMsgFormatter(VpBaseFactory):
             # 文件传输有两条信息（开始和结束），现在只接收文件传输完成的消息
             if all(key in content_text for key in ('cdnattachurl', 'aeskey')):
                 # 下载链接暂时还没有研究出来，先贴上  aeskey 和 cdnattachurl
-                content_link.update({"tag": "FILE_END",})
+                content_link.update({
+                    "aes_key": Str.extract_xml_attr(content_text, 'aeskey'),
+                    "url": Str.extract_xml_attr(content_text, 'cdnattachurl'),
+                    "tag": "FILE_END",
+                })
         elif all(key in content_text for key in ('voicemsg', 'aeskey', 'voiceurl', 'clientmsgid')):  # 语音 - "{s_wxid}:\n{<voice_xml>}"
             content_type = 'voice'
             # 仅保存c_msg_id，先不进行下载
             content_link = {
+                "aes_key": Str.extract_attr(content_text, 'aeskey'),
+                "url": Str.extract_attr(content_text, 'voiceurl'),
+                "md5": Str.extract_attr(content_text, 'voicemd5'),
                 "client_msg_id": Str.extract_attr(content_text, 'clientmsgid'),
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'sendertitle', 'nativeurl', 'templateid', 'iconurl')):  # 红包 - "{s_wxid}:\n{<red_xml>}"
@@ -337,10 +368,10 @@ class VpMsgFormatter(VpBaseFactory):
 
     def handler_nickname(self, client):
         """处理昵称"""
-        msg = self.msg
-        msg['send_wxid_name'], msg['to_wxid_name'], msg['from_wxid_name'] \
-            = self.extract_user_name(self.g_wxid, msg['send_wxid'], msg['to_wxid'], self.is_my_protect, client)
-        self.msg = msg
+        if self.msg.get('send_wxid_name') and self.msg.get('to_wxid_name') and self.msg.get('from_wxid_name'):
+            return self.msg
+        self.msg['send_wxid_name'], self.msg['to_wxid_name'], self.msg['from_wxid_name'] \
+            = self.extract_user_name(self.g_wxid, self.msg['send_wxid'], self.msg['to_wxid'], self.is_my_protect, client)
         return self.msg
 
     @staticmethod
