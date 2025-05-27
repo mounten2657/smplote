@@ -83,6 +83,7 @@ WX_WXID_G2=
 - `storage`：临时文件夹
 - `tool`：基础工具文件夹
 - `utils`：模型工具文件夹
+- `vpp`：虚拟服务文件夹
 - `vps`：vps微服务文件夹
 - `main.py`：主程序文件
 

@@ -14,7 +14,7 @@ message WeChatTextRequest {
   optional string user_list = 3;
 }
 
-service OpenNatService {
+service OpenNatServer {
   rpc SendWeChatText (WeChatTextRequest) returns (CommonResponse);
 }
 

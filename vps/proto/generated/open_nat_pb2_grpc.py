@@ -25,7 +25,7 @@ if _version_not_supported:
     )
 
 
-class OpenNatServiceStub(object):
+class OpenNatServerStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -35,13 +35,13 @@ class OpenNatServiceStub(object):
             channel: A grpc.Channel.
         """
         self.SendWeChatText = channel.unary_unary(
-                '/open_nat.OpenNatService/SendWeChatText',
+                '/open_nat.OpenNatServer/SendWeChatText',
                 request_serializer=open__nat__pb2.WeChatTextRequest.SerializeToString,
                 response_deserializer=open__nat__pb2.CommonResponse.FromString,
                 _registered_method=True)
 
 
-class OpenNatServiceServicer(object):
+class OpenNatServerServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def SendWeChatText(self, request, context):
@@ -51,7 +51,7 @@ class OpenNatServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_OpenNatServiceServicer_to_server(servicer, server):
+def add_OpenNatServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendWeChatText': grpc.unary_unary_rpc_method_handler(
                     servicer.SendWeChatText,
@@ -60,13 +60,13 @@ def add_OpenNatServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'open_nat.OpenNatService', rpc_method_handlers)
+            'open_nat.OpenNatServer', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('open_nat.OpenNatService', rpc_method_handlers)
+    server.add_registered_method_handlers('open_nat.OpenNatServer', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class OpenNatService(object):
+class OpenNatServer(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -83,7 +83,7 @@ class OpenNatService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/open_nat.OpenNatService/SendWeChatText',
+            '/open_nat.OpenNatServer/SendWeChatText',
             open__nat__pb2.WeChatTextRequest.SerializeToString,
             open__nat__pb2.CommonResponse.FromString,
             options,

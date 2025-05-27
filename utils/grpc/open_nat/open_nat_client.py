@@ -17,7 +17,7 @@ class OpenNatClient:
                 ('grpc.max_receive_message_length', 100 * 1024 * 1024)
             ]
         )
-        self.stub = OpenNatServiceStub(self.channel)
+        self.stub = OpenNatServerStub(self.channel)
 
     def send_wechat_text(self, content, app_key, user_list=None):
         response = self.stub.SendWeChatText(WeChatTextRequest(

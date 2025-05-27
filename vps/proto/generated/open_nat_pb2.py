@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eopen_nat.proto\x12\x08open_nat\"9\n\x0e\x43ommonResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0b\n\x03msg\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\"[\n\x11WeChatTextRequest\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x0f\n\x07\x61pp_key\x18\x02 \x01(\t\x12\x16\n\tuser_list\x18\x03 \x01(\tH\x00\x88\x01\x01\x42\x0c\n\n_user_list2Y\n\x0eOpenNatService\x12G\n\x0eSendWeChatText\x12\x1b.open_nat.WeChatTextRequest\x1a\x18.open_nat.CommonResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0eopen_nat.proto\x12\x08open_nat\"9\n\x0e\x43ommonResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0b\n\x03msg\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\"[\n\x11WeChatTextRequest\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\x12\x0f\n\x07\x61pp_key\x18\x02 \x01(\t\x12\x16\n\tuser_list\x18\x03 \x01(\tH\x00\x88\x01\x01\x42\x0c\n\n_user_list2X\n\rOpenNatServer\x12G\n\x0eSendWeChatText\x12\x1b.open_nat.WeChatTextRequest\x1a\x18.open_nat.CommonResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,6 +35,6 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_COMMONRESPONSE']._serialized_end=85
   _globals['_WECHATTEXTREQUEST']._serialized_start=87
   _globals['_WECHATTEXTREQUEST']._serialized_end=178
-  _globals['_OPENNATSERVICE']._serialized_start=180
-  _globals['_OPENNATSERVICE']._serialized_end=269
+  _globals['_OPENNATSERVER']._serialized_start=180
+  _globals['_OPENNATSERVER']._serialized_end=268
 # @@protoc_insertion_point(module_scope)
