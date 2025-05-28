@@ -1,7 +1,7 @@
 from vps.base.desc import ConfigCrypto
 from vps.proto.generated.open_nat_pb2 import *
 from vps.proto.generated.open_nat_pb2_grpc import *
-from tool.core import *
+from tool.core import Logger, Attr, Config, Env, File, Dir, Ins
 
 logger = Logger()
 
@@ -9,7 +9,9 @@ logger = Logger()
 @Ins.singleton
 class OpenNatClient:
 
-    def __init__(self, host, port):
+    def __init__(self, host='', port=''):
+        if not host or not port:
+            host, port = self.get_vps_config()
         self.channel = grpc.insecure_channel(
             f"{host}:{port}",
             options=[
@@ -18,6 +20,13 @@ class OpenNatClient:
             ]
         )
         self.stub = OpenNatServerStub(self.channel)
+
+    @staticmethod
+    def get_vps_config():
+        """获取默认配置"""
+        host = Env.get('GRPC_HOST_ZGY')
+        port = Env.get('GRPC_PORT_ZGY')
+        return host, port
 
     def send_wechat_text(self, content, app_key, user_list=None):
         response = self.stub.SendWeChatText(WeChatTextRequest(
@@ -43,9 +52,6 @@ class OpenNatClient:
         return True
 
     @staticmethod
-    def send_text_msg(content, app_key='a1', host=Env.get('GRPC_HOST_ZGY'), port=Env.get('GRPC_PORT_ZGY')):
+    def send_text_msg(content, app_key='a1', user_list=None):
         """发送文本消息 - 对外方法"""
-        client = OpenNatClient(host, port)
-        return client.send_wechat_text(content, app_key)
-
-
+        return OpenNatClient().send_wechat_text(content, app_key, user_list)

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package vpp_serve;
+
+message CommonResponse {
+  int32 code = 1;
+  string msg = 2;
+  string data = 3;
+}
+
+message VpFileRequest {
+  int32 fty = 1;
+  string key = 2;
+  string url = 3;
+  string fp = 4;
+  string fk = 5;
+  optional int32 fd = 6;
+}
+
+service VppServer {
+  rpc vp_cdn_download (VpFileRequest) returns (CommonResponse);
+}
+

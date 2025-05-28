@@ -1,4 +1,5 @@
 import os
+import json
 from concurrent import futures
 from vps.proto.generated.open_nat_pb2 import *
 from vps.proto.generated.open_nat_pb2_grpc import *
@@ -17,10 +18,11 @@ class OpenNatServer(OpenNatServerServicer):
                 app_key=request.app_key,
                 user_list=request.user_list or None
             )
+            result = result if result else {}
             return CommonResponse(
                 code=int(result.get('errcode', 0)),
                 msg=result.get('errormsg', 'success'),
-                data=str(result)
+                data=json.dumps(result)
             )
         except Exception as e:
             context.set_code(grpc.StatusCode.INTERNAL)

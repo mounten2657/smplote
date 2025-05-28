@@ -1,13 +1,37 @@
 import os
 import json
-import time
 from pathlib import Path
 from typing import Union, Any, Optional
 from tool.core.attr import Attr
 from tool.core.dir import Dir
+from tool.core.str import Str
 
 
 class File:
+
+    @staticmethod
+    def enc_dir(file_path, root_dir='wechat'):
+        """获取加密路径"""
+        file_path = str(file_path).replace(root_dir, '')
+        base_path, file_ext = str(file_path).rsplit('.', 1)
+        file_ext = file_ext if 'silk' != file_ext else 'mp3'
+        enc = Str.encrypt_str(base_path[::-1])
+        dir_path = f"/{enc[0:2].upper()}/{enc[2:4].upper()}/{enc[4:6].upper()}"
+        return f"{dir_path}/{enc[6:][::-1]}.{file_ext}"
+
+    @staticmethod
+    def des_dir(file_path, root_dir='wechat'):
+        """获取解密路径"""
+        file_path = str(file_path).replace(root_dir, '')
+        base_path, file_ext = str(file_path).rsplit('.', 1)
+        try:
+            base_path = f"{base_path[:9]}{base_path[9:][::-1]}"
+            des = Str.decrypt_str(str(base_path).replace('/', ''))
+            return f"{root_dir}{des[::-1]}.{file_ext}"
+        except:
+            # raise ValueError('不是有效的路径')
+            return ''
+
     @staticmethod
     def read_file(file_path: str, encoding: str = 'utf-8') -> Optional[Union[dict, list, str]]:
         """

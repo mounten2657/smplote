@@ -19,7 +19,7 @@ class RouterHandler:
         'callback/qy_callback/collect_wts',
         'callback/qy_callback/collect_gpl',
         'src/static/image',
-        'src/static/office',
+        'src/static/file',
         'src/terminal/output',
     ]
 
@@ -57,11 +57,9 @@ class RouterHandler:
             return FilePreviewService.image(path)
 
         # 文件资源访问
-        @self.app.route('/src/static/office/<path:path>')
-        @self.app.route('/src/static/mp4/<path:path>')
-        @self.app.route('/src/static/mp3/<path:path>')
+        @self.app.route('/src/static/file/<path:path>')
         def office_file(path):
-            return FilePreviewService.office(path)
+            return FilePreviewService.file(path)
 
         # 定义图标路径
         @self.app.route('/favicon.ico')

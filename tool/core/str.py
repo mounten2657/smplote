@@ -4,9 +4,129 @@ import json
 import html
 import random
 import hashlib
+import urllib.parse
+from tool.core.env import Env
 
 
 class Str:
+
+    # 特殊字符码表
+    SPECIAL_MAP = {
+        # 控制字符 (Z0-Z9)
+        '\x00': 'Z0',  # 空字符
+        '\x01': 'Z1',  # 标题开始
+        '\x02': 'Z2',  # 正文开始
+        '\x03': 'Z3',  # 正文结束
+        '\x04': 'Z4',  # 传输结束
+        '\x05': 'Z5',  # 查询
+        '\x06': 'Z6',  # 确认
+        '\x07': 'Z7',  # 响铃
+        '\x08': 'Z8',  # 退格
+        '\x0b': 'Z9',  # 垂直制表符
+        # 常用ASCII特殊符号 (Za-Zz)
+        '/': 'Za', '.': 'Zb', '!': 'Zc', '@': 'Zd',
+        '#': 'Ze', '$': 'Zf', '%': 'Zg', '^': 'Zh',
+        '&': 'Zi', '*': 'Zj', '(': 'Zk', ')': 'Zl',
+        '-': 'Zm', '_': 'Zn', '=': 'Zo', '+': 'Zp',
+        '|': 'Zq', '?': 'Zr', ',': 'Zs', '~': 'Zt',
+        '`': 'Zu', '"': 'Zv', "'": 'Zw', '\\': 'Zx',
+        ':': 'Zy', ';': 'Zz',
+        # 扩展Unicode (ZA-ZY)
+        '[': 'ZA', ']': 'ZB', '{': 'ZC', '}': 'ZD',
+        '<': 'ZE', '>': 'ZF', ' ': 'ZG', '\t': 'ZH',
+        '\n': 'ZI', '\r': 'ZJ', '\x0c': 'ZK', '£': 'ZL',
+        '¥': 'ZM', '©': 'ZN', '®': 'ZO', '°': 'ZP',
+        '±': 'ZQ', 'µ': 'ZR', '¶': 'ZS', '·': 'ZT',
+        '¿': 'ZU', 'À': 'ZV', 'Á': 'ZW', 'Â': 'ZX',
+        'Ã': 'ZY',
+        # 明文字符Z必须放在最后（优先级最低）
+        'Z': 'ZZ'
+    }
+    REVERSE_SPECIAL = {v: k for k, v in SPECIAL_MAP.items()}
+
+    @staticmethod
+    def encrypt_str(content: str, key: str = '') -> str:
+        """加密字符串"""
+        key = key if key else Env.get('APP_CONFIG_MASTER_KEY')
+        content = urllib.parse.quote(content)  # 中文转码
+        # 生成密钥流
+        hmac = hashlib.pbkdf2_hmac('sha256', key.encode(), b'salt', 100000)
+        key_stream = hmac.hex()
+        # 前3字符转6位16进制
+        prefix = (content[:3].encode().hex() if len(content) >= 3
+                  else content.encode().hex().ljust(6, '0'))
+        # 加密后续字符
+        encrypted = []
+        for i, c in enumerate(content[3:]):
+            # 优先处理Z和其他特殊符号
+            if c in Str.SPECIAL_MAP:
+                encrypted.append(Str.SPECIAL_MAP[c])
+                continue
+            # 处理常规字符（加密结果限制在0-9a-zA-Y）
+            key_char = key_stream[(i + 6) % len(key_stream)]
+            shift = ord(key_char) % 61  # 61 = 10数字 + 26小写 + 25大写（排除Z）
+            code = Str._shift_code(c)
+            # 加密计算（结果范围0-60）
+            encrypted_code = (code + shift) % 61
+            # 映射到输出字符
+            if encrypted_code < 10:
+                encrypted.append(str(encrypted_code))
+            elif encrypted_code < 36:
+                encrypted.append(chr(ord('a') + encrypted_code - 10))
+            else:
+                encrypted.append(chr(ord('A') + encrypted_code - 36))
+        return prefix + ''.join(encrypted)
+
+    @staticmethod
+    def decrypt_str(encrypted: str, key: str = '') -> str:
+        """解密字符串"""
+        key = key if key else Env.get('APP_CONFIG_MASTER_KEY')
+        hmac = hashlib.pbkdf2_hmac('sha256', key.encode(), b'salt', 100000)
+        key_stream = hmac.hex()
+        # 解析前6位16进制
+        prefix = bytes.fromhex(encrypted[:6]).decode(errors='replace')[:3]
+        # 解密后续字符
+        decrypted = []
+        i = 0
+        while i < len(encrypted[6:]):
+            # 检查是否为特殊符号（Z后跟数字/字母）
+            if i + 1 < len(encrypted[6:]) and encrypted[6 + i] == 'Z':
+                special_code = encrypted[6 + i:8 + i]
+                if special_code in Str.REVERSE_SPECIAL:
+                    decrypted.append(Str.REVERSE_SPECIAL[special_code])
+                    i += 2
+                    continue
+            # 处理常规字符
+            c = encrypted[6 + i]
+            key_char = key_stream[(len(decrypted) + 6) % len(key_stream)]
+            shift = ord(key_char) % 61
+            code = Str._shift_code(c)
+            # 解密计算
+            orig_code = (code - shift) % 61
+            # 还原字符
+            if orig_code < 10:
+                decrypted.append(str(orig_code))
+            elif orig_code < 36:
+                decrypted.append(chr(ord('a') + orig_code - 10))
+            else:
+                decrypted.append(chr(ord('A') + orig_code - 36))
+            i += 1
+        dec = prefix + ''.join(decrypted)
+        return urllib.parse.unquote(dec)
+
+    @staticmethod
+    def _shift_code(c):
+        """获取特殊字符码"""
+        if c.isdigit():
+            code = int(c)
+        elif c.islower():
+            code = 10 + ord(c) - ord('a')
+        elif c.isupper() and c != 'Z':
+            code = 36 + ord(c) - ord('A')
+        else:
+            code = 0
+        return code
+
     @staticmethod
     def uuid():
         # 获取当前时间戳（精确到毫秒）

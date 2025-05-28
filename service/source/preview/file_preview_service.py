@@ -1,14 +1,23 @@
 import os
 from flask import send_from_directory, abort
 from pathlib import Path
-from tool.core import *
+from tool.core import Dir, File, Config
 
 
 class FilePreviewService:
 
     BASE_STORAGE_DIR = Dir.abs_dir('storage/upload')
     ALLOW_IMAGE_EXT = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'}
-    ALLOW_FILE_EXT = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv', 'mp4', 'mp3'}
+    ALLOW_FILE_EXT = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv', '.png', '.gif', '.mp4', '.mp3'}
+
+    @staticmethod
+    def enc_path(file_path):
+        """加密路径"""
+        enc = des = ''
+        if not Config.is_prod():
+            enc = File.enc_dir(file_path)
+            des = File.des_dir(enc)
+        return {"org": file_path, 'enc': enc, 'des': des}
 
     @staticmethod
     def image(file_path):
@@ -26,7 +35,7 @@ class FilePreviewService:
         return send_from_directory(directory, filename)
 
     @staticmethod
-    def office(file_path):
+    def file(file_path):
         """office文件预览"""
         file_path, full_path = FilePreviewService._check_path(file_path)
 
@@ -43,8 +52,10 @@ class FilePreviewService:
 
     @staticmethod
     def _check_path(file_path):
+        # 解密路径
+        file_path = File.des_dir(file_path)
         if not file_path:
-            abort(400, description="Missing path parameter")
+            abort(400, description="Resource permission denied")
 
         # 安全检查
         if not File.is_safe_path(FilePreviewService.BASE_STORAGE_DIR, file_path):
