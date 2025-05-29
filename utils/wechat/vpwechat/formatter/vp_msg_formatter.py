@@ -30,6 +30,7 @@ class VpMsgFormatter(VpBaseFactory):
             "content_type": '',
             "content_link": '',
             "p_msg_id": 0,
+            "msg_time": '',
             "app_key": '',
             "self_wxid": '',
             "is_my": 0,
@@ -63,6 +64,7 @@ class VpMsgFormatter(VpBaseFactory):
         contents = message.get('content', {}).get('str', '')
         o_msg_id = message.get('msg_id', 0)
         p_msg_id = message.get('new_msg_id', o_msg_id)
+        msg_time = Time.dft(message.get('create_time', 0))
         f_wxid = message.get('from_user_name', {}).get('str', '')
         t_wxid = message.get('to_user_name', {}).get('str', '')
         has_sender = self.has_sender
@@ -175,6 +177,7 @@ class VpMsgFormatter(VpBaseFactory):
             "content_type": content_type,
             "content_link": content_link,
             "p_msg_id": o_msg_id,
+            "msg_time": msg_time,
             "app_key": self.app_key,
             "self_wxid": self.self_wxid,
             "is_my": self.is_my,
