@@ -39,7 +39,7 @@ class VpCallbackHandler(VpBaseFactory):
         t_wxid = message.get('to_user_name', {}).get('str', '')
         g_wxid = f_wxid if '@chatroom' in f_wxid else (t_wxid if '@chatroom' in t_wxid else '')
         is_my = int(f_wxid == self_wxid)
-        is_sl = int(t_wxid == self_wxid and not g_wxid)
+        is_sl = int(not g_wxid)
         if f_wxid:
             if 'a2' == self.app_key and f_wxid != self.config['app_list']['a1']['wxid']:  # 小号只接收来自主账号的消息
                 logger.warning(f"on message: 忽略消息[T0]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
