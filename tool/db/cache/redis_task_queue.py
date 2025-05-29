@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Dict
 from tool.core import Logger, Sys, Ins, Str, Attr
 from tool.db.cache.redis_client import RedisClient
+from tool.db.cache.redis_task_keys import RedisTaskKeys
 
 logger = Logger()
 
@@ -232,6 +233,13 @@ class RedisTaskQueue:
             'delayed': self.redis.zcard(self.delayed_queue),
             'stalled': self.redis.hlen(f"{self.processing_queue}:heartbeats")
         }
+
+    def add_task(self, sk, data):
+        """往队列中添加任务"""
+        service = RedisTaskKeys.RTQ_SERVICE_LIST.get(sk)
+        if not service:
+            raise ValueError(f'Not register service - {sk}')
+        return self.submit(service, data)
 
     def run_consumer(self):
         """异步延迟启动消费"""

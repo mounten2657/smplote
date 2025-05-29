@@ -7,31 +7,24 @@ from tool.core import Ins, Http, Attr, Config, Time
 class CallbackQueueModel(MysqlBaseModel):
     """
     回调队列表
-    ```
-    DROP TABLE IF EXISTS smp_callback_queue;
-    CREATE TABLE `smp_callback_queue` (
-      `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-      `callback_type` varchar(32) NOT NULL DEFAULT '' COMMENT '回调类型: qyapi|gitee|wechatpad',
-      `source_url` varchar(512) NOT NULL DEFAULT '' COMMENT '源地址',
-      `route` varchar(64) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '路由地址',
-      `ip` varchar(64) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'ip地址',
-      `ua` varchar(128) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'User-Agent',
-      `method` varchar(10) NOT NULL DEFAULT 'POST' COMMENT '请求方式',
-      `params` longtext NOT NULL COMMENT '请求参数',
-      `headers` text NOT NULL COMMENT '请求头',
-      `h_event` varchar(64) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '自定义字段，多为事件',
-      `h_value` varchar(64) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '自定义字段，多为某值',
-      `is_processed` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否处理(0否1是)',
-      `is_succeed` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否成功(0否1是)',
-      `process_params` text NOT NULL COMMENT '处理参数',
-      `process_result` text NOT NULL COMMENT '处理结果',
-      `retry_count` int(11) NOT NULL DEFAULT 0 COMMENT '重试次数',
-      `create_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
-      `update_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录更新时间',
-      PRIMARY KEY (`id`),
-      KEY `idx_type_status` (`callback_type`,`is_processed`,`is_succeed`,`h_value` DESC) USING BTREE
-    ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='回调队列表';
-    ```
+        - id - bigint(20) - 主键ID
+        - callback_type - varchar(32) - 回调类型: qyapi|gitee|wechatpad
+        - source_url - varchar(512) - 源地址
+        - route - varchar(64) - 路由地址
+        - ip - varchar(64) - ip地址
+        - ua - varchar(128) - User-Agent
+        - method - varchar(10) - 请求方式
+        - params - longtext - 请求参数
+        - headers - text - 请求头
+        - h_event - varchar(64) - 自定义字段，多为事件
+        - h_value - varchar(64) - 自定义字段，多为某值
+        - is_processed - tinyint(1) - 是否处理(0否1是)
+        - is_succeed - tinyint(1) - 是否成功(0否1是)
+        - process_params - text - 处理参数
+        - process_result - text - 处理结果
+        - retry_count - int(11) - 重试次数
+        - create_at - datetime - 记录创建时间
+        - update_at - datetime - 记录更新时间
     """
 
     _table = 'callback_queue'
@@ -100,9 +93,9 @@ class CallbackQueueModel(MysqlBaseModel):
         condition = {'callback_type': callback_type, 'is_processed': 0}
         return self.where(condition).get()
 
-    def get_list_by_id(self, id_list):
+    def get_list_by_id(self, id_list, callback_type='wechatpad'):
         """获取特定ID组的队列"""
-        return self.where_in('id', id_list).get()
+        return self.where_in('id', id_list).where({'callback_type': callback_type}).get()
 
     def get_by_msg_id(self, msg_id):
         """wechatpad 专用 - 通过消息ID获取，主要用于消息去重"""

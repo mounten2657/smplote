@@ -1,7 +1,9 @@
 from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
 from model.callback.callback_queue_model import CallbackQueueModel
-from tool.core import Logger
+from model.wechat.wechat_file_model import WechatFileModel
+from tool.db.cache.redis_task_queue import RedisTaskQueue
+from tool.core import Logger, Time
 
 logger = Logger()
 
@@ -25,7 +27,7 @@ class VpCallbackService:
         return VpClient(app_key).close_websocket()
 
     @staticmethod
-    def retry_handler(app_key, params):
+    def callback_handler_retry(app_key, params):
         """消息回放 - 多用于调试"""
         # vp_callback -> vp_callback_service -> vp_callback_handler -> vp_callback_service.callback_handler
         if params.get('ids'):  # 通过ID批量重试， 多个英文逗号隔开
@@ -73,8 +75,7 @@ class VpCallbackService:
         res['que_sub'] = self._callback_handler(pid=pid, params=params)
         return 'success' if res['que_sub'] else 'error'
 
-    @staticmethod
-    def _callback_handler(pid, params):
+    def _callback_handler(self, pid, params):
         """微信回调真正处理逻辑"""
         res = {"pid": pid}
         db = CallbackQueueModel()
@@ -82,12 +83,51 @@ class VpCallbackService:
         # 消息数据格式化
         res['rev_handler'], data = VpCallbackHandler.rev_handler(params)
         logger.debug(res['rev_handler'], 'VP_CALL_HD_RES')
-        # 消息数据入微信库
-        # do something
+        data['pid'] = pid
+        # 消息指令处理 - 异步
+        res['cmd_handler'] = RedisTaskQueue().add_task('VP_CM', data)
+        # 消息数据入库 - 异步
+        res['ins_handler'] = RedisTaskQueue().add_task('VP_IH', data)
         update_data = {"process_result": res, "process_params": data}
         if res['rev_handler']:
             update_data.update({"is_succeed": 1})
         res['update_db'] = db.update_process(int(pid), update_data)
         return res
 
+    @staticmethod
+    def command_handler(data):
+        """微信消息指令处理入口"""
+        return True
 
+    @staticmethod
+    def command_handler_retry(id_list):
+        """微信消息指令处理重试"""
+        return VpCallbackService._combine_handler_retry(id_list, 1)
+
+    @staticmethod
+    def insert_handler(data):
+        """微信消息数据入库入口"""
+        return True
+
+    @staticmethod
+    def insert_handler_retry(id_list):
+        """微信消息数据入库重试"""
+        return VpCallbackService._combine_handler_retry(id_list, 2)
+
+    @staticmethod
+    def _combine_handler_retry(id_list, r_type):
+        """组合消息重试 - 多用于调试"""
+        res = {}
+        db = CallbackQueueModel()
+        queue_list = db.get_list_by_id(id_list)
+        for queue in queue_list:
+            pid = queue['id']
+            queue['process_params'].update({
+                'pid': pid,
+            })
+            if 1 == r_type:
+                res[pid] = VpCallbackService.command_handler(queue['process_params'])
+            else:
+                res[pid] = VpCallbackService.insert_handler(queue['process_params'])
+            Time.sleep(0.1)
+        return res

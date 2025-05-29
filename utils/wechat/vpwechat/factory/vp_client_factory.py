@@ -1,6 +1,6 @@
-import base64
-from tool.core import Logger, Http, Time, Attr
-from model.wechat.wechat_api_log_model import WechatApiLog
+from tool.core import Logger, Http, Time, Attr, File
+from utils.grpc.vpp_serve.vpp_serve_client import VppServeClient
+from model.wechat.wechat_api_log_model import WechatApiLogModel
 
 logger = Logger()
 
@@ -26,7 +26,7 @@ class VpClientFactory:
         body.update({"app_key": self.app_key})
         logger.debug(f'VP API 请求参数:  {biz_code} - {method}[{uri}] - {body}', 'VP_API_CALL_STA')
         # 请求数据入库
-        db = WechatApiLog()
+        db = WechatApiLogModel()
         pid = db.add_log(method, uri, body, biz_code)
         # 执行接口请求
         method = 'JSON' if 'POST' == method else method
@@ -155,46 +155,73 @@ class VpClientFactory:
         api = '/label/GetContactLabelList'
         return self._api_call('GET', api, {}, 'VP_FRD')
 
-    def download_image(self, msg_id):
+    def _get_file_path(self, message):
+        """获取文件保存路径"""
+        if int(message['is_sl']):
+            if int(message['is_my']):
+                f_wxid = message['send_wxid']
+            else:
+                f_wxid = message['send_wxid'] if message['send_wxid'] != message['self_wxid'] else message['to_wxid']
+            fp = f"/friend/{f_wxid}"
+        else:
+            fp = f"/room/{str(message['g_wxid']).split('@')[0]}"
+            fp += f"/{Time.date('%Y%m')}"  # 群聊文件较多，按月存储
+        if 'file' == message['content_type']:
+            fp += f"/{message['content_link']['title']}"
+        elif 'voice' == message['content_type']:
+            fp += f"/{message['msg_id']}.silk"
+        else:
+            fp += f"/{message['msg_id']}.{message['content_type']}"
+        fk = File.enc_dir(fp)
+        return fp, fk
+
+    def download_file(self, message):
         """
-        下载图片并返回本地文件保存位置
-        :param msg_id: 消息ID， 注意是 msg_id ，不是 new_msg_id
-        :return: str - 图片的base64编码
-        {"Code":200,"Data":{"Data":{"iLen":12,"Buffer":"sIsldOGVe7kt1qaM"},"MsgId":123456,"FromUserName":{},"ToUserName":{},"TotalLen":431292,"StartPos":431280,"DataLen":12,"NewMsgId":0},"Text":""}
+        下载文件并返回文件基本信息（含可访问的文件链接）
+        :param message: 标准消息结构体 - 来自队列表
+        :return: json - 文件基本信息
+        {'code': 0, 'msg': 'success', 'data': {'url': 'https://static.xxx.com/src/static/file/wechat/36/39/33/aZmc21aZH1VOWRNA0TXaZSPEWBHaZDFP14HFUC0HIFSLT.mp4', 'md5': 'b8aaa43ffefe1f35a7e44aed72df6431', 'size': 954061}}
         """
-        if not msg_id:
-            return ''
-        api = '/message/GetMsgBigImg'
-        # 初始化变量
-        image_data = bytearray()
-        start_pos = 0
-        total_len = chunk_size = 65536
-        while start_pos < total_len:
-            # 循环请求直到结束
+        if not message.get('content_type') or not message.get('content_link'):
+            return {}
+        file_type = {
+            "GIF": 3001,
+            "PNG": 2,
+            "MP4": 4,
+            "FILE": 5,
+            "VOICE": 15,
+        }
+        try:
+            start_time = Time.now(0)
+            msg_type = str(message['content_type']).upper()
+            biz_code = f"VP_{msg_type}"
+            method = 'GRPC'
+            uri = '/message/FileCdnDownload'
+            fp, fk = self._get_file_path(message)
             body = {
-                "CompressType": 0,
-                "FromUserName": "",
-                "MsgId": msg_id,
-                "Section": {
-                    "DataLen": min(chunk_size, total_len - start_pos),
-                    "StartPos": start_pos
-                },
-                "ToUserName": "",
-                "TotalLen": total_len if start_pos else 0
+                "fty": file_type[msg_type],
+                "key": message.get('aes_key', msg_type),
+                "url": message.get('url', ''),
+                "fp": fp,
+                "fk": fk,
+                "fd": int(message.get('fd', 0))
             }
-            res = self._api_call('POST', api, body, 'VP_IMG')
-            buffer = Attr.get_by_point(res, 'Data.Data.Buffer', '')
-            t_len = Attr.get_by_point(res, 'Data.TotalLen', 0)
-            if not int(t_len):  # 总长度为0，说明接口报错了
-                return ''
-            if not start_pos:  # 总长度以接口返回的为准
-                total_len = t_len
-            # 解码当前片段并追加
-            chunk_data = base64.b64decode(buffer)
-            image_data.extend(chunk_data)
-            # 更新起始位置
-            start_pos += len(chunk_data)
-            Time.sleep(0.1)
-        # 最终Base64编码
-        full_base64 = base64.b64encode(image_data).decode('utf-8')
-        return f"data:image/jpeg;base64,{full_base64}"    # jpeg | png | gif | webp | svg
+            logger.debug(f'VP GRPC 请求参数:  {biz_code} - {method}[{uri}] - {body}', 'VP_GRPC_CALL_STA')
+            # 请求数据入库
+            db = WechatApiLogModel()
+            pid = db.add_log(method, uri, body, biz_code)
+            # 使用 vpp 进行 cdn 下载
+            res = VppServeClient.download_file(**body)
+            logger.debug(f'VP GRPC 请求结果: {res}', 'VP_GRPC_CALL_RET')
+            # 更新执行结果
+            run_time = round(Time.now(0) - start_time, 3) * 1000
+            update_data = {"response_time": run_time, "response_result": res}
+            if Attr.get_by_point(res, 'data.url'):
+                update_data.update({"is_succeed": 1})
+            else:
+                logger.warning(f'VP GRPC 请求异常: {res}', 'VP_GRPC_CALL_NUL')
+            db.update_log(pid, update_data)
+            return res.get('data', {})
+        except Exception as e:
+            logger.error(f'VP GRPC 请求错误: {e}', 'VP_GRPC_CALL_ERR')
+            return {}

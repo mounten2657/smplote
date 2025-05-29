@@ -5,7 +5,7 @@ import webbrowser
 from flask import Response
 from flask import Flask, request, send_from_directory
 from tool.router.parse_handler import ParseHandler
-from tool.core import Logger, Attr, Api, Dir, Config, Error, Http
+from tool.core import Logger, Attr, Api, Dir, Config, Error, Http, Env
 from utils.wechat.qywechat.qy_client import QyClient
 from service.source.preview.file_preview_service import FilePreviewService
 
@@ -13,9 +13,15 @@ logger = Logger()
 
 
 class RouterHandler:
+
+    # 免鉴权的开放接口
+    OPEN_ROUTE_LIST = [
+        'bot/index/index',
+        'callback/gitee_callback/smplote',
+    ]
+
     # 路由忽略列表，适合回调和文件预览等
     IGNORE_ROUTE_LIST = [
-        'callback/gewe_callback/collect',
         'callback/qy_callback/collect_wts',
         'callback/qy_callback/collect_gpl',
         'src/static/image',
@@ -71,6 +77,12 @@ class RouterHandler:
         @self.app.route('/<path:method_path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
         def http_execute_method(method_path):
             try:
+                # API 鉴权
+                headers = Http.get_request_headers()
+                authcode = Attr.get(headers, 'Authcode')
+                open_list = self.OPEN_ROUTE_LIST + self.IGNORE_ROUTE_LIST
+                if Env.get('APP_AUTH_KEY') != authcode and method_path not in open_list:
+                    return Api.error('Permission denied', None, 99)
                 module_name, method_name = method_path.rsplit('/', 1)
                 module_path = f'{module_name.replace("/", ".")}'
                 params = RouterHandler.get_http_params()

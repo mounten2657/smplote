@@ -194,7 +194,7 @@ class Logger:
             headers = Http.get_request_headers()
             user_agent = Attr.get(headers, 'User-Agent')
             content_type = Attr.get(headers, 'Content-Type')
-            authcode = Attr.get(headers, 'authcode', '')
+            authcode = Attr.get(headers, 'Authcode', '')
             request_params = dict(request.args)
             response = Attr.get(data, 'response')
             status_code = Attr.get(response, 'status_code', 100)

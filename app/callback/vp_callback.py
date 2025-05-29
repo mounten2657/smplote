@@ -6,7 +6,19 @@ class VpCallback(BaseApp):
 
     def collect_retry(self):
         """消息回放入口"""
-        res = VpCallbackService.retry_handler(self.app_key, self.params)
+        res = VpCallbackService.callback_handler_retry(self.app_key, self.params)
+        return self.success(res)
+
+    def command_retry(self):
+        """指令回放入口"""
+        id_list = self.params.get('ids', '').split(',')
+        res = VpCallbackService.command_handler_retry(id_list)
+        return self.success(res)
+
+    def insert_retry(self):
+        """入库回放入口"""
+        id_list = self.params.get('ids', '').split(',')
+        res = VpCallbackService.insert_handler_retry(id_list)
         return self.success(res)
 
     def online_status(self):

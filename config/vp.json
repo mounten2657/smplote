@@ -2,7 +2,6 @@
     "ws_host": "[ENV.VP_WS_HOST]",
     "ws_port": "[ENV.VP_WS_PORT]",
     "ws_callback_path": "utils.wechat.vpwechat.callback.vp_callback_handler",
-    "ws_service_path": "service.wechat.callback.vp_callback_service",
     "admin_key": "[ENV.VP_ADMIN_KEY]",
     "command_list": "#设置,#天气,#点歌,#提问,#百科",
     "admin_list": "[ENV.VP_ADMIN_LIST]",
