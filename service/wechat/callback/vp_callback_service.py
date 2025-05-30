@@ -41,6 +41,7 @@ class VpCallbackService:
                     'is_force': params.get('is_force', 0),
                 })
                 res[queue['id']] = VpCallbackHandler(app_key).on_message(queue['params'])
+                Time.sleep(0.1)
             return res
         else:  # 单个更新
             params.update({'is_retry': 1})
