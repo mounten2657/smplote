@@ -75,7 +75,7 @@ class WechatUserModel(MysqlBaseModel):
                   'description', 'phone_list', 'label_id_list', 'label_name_list', 'room_list']
         change = Attr.data_diff(Attr.select_keys(info, fields), Attr.select_keys(user, fields), 'wxid')
         if change:
-            change_log.apped(change)
+            change_log.append(change)
             if len(change_log) > 30:
                 change_log.pop(0)
             self.update({"id": pid}, {"change_log": change_log})

@@ -53,7 +53,7 @@ class WechatRoomModel(MysqlBaseModel):
         fields = ['nickname', 'notice', 'user_count', 'owner', 'head_img_url', 'member_list']
         change = Attr.data_diff(Attr.select_keys(info, fields), Attr.select_keys(room, fields), 'wxid')
         if change:
-            change_log.apped(change)
+            change_log.append(change)
             if len(change_log) > 60:
                 change_log.pop(0)
             self.update({"id": pid}, {"change_log": change_log})
