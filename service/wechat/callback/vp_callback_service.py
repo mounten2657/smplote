@@ -2,8 +2,12 @@ from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
 from model.callback.callback_queue_model import CallbackQueueModel
 from model.wechat.wechat_file_model import WechatFileModel
+from model.wechat.wechat_room_model import WechatRoomModel
+from model.wechat.wechat_user_label_model import WechatUserLabelModel
+from model.wechat.wechat_user_model import WechatUserModel
+from model.wechat.wechat_msg_model import WechatMsgModel
 from tool.db.cache.redis_task_queue import RedisTaskQueue
-from tool.core import Logger, Time
+from tool.core import Logger, Time, Error, Attr
 
 logger = Logger()
 
@@ -98,7 +102,18 @@ class VpCallbackService:
     @staticmethod
     def command_handler(data):
         """微信消息指令处理入口"""
-        return True
+        try:
+            is_at = data['is_at']
+            is_my = data['is_my']
+            is_sl = data['is_sl']
+            is_group = data['is_group']
+            content = data['content']
+            # do something
+            return True
+        except Exception as e:
+            err = Error.handle_exception_info(e)
+            logger.error(f"消息指令处理失败 - {err}", "VP_CMD_ERR")
+            return err
 
     @staticmethod
     def command_handler_retry(id_list):
@@ -108,7 +123,87 @@ class VpCallbackService:
     @staticmethod
     def insert_handler(data):
         """微信消息数据入库入口"""
-        return True
+        # 入库顺序： 群聊表 - 用户表 - 消息表
+        try:
+            res = {}
+            app_key = data['app_key']
+            msg_id = data['msg_id']
+            msg_type = data['content_type']
+            g_wxid = data['g_wxid']
+            s_wxid = data['send_wxid']
+            t_wxid = data['to_wxid']
+            self_wxid = data['self_wxid']
+            # 先判断消息有没有入库 - 已入库就不继续执行了
+            mdb = WechatMsgModel()
+            m_info = mdb.get_msg_info(msg_id)
+            is_retry = data.get('is_retry')
+            if m_info and not is_retry:
+                return True
+            # 只有一个消费者，所以不用加锁
+            client = VpClient(app_key)
+            user_list = [{"wxid": s_wxid}, {"wxid": t_wxid}]
+            room = {}
+            # 群聊入库
+            if g_wxid:
+                room = client.get_room(g_wxid)
+                rdb = WechatRoomModel()
+                r_info = rdb.get_room_info(g_wxid)
+                if not r_info:
+                    res['ins_room'] = rdb.add_room(room, app_key)
+                    r_info = rdb.get_room_info(g_wxid)
+                if Time.now() - Time.tfd(str(r_info['update_at'])) > 1800:
+                    res['chk_room'] = rdb.check_room_info(room, r_info)
+                user_list = room['member_list']
+            # 标签更新
+            ldb = WechatUserLabelModel()
+            u_label = ldb.get_label(self_wxid)
+            label = client.get_user_frd_lab()
+            label = Attr.get_by_point(label, 'Data.labelPairList', [])
+            if len(u_label) != len(label):
+                res['ins_label'] = ldb.add_label(label, self_wxid)
+            # 用户入库
+            for u in user_list:
+                wxid = u['wxid']
+                user = client.get_user(wxid, g_wxid)
+                user['user_type'] = 1 if user['is_friend'] else 2
+                user['room_list'] = {g_wxid: room['nickname']} if room else {}
+                udb = WechatUserModel()
+                u_info = udb.get_user_info(u['wxid'])
+                if not u_info:
+                    user['wx_nickname'] = user['nickname']
+                    res['ins_user'] = udb.add_user(user, app_key)
+                    u_info = udb.get_user_info(wxid)
+                if Time.now() - Time.tfd(str(u_info['update_at'])) > 1800:
+                    user['room_list'].update(u_info['room_list'])
+                    res['chk_user'] = udb.check_user_info(user, u_info)
+            # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
+            fid = 0
+            data['g_wxid_name'] = room['nickname'] if room else ''
+            if msg_type in ['gif', 'png', 'mp4', 'file', 'voice']:
+                file = client.download_file(data)
+                if file['url']:
+                    fdb = WechatFileModel()
+                    f_info = fdb.get_file_info(file['md5'])
+                    if f_info:
+                        fid = f_info['id']
+                    else:
+                        res['ins_file'] = fid = fdb.add_file(file, data)
+            # 消息入库
+            data['fid'] = fid
+            if 'revoke' == msg_type:
+                r_msg_id = data['content_link']['p_new_msg_id']
+                r_msg = CallbackQueueModel().get_by_msg_id(r_msg_id)
+                if r_msg:
+                    data['content'] += f"<{r_msg['process_params']['content']}>"
+            if m_info:
+                res['upd_msg'] = mdb.add_msg(data, app_key, m_info['id'])
+            else:
+                res['ins_msg'] = mdb.add_msg(data, app_key)
+            return res
+        except Exception as e:
+            err = Error.handle_exception_info(e)
+            logger.error(f"消息入库失败 - {err}", "VP_INS_ERR")
+            return False
 
     @staticmethod
     def insert_handler_retry(id_list):
@@ -126,9 +221,11 @@ class VpCallbackService:
             queue['process_params'].update({
                 'pid': pid,
             })
+            process = queue['process_params']
+            process.update({"is_retry": 1})
             if 1 == r_type:
-                res[pid] = VpCallbackService.command_handler(queue['process_params'])
+                res[pid] = VpCallbackService.command_handler(process)
             else:
-                res[pid] = VpCallbackService.insert_handler(queue['process_params'])
+                res[pid] = VpCallbackService.insert_handler(process)
             Time.sleep(0.1)
         return res

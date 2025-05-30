@@ -213,8 +213,18 @@ class VpMsgFormatter(VpBaseFactory):
             content_type = 'gif'
             # 仅保存下载链接，先不进行下载
             content_link = {
+                "type": 3001,
                 "url": Str.extract_attr(content_text, 'cdnurl').replace('&amp;', '&'),
                 "md5": Str.extract_attr(content_text, 'md5'),
+            }
+        elif all(key in content_text for key in ('msg', 'emojiinfo', 'cdnthumbaeskey', 'cdnthumburl')):  # 表情 - "{s_wxid}:\n{<emoji_xml>}"
+            content_type = 'gif'
+            # 仅保存下载链接，先不进行下载
+            content_link = {
+                "type": 3,
+                "aes_key": Str.extract_xml_attr(content_text, 'cdnthumbaeskey'),
+                "url": Str.extract_xml_attr(content_text, 'cdnthumburl'),
+                "md5": Str.extract_xml_attr(content_text, 'emoticonmd5'),
             }
         elif all(key in content_text for key in ('msg', 'img', 'aeskey', 'cdnmidimgurl')):  # 图片 - "{s_wxid}:\n{<image_xml>}"
             content_type = 'png'

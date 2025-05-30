@@ -1,3 +1,4 @@
+import os
 from tool.core import Logger, Http, Time, Attr, File
 from utils.grpc.vpp_serve.vpp_serve_client import VppServeClient
 from model.wechat.wechat_api_log_model import WechatApiLogModel
@@ -119,7 +120,7 @@ class VpClientFactory:
         body = {"ChatRoomName": g_wxid}
         return self._api_call('POST', api, body, 'VP_GRP')
 
-    def get_friend_info(self, wxid, g_wxid = ''):
+    def get_friend_info(self, wxid, g_wxid=''):
         """
         获取联系人详情
         :param wxid: 联系人wxid
@@ -198,10 +199,14 @@ class VpClientFactory:
             method = 'GRPC'
             uri = '/message/FileCdnDownload'
             fp, fk = self._get_file_path(message)
+            content_link = message.get('content_link', {})
+            fty = file_type[msg_type]
+            if 'GIF' == msg_type:
+                fty = content_link['type']
             body = {
-                "fty": file_type[msg_type],
-                "key": message.get('aes_key', msg_type),
-                "url": message.get('url', ''),
+                "fty": fty,
+                "key": content_link.get('aes_key', msg_type),
+                "url": content_link.get('url', ''),
                 "fp": fp,
                 "fk": fk,
                 "fd": int(message.get('fd', 0))
@@ -221,7 +226,14 @@ class VpClientFactory:
             else:
                 logger.warning(f'VP GRPC 请求异常: {res}', 'VP_GRPC_CALL_NUL')
             db.update_log(pid, update_data)
-            return res.get('data', {})
+            data = res.get('data', {})
+            data.update({
+                "save_path": fp,
+                "file_name": os.path.basename(fp),
+                "fake_path": fk,
+                "biz_code": biz_code,
+            })
+            return data
         except Exception as e:
             logger.error(f'VP GRPC 请求错误: {e}', 'VP_GRPC_CALL_ERR')
             return {}

@@ -11,31 +11,44 @@ class WechatFileModel(MysqlBaseModel):
         - fake_path - varchar(255) - 虚拟路径
         - save_path - varchar(255) - 真实路径
         - file_name - varchar(255) - 文件名
-        - file_ext - varchar(8) - 文件后缀
         - biz_code - varchar(32) - 业务代码
-        - file_md5 - varchar(32) - 文件md5
-        - file_size - int - 文件大小(byte)
-        - que_id - bigint - 队列ID
-        - msg_id - bigint - 消息ID
         - s_wxid - varchar(32) - 发送人wxid
+        - s_wxid_name - varchar(64) - 发送人昵称
+        - file_size - int - 文件大小(byte)
+        - file_md5 - varchar(32) - 文件md5
+        - pid - bigint - 队列ID
+        - msg_id - bigint - 消息ID
         - t_wxid - varchar(32) - 接收人wxid
+        - t_wxid_name - varchar(64) - 接收人昵称
         - g_wxid - varchar(32) - 群聊wxid
+        - g_wxid_name - varchar(64) - 群聊昵称
         - create_at - datetime - 记录创建时间
         - update_at - datetime - 记录更新时间
     """
 
     _table = 'wechat_file'
 
-    def add_file(self, method, uri, body, biz_code=''):
-        """日志数据入库"""
+    def add_file(self, file, message):
+        """数据入库"""
         insert_data = {
-            "uri": uri,
-            "biz_code": biz_code,
-            "h_event": method,
-            "request_params": body if body else {},
-            "process_params": {},
-            "response_result": {},
+            "url": file['url'],
+            "fake_path": file['fake_path'],
+            "save_path": file['save_path'],
+            "file_name": file['file_name'],
+            "biz_code": file['biz_code'],
+            "s_wxid": message['send_wxid'],
+            "s_wxid_name": message['send_wxid_name'],
+            "file_size": file['size'],
+            "file_md5": file['md5'],
+            "pid": message['pid'],
+            "msg_id": message['msg_id'],
+            "t_wxid": message['to_wxid'],
+            "t_wxid_name": message['to_wxid_name'],
+            "g_wxid": message['g_wxid'],
+            "g_wxid_name": message['g_wxid_name'],
         }
         return self.insert(insert_data)
 
-
+    def get_file_info(self, md5):
+        """获取消息信息"""
+        return self.where({"file_md5": md5}).first()

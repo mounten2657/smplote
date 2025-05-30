@@ -1,3 +1,4 @@
+import re
 import json
 import types
 import importlib
@@ -36,6 +37,16 @@ class Attr:
             except Exception:
                 return False
         return True
+
+    @staticmethod
+    def select_keys(d, fields):
+        """
+        返回字典中存在的指定字段
+        :param d:  字典
+        :param fields:  字段列表
+        :return:  筛选后的字典
+        """
+        return {k: d[k] for k in fields if k in d}
 
     @staticmethod
     def remove_keys(dictionary, keys):
@@ -244,5 +255,181 @@ class Attr:
         except Exception:
             return obj
 
+    @staticmethod
+    def data_diff(dict1, dict2, lk='id', fm=1):
+        """
+        比较两个字典的共有字段差异，返回格式化差异结果
+        列表处理逻辑：基于指定键(lk)匹配元素，简化差异描述
+        input:
+        a1 = {
+            "k1": "v1", "k2": "v2", "k3": "v3", "k4": "v4",
+            "k5": {"id": 10, "name": "n1", "age": 18, "score": 99},
+            "k6": "v6",
+            "k7": [{"id": 11, "name": "v11"}, {"id": 12, "name": "v12"}, {"id": 13, "name": "v13"}],
+            "k9": '90.01'
+        }
+        a2 = {
+            "k2": "v2", "k3": "v33",
+            "k5": {"id": 10, "name": "n2", "age": 19},
+            "k7": [{"id": 11, "name": "v11"}, {"id": 12, "name": "v13"}, {"id": 14, "name": "v14"}, {"id": 15, "name": "v15"}],
+            "k8": "v8",
+            "k9": '98.01'
+        }
+        output:
+        {
+          "k3": {"type": "str","val": "v3-->v33"},
+          "k5": {"type": "dict","val": "age:18-->19||name:n1-->n2||score:99-->"},
+          "k7": {"type": "list","val": "1.name:v12-->v13||2.id;name:13;v13-->||3.id;name:-->14;v14||4.id;name:-->15;v15"},
+          "k9": {"type": "float","val": "90.01-->98.01"}
+        }
+        format:
+        {'k3': 'v3-->v33', 'k5': 'name:n1-->n2||age:18-->19||score:99-->', 'k7': '1.name:v12-->v13||2.id;name:13;v13-->||3.id;name:-->14;v14||4.id;name:-->15;v15', 'k9': '90.01-->98.01'}
+
+        参数:
+            dict1 (dict): 第一个字典
+            dict2 (dict): 第二个字典
+            lk (str): 列表元素的匹配键名，默认为'id'
+            fm (int): 是否简化返回，默认为 1
+
+        返回:
+            dict: 差异结果，格式为 {"字段名": {"type": 类型, "val": "差异描述"}}
+        """
+        diff_result = {}
+
+        common_keys = set(dict1.keys()) & set(dict2.keys())
+
+        for key in common_keys:
+            val1 = dict1[key]
+            val2 = dict2[key]
+
+            if type(val1) != type(val2):
+                diff_result[key] = {
+                    "type": "type_mismatch",
+                    "val": f"{type(val1).__name__}-->{type(val2).__name__}"
+                }
+                continue
+
+            if isinstance(val1, dict):
+                dict_diff = {}
+                for sub_key in set(val1.keys()) | set(val2.keys()):
+                    if sub_key in val1 and sub_key in val2:
+                        if val1[sub_key] != val2[sub_key]:
+                            dict_diff[sub_key] = f"{val1[sub_key]}-->{val2[sub_key]}"
+                    elif sub_key in val1:
+                        dict_diff[sub_key] = f"{val1[sub_key]}-->"
+                    else:
+                        dict_diff[sub_key] = f"-->{val2[sub_key]}"
+
+                if dict_diff:
+                    diff_result[key] = {
+                        "type": "dict",
+                        "val": "||".join([f"{k}:{v}" for k, v in dict_diff.items()])
+                    }
+
+            elif isinstance(val1, list):
+                # 处理字典列表（有匹配键的情况）
+                if all(isinstance(x, dict) and lk in x for x in val1 + val2):
+                    # 构建匹配键到元素的映射
+                    dict1_items = {x[lk]: x for x in val1}
+                    dict2_items = {x[lk]: x for x in val2}
+
+                    common_ids = set(dict1_items.keys()) & set(dict2_items.keys())
+                    removed_ids = set(dict1_items.keys()) - common_ids
+                    added_ids = set(dict2_items.keys()) - common_ids
+
+                    list_diff = []
+                    max_index = len(val1) - 1
+
+                    # 处理修改的元素
+                    for id_ in common_ids:
+                        elem1 = dict1_items[id_]
+                        elem2 = dict2_items[id_]
+
+                        diff_fields = []
+                        all_keys = set(elem1.keys()) | set(elem2.keys())
+                        changed = False
+
+                        for k in all_keys:
+                            if k in elem1 and k in elem2:
+                                if elem1[k] != elem2[k]:
+                                    diff_fields.append(f"{k}:{elem1[k]}-->{elem2[k]}")
+                                    changed = True
+                            elif k in elem1:
+                                diff_fields.append(f"{k}:{elem1[k]}-->")
+                                changed = True
+                            else:
+                                diff_fields.append(f"{k}:-->{elem2[k]}")
+                                changed = True
+
+                        if changed:
+                            original_index = next(i for i, x in enumerate(val1) if x[lk] == id_)
+                            list_diff.append(f"{original_index}.{'||'.join(diff_fields)}")
+
+                    # 处理删除的元素
+                    for id_ in removed_ids:
+                        elem = dict1_items[id_]
+                        original_index = next(i for i, x in enumerate(val1) if x[lk] == id_)
+                        field_str = ";".join(f"{k}" for k, v in elem.items())
+                        value_str = ";".join(f"{v}" for k, v in elem.items())
+                        list_diff.append(f"{original_index}.{field_str}:{value_str}-->")
+
+                    # 处理新增的元素
+                    for id_ in added_ids:
+                        elem = dict2_items[id_]
+                        new_index = max_index + 1 + len([x for x in added_ids if list(dict2_items.keys()).index(x) < list(dict2_items.keys()).index(id_)])
+                        field_str = ";".join(f"{k}" for k, v in elem.items())
+                        value_str = ";".join(f"{v}" for k, v in elem.items())
+                        list_diff.append(f"{new_index}.{field_str}:-->{value_str}")
+
+                    if list_diff:
+                        diff_result[key] = {
+                            "type": "list",
+                            "val": "||".join(list_diff)
+                        }
+                else:
+                    # 非字典列表或没有匹配键的情况
+                    list_diff = []
+                    min_len = min(len(val1), len(val2))
+
+                    for i in range(min_len):
+                        if val1[i] != val2[i]:
+                            if isinstance(val1[i], dict) and isinstance(val2[i], dict):
+                                sub_diff = []
+                                for k in set(val1[i].keys()) | set(val2[i].keys()):
+                                    if k in val1[i] and k in val2[i]:
+                                        if val1[i][k] != val2[i][k]:
+                                            sub_diff.append(f"{k}:{val1[i][k]}-->{val2[i][k]}")
+                                    elif k in val1[i]:
+                                        sub_diff.append(f"{k}:{val1[i][k]}-->")
+                                    else:
+                                        sub_diff.append(f"{k}:-->{val2[i][k]}")
+
+                                if sub_diff:
+                                    list_diff.append(f"{i}.{'||'.join(sub_diff)}")
+                            else:
+                                list_diff.append(f"{i}.{val1[i]}-->{val2[i]}")
+
+                    if len(val1) > len(val2):
+                        for i in range(len(val2), len(val1)):
+                            list_diff.append(f"{i}.{val1[i]}-->")
+                    elif len(val2) > len(val1):
+                        for i in range(len(val1), len(val2)):
+                            list_diff.append(f"{i}.-->{val2[i]}")
+
+                    if list_diff:
+                        diff_result[key] = {
+                            "type": "list",
+                            "val": "||".join(list_diff)
+                        }
+
+            elif val1 != val2:
+                diff_result[key] = {
+                    "type": type(val1).__name__,
+                    "val": f"{val1}-->{val2}"
+                }
+
+        if fm:
+            return {k: diff_result[k]["val"] for k in sorted(diff_result.keys(), key=lambda x: [int(c) if c.isdigit() else c for c in re.split('([0-9]+)', x)])}
+        return diff_result
 
 

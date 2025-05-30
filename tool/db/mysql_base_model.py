@@ -473,3 +473,6 @@ class MysqlBaseModel:
             self._release_connection(self.connection)
             self.logger.info("MySQL connection closed", 'DB_CONN', 'mysql')
 
+    def get_info(self, pid):
+        """根据主键获取第一条记录"""
+        return self.where({"id": pid}).first()
