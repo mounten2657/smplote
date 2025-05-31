@@ -216,7 +216,14 @@ class VpClientFactory:
             db = WechatApiLogModel()
             pid = db.add_log(method, uri, body, biz_code)
             # 使用 vpp 进行 cdn 下载
-            res = VppServeClient.download_file(**body)
+            if "PNG" == msg_type:  # 图片优先下载高清 - 1高清 | 2标准 | 3缩略
+                body['fty'] = 1
+                res = VppServeClient.download_file(**body)
+                if not Attr.get_by_point(res, 'data.url'):
+                    body['fty'] = 2
+                    res = VppServeClient.download_file(**body)
+            else:
+                res = VppServeClient.download_file(**body)
             logger.debug(f'VP GRPC 请求结果: {res}', 'VP_GRPC_CALL_RET')
             # 更新执行结果
             run_time = round(Time.now(0) - start_time, 3) * 1000
