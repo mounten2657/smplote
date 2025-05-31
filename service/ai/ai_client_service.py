@@ -40,11 +40,8 @@ class AiClientService:
             return False
         # 获取对话文本
         context_list = tdb.get_context_list(cid)
-        messages = [
-            {"role": "system", "content": prompt_text},
-            {"role": "user", "content": content}
-        ]
-        messages = AiClientService.get_chat_messages(context_list, messages)
+        messages = [{"role": "system", "content": prompt_text}]
+        messages = AiClientService.get_chat_messages(context_list, messages, content)
         # 插入新对话
         tid = tdb.add_context({
             "chat_id": cid,
@@ -70,14 +67,16 @@ class AiClientService:
         return response
 
     @staticmethod
-    def get_chat_messages(context_list, messages):
+    def get_chat_messages(context_list, messages, content):
         """获取历史对话列表 - 待优化 - 使用历史总结"""
         if not context_list:
+            messages.append({"role": "user", "content": content})
             return messages
         for context in reversed(context_list):
-            messages.append({"role": "system", "content": context['response_result']['content']})
             messages.append({"role": "user", "content": context['request_params']['content']})
+            messages.append({"role": "system", "content": context['response_result']['content']})
             while len(messages) > 10:
                 messages.pop(0)
                 messages.pop(0)
+        messages.append({"role": "user", "content": content})
         return messages
