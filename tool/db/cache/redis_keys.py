@@ -13,7 +13,7 @@ class RedisKeys:
         "VP_USER_INFO": {"key": "wechatpad:user:base_info:%s", "ttl": 3600},
         "VP_USER_FRD_INF": {"key": "wechatpad:user:frd_info:%s", "ttl": 3600},
         "VP_USER_FRD_RAL": {"key": "wechatpad:user:frd_relation:%s", "ttl": 86400},
-        "VP_USER_FRD_LAB": {"key": "wechatpad:user:frd_label", "ttl": 7 * 86400},
+        "VP_USER_FRD_LAB": {"key": "wechatpad:user:frd_label", "ttl": 86400},
         "VP_USER_DB_INF": {"key": "wechatpad:user:frd_label", "ttl": 3600},
         # 微信群聊相关
         "VP_ROOM_INFO": {"key": "wechatpad:room:base_info:%s", "ttl": 3600},
