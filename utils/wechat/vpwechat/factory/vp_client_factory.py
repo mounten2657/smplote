@@ -168,11 +168,11 @@ class VpClientFactory:
             fp = f"/room/{str(message['g_wxid']).split('@')[0]}"
             fp += f"/{Time.date('%Y%m')}"  # 群聊文件较多，按月存储
         if 'file' == message['content_type']:
-            fp += f"/{message['content_link']['title']}"
+            fp += f"/file/{message['content_link']['title']}"
         elif 'voice' == message['content_type']:
-            fp += f"/{message['msg_id']}.silk"
+            fp += f"/mp3/{message['msg_id']}.silk"
         else:
-            fp += f"/{message['msg_id']}.{message['content_type']}"
+            fp += f"/{message['content_type']}/{message['msg_id']}.{message['content_type']}"
         fk = File.enc_dir(fp)
         return fp, fk
 

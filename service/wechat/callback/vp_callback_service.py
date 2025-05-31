@@ -151,7 +151,7 @@ class VpCallbackService:
                 if not r_info:
                     res['ins_room'] = rdb.add_room(room, app_key)
                     r_info = rdb.get_room_info(g_wxid)
-                if Time.now() - Time.tfd(str(r_info['update_at'])) > 1800:
+                if r_info and Time.now() - Time.tfd(str(r_info['update_at'])) > 1800:
                     res['chk_room'] = rdb.check_room_info(room, r_info)
                 user_list = room['member_list']
             # 标签更新
@@ -161,19 +161,22 @@ class VpCallbackService:
             label = Attr.get_by_point(label, 'Data.labelPairList', [])
             if len(u_label) != len(label):
                 res['ins_label'] = ldb.add_label(label, self_wxid)
+            # 批量获取用户
+            udb = WechatUserModel()
+            wxid_list = [d["wxid"] for d in user_list]
+            u_list = udb.get_user_list(wxid_list)
             # 用户入库
             for u in user_list:
                 wxid = u['wxid']
                 user = client.get_user(wxid, g_wxid)
                 user['user_type'] = 1 if user['is_friend'] else 2
                 user['room_list'] = {g_wxid: room['nickname']} if room else {}
-                udb = WechatUserModel()
-                u_info = udb.get_user_info(u['wxid'])
+                u_info = Attr.select_item_by_where(u_list, {"wxid": wxid})
                 if not u_info:
                     user['wx_nickname'] = user['nickname']
                     res['ins_user'] = udb.add_user(user, app_key)
                     u_info = udb.get_user_info(wxid)
-                if Time.now() - Time.tfd(str(u_info['update_at'])) > 1800:
+                if u_info and Time.now() - Time.tfd(str(u_info['update_at'])) > 1800:
                     user['room_list'].update(u_info['room_list'])
                     res['chk_user'] = udb.check_user_info(user, u_info)
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
@@ -199,6 +202,7 @@ class VpCallbackService:
                 res['upd_msg'] = mdb.add_msg(data, app_key, m_info['id'])
             else:
                 res['ins_msg'] = mdb.add_msg(data, app_key)
+            # 入库成功 - 更新队列表的 retry_count
             return res
         except Exception as e:
             err = Error.handle_exception_info(e)

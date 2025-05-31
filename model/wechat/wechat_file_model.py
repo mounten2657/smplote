@@ -1,5 +1,5 @@
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins
+from tool.core import Ins, File
 
 
 @Ins.singleton
@@ -48,6 +48,22 @@ class WechatFileModel(MysqlBaseModel):
             "g_wxid_name": message['g_wxid_name'],
         }
         return self.insert(insert_data)
+
+    def fix_file(self):
+        """临时修复脚本"""
+        a_list = self.where({"id":{"opt":"<=",  "val":1}}).get()
+        for file in a_list:
+            f_type = str(file['biz_code']).replace('VP_', '').lower()
+            if 'voice' == f_type:
+                f_type = 'mp3'
+            fp = file['save_path']
+            base_path, file_name = str(fp).rsplit('/', 1)
+            fp = f"{base_path}/{f_type}/{file_name}"
+            fk = File.enc_dir(fp)
+            base_url, fn = str(file['url']).split('/wechat/', 1)
+            url = f"{base_url}/wechat{fk}"
+            self.update({"id": file['id']}, {"url": url, "fake_path": fk, "save_path": fp})
+        return True
 
     def get_file_info(self, md5):
         """获取消息信息"""

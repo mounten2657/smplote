@@ -84,3 +84,31 @@ class WechatUserModel(MysqlBaseModel):
     def get_user_info(self, wxid):
         """获取用户信息"""
         return self.where({"wxid": wxid}).first()
+
+    @Ins.cached('VP_USER_DB_INF')
+    def get_user_info_cache(self, wxid):
+        """获取用户信息 - 有缓存"""
+        return self.where({"wxid": wxid}).first()
+
+    def get_user_list(self, wxid_list, chunk_size=50):
+        """获取用户列表（自动分块查询避免SQL语句过长）
+
+        Args:
+            wxid_list: 微信ID列表
+            chunk_size: 每批查询的数量，默认为50
+
+        Returns:
+            查询结果列表
+        """
+        if not wxid_list:
+            return []
+        # 对列表进行分块
+        chunks = [wxid_list[i:i + chunk_size]
+                  for i in range(0, len(wxid_list), chunk_size)]
+        result = []
+        for chunk in chunks:
+            # 查询当前分块的数据
+            chunk_result = self.where_in("wxid", chunk).get()
+            if chunk_result:
+                result.extend(chunk_result)
+        return result

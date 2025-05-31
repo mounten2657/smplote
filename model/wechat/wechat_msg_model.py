@@ -9,18 +9,18 @@ class WechatMsgModel(MysqlBaseModel):
         - id - int - 主键ID
         - app_key - varchar(4) - 应用账户：a1|a2
         - msg_id - bigint - 消息ID
-        - msg_type - int - 微信消息类型
         - content - longtext - 消息内容
         - content_type - varchar(8) - 识别消息类型
         - msg_time - datetime - 消息时间
-        - g_wxid - varchar(32) - 群聊ID(非群聊为0)
-        - g_wxid_name - varchar(64) - 群聊名称
+        - s_wxid - varchar(32) - 发送方wxid
+        - s_wxid_name - varchar(64) - 发送方名称
+        - msg_type - int - 微信消息类型
         - is_my - tinyint(1) - 是否自己的消息(0否1是)
         - is_at - tinyint(1) - 是否艾特自己(0否1是)
         - is_sl - tinyint(1) - 是否私聊(0否1是)
         - is_group - tinyint(1) - 是否群聊(0否1是)
-        - s_wxid - varchar(32) - 发送方wxid
-        - s_wxid_name - varchar(64) - 发送方名称
+        - g_wxid - varchar(32) - 群聊ID(非群聊为0)
+        - g_wxid_name - varchar(64) - 群聊名称
         - t_wxid - varchar(32) - 接收方wxid
         - t_wxid_name - varchar(64) - 接收方名称
         - f_wxid - varchar(32) - 来自方wxid
@@ -70,5 +70,3 @@ class WechatMsgModel(MysqlBaseModel):
     def get_msg_info(self, mid):
         """获取消息信息"""
         return self.where({"msg_id": mid}).first()
-
-
