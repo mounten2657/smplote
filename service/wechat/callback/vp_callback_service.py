@@ -128,6 +128,7 @@ class VpCallbackService:
             res = {}
             app_key = data['app_key']
             msg_id = data['msg_id']
+            pid = data['pid']
             msg_type = data['content_type']
             g_wxid = data['g_wxid']
             s_wxid = data['send_wxid']
@@ -139,8 +140,13 @@ class VpCallbackService:
             is_retry = data.get('is_retry')
             if m_info and not is_retry:
                 return True
+            # 内容为空 - 直接跳过
+            if not data.get('content'):
+                return False
             # 只有一个消费者，所以不用加锁
             client = VpClient(app_key)
+            qdb = CallbackQueueModel()
+            res['upd_cnt_1'] = qdb.set_retry_count(pid, 1)
             user_list = [{"wxid": s_wxid}, {"wxid": t_wxid}]
             room = {}
             # 群聊入库
@@ -203,6 +209,7 @@ class VpCallbackService:
             else:
                 res['ins_msg'] = mdb.add_msg(data, app_key)
             # 入库成功 - 更新队列表的 retry_count
+            res['upd_cnt_2'] = qdb.set_retry_count(pid, 2)
             return res
         except Exception as e:
             err = Error.handle_exception_info(e)

@@ -7,18 +7,18 @@ class WechatMsgModel(MysqlBaseModel):
     """
     微信用户标签表
         - id - int - 主键ID
-        - app_key - varchar(4) - 应用账户：a1|a2
         - msg_id - bigint - 消息ID
         - content - longtext - 消息内容
         - content_type - varchar(8) - 识别消息类型
         - msg_time - datetime - 消息时间
         - s_wxid - varchar(32) - 发送方wxid
         - s_wxid_name - varchar(64) - 发送方名称
-        - msg_type - int - 微信消息类型
         - is_my - tinyint(1) - 是否自己的消息(0否1是)
         - is_at - tinyint(1) - 是否艾特自己(0否1是)
         - is_sl - tinyint(1) - 是否私聊(0否1是)
         - is_group - tinyint(1) - 是否群聊(0否1是)
+        - msg_type - int - 微信消息类型
+        - app_key - varchar(4) - 应用账户：a1|a2
         - g_wxid - varchar(32) - 群聊ID(非群聊为0)
         - g_wxid_name - varchar(64) - 群聊名称
         - t_wxid - varchar(32) - 接收方wxid
@@ -39,20 +39,20 @@ class WechatMsgModel(MysqlBaseModel):
     def add_msg(self, msg, app_key, mid=0):
         """数据入库"""
         insert_data = {
-            "app_key": app_key,
             "msg_id": msg['msg_id'],
-            "msg_type": msg['msg_type'],
             "content": msg['content'],
             "content_type": msg['content_type'],
             "msg_time": msg['msg_time'],
-            "g_wxid": msg['g_wxid'],
-            "g_wxid_name": msg['g_wxid_name'],
+            "s_wxid": msg['send_wxid'],
+            "s_wxid_name": msg['send_wxid_name'],
             "is_my": msg['is_my'],
             "is_at": msg['is_at'],
             "is_sl": msg['is_sl'],
             "is_group": msg['is_group'],
-            "s_wxid": msg['send_wxid'],
-            "s_wxid_name": msg['send_wxid_name'],
+            "msg_type": msg['msg_type'],
+            "app_key": app_key,
+            "g_wxid": msg['g_wxid'],
+            "g_wxid_name": msg['g_wxid_name'],
             "t_wxid": msg['to_wxid'],
             "t_wxid_name": msg['to_wxid_name'],
             "f_wxid": msg['from_wxid'],

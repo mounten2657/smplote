@@ -7,7 +7,6 @@ class WechatRoomModel(MysqlBaseModel):
     """
     微信群聊表
         - id - int - 主键ID
-        - app_key - varchar(4) - 应用账户：a1|a2
         - g_wxid - varchar(64) - 群聊微信ID
         - nickname - varchar(128) - 群昵称
         - quan_pin - varchar(128) - 全拼
@@ -18,6 +17,7 @@ class WechatRoomModel(MysqlBaseModel):
         - head_img_url - varchar(512) - 小头像URL
         - member_list - longtext - 群成员列表
         - change_log - text - 变更日志（最近60条）
+        - app_key - varchar(4) - 应用账户：a1|a2
         - remark - varchar(255) - 备注
         - extra - text - 关联属性
         - create_at - datetime - 记录创建时间

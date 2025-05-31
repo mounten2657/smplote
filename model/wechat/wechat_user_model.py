@@ -7,7 +7,6 @@ class WechatUserModel(MysqlBaseModel):
     """
     微信用户表
         - id - int - 主键ID
-        - app_key - varchar(4) - 应用账户：a1|a2
         - wxid - varchar(32) - 用户微信ID
         - p_wxid - varchar(32) - 自定义微信ID
         - user_type - tinyint(1) - 用户类型(1好友|2群聊)
@@ -28,6 +27,7 @@ class WechatUserModel(MysqlBaseModel):
         - label_name_list - varchar(255) - 标签名列表
         - room_list - text - 关联的群聊列表
         - change_log - text - 变更日志（最近30条）
+        - app_key - varchar(4) - 应用账户：a1|a2
         - remark - varchar(255) - 备注
         - extra - text - 关联属性
         - create_at - datetime - 记录创建时间

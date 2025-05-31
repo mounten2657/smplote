@@ -77,6 +77,10 @@ class CallbackQueueModel(MysqlBaseModel):
         """更新为已处理成功"""
         return self.update({'id': pid}, {'is_succeed': is_succeed})
 
+    def set_retry_count(self, pid, retry_count=1):
+        """更新重试次数 - 也可以引申为业务的标志位"""
+        return self.update({'id': pid}, {'retry_count': retry_count})
+
     def update_process(self, pid, data, is_force=0):
         """更新处理数据"""
         info = self.where({"id": pid}).first()
