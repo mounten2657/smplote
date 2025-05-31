@@ -35,6 +35,7 @@ class VpCallbackHandler(VpBaseFactory):
         msg_id = f"{p_msg_id}-{msg_id}"  # 展示用
         msg_type = message.get('msg_type', 0)
         msg_source = message.get('msg_source', '')
+        contents = message.get('content', {}).get('str', '')
         f_wxid = message.get('from_user_name', {}).get('str', '')
         t_wxid = message.get('to_user_name', {}).get('str', '')
         g_wxid = f_wxid if '@chatroom' in f_wxid else (t_wxid if '@chatroom' in t_wxid else '')
@@ -59,6 +60,9 @@ class VpCallbackHandler(VpBaseFactory):
                 return False
             if all(key in msg_source for key in ('bizmsg', 'bizclientmsgid')):  # 隐蔽公众号
                 logger.warning(f"on message: 忽略消息[T21]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
+            if all(key in contents for key in ('announcement', 'sourceid', 'htmlid')):  # 群公告
+                logger.warning(f"on message: 忽略消息[T22]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
             if f_wxid in str(app_config['g_wxid_exc']).split(','):  # 无用群
                 logger.warning(f"on message: 忽略消息[T3]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
