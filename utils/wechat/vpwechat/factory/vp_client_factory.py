@@ -1,6 +1,6 @@
 import os
 from tool.core import Logger, Http, Time, Attr, File
-from utils.grpc.vpp_serve.vpp_serve_client import VppServeClient
+from service.vpp.vpp_serve_service import VppServeService
 from model.wechat.wechat_api_log_model import WechatApiLogModel
 
 logger = Logger()
@@ -68,7 +68,7 @@ class VpClientFactory:
             for at in ats:
                 at_wxid_list.append(at['wxid'])
                 at_str += f"@{at['nickname']}"
-            content = f"{at_str} {content}"
+            content = f"{at_str}\r\n{content}"
         body = {
             "MsgItem": [{
                 "AtWxIDList": at_wxid_list,
@@ -218,12 +218,12 @@ class VpClientFactory:
             # 使用 vpp 进行 cdn 下载
             if "PNG" == msg_type:  # 图片优先下载高清 - 1高清 | 2标准 | 3缩略
                 body['fty'] = 1
-                res = VppServeClient.download_file(**body)
+                res = VppServeService.download_file(**body)
                 if not Attr.get_by_point(res, 'data.url'):
                     body['fty'] = 2
-                    res = VppServeClient.download_file(**body)
+                    res = VppServeService.download_file(**body)
             else:
-                res = VppServeClient.download_file(**body)
+                res = VppServeService.download_file(**body)
             logger.debug(f'VP GRPC 请求结果: {res}', 'VP_GRPC_CALL_RET')
             # 更新执行结果
             run_time = round(Time.now(0) - start_time, 3) * 1000

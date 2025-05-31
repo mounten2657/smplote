@@ -296,3 +296,8 @@ class Str:
         if 1 <= position <= len(results):
             return results[position - 1]
         return ''
+
+    @staticmethod
+    def remove_at_user(content):
+        """去除前面艾特的用户"""
+        return re.sub(r'^(@[^\s@]+[\s]*)*', '', content)

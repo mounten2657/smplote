@@ -1,5 +1,5 @@
+from service.vps.open_nat_service import OpenNatService
 from utils.wechat.qywechat.factory.qy_client_factory import QyClientFactory
-from utils.grpc.open_nat.open_nat_client import OpenNatClient
 from tool.core import Que, Ins
 
 
@@ -33,7 +33,7 @@ class QyMsgSender(QyClientFactory, Que):
 
     def _send_text_message_rpc(self, content, app_key):
         """通过 vps  发送文本消息"""
-        return OpenNatClient.send_text_msg(content, app_key)
+        return OpenNatService.send_text_msg(content, app_key)
 
     def _send_text_message(self, content, app_key):
         """

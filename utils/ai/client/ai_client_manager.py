@@ -32,25 +32,21 @@ class AIClientManager:
         service = service or self.config['last_service']
         return self.clients.get(service)
 
-    def call_ai(self, text: str, prompt: str = 'prompt', service: Optional[str] = '') -> str:
+    def call_ai(self, messages: list, service: Optional[str] = '') -> str:
         """
         调用AI接口
-        :param text:  提问文本
-        :param prompt:  预设 prompt （用来设定角色）
+        :param messages:  对话列表 -  [{"role": "system", "content": prompt_text}, {"role": "user", "content": content}]
         :param service:  AI 服务商
         :return:
         """
         service = service if service else self.config['last_service']  # 获取默认服务商
         logger = Logger()
-        logger.info({"service": service, "prompt": prompt, "content": text[0:100]}, 'CALL_AI_TXT', 'ai')
+        logger.info({"service": service,"content": str(messages)[0:100]}, 'CALL_AI_TXT', 'ai')
         try:
             client = self.clients.get(service)
             response = client.chat.completions.create(
                 model=self.config['services'][service or self.config['last_service']]['model'],
-                messages=[
-                    {"role": "system", "content": prompt},
-                    {"role": "user", "content": text}
-                ],
+                messages=messages,
                 temperature=0.3
             )
             res = response.choices[0].message.content
@@ -59,4 +55,3 @@ class AIClientManager:
             res = Error.handle_exception_info(e)
             logger.info({"service": service, "content": res}, 'CALL_AI_EXP', 'ai')
         return res
-

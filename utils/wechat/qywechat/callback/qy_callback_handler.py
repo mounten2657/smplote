@@ -70,6 +70,7 @@ class QyCallbackHandler:
         else:
             pass  # 未识别的消息放行
         handler.set_content(content)
+        handler.set_user({"id": msg_user, "name": msg_user})
         action = getattr(handler, method)
         logger.debug([handler.__class__, method], 'QY_MSG_DIS_END')
         return action()

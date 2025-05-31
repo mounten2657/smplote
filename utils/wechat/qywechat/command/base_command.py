@@ -8,9 +8,14 @@ class BaseCommand:
     def __init__(self):
         self.client = QyClient()
         self.content = None
+        self.user = None
 
     def set_content(self, content):
         self.content = content
+        return True
+
+    def set_user(self, user):
+        self.user = user
         return True
 
     def exec_null(self):

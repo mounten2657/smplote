@@ -23,7 +23,7 @@ class QyCallbackService(Que):
                 update_data = {"process_result": res, "is_processed": 1, "is_succeed": 1}
                 db.update_process(int(pid), update_data)
             return res['verify']
-        xml = params.get('xml')
+        xml = params.get('xml', '')
         # 更新处理数据
         update_data = {"process_params": {"app_key": app_key, "xml": '[XML]'}}
         res['update_db'] = db.update_process(int(pid), update_data)

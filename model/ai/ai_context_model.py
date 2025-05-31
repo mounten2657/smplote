@@ -22,3 +22,36 @@ class AiContextModel(MysqlBaseModel):
     """
 
     _table = 'ai_context'
+
+    def add_context(self, context, config):
+        """数据入库"""
+        insert_data = {
+            "chat_id": context['chat_id'],
+            "biz_code": context['biz_code'],
+            "method_name": context['method_name'],
+            "ai_type": config['ai_type'],
+            "ai_model": config['ai_model'],
+            "request_params": context['request_params'],
+            "response_result": {},
+            "is_succeed": 0,
+            "is_summary": context['is_summary'],
+            "response_time": 0,
+        }
+        return self.insert(insert_data)
+
+    def update_context_response(self, pid, response):
+        """更新响应结果"""
+        return self.update({"id": pid}, response)
+
+    def get_context_info(self, pid):
+        """获取上下文信息"""
+        return self.where({"id": pid}).first()
+
+    def get_context_list(self, cid):
+        """获取上下文列表 - 最近5条"""
+        return self.where({"chat_id": cid}).order('id', 'desc').limit(0, 5).get()
+
+    def get_context_count(self, cid):
+        """获取上下文列表 - 最近5条"""
+        info = self.where({"chat_id": cid}).select(['count(1) as count']).first()
+        return info['count'] if info else 0

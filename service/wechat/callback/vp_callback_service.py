@@ -1,3 +1,4 @@
+from service.ai.command.ai_command_service import AiCommandService
 from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
 from model.callback.callback_queue_model import CallbackQueueModel
@@ -7,7 +8,7 @@ from model.wechat.wechat_user_label_model import WechatUserLabelModel
 from model.wechat.wechat_user_model import WechatUserModel
 from model.wechat.wechat_msg_model import WechatMsgModel
 from tool.db.cache.redis_task_queue import RedisTaskQueue
-from tool.core import Logger, Time, Error, Attr
+from tool.core import Logger, Time, Error, Attr, Config, Str
 
 logger = Logger()
 
@@ -103,17 +104,48 @@ class VpCallbackService:
     def command_handler(data):
         """微信消息指令处理入口"""
         try:
+            app_key = data['app_key']
             is_at = data['is_at']
-            is_my = data['is_my']
-            is_sl = data['is_sl']
-            is_group = data['is_group']
+            s_wxid = data['send_wxid']
+            g_wxid = data['g_wxid']
             content = data['content']
-            # do something
-            return True
+            if not is_at or not content:
+                return False
+            config = Config.vp_config()
+            app_config = config['app_list'][app_key]
+            # 拦截非允许群
+            if g_wxid not in str(app_config['g_wxid']).split(','):
+                return False
+            room = WechatRoomModel().get_room_info(g_wxid)
+            user = Attr.select_item_by_where(room.get('member_list', []), {"wxid": s_wxid})
+            s_wxid_name = user.get('display_name', '')
+            s_user = {"id": s_wxid, "name": s_wxid_name}
+            extra = {"g_wxid": g_wxid, "g_wxid_name": room.get('nickname', ''), "s_wxid": s_wxid, "s_wxid_name": s_wxid_name}
+            commands = config['command_list'].split(',')
+            content = Str.remove_at_user(content)
+            if str(content).startswith(tuple(commands)):
+                if str(content).startswith('#提问'):
+                    response = AiCommandService.question(content, s_user, 'VP_QUS', extra)
+                elif str(content).startswith('#百科'):
+                    response = AiCommandService.science(content, s_user, 'VP_SCI', extra)
+                elif s_wxid not in str(config['admin_list']).split(','):
+                    # 拦截非管理员 - 以下功能都是只有管理员才能使用
+                    response = '只有管理员才能使用该功能'
+                elif str(content).startswith('#设置'):
+                    response = '设置功能正在开发中……'
+                elif str(content).startswith('#天气'):
+                    response = '天气功能正在开发中……'
+                elif str(content).startswith('#点歌'):
+                    response = '点歌功能正在开发中……'
+                else:
+                    response = '暂未支持该功能……'
+                client = VpClient(app_key)
+                return client.send_msg(response, g_wxid, [{"wxid": s_wxid, "nickname": s_wxid_name}])
+            return False
         except Exception as e:
             err = Error.handle_exception_info(e)
             logger.error(f"消息指令处理失败 - {err}", "VP_CMD_ERR")
-            return err
+            return False
 
     @staticmethod
     def command_handler_retry(id_list):

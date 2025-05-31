@@ -135,6 +135,7 @@ class MysqlBaseModel:
         self._wheres = []
         self._where_ins = []
         self._where_sqls = []
+        self._order_str = None
         self._limit_offset = None
         self._limit_count = None
 
@@ -166,6 +167,14 @@ class MysqlBaseModel:
         """custom sql condition query method"""
         if sql:
             self._where_sqls.append(sql)
+        return self
+
+    def order(self, column: str, des: str) -> 'MysqlBaseModel':
+        self._order_str = self._order_str if self._order_str  else ''
+        if not self._order_str:
+            self._order_str = f" ORDER BY {column} {des.upper()} "
+        else:
+            self._order_str += f", {column} {des.upper()} "
         return self
 
     def limit(self, offset: int, count: int) -> 'MysqlBaseModel':
@@ -213,7 +222,9 @@ class MysqlBaseModel:
             else:
                 limit_clause = f"LIMIT {self._limit_count}"
 
-        sql = f"SELECT {select_clause} FROM {self._table} WHERE {where_clause} {limit_clause}"
+        order_str = self._order_str if self._order_str else ''
+
+        sql = f"SELECT {select_clause} FROM {self._table} WHERE {where_clause} {order_str} {limit_clause}"
         self.logger.debug({"sql": sql.strip(), "params": params}, 'DB_SQL_SELECT', 'mysql')
         return sql.strip(), params
 

@@ -50,8 +50,3 @@ class OpenNatClient:
         process = lambda d: {k: process(v) if isinstance(v, dict) else cryptor.encrypt(str(v)) for k, v in d.items()}
         File.save_file(process(config), Dir.abs_dir('vps/config/qy.enc.json'))
         return True
-
-    @staticmethod
-    def send_text_msg(content, app_key='a1', user_list=None):
-        """发送文本消息 - 对外方法"""
-        return OpenNatClient().send_wechat_text(content, app_key, user_list)
