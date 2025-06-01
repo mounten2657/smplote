@@ -54,9 +54,9 @@ class AiContextModel(MysqlBaseModel):
                 .limit(0, 5)
                 .get())
 
-    def get_context_count(self, cid):
+    def get_context_count(self, cid, biz_code):
         """获取上下文列表 - 最近5条"""
-        info = (self.where({"chat_id": cid, "is_summary": 0})
+        info = (self.where({"chat_id": cid, "is_summary": 0, "biz_code": biz_code})
                 .select(['count(1) as count'])
                 .first())
         return info['count'] if info else 0

@@ -60,7 +60,7 @@ class AiClientService:
                 "response_time": round(Time.now(0) - start_time, 3) * 1000
             }
             tdb.update_context_response(tid, update_data)
-            count = tdb.get_context_count(cid)
+            count = tdb.get_context_count(cid, biz_code)
             # 更新对话次数
             if count:
                 cdb.update_chat_summary(cid, {"chat_count": count})
