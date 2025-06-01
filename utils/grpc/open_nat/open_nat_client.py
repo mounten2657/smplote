@@ -29,16 +29,23 @@ class OpenNatClient:
         return host, port
 
     def send_wechat_text(self, content, app_key, user_list=None):
-        response = self.stub.SendWeChatText(WeChatTextRequest(
-            content=content,
-            app_key=app_key,
-            user_list=user_list or ""
-        ))
-        return {
-            "code": response.code,
-            "msg": response.msg,
-            "data": Attr.parse_json_ignore(response.data)
-        }
+        try:
+            response = self.stub.SendWeChatText(WeChatTextRequest(
+                content=content,
+                app_key=app_key,
+                user_list=user_list or ""
+            ))
+            return {
+                "code": response.code,
+                "msg": response.msg,
+                "data": Attr.parse_json_ignore(response.data)
+            }
+        except Exception as e:
+            return {
+                "code": 799,
+                "msg": f"grpc error - {e}",
+                "data": None
+            }
 
     def close(self):
         self.channel.close()
