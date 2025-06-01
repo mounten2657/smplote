@@ -1,6 +1,6 @@
 from service.vps.open_nat_service import OpenNatService
 from utils.wechat.qywechat.factory.qy_client_factory import QyClientFactory
-from tool.core import Que, Ins
+from tool.core import Que, Ins, Error
 
 
 @Ins.singleton
@@ -23,13 +23,15 @@ class QyMsgSender(QyClientFactory, Que):
         app_key = kwargs.get('app_key')
         if not content:
             return False
-        if msg_type == 'text':
-            # 改为通过 vps 的 gRpc 发送
-            return self._send_text_message_rpc(content, app_key)
-        if msg_type == 'markdown':
-            # 弃用 - 只能在企业微信中查看
-            return self._send_md_message(content, app_key)
-        return False
+        try:
+            if msg_type == 'text':
+                # 改为通过 vps 的 gRpc 发送
+                return self._send_text_message_rpc(content, app_key)
+            if msg_type == 'markdown':
+                # 弃用 - 只能在企业微信中查看
+                return self._send_md_message(content, app_key)
+        except Exception as e:
+            return Error.handle_exception_info(e)
 
     def _send_text_message_rpc(self, content, app_key):
         """通过 vps  发送文本消息"""
