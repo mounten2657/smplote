@@ -163,6 +163,8 @@ class VpCallbackService:
                     response = '天气功能正在开发中……'
                 elif str(content).startswith('#点歌'):
                     response = '点歌功能正在开发中……'
+                elif str(content).startswith('#总结'):
+                    response = '总结功能正在开发中……'
                 else:
                     response = '暂未支持该功能……'
                 return client.send_msg(response, g_wxid, [{"wxid": s_wxid, "nickname": s_wxid_name}])
