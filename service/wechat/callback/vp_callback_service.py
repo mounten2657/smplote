@@ -138,6 +138,10 @@ class VpCallbackService:
                 elif '103' == content:
                     SendWxMsgService.send_qy_msg(app_key, f'{s_wxid_name} 正在呼唤你，请尽快回复')
                     response = '已发送至管理员……\r\n\r\n正在转接人工服务，请稍后……'
+                elif '201' == content or str(content).startswith('#任务'):
+                    response = '任务功能正在开发中……'
+                elif '202' == content or str(content).startswith('#红石'):
+                    response = '红石功能正在开发中……'
                 elif s_wxid not in str(config['admin_list']).split(','):
                     # 拦截非管理员 - 以下功能都是只有管理员才能使用
                     response = '只有管理员才能使用该功能'
