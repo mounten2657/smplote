@@ -130,17 +130,18 @@ class VpCallbackService:
                 client = VpClient(app_key)
                 redis = RedisClient()
                 cache_key = 'LOCK_AI_VP_QUS'
+                is_admin = s_wxid in str(config['admin_list']).split(',')
                 if '1' == content:
                     response = '工号09527为您服务，提问请按101，百科请按102，任务请按201，红石请按202，其它请按103'
                 elif '101' == content or str(content).startswith('#提问'):
-                    if redis.get(cache_key, [s_wxid]):
+                    if redis.get(cache_key, [s_wxid]) and not is_admin:
                         response = '每分钟只能提问一次'
                     else:
                         redis.set(cache_key, 1, [s_wxid])
                         content = '#提问' if '101' == content else content
                         response = AiCommandService.question(content, s_user, 'VP_QUS', extra)
                 elif '102' == content or str(content).startswith('#百科'):
-                    if redis.get(cache_key, [s_wxid]):
+                    if redis.get(cache_key, [s_wxid]) and not is_admin:
                         response = '每分钟只能提问一次'
                     else:
                         redis.set(cache_key, 1, [s_wxid])
@@ -153,7 +154,7 @@ class VpCallbackService:
                     response = '任务功能正在开发中……'
                 elif '202' == content or str(content).startswith('#红石'):
                     response = '红石功能正在开发中……'
-                elif s_wxid not in str(config['admin_list']).split(','):
+                elif not is_admin:
                     # 拦截非管理员 - 以下功能都是只有管理员才能使用
                     response = '只有管理员才能使用该功能'
                 elif str(content).startswith('#设置'):
