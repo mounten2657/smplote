@@ -36,6 +36,7 @@ class VpClient(VpBaseFactory):
         """关闭 websocket"""
         def ws_close():
             logger.debug(f'websocket close - {is_all}', 'WS_CED')
+            RedisClient().delete('LOCK_WSS_CNT')
             if is_all:
                 VpSocketFactory('a1').close()
                 VpSocketFactory('a2').close()

@@ -74,7 +74,7 @@ class AiClientService:
             return messages
         for context in reversed(context_list):
             messages.append({"role": "user", "content": context['request_params']['content']})
-            messages.append({"role": "system", "content": context['response_result']['content']})
+            messages.append({"role": "assistant", "content": context['response_result']['content']})
             while len(messages) > 10:
                 messages.pop(0)
                 messages.pop(0)
