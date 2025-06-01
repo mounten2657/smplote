@@ -202,7 +202,7 @@ class VpCallbackService:
                 if not r_info:
                     res['ins_room'] = rdb.add_room(room, app_key)
                     r_info = rdb.get_room_info(g_wxid)
-                if r_info and (Time.now() - Time.tfd(str(r_info['update_at'])) > 600):
+                if r_info and (Time.now() - Time.tfd(str(r_info['update_at'])) > 6):
                     res['chk_room'] = rdb.check_room_info(room, r_info)
                 user_list = room['member_list']
             # 标签更新
@@ -227,7 +227,7 @@ class VpCallbackService:
                     user['wx_nickname'] = user['nickname']
                     res['ins_user'] = udb.add_user(user, app_key)
                     u_info = udb.get_user_info(wxid)
-                if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 600):
+                if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 6):
                     user['room_list'].update(u_info['room_list'])
                     res['chk_user'] = udb.check_user_info(user, u_info)
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了

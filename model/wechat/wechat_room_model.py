@@ -89,7 +89,7 @@ class WechatRoomModel(MysqlBaseModel):
                 msg += f"微信昵称：{d['display_name']}\r\n"
                 msg += f"退群日期：{Time.date()}\r\n"
                 msg += f"退群原因：{reason}\r\n"
-                msg += f"\r\n--山高路远，江湖再见，且行且珍惜！--"
+                msg += f"\r\n山高路远江湖再见，且行且珍惜！"
                 client.send_msg(msg, g_wxid)
         if changes.get('add'):  # 入群提醒
             add_list = changes.get('add')

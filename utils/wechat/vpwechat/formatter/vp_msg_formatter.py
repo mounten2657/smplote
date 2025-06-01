@@ -148,8 +148,8 @@ class VpMsgFormatter(VpBaseFactory):
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, 0, client)
             t_name = t_name if t_name != t_wxid else content_link['i_name']
             self.msg['send_wxid_name'], self.msg['to_wxid_name'], self.msg['from_wxid_name'] = s_name, t_name, f_name
-            print(111, self.msg['to_wxid_name'])
             send_wxid, content = [s_wxid, f"[邀请消息] {s_name} 邀请 {t_name} 加入了群聊"]
+            client.refresh_room(self.g_wxid)
         elif 'revoke' == content_type:  # 撤回
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, self.is_my_protect, client)
             title_str = Str.extract_xml_attr(content_text, 'replacemsg').split('撤回', 1)
