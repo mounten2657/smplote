@@ -54,7 +54,7 @@ class WechatRoomModel(MysqlBaseModel):
         change = Attr.data_diff(Attr.select_keys(info, fields), Attr.select_keys(room, fields), 'wxid')
         if change:
             update_data = {}
-            for k, v in change:
+            for k, v in change.items():
                 update_data[k] = room[k]
             change['_dt'] = Time.date()
             change_log.append(change)
