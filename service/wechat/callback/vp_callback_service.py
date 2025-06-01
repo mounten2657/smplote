@@ -130,8 +130,10 @@ class VpCallbackService:
                 if '1' == content:
                     response = '工号09527为您服务，提问请按101，百科请按102，其它请按103'
                 elif '101' == content or str(content).startswith('#提问'):
+                    content = '#提问' if '101' == content else content
                     response = AiCommandService.question(content, s_user, 'VP_QUS', extra)
                 elif '102' == content or str(content).startswith('#百科'):
+                    content = '#百科' if '102' == content else content
                     response = AiCommandService.science(content, s_user, 'VP_SCI', extra)
                 elif '103' == content:
                     SendWxMsgService.send_qy_msg(app_key, f'{s_wxid_name} 正在呼唤你，请尽快回复')
