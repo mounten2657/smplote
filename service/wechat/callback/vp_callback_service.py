@@ -128,7 +128,7 @@ class VpCallbackService:
             if str(content).startswith(tuple(commands)):
                 client = VpClient(app_key)
                 if '1' == content:
-                    response = '工号09527为您服务，提问请按101，百科请按102，其它请按103'
+                    response = '工号09527为您服务，提问请按101，百科请按102，任务请按201，红石请按202，其它请按103'
                 elif '101' == content or str(content).startswith('#提问'):
                     content = '#提问' if '101' == content else content
                     response = AiCommandService.question(content, s_user, 'VP_QUS', extra)
