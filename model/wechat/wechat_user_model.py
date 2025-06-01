@@ -1,5 +1,5 @@
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins, Attr
+from tool.core import Ins, Attr, Time
 
 
 @Ins.singleton
@@ -75,10 +75,15 @@ class WechatUserModel(MysqlBaseModel):
                   'description', 'phone_list', 'label_id_list', 'label_name_list', 'room_list']
         change = Attr.data_diff(Attr.select_keys(info, fields), Attr.select_keys(user, fields), 'wxid')
         if change:
+            update_data = {}
+            for k, v in change:
+                update_data[k] = user[k]
+            change['_dt'] = Time.date()
             change_log.append(change)
             if len(change_log) > 30:
                 change_log.pop(0)
-            self.update({"id": pid}, {"change_log": change_log})
+            update_data['change_log'] = change_log
+            self.update({"id": pid}, update_data)
         return True
 
     def get_user_info(self, wxid):
