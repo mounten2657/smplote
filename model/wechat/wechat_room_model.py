@@ -50,7 +50,7 @@ class WechatRoomModel(MysqlBaseModel):
         pid = info['id']
         change_log = info['change_log'] if info['change_log'] else []
         # 比较两个信息，如果有变动，就插入变更日志
-        fields = ['nickname', 'notice', 'user_count', 'owner', 'head_img_url', 'member_list']
+        fields = ['nickname', 'notice', 'member_count', 'owner', 'head_img_url', 'member_list']
         change = Attr.data_diff(Attr.select_keys(info, fields), Attr.select_keys(room, fields), 'wxid')
         if change:
             update_data = {}

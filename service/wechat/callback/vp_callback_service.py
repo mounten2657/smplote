@@ -1,4 +1,5 @@
 from service.ai.command.ai_command_service import AiCommandService
+from service.wechat.reply.send_wx_msg_service import SendWxMsgService
 from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
 from model.callback.callback_queue_model import CallbackQueueModel
@@ -125,10 +126,16 @@ class VpCallbackService:
             commands = config['command_list'].split(',')
             content = Str.remove_at_user(content)
             if str(content).startswith(tuple(commands)):
-                if str(content).startswith('#提问'):
+                client = VpClient(app_key)
+                if '1' == content:
+                    response = '工号09527为您服务，提问请按101，百科请按102，其它请按103'
+                elif '101' == content or str(content).startswith('#提问'):
                     response = AiCommandService.question(content, s_user, 'VP_QUS', extra)
-                elif str(content).startswith('#百科'):
+                elif '102' == content or str(content).startswith('#百科'):
                     response = AiCommandService.science(content, s_user, 'VP_SCI', extra)
+                elif '103' == content:
+                    SendWxMsgService.send_qy_msg(app_key, f'{s_wxid_name} 正在呼唤你，请尽快回复')
+                    response = '已发送至管理员……\r\n\r\n正在转接人工服务，请稍后……'
                 elif s_wxid not in str(config['admin_list']).split(','):
                     # 拦截非管理员 - 以下功能都是只有管理员才能使用
                     response = '只有管理员才能使用该功能'
@@ -140,7 +147,6 @@ class VpCallbackService:
                     response = '点歌功能正在开发中……'
                 else:
                     response = '暂未支持该功能……'
-                client = VpClient(app_key)
                 return client.send_msg(response, g_wxid, [{"wxid": s_wxid, "nickname": s_wxid_name}])
             return False
         except Exception as e:
