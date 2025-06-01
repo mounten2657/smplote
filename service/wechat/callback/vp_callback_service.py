@@ -1,5 +1,6 @@
 from service.ai.command.ai_command_service import AiCommandService
 from service.wechat.reply.send_wx_msg_service import SendWxMsgService
+from tool.db.cache.redis_client import RedisClient
 from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
 from model.callback.callback_queue_model import CallbackQueueModel
@@ -127,14 +128,24 @@ class VpCallbackService:
             content = Str.remove_at_user(content)
             if str(content).startswith(tuple(commands)):
                 client = VpClient(app_key)
+                redis = RedisClient()
+                cache_key = 'LOCK_AI_VP_QUS'
                 if '1' == content:
                     response = '工号09527为您服务，提问请按101，百科请按102，任务请按201，红石请按202，其它请按103'
                 elif '101' == content or str(content).startswith('#提问'):
-                    content = '#提问' if '101' == content else content
-                    response = AiCommandService.question(content, s_user, 'VP_QUS', extra)
+                    if redis.get(cache_key, [s_wxid]):
+                        response = '每分钟只能提问一次'
+                    else:
+                        redis.set(cache_key, 1, [s_wxid])
+                        content = '#提问' if '101' == content else content
+                        response = AiCommandService.question(content, s_user, 'VP_QUS', extra)
                 elif '102' == content or str(content).startswith('#百科'):
-                    content = '#百科' if '102' == content else content
-                    response = AiCommandService.science(content, s_user, 'VP_SCI', extra)
+                    if redis.get(cache_key, [s_wxid]):
+                        response = '每分钟只能提问一次'
+                    else:
+                        redis.set(cache_key, 1, [s_wxid])
+                        content = '#百科' if '102' == content else content
+                        response = AiCommandService.science(content, s_user, 'VP_SCI', extra)
                 elif '103' == content:
                     SendWxMsgService.send_qy_msg(app_key, f'{s_wxid_name} 正在呼唤你，请尽快回复')
                     response = '已发送至管理员……\r\n\r\n正在转接人工服务，请稍后……'
@@ -202,7 +213,7 @@ class VpCallbackService:
                 if not r_info:
                     res['ins_room'] = rdb.add_room(room, app_key)
                     r_info = rdb.get_room_info(g_wxid)
-                if r_info and (Time.now() - Time.tfd(str(r_info['update_at'])) > 6):
+                if r_info and (Time.now() - Time.tfd(str(r_info['update_at'])) > 60):
                     res['chk_room'] = rdb.check_room_info(room, r_info)
                 user_list = room['member_list']
             # 标签更新
@@ -227,7 +238,7 @@ class VpCallbackService:
                     user['wx_nickname'] = user['nickname']
                     res['ins_user'] = udb.add_user(user, app_key)
                     u_info = udb.get_user_info(wxid)
-                if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 6):
+                if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 60):
                     user['room_list'].update(u_info['room_list'])
                     res['chk_user'] = udb.check_user_info(user, u_info)
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了

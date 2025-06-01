@@ -43,6 +43,6 @@ class AiChatModel(MysqlBaseModel):
         """更新最近总结"""
         return self.update({"id": pid}, summary)
 
-    def get_chat_info(self, uid):
+    def get_chat_info(self, uid, biz_code):
         """获取会话信息"""
-        return self.where({"user_id": uid}).first()
+        return self.where({"user_id": uid, "biz_code": biz_code}).first()

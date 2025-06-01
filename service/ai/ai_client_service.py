@@ -26,7 +26,7 @@ class AiClientService:
         # 对话入库
         cdb = AiChatModel()
         tdb = AiContextModel()
-        chat = cdb.get_chat_info(user['id'])
+        chat = cdb.get_chat_info(user['id'], biz_code)
         cid = chat.get('id', 0) if chat else 0
         if not chat:
             cid = cdb.add_chat({
@@ -39,7 +39,7 @@ class AiClientService:
         if not cid:
             return False
         # 获取对话文本
-        context_list = tdb.get_context_list(cid)
+        context_list = tdb.get_context_list(cid, biz_code)
         messages = [{"role": "system", "content": prompt_text}]  # 角色设定
         messages = AiClientService.get_chat_messages(context_list, messages, content)
         # 插入新对话
