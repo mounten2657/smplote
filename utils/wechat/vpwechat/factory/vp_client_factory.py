@@ -81,6 +81,50 @@ class VpClientFactory:
         }
         return self._api_call('POST', api, body, 'VP_SMG')
 
+    def send_img_message(self, image_path, to_wxid):
+        """
+        发送图片消息
+        :param image_path: 图片本地路径，会转为 base64
+        :param to_wxid: 接收者wxid
+        :return:  json - Data.isSendSuccess
+        {"Code":200,"Data":[{"isSendSuccess":true,"resp":{},"msgSource":"xml", "newMsgId":"xxx","toUSerName":"xxx"}],"Text":""}
+        """
+        if not image_path or not to_wxid:
+            return False
+        img_base64 = File.get_base64(image_path)
+        api = '/message/SendImageNewMessage'
+        body = {
+            "MsgItem": [{
+                "AtWxIDList": [],
+                "ImageContent": img_base64,
+                "MsgType": 2,
+                "TextContent": "",
+                "ToUserName": to_wxid,
+
+            }]
+        }
+        return self._api_call('POST', api, body, 'VP_SMG_IMG')
+
+    def send_voice_message(self, mp3_path, to_wxid):
+        """
+        发送语音消息
+        :param mp3_path: 图片本地路径，会转为 base64
+        :param to_wxid: 接收者wxid
+        :return:  json - Data.isSendSuccess
+        {"Code":200,"Data":[{"isSendSuccess":true,"resp":{},"msgSource":"xml", "newMsgId":"xxx","toUSerName":"xxx"}],"Text":""}
+        """
+        if not mp3_path or not to_wxid:
+            return False
+        mp3_base64 = File.get_base64(mp3_path)
+        api = '/message/SendVoice'
+        body = {
+          "ToUserName": to_wxid,
+          "VoiceData": mp3_base64,
+          "VoiceFormat": 0,
+          "VoiceSecond,": 0
+        }
+        return self._api_call('POST', api, body, 'VP_SMG_MP3')
+
     def get_room_info(self, g_wxid):
         """
         获取群详情

@@ -50,5 +50,9 @@ class WechatFileModel(MysqlBaseModel):
         return self.insert(insert_data)
 
     def get_file_info(self, md5):
-        """获取消息信息"""
+        """获取文件信息"""
         return self.where({"file_md5": md5}).first()
+
+    def get_biz_file_info(self, biz_code, s_wxid, s_wxid_name):
+        """获取业务文件信息"""
+        return self.where({"biz_code": biz_code, "s_wxid": s_wxid, "s_wxid_name": s_wxid_name}).first()

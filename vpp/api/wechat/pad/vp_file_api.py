@@ -36,8 +36,11 @@ class VpFileApi:
         base_path, file_ext = str(output_file).rsplit('.', 1)
         try:
             if not os.path.exists(output_file) or fd:
+                os.makedirs(os.path.dirname(output_file), exist_ok=True)
                 if 3001 == fty:  # emoji
-                    output_file = self.download_emoji(url, output_file)
+                    output_file = self.download_url_file(url, output_file)
+                elif 5001 == fty:  # website file
+                    output_file = self.download_url_file(url, output_file)
                 else:  # 图视文音
                     api = '/message/SendCdnDownload'
                     payload = {
@@ -55,7 +58,6 @@ class VpFileApi:
                         return res
                     binary_data = base64.b64decode(file_data)
                     # 保存本地文件
-                    os.makedirs(os.path.dirname(output_file), exist_ok=True)
                     with open(output_file, 'wb') as f:
                         f.write(binary_data)
             if ('silk' == file_ext and not os.path.exists(f"{base_path}.mp3")) or fd:
@@ -72,8 +74,8 @@ class VpFileApi:
             res.update({"code": 999, "msg": f"Download error: {e}"})
             return res
 
-    def download_emoji(self, url, file_path):
-        """下载并保存emoji"""
+    def download_url_file(self, url, file_path):
+        """下载并保存文件"""
         try:
             # 发送 HTTP 请求，设置 stream=True 以流式方式下载
             response = requests.get(url, stream=True, timeout=10)

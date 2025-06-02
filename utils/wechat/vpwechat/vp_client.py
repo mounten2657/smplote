@@ -51,6 +51,14 @@ class VpClient(VpBaseFactory):
         """发送文本消息"""
         return self.client.send_text_message(content, to_wxid, ats)
 
+    def send_img_msg(self, image_path, to_wxid):
+        """发送图片消息"""
+        return self.client.send_img_message(image_path, to_wxid)
+
+    def send_voice_message(self, mp3_path, to_wxid):
+        """发送语音消息"""
+        return self.client.send_voice_message(mp3_path, to_wxid)
+
     def get_login_status(self):
         """获取登陆状态"""
         return self.client.get_login_status()

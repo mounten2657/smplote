@@ -1,6 +1,8 @@
 import os
 import json
+import base64
 from pathlib import Path
+from pydub import AudioSegment
 from typing import Union, Any, Optional
 from tool.core.attr import Attr
 from tool.core.dir import Dir
@@ -125,4 +127,36 @@ class File:
             return 0
         return int(file_path.stat().st_mtime)
 
+    @staticmethod
+    def get_base64(file_path: str) -> str:
+        """
+        将本地文件转换为 Base64 编码字符串
 
+        参数:
+        file_path (str): 本地文件路径
+
+        返回:
+        str: 图片的 Base64 编码字符串（不含前缀）
+
+        示例:
+         get_base64("path/to/image.jpg")
+        'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA...'
+        """
+        try:
+            with open(file_path, "rb") as fp:
+                # 读取文件内容并进行 Base64 编码
+                encoded_bytes = base64.b64encode(fp.read())
+                # 转换为 UTF-8 字符串
+                return encoded_bytes.decode("utf-8")
+        except FileNotFoundError:
+            raise ValueError(f"文件不存在: {file_path}")
+        except Exception as e:
+            raise RuntimeError(f"转Base64失败: {str(e)}")
+
+    @staticmethod
+    def get_mp3_duration(file_path):
+        """获取mp3文件时长"""
+        audio = AudioSegment.from_file(file_path, "mp3")
+        duration_ms = len(audio)  # 获取时长（毫秒）
+        duration_sec = duration_ms / 1000  # 转换为秒
+        return duration_sec

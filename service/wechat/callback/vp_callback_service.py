@@ -1,5 +1,6 @@
 from service.ai.command.ai_command_service import AiCommandService
 from service.wechat.reply.send_wx_msg_service import SendWxMsgService
+from service.wechat.sky.sky_data_service import SkyDataService
 from tool.db.cache.redis_client import RedisClient
 from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
@@ -10,7 +11,7 @@ from model.wechat.wechat_user_label_model import WechatUserLabelModel
 from model.wechat.wechat_user_model import WechatUserModel
 from model.wechat.wechat_msg_model import WechatMsgModel
 from tool.db.cache.redis_task_queue import RedisTaskQueue
-from tool.core import Logger, Time, Error, Attr, Config, Str
+from tool.core import Logger, Time, Error, Attr, Config, Str, Sys, Dir
 
 logger = Logger()
 
@@ -112,6 +113,7 @@ class VpCallbackService:
             s_wxid = data['send_wxid']
             g_wxid = data['g_wxid']
             content = data['content']
+            use_at = 1
             if not(content and (is_at or is_my)):
                 return False
             config = Config.vp_config()
@@ -149,25 +151,53 @@ class VpCallbackService:
                         response = AiCommandService.science(content, s_user, 'VP_SCI', extra)
                 elif '103' == content:
                     SendWxMsgService.send_qy_msg(app_key, f'{s_wxid_name} 正在呼唤你，请尽快回复')
-                    response = '已发送至管理员……\r\n\r\n正在转接人工服务，请稍后……'
+                    response = '已发送至管理员……\r\n\r\n正在呼唤本人，请稍后……'
+                    file = SkyDataService().get_sky_file('yj')
+                    fp = file.get('save_path')
+                    if fp:
+                        fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+                        v_task = lambda path=fp, wxid=g_wxid: client.send_voice_message(path, wxid)
+                        Sys.delayed_task(15, v_task)
                 elif '201' == content or str(content).startswith('#任务'):
-                    response = '任务功能正在开发中……'
+                    file = SkyDataService().get_sky_file('rw')
+                    fp = file.get('save_path')
+                    if fp:
+                        fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+                        return client.send_img_msg(file.get('save_path'), g_wxid)
+                    response = '获取sky任务失败'
                 elif '202' == content or str(content).startswith('#红石'):
-                    response = '红石功能正在开发中……'
+                    file = SkyDataService().get_sky_file('hs')
+                    fp = file.get('save_path')
+                    if fp:
+                        fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+                        return client.send_img_msg(file.get('save_path'), g_wxid)
+                    response = '获取sky红石失败'
+                elif str(content).startswith('#公告'):
+                    s_res = SkyDataService().get_sky_gg()
+                    response = s_res.get('main', "暂未查询到公告")
+                    use_at = 0
+                elif str(content).startswith('#v50'):
+                    s_res = SkyDataService().get_v50()
+                    response = s_res.get('main', "暂未查询到v50")
+                    use_at = 0
+                elif str(content).startswith('#天气'):
+                    city = str(content).replace('#天气', '').strip()
+                    s_res = SkyDataService().get_weather(city)
+                    response = s_res.get('main', "暂未查询到天气")
+                    use_at = 0
                 elif not is_admin:
                     # 拦截非管理员 - 以下功能都是只有管理员才能使用
                     response = '只有管理员才能使用该功能'
                 elif str(content).startswith('#设置'):
                     response = '设置功能正在开发中……'
-                elif str(content).startswith('#天气'):
-                    response = '天气功能正在开发中……'
                 elif str(content).startswith('#点歌'):
                     response = '点歌功能正在开发中……'
                 elif str(content).startswith('#总结'):
                     response = '总结功能正在开发中……'
                 else:
                     response = '暂未支持该功能……'
-                return client.send_msg(response, g_wxid, [{"wxid": s_wxid, "nickname": s_wxid_name}])
+                at_list = [{"wxid": s_wxid, "nickname": s_wxid_name}] if use_at else []
+                return client.send_msg(response, g_wxid, at_list)
             return False
         except Exception as e:
             err = Error.handle_exception_info(e)
