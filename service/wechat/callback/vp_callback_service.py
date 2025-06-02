@@ -114,7 +114,7 @@ class VpCallbackService:
             g_wxid = data['g_wxid']
             content = data['content']
             use_at = 1
-            if not(content and (is_at or is_my)):
+            if not(content and (is_at or is_my)) or not g_wxid:
                 return False
             config = Config.vp_config()
             app_config = config['app_list'][app_key]
