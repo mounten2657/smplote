@@ -119,9 +119,9 @@ class SkyDataService:
             data_list = res.get('data')
             text = f"【天气预报】\r\n{res.get('city')}\r\n"
             for data in data_list:
-                text += f"\r\n{data['date']}: "
-                text += f"\r\n{data['weather']} {data['temperature']}"
-                text += f"\r\n{data['wind']} {data['wind_level']}"
-                text += f"\r\n{data['air_quality']}\r\n"
+                text += f"\r\n## {data['date']}: "
+                text += f"\r\n天气：{data['weather']} {data['temperature']}"
+                text += f"\r\n风力：{data['wind']} {data['wind_level']}"
+                text += f"\r\n空气：{data['air_quality']}\r\n"
             return {"title": res.get('city'), "main": text, "data_list": data_list}
         return {"title": city, "main": f"暂未查询到{city}天气"}
