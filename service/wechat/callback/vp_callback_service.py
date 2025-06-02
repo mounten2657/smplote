@@ -163,14 +163,14 @@ class VpCallbackService:
                     fp = file.get('save_path')
                     if fp:
                         fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
-                        return client.send_img_msg(file.get('save_path'), g_wxid)
+                        return client.send_img_msg(fp, g_wxid)
                     response = '获取sky任务失败'
                 elif '202' == content or str(content).startswith('#红石'):
                     file = SkyDataService().get_sky_file('hs')
                     fp = file.get('save_path')
                     if fp:
                         fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
-                        return client.send_img_msg(file.get('save_path'), g_wxid)
+                        return client.send_img_msg(fp, g_wxid)
                     response = '获取sky红石失败'
                 elif str(content).startswith('#公告'):
                     s_res = SkyDataService().get_sky_gg()
