@@ -100,10 +100,3 @@ WX_WXID_G2=
 
 ---
 
-### 📚 推荐阅读
-
--   [WeChatAI](https://github.com/Vita0519/WeChatAI)
--   [wxpy](https://wxpy.readthedocs.io/zh/latest/index.html)
--   [github优秀开源作品集](https://www.allfather.top/mol2d/)
-
----
