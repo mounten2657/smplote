@@ -10,6 +10,7 @@ class RedisKeys:
         "LOCK_SQL_CNT": {"key": "lock_mysql_connection", "ttl": 87400},
         "LOCK_WSS_CNT": {"key": "lock_wss_connection", "ttl": 87400},
         "LOCK_AI_VP_QUS": {"key": "lock_ai_vp_qus:%s", "ttl": 60},
+        "LOCK_SKY_API_SG": {"key": "lock_sky_api_sg:%s", "ttl": 60},
         # 微信用户相关
         "VP_USER_INFO": {"key": "wechatpad:user:base_info:%s", "ttl": 1800},
         "VP_USER_FRD_INF": {"key": "wechatpad:user:frd_info:%s", "ttl": 3600},

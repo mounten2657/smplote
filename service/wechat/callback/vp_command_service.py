@@ -103,6 +103,10 @@ class VpCommandService:
 
     def vp_sky_sg(self, content):
         """sky身高"""
+        redis = RedisClient()
+        cache_key = 'LOCK_SKY_API_SG'
+        if redis.get(cache_key, [self.s_wxid]) and not self.is_admin:
+            return self.client.send_msg('每分钟只能查询身高一次', self.g_wxid, self.at_list)
         content = '#身高' if '203' == content else content
         code = str(content).replace('#身高', '').strip()
         if len(code) < 14:
