@@ -122,7 +122,7 @@ class SkyDataService:
         text = res.get('hb', '')
         url = f"{self._OVO_API}/api/sky/jjsj/sj?key={self.ovo_key}"
         res = Http.send_request('GET', url)
-        text += "\r\n季节季蜡：\r\n"
+        text += "\r\n\r\n季节季蜡：\r\n"
         for i in range(1, 10):
             text += f"{res.get(f'msg{i}', '')}\r\n"
         return {"title": "倒计时", "main": text, "code": 0}
