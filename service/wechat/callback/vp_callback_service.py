@@ -118,7 +118,7 @@ class VpCallbackService:
             if g_wxid not in str(app_config['g_wxid']).split(','):
                 return False
             commands = ",".join([config['command_list'], config['command_list_sky']]).split(',')
-            content = Str.remove_at_user(content)
+            content = Str.remove_at_user(content).strip()
             if str(content).startswith(tuple(commands)):
                 is_admin = s_wxid in str(config['admin_list']).split(',')
                 client = VpClient(app_key)
