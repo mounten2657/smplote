@@ -378,7 +378,8 @@ class VpMsgFormatter(VpBaseFactory):
         push_content = message.get('push_content', '')
         at_user = self.extract_at_user(msg_source)
         # is_at = 1 if self_wxid in str(at_user).split(',') else 0
-        is_at = 1 if '在群聊中@了你' in push_content else 0
+        # is_at = 1 if '在群聊中@了你' in push_content else 0
+        is_at = 1 if at_user else 0
         self.msg.update({
             "at_user": at_user,
             "is_at": is_at,
