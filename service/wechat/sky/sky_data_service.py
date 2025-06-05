@@ -128,7 +128,7 @@ class SkyDataService:
             text += f"{res.get(f'msg{i}', '')}\r\n"
         url = f"{self._OVO_API}/api/sky/gymf/mf?key={self.ovo_key}"
         res = Http.send_request('GET', url)
-        text += "\r\n\r\n魔法家具：\r\n" + res.get('dadmf', '')
+        text += "\r\n魔法家具：\r\n" + res.get('dadmf', '')
         return {"title": "倒计时", "main": text, "code": 0}
 
     def get_v50(self):
