@@ -94,7 +94,7 @@ class Http:
         if request.headers.get('Content-Type') == 'application/json':
             post_data = request.get_json()
         elif request.headers.get('Content-Type') == 'text/xml':
-            post_data = request.get_data()
+            post_data = {"xml": str(request.get_data(as_text=False).decode('utf-8'))}
         else:
             post_data = request.form.to_dict()
         get_data.update(post_data)
