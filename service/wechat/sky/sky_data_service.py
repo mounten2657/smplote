@@ -121,9 +121,12 @@ class SkyDataService:
         url = f"{self._OVO_API}/api/skygm/hd?key={self.ovo_key}"
         res = Http.send_request('GET', url)
         text = res.get('hb', '')
+        if text:
+            ts = text.split('国际服', 1)
+            text = ts[0]
         url = f"{self._OVO_API}/api/sky/jjsj/sj?key={self.ovo_key}"
         res = Http.send_request('GET', url)
-        text += "\r\n\r\n季节季蜡：\r\n"
+        text += "\r\n季节季蜡：\r\n"
         for i in range(1, 10):
             text += f"{res.get(f'msg{i}', '')}\r\n"
         url = f"{self._OVO_API}/api/sky/gymf/mf?key={self.ovo_key}"
