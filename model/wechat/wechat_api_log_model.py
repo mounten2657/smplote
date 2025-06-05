@@ -24,11 +24,13 @@ class WechatApiLogModel(MysqlBaseModel):
 
     def add_log(self, method, uri, body, biz_code=''):
         """日志数据入库"""
+        body = body if body else {}
         insert_data = {
             "uri": uri,
             "biz_code": biz_code,
             "h_event": method,
-            "request_params": body if body else {},
+            "h_value": body.get('ToUserName', ''),
+            "request_params": body,
             "process_params": {},
             "response_result": {},
         }
