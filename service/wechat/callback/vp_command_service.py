@@ -106,7 +106,7 @@ class VpCommandService:
         content = '#身高' if '203' == content else content
         code = str(content).replace('#身高', '').strip()
         if len(code) < 14:
-            response = "请输入有效的好友码，如： xxxx-xxxx-xxxx"
+            response = '请输入"#身高 [好友码]"进行查询，如： #身高 xxxx-xxxx-xxxx'
         else:
             s_res = self.service.get_sky_sg(code)
             response = s_res.get('main', "暂未查询到身高")
