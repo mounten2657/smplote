@@ -120,6 +120,8 @@ class ExportWxInfoService:
         每日任务自动化 - wx core db -> user & chat list -> json to txt -> ai -> md -> img
         :param all_params: 请求入参，主要包含微信相关参数，日期不传默认今日
         :return: 自动化每个步骤执行的结果
+        # 完整参数示例：
+        # python main.py -m bot.task.daily_task -p "ac=a1&gr=g1&report_type=1&start_date=2025-04-08&end_date=2025-04-09"
         """
         now_timestamp = Time.now()
         task_res = {"all_params": all_params}
@@ -141,8 +143,3 @@ class ExportWxInfoService:
                 return task_res
         task_res['run_time'] = Time.now() - now_timestamp
         return task_res
-
-
-
-
-

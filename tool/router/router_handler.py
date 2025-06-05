@@ -17,6 +17,7 @@ class RouterHandler:
     # 免鉴权的开放接口
     OPEN_ROUTE_LIST = [
         'bot/index/index',
+        'bot/task/sky_rw',
         'callback/gitee_callback/smplote',
     ]
 
