@@ -18,8 +18,11 @@ class AiClientService:
         :return:
         """
         client = AIClientManager()
-        ai_config = client.config['services'][client.config['last_service']]
-        t_config = {"ai_type": client.config['last_service'], "ai_model": ai_config['model']}
+        service = client.config['last_service']
+        if biz_code in ['VP_QUS', 'VP_SIC']:  # 群聊使用免费的web ai
+            service = 'WebGpt'
+        ai_config = client.config['services'][service]
+        t_config = {"ai_type": service, "ai_model": ai_config['model']}
         # 获取预设文本
         prompt_text = client.config.get(prompt)
         prompt_text = prompt_text if prompt_text else prompt
@@ -28,7 +31,9 @@ class AiClientService:
         tdb = AiContextModel()
         chat = cdb.get_chat_info(user['id'], biz_code)
         cid = chat.get('id', 0) if chat else 0
+        is_new = 0
         if not chat:
+            is_new = 1
             cid = cdb.add_chat({
                 "biz_code": biz_code,
                 "user_id": user['id'],
@@ -50,13 +55,29 @@ class AiClientService:
             "request_params": {"content": content, "messages": messages, "extra": extra if extra else {}},
             "is_summary": 0
         }, t_config)
+        rid = 0
         start_time = Time.now(0)
-        response = client.call_ai(messages)
+        if 'WebGpt' == service:
+            # 调用 web ai 接口
+            if is_new:
+                content = f"{prompt}\r\n现在，请直接回答问题：{content}"
+            ret = client.call_ai_web(content, service, {"rid": extra.get('s_wxid', '')})
+            if isinstance(ret, dict):
+                rid = ret.get('room')
+                response = ret.get('msg')
+            else:
+                response = str(ret)
+        else:
+            # 调用 openai 接口
+            response = client.call_ai(messages)
         # 更新对话结果
         if response and isinstance(response, str):
+            response_result = {"content": response}
+            if rid:
+                response_result.update({"rid": rid})
             update_data = {
                 "is_succeed": 1,
-                "response_result": {"content": response},
+                "response_result": response_result,
                 "response_time": round(Time.now(0) - start_time, 3) * 1000
             }
             tdb.update_context_response(tid, update_data)

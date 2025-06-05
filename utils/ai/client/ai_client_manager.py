@@ -1,7 +1,9 @@
 import openai
 from typing import Optional, Dict
 from openai import OpenAI
-from tool.core import *
+from tool.core import Logger, Config, Error, Http
+
+logger = Logger()
 
 
 class AIClientManager:
@@ -40,7 +42,6 @@ class AIClientManager:
         :return:
         """
         service = service if service else self.config['last_service']  # 获取默认服务商
-        logger = Logger()
         logger.info({"service": service,"content": str(messages)[0:100]}, 'CALL_AI_TXT', 'ai')
         try:
             client = self.clients.get(service)
@@ -54,4 +55,21 @@ class AIClientManager:
         except (Exception, openai.InternalServerError) as e:
             res = Error.handle_exception_info(e)
             logger.info({"service": service, "content": res}, 'CALL_AI_EXP', 'ai')
+        return res
+
+    def call_ai_web(self, content, service, extra=None):
+        """调用web形式的api"""
+        extra = extra if extra else {}
+        rid = extra.get('rid', '')
+        logger.info({"service": service,"content": str(content)[0:100]}, 'CALL_AI_WEB_TXT', 'ai')
+        try:
+            cfg = self.config['services'][service]
+            api_key = cfg['api_key']
+            base_url = cfg['base_url'].rstrip('/') + cfg['api_uri']
+            params = {"key": api_key, "msg": content, "rm": rid}
+            res = Http.send_request('GET', base_url, params)
+            logger.info({"service": service, "content": res}, 'CALL_AI_WEB_RES', 'ai')
+        except Exception as e:
+            res = Error.handle_exception_info(e)
+            logger.info({"service": service, "content": res}, 'CALL_AI_WEB_EXP', 'ai')
         return res

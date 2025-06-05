@@ -2,7 +2,6 @@ import os
 import json
 import base64
 from pathlib import Path
-from pydub import AudioSegment
 from typing import Union, Any, Optional
 from tool.core.attr import Attr
 from tool.core.dir import Dir
@@ -153,10 +152,11 @@ class File:
         except Exception as e:
             raise RuntimeError(f"转Base64失败: {str(e)}")
 
-    @staticmethod
-    def get_mp3_duration(file_path):
-        """获取mp3文件时长"""
-        audio = AudioSegment.from_file(file_path, "mp3")
-        duration_ms = len(audio)  # 获取时长（毫秒）
-        duration_sec = duration_ms / 1000  # 转换为秒
-        return duration_sec
+    # @staticmethod
+    # def get_mp3_duration(file_path):
+    #     """获取mp3文件时长"""
+    #     from pydub import AudioSegment
+    #     audio = AudioSegment.from_file(file_path, "mp3")
+    #     duration_ms = len(audio)  # 获取时长（毫秒）
+    #     duration_sec = duration_ms / 1000  # 转换为秒
+    #     return duration_sec

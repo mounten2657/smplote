@@ -204,9 +204,9 @@ class VpClientFactory:
         """获取文件保存路径"""
         if int(message['is_sl']):
             if int(message['is_my']):
-                f_wxid = message['send_wxid']
+                f_wxid = message['to_wxid']
             else:
-                f_wxid = message['send_wxid'] if message['send_wxid'] != message['self_wxid'] else message['to_wxid']
+                f_wxid = message['send_wxid']
             fp = f"/friend/{f_wxid}"
         else:
             fp = f"/room/{str(message['g_wxid']).split('@')[0]}"

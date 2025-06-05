@@ -1,4 +1,5 @@
 import redis
+import datetime
 from typing import Dict, Any
 from tool.db.cache.redis_keys import RedisKeys
 from tool.core.config import Config
@@ -109,6 +110,8 @@ class RedisClient:
         # 格式化键（如果有参数的话）
         formatted_key = key_info["key"] % tuple(args) if args else key_info["key"]
         ttl = key_info["ttl"]
+        if 'today' == ttl:
+            ttl = (86400 - datetime.datetime.now().timestamp() % 86400)
         return formatted_key, ttl
 
     def get(self, key_name, args=None):

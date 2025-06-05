@@ -6,6 +6,12 @@
             "api_uri": "",
             "model": "deepseek-chat"
         },
+        "WebGpt": {
+            "api_key": "[ENV.AI_API_KEY_WEB_GPT]",
+            "base_url": "[ENV.AI_API_URL_WEB_GPT]",
+            "api_uri": "",
+            "model": "gpt3.5"
+        },
         "Kimi": {
             "api_key": "[ENV.AI_API_KEY_KIMI]",
             "base_url": "https://api.moonshot.cn/v1",
