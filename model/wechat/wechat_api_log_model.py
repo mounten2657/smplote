@@ -1,5 +1,5 @@
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins
+from tool.core import Ins, Attr
 
 
 @Ins.singleton
@@ -29,7 +29,7 @@ class WechatApiLogModel(MysqlBaseModel):
             "uri": uri,
             "biz_code": biz_code,
             "h_event": method,
-            "h_value": body.get('ToUserName', ''),
+            "h_value": Attr.get_by_point(body, 'MsgItem.0.ToUserName'),
             "request_params": body,
             "process_params": {},
             "response_result": {},
