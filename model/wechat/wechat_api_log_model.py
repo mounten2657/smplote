@@ -29,7 +29,7 @@ class WechatApiLogModel(MysqlBaseModel):
             "uri": uri,
             "biz_code": biz_code,
             "h_event": method,
-            "h_value": Attr.get_by_point(body, 'MsgItem.0.ToUserName'),
+            "h_value": Attr.get_by_point(body, 'MsgItem.0.ToUserName', ''),
             "request_params": body,
             "process_params": {},
             "response_result": {},
