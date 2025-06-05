@@ -75,11 +75,11 @@ class VpCommandService:
             self.client.send_img_msg(fp, self.g_wxid)
             # 其它相关信息也一并发送
             jl = self.service.get_sky_file('jl')
-            self.client.send_img_msg(jl['save_path'], self.g_wxid)
+            self.client.send_img_msg(Dir.abs_dir(f'storage/upload/wechat/{jl['save_path']}'), self.g_wxid)
             dl = self.service.get_sky_file('dl')
-            self.client.send_img_msg(dl['save_path'], self.g_wxid)
+            self.client.send_img_msg(Dir.abs_dir(f'storage/upload/wechat/{dl['save_path']}'), self.g_wxid)
             mf = self.service.get_sky_file('mf')
-            self.client.send_img_msg(mf['save_path'], self.g_wxid)
+            self.client.send_img_msg(Dir.abs_dir(f'storage/upload/wechat/{mf['save_path']}'), self.g_wxid)
             return True
         response = '获取sky任务失败'
         return self.client.send_msg(response, self.g_wxid, self.at_list)
