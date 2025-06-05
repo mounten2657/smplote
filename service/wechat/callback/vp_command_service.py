@@ -67,7 +67,13 @@ class VpCommandService:
 
     def vp_sky_rw(self, content):
         """sky任务"""
-        def delay_pic():
+        content = '#任务' if '201' == content else content
+        file = self.service.get_sky_file('rw')
+        fp = file.get('save_path')
+        if fp:
+            fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+            self.client.send_img_msg(fp, self.g_wxid)
+            # 其它相关信息也一并发送
             jl = self.service.get_sky_file('jl')
             self.client.send_img_msg(jl['save_path'], self.g_wxid)
             dl = self.service.get_sky_file('dl')
@@ -75,13 +81,6 @@ class VpCommandService:
             mf = self.service.get_sky_file('mf')
             self.client.send_img_msg(mf['save_path'], self.g_wxid)
             return True
-        content = '#任务' if '201' == content else content
-        file = self.service.get_sky_file('rw')
-        fp = file.get('save_path')
-        if fp:
-            fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
-            Sys.delayed_task(2, delay_pic)
-            return self.client.send_img_msg(fp, self.g_wxid)
         response = '获取sky任务失败'
         return self.client.send_msg(response, self.g_wxid, self.at_list)
 
@@ -125,9 +124,10 @@ class VpCommandService:
         fp = file.get('save_path')
         if fp:
             fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+            self.client.send_img_msg(fp, self.g_wxid)
+            # 其它相关信息也一并发送
             text = self.service.get_sky_djs()
-            Sys.delayed_task(2, lambda t=text['main'], g=self.g_wxid: self.client.send_msg(t, g))
-            return self.client.send_img_msg(fp, self.g_wxid)
+            return self.client.send_msg(text['main'], self.g_wxid)
         response = '暂未查询到日历'
         return self.client.send_msg(response, self.g_wxid)
 
