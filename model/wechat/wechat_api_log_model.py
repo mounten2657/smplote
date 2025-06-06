@@ -15,6 +15,7 @@ class WechatApiLogModel(MysqlBaseModel):
         - process_params - longtext - 处理参数
         - response_result - longtext - 返回结果
         - is_succeed - tinyint(1) - 是否成功(0否1是)
+        - aid - bigint - AI聊天记录ID
         - response_time - int - 响应耗时(ms)
         - create_at - datetime - 记录创建时间
         - update_at - datetime - 记录更新时间
@@ -29,8 +30,9 @@ class WechatApiLogModel(MysqlBaseModel):
             "uri": uri,
             "biz_code": biz_code,
             "h_event": method,
-            "h_value": Attr.get_by_point(body, 'MsgItem.0.ToUserName', ''),
+            "h_value": Attr.get_by_point(body, 'MsgItem.0.ToUserName', body.get('ToUserName', '')),
             "request_params": body,
+            "aid": int(body.get('aid', 0)),
             "process_params": {},
             "response_result": {},
         }

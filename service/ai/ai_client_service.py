@@ -42,7 +42,7 @@ class AiClientService:
                 "extra": extra if extra else {},
             }, t_config)
         if not cid:
-            return False
+            return '', 0
         # 获取对话文本
         context_list = tdb.get_context_list(cid, biz_code)
         messages = [{"role": "system", "content": prompt_text}]  # 角色设定
@@ -85,7 +85,7 @@ class AiClientService:
             # 更新对话次数
             if count:
                 cdb.update_chat_summary(cid, {"chat_count": count})
-        return response
+        return response, tid
 
     @staticmethod
     def get_chat_messages(context_list, messages, content):

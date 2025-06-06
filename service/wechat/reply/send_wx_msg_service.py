@@ -1,6 +1,5 @@
+from service.wechat.callback.vp_command_service import VpCommandService
 from utils.wechat.qywechat.qy_client import QyClient
-from utils.wechat.vpwechat.vp_client import VpClient
-from tool.core import Config
 
 
 class SendWxMsgService:
@@ -11,8 +10,6 @@ class SendWxMsgService:
 
     @staticmethod
     def send_vp_msg(app_key, content):
-        config = Config.vp_config()
-        to_wxid = config['app_list'][app_key]['wxid']
-        # 使用小号给主账号发消息
-        return VpClient('a2').send_msg(content, to_wxid)
+        commander = VpCommandService(app_key)
+        return commander.vp_normal_msg(content)
 

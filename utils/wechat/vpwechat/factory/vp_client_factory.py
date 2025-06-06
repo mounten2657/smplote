@@ -2,6 +2,7 @@ import os
 from tool.core import Logger, Http, Time, Attr, File
 from service.vpp.vpp_serve_service import VppServeService
 from model.wechat.wechat_api_log_model import WechatApiLogModel
+from model.wechat.wechat_msg_model import WechatMsgModel
 
 logger = Logger()
 
@@ -13,13 +14,14 @@ class VpClientFactory:
         self.app_key = app_key
         self.key = config['app_list'][self.app_key]['token_key']
 
-    def _api_call(self, method: str, uri: str, body: dict = None, biz_code: str = 'NULL'):
+    def _api_call(self, method: str, uri: str, body: dict = None, biz_code: str = 'NULL', extra=None):
         """
         发起 wechatpad http 请求
         :param method:  http 请求方式
         :param uri:  请求路径
         :param body:  post 数据
         :param biz_code:  业务码
+        :param extra:  额外参数
         :return: json
         """
         start_time = Time.now(0)
@@ -38,8 +40,50 @@ class VpClientFactory:
         update_data = {"response_time": run_time, "response_result": res}
         if res.get('Code') == 200:
             update_data.update({"is_succeed": 1})
+            self.insert_to_wechat_msg(res, biz_code, pid, extra)
         db.update_log(pid, update_data)
         return res
+
+    def insert_to_wechat_msg(self, res, biz_code, lid, extra):
+        """插入到微信消息表"""
+        d_mid = Attr.get_by_point(res, 'Data.newMsgId', 0)
+        msg_id = Attr.get_by_point(res, 'Data.0.newMsgId', d_mid)
+        if 'VP_SMG' in biz_code and msg_id:
+            mdb = WechatMsgModel()
+            content = extra.get('content')
+            c_type = extra.get('c_type')
+            if not content or not c_type:
+                return False
+            content = content if 'VP_SMG' == biz_code else f"{content} {msg_id}.{c_type}"
+            msg = {
+                "msg_id": msg_id,
+                "content": content,
+                "content_type": c_type,
+                "msg_time": Time.date(),
+                "s_wxid": extra.get('self_wxid', ''),
+                "s_wxid_name": extra.get('self_wxid_name', ''),
+                "is_my": 1,
+                "is_at": 0,
+                "is_sl": 0,
+                "is_group": 1,
+                "msg_type": 4001,
+                "app_key": self.app_key,
+                "g_wxid": extra.get('g_wxid', ''),
+                "g_wxid_name": extra.get('g_wxid_name', ''),
+                "t_wxid": extra.get('g_wxid', ''),
+                "t_wxid_name": extra.get('g_wxid_name', ''),
+                "f_wxid": extra.get('self_wxid', ''),
+                "f_wxid_name": extra.get('self_wxid_name', ''),
+                "at_user": extra.get('at_user', ''),
+                "p_msg_id": 0,
+                "fid": extra.get('file', {}).get('id', 0),
+                "pid": 0,
+                "aid": extra.get('aid', 0),
+                "lid": lid,
+                "content_link": {},
+            }
+            mdb.add_msg(msg, self.app_key)
+        return True
 
     def get_login_status(self):
         """
@@ -50,12 +94,13 @@ class VpClientFactory:
         api = '/login/GetLoginStatus'
         return self._api_call('GET', api, {}, 'VP_LGS')
 
-    def send_text_message(self, content, to_wxid, ats=None):
+    def send_text_message(self, content, to_wxid, ats=None, extra=None):
         """
         发送文本消息
         :param content: 消息内容
         :param to_wxid: 接收者wxid
         :param ats: 需要 at 的人 - [{"wxid": "xxx", "nickname": "yyy"}]
+        :param extra: 额外参数
         :return:  json - Data.isSendSuccess
         {"Code":200,"Data":[{"isSendSuccess":true,"resp":{},"textContent":"Hello World","toUSerName":"xxx"}],"Text":""}
         """
@@ -79,13 +124,15 @@ class VpClientFactory:
 
             }]
         }
-        return self._api_call('POST', api, body, 'VP_SMG')
+        extra.update({"content": content, "c_type": "text", "at_user": ",".join(at_wxid_list)})
+        return self._api_call('POST', api, body, 'VP_SMG', extra)
 
-    def send_img_message(self, image_path, to_wxid):
+    def send_img_message(self, image_path, to_wxid, extra=None):
         """
         发送图片消息
         :param image_path: 图片本地路径，会转为 base64
         :param to_wxid: 接收者wxid
+        :param extra: 额外参数
         :return:  json - Data.isSendSuccess
         {"Code":200,"Data":[{"isSendSuccess":true,"resp":{},"msgSource":"xml", "newMsgId":"xxx","toUSerName":"xxx"}],"Text":""}
         """
@@ -103,13 +150,15 @@ class VpClientFactory:
 
             }]
         }
-        return self._api_call('POST', api, body, 'VP_SMG_IMG')
+        extra.update({"content": "[图片消息]", "c_type": "png"})
+        return self._api_call('POST', api, body, 'VP_SMG_IMG', extra)
 
-    def send_voice_message(self, mp3_path, to_wxid):
+    def send_voice_message(self, mp3_path, to_wxid, extra=None):
         """
         发送语音消息
         :param mp3_path: 图片本地路径，会转为 base64
         :param to_wxid: 接收者wxid
+        :param extra: 额外参数
         :return:  json - Data.isSendSuccess
         {"Code":200,"Data":[{"isSendSuccess":true,"resp":{},"msgSource":"xml", "newMsgId":"xxx","toUSerName":"xxx"}],"Text":""}
         """
@@ -123,7 +172,8 @@ class VpClientFactory:
           "VoiceFormat": 0,
           "VoiceSecond,": 0
         }
-        return self._api_call('POST', api, body, 'VP_SMG_MP3')
+        extra.update({"content": "[语音消息]", "c_type": "voice"})
+        return self._api_call('POST', api, body, 'VP_SMG_MP3', extra)
 
     def get_room_info(self, g_wxid):
         """

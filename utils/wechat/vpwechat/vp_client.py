@@ -47,17 +47,17 @@ class VpClient(VpBaseFactory):
         logger.debug(f'websocket close done {is_all} - {res}', 'WS_END')
         return res
 
-    def send_msg(self, content, to_wxid, ats=None):
+    def send_msg(self, content, to_wxid, ats=None, extra=None):
         """发送文本消息"""
-        return self.client.send_text_message(content, to_wxid, ats)
+        return self.client.send_text_message(content, to_wxid, ats, extra)
 
-    def send_img_msg(self, image_path, to_wxid):
+    def send_img_msg(self, image_path, to_wxid, extra=None):
         """发送图片消息"""
-        return self.client.send_img_message(image_path, to_wxid)
+        return self.client.send_img_message(image_path, to_wxid, extra)
 
-    def send_voice_message(self, mp3_path, to_wxid):
+    def send_voice_message(self, mp3_path, to_wxid, extra=None):
         """发送语音消息"""
-        return self.client.send_voice_message(mp3_path, to_wxid)
+        return self.client.send_voice_message(mp3_path, to_wxid, extra)
 
     def get_login_status(self):
         """获取登陆状态"""

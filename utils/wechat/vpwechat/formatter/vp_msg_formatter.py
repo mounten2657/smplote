@@ -1,4 +1,5 @@
 from xml.etree import ElementTree
+from service.wechat.callback.vp_command_service import VpCommandService
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.vp_client import VpClient
 from tool.core import Logger, Attr, Str, Time
@@ -97,7 +98,8 @@ class VpMsgFormatter(VpBaseFactory):
                 msg += f"[{content_link['title']}-{content_link['sender_title']}]\r\n"
                 msg += f"发送日期：{Time.date()}\r\n"
                 msg += f"\r\n--[艾特位招租]--"
-                client.send_msg(msg, self.g_wxid)
+                commander = VpCommandService(self.app_key, self.g_wxid, send_wxid)
+                commander.vp_normal_msg(msg)
         elif 'transfer' == content_type:  # 转账
             s_wxid = content_link['payer_username']
             t_wxid = content_link['receiver_username']

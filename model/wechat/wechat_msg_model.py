@@ -29,6 +29,8 @@ class WechatMsgModel(MysqlBaseModel):
         - p_msg_id - bigint - 原始消息id
         - fid - bigint - 文件id
         - pid - bigint - 队列id
+        - aid - bigint - AI聊天记录ID
+        - lid - bigint - 微信接口日志ID
         - content_link - text - 内容属性
         - create_at - datetime - 记录创建时间
         - update_at - datetime - 记录更新时间
@@ -36,7 +38,7 @@ class WechatMsgModel(MysqlBaseModel):
 
     _table = 'wechat_msg'
 
-    def add_msg(self, msg, app_key, mid=0):
+    def add_msg(self, msg, app_key, pid=0):
         """数据入库"""
         insert_data = {
             "msg_id": msg['msg_id'],
@@ -61,10 +63,12 @@ class WechatMsgModel(MysqlBaseModel):
             "p_msg_id": msg['p_msg_id'],
             "fid": msg['fid'],
             "pid": msg['pid'],
+            "aid": int(msg.get('aid', 0)),
+            "lid": int(msg.get('lid', 0)),
             "content_link": msg['content_link'],
         }
-        if mid:  # 强制覆盖
-            return self.update({"id": mid}, insert_data)
+        if pid:  # 强制覆盖
+            return self.update({"id": pid}, insert_data)
         return self.insert(insert_data)
 
     def get_msg_info(self, mid):

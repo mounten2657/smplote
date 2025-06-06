@@ -121,8 +121,7 @@ class VpCallbackService:
             content = Str.remove_at_user(content).strip()
             if str(content).startswith(tuple(commands)):
                 is_admin = s_wxid in str(config['admin_list']).split(',')
-                client = VpClient(app_key)
-                commander = VpCommandService(app_key, s_wxid, g_wxid)
+                commander = VpCommandService(app_key, g_wxid, s_wxid)
                 if '1' == content:
                     return commander.vp_manual(content)
                 elif '101' == content or str(content).startswith('#提问'):
@@ -166,7 +165,7 @@ class VpCallbackService:
                     return commander.vp_report(content)
                 else:
                     response = '暂未支持该功能……'
-                return client.send_msg(response, g_wxid)
+                return commander.vp_normal_msg(response)
             return False
         except Exception as e:
             err = Error.handle_exception_info(e)

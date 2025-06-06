@@ -1,6 +1,5 @@
-import re
 import random
-from utils.wechat.vpwechat.vp_client import VpClient
+from service.wechat.callback.vp_command_service import VpCommandService
 from tool.db.mysql_base_model import MysqlBaseModel
 from tool.core import Ins, Attr, Time
 
@@ -76,7 +75,7 @@ class WechatRoomModel(MysqlBaseModel):
         if not change_str:
             return False
         changes = self.extract_member_change(change_str)
-        client = VpClient(app_key)
+        commander = VpCommandService(app_key, g_wxid)
         if changes.get('del'):  # 退群提醒
             del_list = changes.get('del')
             reason_list = ["群主没有发红包", "群主没有分配对象", "群主没有定期发放福利",
@@ -90,14 +89,14 @@ class WechatRoomModel(MysqlBaseModel):
                 msg += f"退群日期：{Time.date()}\r\n"
                 msg += f"退群原因：{reason}\r\n"
                 msg += f"\r\n山高路远江湖再见，且行且珍惜！"
-                client.send_msg(msg, g_wxid)
+                commander.vp_normal_msg(msg)
         if changes.get('add'):  # 入群提醒
             add_list = changes.get('add')
             for d in add_list:
                 msg = f"【欢迎新成员】\r\n"
                 msg += f"微信昵称：{d['display_name']}\r\n"
                 msg += f"入群日期：{Time.date()}\r\n"
-                client.send_msg(msg, g_wxid)
+                commander.vp_normal_msg(msg)
         if changes.get('update'):  # 修改昵称提醒
             update_list = changes.get('update')
             for d in update_list:
@@ -105,7 +104,7 @@ class WechatRoomModel(MysqlBaseModel):
                 msg += f"原始昵称：{d['before']['display_name']}\r\n"
                 msg += f"新的昵称：{d['after']['display_name']}\r\n"
                 msg += f"修改日期：{Time.date()}\r\n"
-                client.send_msg(msg, g_wxid)
+                commander.vp_normal_msg(msg)
         return True
 
     @staticmethod

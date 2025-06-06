@@ -20,11 +20,11 @@ class AiCommand(BaseCommand):
 
     def exec_0_3(self):
         """AI 提问"""
-        response = AiCommandService.question(self.content, self.user, 'QY_QUS')
+        response, aid = AiCommandService.question(self.content, self.user, 'QY_QUS')
         return self.send_content(response)
 
     def exec_0_4(self):
         """AI 百科"""
-        response = AiCommandService.science(self.content, self.user, 'QY_SCI')
+        response, aid = AiCommandService.science(self.content, self.user, 'QY_SCI')
         return self.send_content(response)
 

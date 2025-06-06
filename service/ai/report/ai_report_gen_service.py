@@ -43,7 +43,7 @@ class AIReportGenService:
         text = f"{ai_config['report_template']}\n\n微信群[{room_name}]聊天记录：\n\n{text}"
 
         # 2. 调用AI
-        response = AiClientService.answer(text, prompt, g_user, 'GEN_REP', extra)
+        response, aid = AiClientService.answer(text, prompt, g_user, 'GEN_REP', extra)
 
         # 3. 保存结果
         if output_path:
