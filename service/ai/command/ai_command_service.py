@@ -1,4 +1,5 @@
 from service.ai.ai_client_service import AiClientService
+from tool.core import Dir, File
 
 
 class AiCommandService:
@@ -23,6 +24,17 @@ class AiCommandService:
             text = '请按 "#百科" 开头进行AI科普，如：\r\n#百科 蝾螈'
             return text, 0
         prompt = '你是一个科普助手，请根据我提供的关键词进行科普，回答要简短有力，条理清晰，语气要严谨。'
+        response, aid = AiClientService.answer(content, prompt, user, biz_code, extra)
+        response = f"{response}\r\n\r\n--此内容由AI生成，请仔细甄别--"
+        return response, aid
+
+    @staticmethod
+    def bf(content, user, biz_code, extra=None):
+        """AI 男友"""
+        content = str(content).replace('#男友', '').strip()
+        if not content or content == 'None':
+            content = '你好'
+        prompt = File.read_file(Dir.abs_dir('storage/upload/wechat/website/sky/prompt/bf_01.txt'))
         response, aid = AiClientService.answer(content, prompt, user, biz_code, extra)
         response = f"{response}\r\n\r\n--此内容由AI生成，请仔细甄别--"
         return response, aid

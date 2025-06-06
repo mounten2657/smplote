@@ -90,10 +90,10 @@ class VpCallbackService:
         res['rev_handler'], data = VpCallbackHandler.rev_handler(params)
         logger.debug(res['rev_handler'], 'VP_CALL_HD_RES')
         data['pid'] = pid
-        # 消息指令处理 - 异步
-        res['cmd_handler'] = RedisTaskQueue().add_task('VP_CM', data)
         # 消息数据入库 - 异步
         res['ins_handler'] = RedisTaskQueue().add_task('VP_IH', data)
+        # 消息指令处理 - 异步
+        res['cmd_handler'] = RedisTaskQueue().add_task('VP_CM', data)
         update_data = {"process_result": res, "process_params": data}
         if res['rev_handler']:
             update_data.update({"is_succeed": 1})
@@ -152,6 +152,8 @@ class VpCallbackService:
                     return commander.vp_ov_wa(content)
                 elif str(content).startswith('#壁纸'):
                     return commander.vp_ov_bz(content)
+                elif str(content).startswith('#男友'):
+                    return commander.vp_bf(content)
                 elif str(content).startswith('#唱歌'):
                     return commander.vp_ov_cg(content)
                 elif str(content).startswith('#点歌'):

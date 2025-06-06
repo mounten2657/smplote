@@ -19,7 +19,7 @@ class AiClientService:
         """
         client = AIClientManager()
         service = client.config['last_service']
-        if biz_code in ['VP_QUS', 'VP_SCI']:  # 群聊使用免费的web ai
+        if biz_code in ['VP_QUS', 'VP_SCI', 'VP_BF']:  # 群聊使用免费的web ai
             service = 'WebGpt'
         ai_config = client.config['services'][service]
         t_config = {"ai_type": service, "ai_model": ai_config['model']}
