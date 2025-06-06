@@ -62,7 +62,7 @@ class VpCommandService:
 
     def vp_bf(self, content):
         """AI男友"""
-        response, aid = AiCommandService.science(content, self.s_user, 'VP_BF', self.extra)
+        response, aid = AiCommandService.bf(content, self.s_user, 'VP_BF', self.extra)
         self.extra.update({"aid": aid})
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
