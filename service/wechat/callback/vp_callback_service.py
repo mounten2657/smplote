@@ -154,6 +154,8 @@ class VpCallbackService:
                     return commander.vp_ov_bz(content)
                 elif str(content).startswith('#男友'):
                     return commander.vp_bf(content)
+                elif str(content).startswith('#女友'):
+                    return commander.vp_gf(content)
                 elif str(content).startswith('#唱歌'):
                     return commander.vp_ov_cg(content)
                 elif str(content).startswith('#点歌'):

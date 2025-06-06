@@ -66,6 +66,12 @@ class VpCommandService:
         self.extra.update({"aid": aid})
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
+    def vp_gf(self, content):
+        """AI女友"""
+        response, aid = AiCommandService.gf(content, self.s_user, 'VP_GF', self.extra)
+        self.extra.update({"aid": aid})
+        return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
+
     def vp_self(self, content):
         """转人工"""
         SendWxMsgService.send_qy_msg(self.app_key, f'{self.s_wxid_name} 正在呼唤你，请尽快回复')
