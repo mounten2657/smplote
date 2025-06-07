@@ -1,3 +1,4 @@
+from typing import Callable
 from vpp.proto.generated.vpp_serve_pb2 import *
 from vpp.proto.generated.vpp_serve_pb2_grpc import *
 from tool.core import Logger, Attr, Env, Ins
@@ -30,17 +31,29 @@ class VppServeClient:
     def close(self):
         self.channel.close()
 
-    def vp_download_file(self, fty, key, url, fp, fk, fd):
-        response = self.stub.vp_cdn_download(VpFileRequest(
-            fty=fty,
-            key=key,
-            url=url,
-            fp=fp,
-            fk=fk,
-            fd=fd
-        ))
+    @staticmethod
+    def _exec_api(func: Callable, *args, **kwargs):
+        """调用api接口"""
+        response = func(*args, **kwargs)
         return {
-            "code": response.code,
-            "msg": response.msg,
-            "data": Attr.parse_json_ignore(response.data)
+            "code": response.code,"msg": response.msg,"data": Attr.parse_json_ignore(response.data)
         }
+
+    def vp_download_file(self, fty, key, url, fp, fk, fd):
+        """下载文件"""
+        return self._exec_api(lambda: self.stub.vp_cdn_download(VpFileRequest(
+            fty=fty, key=key, url=url,
+            fp=fp, fk=fk, fd=fd
+        )))
+
+    def wk_html_2_img(self, fp, fo=''):
+        """html转图片"""
+        return self._exec_api(lambda: self.stub.wk_html_2_img(WkHtmlRequest(
+            fp=fp, fo=fo
+        )))
+
+    def wk_html_2_pdf(self, fp, fo=''):
+        """html转PDF"""
+        return self._exec_api(lambda: self.stub.wk_html_2_pdf(WkHtmlRequest(
+            fp=fp, fo=fo
+        )))

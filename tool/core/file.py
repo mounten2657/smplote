@@ -83,6 +83,11 @@ class File:
             return False
 
     @staticmethod
+    def exists(fp):
+        """判断文件或路径是否存在"""
+        return os.path.exists(fp)
+
+    @staticmethod
     def deduplicate_json_file(input_file, key):
         """对json文件里的列表去重并重新写入"""
         with open(input_file, 'r', encoding='utf-8') as f:

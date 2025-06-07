@@ -1,7 +1,8 @@
 from service.ai.command.ai_command_service import AiCommandService
-from service.wechat.reply.send_wx_msg_service import SendWxMsgService
 from service.wechat.sky.sky_data_service import SkyDataService
+from service.ai.report.ai_report_gen_service import AIReportGenService
 from tool.db.cache.redis_client import RedisClient
+from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
 from tool.core import Config, Attr, Sys, Dir
 
@@ -74,7 +75,7 @@ class VpCommandService:
 
     def vp_self(self, content):
         """转人工"""
-        SendWxMsgService.send_qy_msg(self.app_key, f'{self.s_wxid_name} 正在呼唤你，请尽快回复')
+        QyClient(self.app_key).send_msg(self.app_key, f'{self.s_wxid_name} 正在呼唤你，请尽快回复')
         response = '已发送至管理员……\r\n\r\n正在呼唤本人，请稍后……'
         file = self.service.get_sky_file('yj')
         fp = file.get('save_path')
@@ -229,8 +230,13 @@ class VpCommandService:
 
     def vp_report(self, content):
         """总结"""
-        response = '总结功能正在开发中……'
-        return self.client.send_msg(response, self.g_wxid, [], self.extra)
+        response = '数据收集中...\r\n\r\n正在进行总结，请稍后……'
+        self.client.send_msg(response, self.g_wxid, [], self.extra)
+        fn_img = AIReportGenService.get_report_img(self.extra, 'simple')
+        if fn_img:
+            self.extra.update({"fn_img": fn_img})
+            return self.client.send_img_msg(fn_img, self.g_wxid, self.extra)
+        return False
 
     def vp_normal_msg(self, response, ats=None, extra=None):
         """发送普通群消息"""

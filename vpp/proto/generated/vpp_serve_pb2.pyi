@@ -62,3 +62,21 @@ class VpFileRequest(google.protobuf.message.Message):
     def WhichOneof(self, oneof_group: typing.Literal["_fd", b"_fd"]) -> typing.Literal["fd"] | None: ...
 
 global___VpFileRequest = VpFileRequest
+
+@typing.final
+class WkHtmlRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    FP_FIELD_NUMBER: builtins.int
+    FO_FIELD_NUMBER: builtins.int
+    fp: builtins.str
+    fo: builtins.str
+    def __init__(
+        self,
+        *,
+        fp: builtins.str = ...,
+        fo: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["fo", b"fo", "fp", b"fp"]) -> None: ...
+
+global___WkHtmlRequest = WkHtmlRequest

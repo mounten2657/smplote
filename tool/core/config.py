@@ -33,6 +33,10 @@ class Config:
         return int(os.environ.get('IS_PROD', 0))
 
     @staticmethod
+    def prod_root_dir():
+        return Env.get('APP_ROOT_DIR')
+
+    @staticmethod
     def base_url(is_prod=0):
         app = Config.app_config()
         if Config.is_prod() or is_prod:

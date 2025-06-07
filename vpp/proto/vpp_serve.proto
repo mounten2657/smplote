@@ -17,7 +17,14 @@ message VpFileRequest {
   optional int32 fd = 6;
 }
 
+message WkHtmlRequest {
+  string fp = 1;
+  string fo = 2;
+}
+
 service VppServer {
   rpc vp_cdn_download (VpFileRequest) returns (CommonResponse);
+  rpc wk_html_2_img (WkHtmlRequest) returns (CommonResponse);
+  rpc wk_html_2_pdf (WkHtmlRequest) returns (CommonResponse);
 }
 

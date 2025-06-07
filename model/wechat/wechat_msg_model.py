@@ -1,5 +1,5 @@
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins
+from tool.core import Ins, Time
 
 
 @Ins.singleton
@@ -74,3 +74,12 @@ class WechatMsgModel(MysqlBaseModel):
     def get_msg_info(self, mid):
         """获取消息信息"""
         return self.where({"msg_id": mid}).first()
+
+    def get_msg_list(self, g_wxid, m_date=''):
+        """获取消息列表 - 今日的最近1000条"""
+        m_date = m_date if m_date else Time.date("%Y-%m-%d 00:00:00")
+        return (((self.where({"g_wxid": g_wxid})
+                  .where({"msg_time": {"opt": ">=", "val": m_date}})
+                  .order('msg_time', 'desc'))
+                  .limit(0, 1000))
+                  .get())

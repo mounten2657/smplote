@@ -4,6 +4,8 @@ from tool.core import Dir, File
 
 class AiCommandService:
 
+    _ai_suffix = '\r\n\r\n--此内容由AI生成，请仔细甄别--'
+
     @staticmethod
     def question(content, user, biz_code, extra=None):
         """AI 提问"""
@@ -13,7 +15,7 @@ class AiCommandService:
             return text, 0
         prompt = '你是一个智能助手，请帮我回答一系列的问题，回答要简短有力，条理清晰，不要过度联想，语气要温和。'
         response, aid = AiClientService.answer(content, prompt, user, biz_code, extra)
-        response = f"{response}\r\n\r\n--此内容由AI生成，请仔细甄别--"
+        response += AiCommandService._ai_suffix
         return response, aid
 
     @staticmethod
@@ -25,7 +27,7 @@ class AiCommandService:
             return text, 0
         prompt = '你是一个科普助手，请根据我提供的关键词进行科普，回答要简短有力，条理清晰，语气要严谨。'
         response, aid = AiClientService.answer(content, prompt, user, biz_code, extra)
-        response = f"{response}\r\n\r\n--此内容由AI生成，请仔细甄别--"
+        response += AiCommandService._ai_suffix
         return response, aid
 
     @staticmethod
@@ -36,7 +38,6 @@ class AiCommandService:
             content = '你好'
         prompt = File.read_file(Dir.wechat_dir('website/sky/prompt/bf_01.txt'))
         response, aid = AiClientService.answer(content, prompt, user, biz_code, extra)
-        response = f"{response}\r\n\r\n--此内容由AI生成，请仔细甄别--"
         return response, aid
 
     @staticmethod
@@ -47,5 +48,4 @@ class AiCommandService:
             content = '你好'
         prompt = File.read_file(Dir.wechat_dir('website/sky/prompt/gf_01.txt'))
         response, aid = AiClientService.answer(content, prompt, user, biz_code, extra)
-        response = f"{response}\r\n\r\n--此内容由AI生成，请仔细甄别--"
         return response, aid

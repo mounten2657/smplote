@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fvpp_serve.proto\x12\tvpp_serve\"9\n\x0e\x43ommonResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0b\n\x03msg\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\"f\n\rVpFileRequest\x12\x0b\n\x03\x66ty\x18\x01 \x01(\x05\x12\x0b\n\x03key\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\n\n\x02\x66p\x18\x04 \x01(\t\x12\n\n\x02\x66k\x18\x05 \x01(\t\x12\x0f\n\x02\x66\x64\x18\x06 \x01(\x05H\x00\x88\x01\x01\x42\x05\n\x03_fd2S\n\tVppServer\x12\x46\n\x0fvp_cdn_download\x12\x18.vpp_serve.VpFileRequest\x1a\x19.vpp_serve.CommonResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fvpp_serve.proto\x12\tvpp_serve\"9\n\x0e\x43ommonResponse\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0b\n\x03msg\x18\x02 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\t\"f\n\rVpFileRequest\x12\x0b\n\x03\x66ty\x18\x01 \x01(\x05\x12\x0b\n\x03key\x18\x02 \x01(\t\x12\x0b\n\x03url\x18\x03 \x01(\t\x12\n\n\x02\x66p\x18\x04 \x01(\t\x12\n\n\x02\x66k\x18\x05 \x01(\t\x12\x0f\n\x02\x66\x64\x18\x06 \x01(\x05H\x00\x88\x01\x01\x42\x05\n\x03_fd\"\'\n\rWkHtmlRequest\x12\n\n\x02\x66p\x18\x01 \x01(\t\x12\n\n\x02\x66o\x18\x02 \x01(\t2\xdf\x01\n\tVppServer\x12\x46\n\x0fvp_cdn_download\x12\x18.vpp_serve.VpFileRequest\x1a\x19.vpp_serve.CommonResponse\x12\x44\n\rwk_html_2_img\x12\x18.vpp_serve.WkHtmlRequest\x1a\x19.vpp_serve.CommonResponse\x12\x44\n\rwk_html_2_pdf\x12\x18.vpp_serve.WkHtmlRequest\x1a\x19.vpp_serve.CommonResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,6 +35,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_COMMONRESPONSE']._serialized_end=87
   _globals['_VPFILEREQUEST']._serialized_start=89
   _globals['_VPFILEREQUEST']._serialized_end=191
-  _globals['_VPPSERVER']._serialized_start=193
-  _globals['_VPPSERVER']._serialized_end=276
+  _globals['_WKHTMLREQUEST']._serialized_start=193
+  _globals['_WKHTMLREQUEST']._serialized_end=232
+  _globals['_VPPSERVER']._serialized_start=235
+  _globals['_VPPSERVER']._serialized_end=458
 # @@protoc_insertion_point(module_scope)

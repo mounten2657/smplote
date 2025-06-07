@@ -2,42 +2,53 @@ import os
 import json
 import signal
 from concurrent import futures
+from typing import Callable
 from vpp.proto.generated.vpp_serve_pb2 import *
 from vpp.proto.generated.vpp_serve_pb2_grpc import *
 from vpp.api.wechat.pad.vp_file_api import VpFileApi
+from vpp.api.lib.wk.wk_html_api import WkHtmlApi
 
 
 class VppServer:
 
     def __init__(self):
         self.file_api = VpFileApi()
+        self.wk_api = WkHtmlApi()
 
     def vp_cdn_download(self, request, context):
+        """下载文件"""
+        return self._exec_api(context, lambda: self.file_api.download_file(
+                fty=request.fty, key=request.key, url=request.url,
+                fp=request.fp, fk=request.fk, fd=request.fd,
+        ))
+
+    def wk_html_2_img(self, request, context):
+        """转图片"""
+        return self._exec_api(context, lambda: self.wk_api.wk_html_to_img(
+                fp=request.fp, fo=request.fo
+        ))
+
+    def wk_html_2_pdf(self, request, context):
+        """转PDF"""
+        return self._exec_api(context, lambda: self.wk_api.wk_html_to_pdf(
+                fp=request.fp, fo=request.fo
+        ))
+
+    @staticmethod
+    def _exec_api(context, func: Callable, *args, **kwargs):
+        """执行api方法"""
         try:
-            result = self.file_api.download_file(
-                fty=request.fty,
-                key=request.key,
-                url=request.url,
-                fp=request.fp,
-                fk=request.fk,
-                fd=request.fd,
-            )
+            result = func(*args, **kwargs)
             result = result if result else {}
             return CommonResponse(
-                code=int(result.get('code', 0)),
-                msg=result.get('msg', 'success'),
-                data=json.dumps(result)
+                code=int(result.get('code', 0)),msg=result.get('msg', 'success'),data=json.dumps(result)
             )
         except Exception as e:
             context.set_code(grpc.StatusCode.INTERNAL)
-            return CommonResponse(
-                code=9999,
-                msg=str(e),
-                data='Null',
-            )
+            return CommonResponse(code=9999,msg=str(e),data='Null')
 
     @staticmethod
-    def shutdown_handler(server):
+    def _shutdown_handler(server):
         """注册信号处理"""
         def signal_handler(sig, frame):
             pid = os.getpid()
@@ -63,7 +74,7 @@ class VppServer:
         server.start()
         print("gRPC Server is running")
         try:
-            VppServer.shutdown_handler(server)
+            VppServer._shutdown_handler(server)
             server.wait_for_termination()
         except KeyboardInterrupt:
             pass
