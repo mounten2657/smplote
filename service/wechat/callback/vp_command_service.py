@@ -230,9 +230,13 @@ class VpCommandService:
 
     def vp_report(self, content):
         """总结"""
+        is_force = 0
+        code = str(content).replace('#总结', '').strip()
+        if '1' == code:
+            is_force = 1
         response = '数据收集中...\r\n\r\n正在进行总结，请稍后……'
         self.client.send_msg(response, self.g_wxid, [], self.extra)
-        fn_img = AIReportGenService.get_report_img(self.extra, 'simple')
+        fn_img = AIReportGenService.get_report_img(self.extra, 'simple', is_force)
         if fn_img:
             self.extra.update({"fn_img": fn_img})
             return self.client.send_img_msg(fn_img, self.g_wxid, self.extra)
