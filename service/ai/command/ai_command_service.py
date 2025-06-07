@@ -34,7 +34,7 @@ class AiCommandService:
         content = str(content).replace('#男友', '').strip()
         if not content or content == 'None':
             content = '你好'
-        prompt = File.read_file(Dir.abs_dir('storage/upload/wechat/website/sky/prompt/bf_01.txt'))
+        prompt = File.read_file(Dir.wechat_dir('website/sky/prompt/bf_01.txt'))
         response, aid = AiClientService.answer(content, prompt, user, biz_code, extra)
         response = f"{response}\r\n\r\n--此内容由AI生成，请仔细甄别--"
         return response, aid
@@ -45,7 +45,7 @@ class AiCommandService:
         content = str(content).replace('#女友', '').strip()
         if not content or content == 'None':
             content = '你好'
-        prompt = File.read_file(Dir.abs_dir('storage/upload/wechat/website/sky/prompt/gf_01.txt'))
+        prompt = File.read_file(Dir.wechat_dir('website/sky/prompt/gf_01.txt'))
         response, aid = AiClientService.answer(content, prompt, user, biz_code, extra)
         response = f"{response}\r\n\r\n--此内容由AI生成，请仔细甄别--"
         return response, aid

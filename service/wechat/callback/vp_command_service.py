@@ -79,7 +79,7 @@ class VpCommandService:
         file = self.service.get_sky_file('yj')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+            fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
             Sys.delayed_task(15, lambda: self.client.send_voice_message(fp, self.g_wxid, self.extra))
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
@@ -90,19 +90,19 @@ class VpCommandService:
         file = self.service.get_sky_file('rw')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+            fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
             self.client.send_img_msg(fp, self.g_wxid, self.extra)
             # 其它相关信息也一并发送
             jl = self.service.get_sky_file('jl')
             self.extra.update({"file": jl})
-            self.client.send_img_msg(Dir.abs_dir(f'storage/upload/wechat/{jl['save_path']}'), self.g_wxid, self.extra)
+            self.client.send_img_msg(Dir.wechat_dir(f'{jl['save_path']}'), self.g_wxid, self.extra)
             dl = self.service.get_sky_file('dl')
             self.extra.update({"file": dl})
-            self.client.send_img_msg(Dir.abs_dir(f'storage/upload/wechat/{dl['save_path']}'), self.g_wxid, self.extra)
+            self.client.send_img_msg(Dir.wechat_dir(f'{dl['save_path']}'), self.g_wxid, self.extra)
             mf = self.service.get_sky_file('mf')
             self.extra.update({"file": mf})
-            self.client.send_img_msg(Dir.abs_dir(f'storage/upload/wechat/{mf['save_path']}'), self.g_wxid, self.extra)
+            self.client.send_img_msg(Dir.wechat_dir(f'{mf['save_path']}'), self.g_wxid, self.extra)
             return True
         response = '获取sky任务失败'
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
@@ -119,7 +119,7 @@ class VpCommandService:
         file = self.service.get_sky_file('hs')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+            fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '获取sky红石失败'
@@ -151,7 +151,7 @@ class VpCommandService:
         file = self.service.get_sky_file('rl')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+            fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
             self.client.send_img_msg(fp, self.g_wxid, self.extra)
             # 其它相关信息也一并发送
@@ -165,7 +165,7 @@ class VpCommandService:
         file = self.service.get_sky_file('xz')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+            fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到先祖'
@@ -176,7 +176,7 @@ class VpCommandService:
         file = self.service.get_sky_file('db')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+            fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到代币'
@@ -206,7 +206,7 @@ class VpCommandService:
         file = self.service.get_sky_file('bz')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.abs_dir(f'storage/upload/wechat/{fp}')
+            fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到壁纸'

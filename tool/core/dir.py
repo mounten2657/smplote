@@ -30,3 +30,8 @@ class Dir:
         else:  # Linux 或 macOS 系统
             full_path = full_path.replace('\\', '/')
         return full_path
+
+    @staticmethod
+    def wechat_dir(relative_path):
+        """微信文件夹"""
+        return Dir.abs_dir(f'storage/upload/wechat/{relative_path}')
