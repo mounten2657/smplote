@@ -57,6 +57,7 @@ class AIReportGenService:
         g_wxid = data['g_wxid']
         g_user = {"id": g_wxid, "name": data['g_wxid_name']}
         fp = Dir.wechat_dir(f"room/{str(g_wxid).split('@')[0]}/{Time.date('%Y%m')}/file")
+        os.makedirs(os.path.dirname(fp), exist_ok=True)
         fn_txt = f"{fp}/report_{Time.date('%Y%m%d')}.txt"
         fn_md = f"{fp}/report_{Time.date('%Y%m%d')}_{p_type}.md"
         fn_img = f"{fp}/report_{Time.date('%Y%m%d')}_{p_type}.png"
