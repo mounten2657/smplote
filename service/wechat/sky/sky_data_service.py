@@ -74,11 +74,11 @@ class SkyDataService:
         """获取sky文件名称"""
         extra = extra if extra else {}
         if 'yj' == sky_type:
-            r_num = extra.get('r_num') if extra.get('r_num') else random.randint(1, 24)
+            r_num = extra.get('r_num', 24)
             fn = f"sky_{sky_type}_{r_num}.mp3"
             url = f"{self._ZXZ_API}/api/sjyjsj/m/{r_num}.mp3"
         elif 'bz' == sky_type:
-            r_num = extra.get('r_num') if extra.get('r_num') else random.randint(1, 999)
+            r_num = extra.get('r_num', 999)
             fn = f"sky_{sky_type}_{r_num}.png"
             if 0 == r_num % 2:
                 url = f"{self._ZXZ_API}//api/mhycos/?type=5&num=1"
@@ -98,7 +98,7 @@ class SkyDataService:
                 else:
                     url = ''
         elif 'ng' == sky_type:
-            r_num = extra.get('r_num') if extra.get('r_num') else random.randint(1, 199)
+            r_num = extra.get('r_num', 199)
             fn = f"sky_{sky_type}_{r_num}.mp3"
             url = f"{self._OVO_API}/api/muic/nscg/nscg/{r_num}.mp3"
         else:

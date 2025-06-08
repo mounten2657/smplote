@@ -171,8 +171,8 @@ class VpCallbackService:
                 # 非管理员拦截（所有管理命令都已在上面处理）
                 if not is_admin:
                     return commander.vp_normal_msg('只有管理员才能使用该功能')
-                # 默认返回
-                return False
+            # 默认返回
+            return False
         except Exception as e:
             err = Error.handle_exception_info(e)
             logger.error(f"消息指令处理失败 - {err}", "VP_CMD_ERR")
