@@ -8,7 +8,7 @@ from model.wechat.wechat_user_label_model import WechatUserLabelModel
 from model.wechat.wechat_user_model import WechatUserModel
 from model.wechat.wechat_msg_model import WechatMsgModel
 from tool.db.cache.redis_task_queue import RedisTaskQueue
-from tool.core import Logger, Time, Error, Attr, Config, Str
+from tool.core import Logger, Time, Error, Attr, Config, Str, Sys
 
 logger = Logger()
 
@@ -122,6 +122,7 @@ class VpCallbackService:
                 is_admin = s_wxid in str(config['admin_list']).split(',')
                 commander = VpCommandService(app_key, g_wxid, s_wxid)
                 content_str = str(content)
+                admin_str = "只有管理员才能使用该功能"
                 # 定义命令前缀与处理函数的映射关系
                 command_map = {
                     # 数字命令
@@ -141,7 +142,6 @@ class VpCallbackService:
                     '#百科': lambda: commander.vp_science(content),
                     '#任务': lambda: commander.vp_sky_rw(content),
                     '#红石': lambda: commander.vp_sky_hs(content),
-                    '#身高': lambda: commander.vp_sky_sg(content),
                     '#公告': lambda: commander.vp_sky_gg(content),
                     '#日历': lambda: commander.vp_sky_rl(content),
                     '#先祖': lambda: commander.vp_sky_xz(content),
@@ -153,9 +153,10 @@ class VpCallbackService:
                     '#男友': lambda: commander.vp_bf(content),
                     '#女友': lambda: commander.vp_gf(content),
                     '#唱歌': lambda: commander.vp_ov_cg(content),
-                    '#点歌': lambda: commander.vp_dg(content) if is_admin else commander.vp_normal_msg('只有管理员才能使用该功能'),
-                    '#设置': lambda: commander.vp_setting(content) if is_admin else commander.vp_normal_msg('只有管理员才能使用该功能'),
-                    '#总结': lambda: commander.vp_report(content) if is_admin else commander.vp_normal_msg('只有管理员才能使用该功能'),
+                    '#身高': lambda: commander.vp_sky_sg(content) if is_admin else commander.vp_normal_msg(admin_str),
+                    '#点歌': lambda: commander.vp_dg(content) if is_admin else commander.vp_normal_msg(admin_str),
+                    '#设置': lambda: commander.vp_setting(content) if is_admin else commander.vp_normal_msg(admin_str),
+                    '#总结': lambda: commander.vp_report(content) if is_admin else commander.vp_normal_msg(admin_str),
                 }
                 # 检查数字开头的命令
                 if content_str and content_str[0] in ('1', '2'):
@@ -187,11 +188,11 @@ class VpCallbackService:
     def insert_handler(data):
         """微信消息数据入库入口"""
         # 入库顺序： 群聊表 - 用户表 - 消息表
+        pid = data['pid']
         try:
             res = {}
             app_key = data['app_key']
             msg_id = data['msg_id']
-            pid = data['pid']
             msg_type = data['content_type']
             g_wxid = data['g_wxid']
             s_wxid = data['send_wxid']
@@ -237,6 +238,8 @@ class VpCallbackService:
             # 用户入库
             for u in user_list:
                 wxid = u['wxid']
+                if not wxid:
+                    continue
                 user = client.get_user(wxid, g_wxid)
                 user['user_type'] = 1 if user['is_friend'] else 2
                 user['room_list'] = {g_wxid: room['nickname']} if room else {}
@@ -253,7 +256,7 @@ class VpCallbackService:
             data['g_wxid_name'] = room['nickname'] if room else ''
             if msg_type in ['gif', 'png', 'mp4', 'file', 'voice']:
                 file = client.download_file(data)
-                if file['url']:
+                if file.get('url'):
                     fdb = WechatFileModel()
                     f_info = fdb.get_file_info(file['md5'])
                     if f_info:
@@ -277,6 +280,7 @@ class VpCallbackService:
         except Exception as e:
             err = Error.handle_exception_info(e)
             logger.error(f"消息入库失败 - {err}", "VP_INS_ERR")
+            # Sys.delayed_task(3, lambda: VpCallbackService.insert_handler_retry([pid]))
             return False
 
     @staticmethod

@@ -38,6 +38,8 @@ class WechatUserModel(MysqlBaseModel):
 
     def add_user(self, user, app_key):
         """数据入库"""
+        if not user['wxid']:
+            return 0
         insert_data = {
             "app_key": app_key,
             "wxid": user['wxid'],
