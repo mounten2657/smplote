@@ -171,7 +171,7 @@ class VpClientFactory:
           "ToUserName": to_wxid,
           "VoiceData": mp3_base64,
           "VoiceFormat": 0,
-          "VoiceSecond,": 0
+          "VoiceSecond": 0
         }
         extra.update({"content": "[语音消息]", "c_type": "voice"})
         return self._api_call('POST', api, body, 'VP_SMG_MP3', extra)
