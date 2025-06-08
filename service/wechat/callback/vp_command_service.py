@@ -116,7 +116,8 @@ class VpCommandService:
         """转人工"""
         QyClient(self.app_key).send_msg(self.app_key, f'{self.s_wxid_name} 正在呼唤你，请尽快回复')
         response = '已发送至管理员……\r\n\r\n正在呼唤本人，请稍后……'
-        file = self.service.get_sky_file('yj')
+        r_num = random.randint(1, 24)
+        file = self.service.get_sky_file('yj', {"r_num": r_num})
         fp = file.get('save_path')
         if fp:
             fp = Dir.wechat_dir(f'{fp}')
@@ -168,7 +169,7 @@ class VpCommandService:
         content = '#身高' if '203' == content else content
         code = str(content).replace('#身高', '').strip()
         if len(code) < 14:
-            response = '请输入"#身高 [好友码]"进行查询，如： #身高 xxxx-xxxx-xxxx'
+            response = '请输入"#身高 [好友码]"进行查询，如： #身高 B1A9-KMV2-4ZG5'
         else:
             s_res = self.service.get_sky_sg(code)
             response = s_res.get('main', "暂未查询到身高")
@@ -240,7 +241,7 @@ class VpCommandService:
 
     def vp_ov_bz(self, content):
         """ov壁纸"""
-        r_num = random.randint(1, 299)
+        r_num = random.randint(1, 999)
         file = self.service.get_sky_file('bz', {"r_num": r_num})
         fp = file.get('save_path')
         if fp:
@@ -252,7 +253,14 @@ class VpCommandService:
 
     def vp_ov_cg(self, content):
         """ov唱歌"""
-        response = '唱歌功能正在开发中……'
+        r_num = random.randint(1, 199)
+        file = self.service.get_sky_file('ng', {"r_num": r_num})
+        fp = file.get('save_path')
+        if fp:
+            fp = Dir.wechat_dir(f'{fp}')
+            self.extra.update({"file": file})
+            return self.client.send_voice_message(fp, self.g_wxid, self.extra)
+        response = '歌曲已失效'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
     def vp_dg(self, content):
