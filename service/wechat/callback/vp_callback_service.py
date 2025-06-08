@@ -280,7 +280,7 @@ class VpCallbackService:
         except Exception as e:
             err = Error.handle_exception_info(e)
             logger.error(f"消息入库失败 - {err}", "VP_INS_ERR")
-            # Sys.delayed_task(3, lambda: VpCallbackService.insert_handler_retry([pid]))
+            Sys.delayed_task(5, lambda: VpCallbackService.insert_handler_retry([pid]))
             return False
 
     @staticmethod
