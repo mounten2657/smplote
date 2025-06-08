@@ -1,3 +1,4 @@
+import random
 from service.ai.command.ai_command_service import AiCommandService
 from service.wechat.sky.sky_data_service import SkyDataService
 from service.ai.report.ai_report_gen_service import AIReportGenService
@@ -34,40 +35,40 @@ class VpCommandService:
         """入口"""
         c_str = """✨工号 9527 为您服务：
         
-        📢 可用命令列表：
-        
-        【基础功能】
-        [101] 或 #提问 - 智能问答
-        [102] 或 #百科 - 知识百科
+    📢 可用命令列表：
+    
+    【基础功能】
+    [101] 或 #提问 - 智能问答
+    [102] 或 #百科 - 知识百科
 
-        【光遇专区】
-        [201] 或 #任务 - 每日任务查询
-        [202] 或 #红石 - 红石掉落时间
-        [203] 或 #身高 - 身高预测计算
-        #日历 - 季节日历查询
-        #先祖 - 旅行先祖查询
-        #代币 - 活动代币查询
-        #公告 - 游戏最新公告
+    【光遇专区】
+    [201] 或 #任务 - 每日任务查询
+    [202] 或 #红石 - 红石掉落时间
+    [203] 或 #身高 - 身高预测计算
+    #日历 - 季节日历查询
+    #先祖 - 旅行先祖查询
+    #代币 - 活动代币查询
+    #公告 - 游戏最新公告
 
-        【休闲娱乐】
-        #天气 - 实时天气查询
-        #v50 - 来个疯狂星期四
-        #文案 - 获取朋友圈文案
-        #壁纸 - 随机精美壁纸
-        #男友 - 虚拟男友聊天
-        #女友 - 虚拟女友聊天
-        #唱歌 - 随机歌曲
+    【休闲娱乐】
+    #天气 - 实时天气查询
+    #v50 - 来个疯狂星期四
+    #文案 - 获取朋友圈文案
+    #壁纸 - 随机精美壁纸
+    #男友 - 虚拟男友聊天
+    #女友 - 虚拟女友聊天
+    #唱歌 - 随机歌曲
 
-        【管理员专用】
-        #点歌 - 点播歌曲
-        #设置 - 系统设置
-        #总结 - 群聊总结报告
+    【管理员专用】
+    #点歌 - 点播歌曲
+    #设置 - 系统设置
+    #总结 - 群聊总结报告
 
-        💡 提示：直接发送对应指令即可使用功能
-        （如发送 "#任务" 查询任务）
-        
-        ⚡紧急联系：
-        呼叫人工服务：直接输入 [103]（需@机器人触发）
+    💡 提示：直接发送对应指令即可使用功能
+    （如发送 "#任务" 查询任务）
+    
+    ⚡紧急联系：
+    呼叫人工服务：直接输入 [103]（需@机器人触发）
         
         """
         response = c_str
@@ -218,8 +219,11 @@ class VpCommandService:
     def vp_zxz_tq(self, content):
         """zxz天气"""
         city = str(content).replace('#天气', '').strip()
-        s_res = self.service.get_weather(city)
-        response = s_res.get('main', "暂未查询到天气")
+        if len(city) < 2:
+            response = '请输入"#天气 [城市]"进行查询，如： #天气 上海'
+        else:
+            s_res = self.service.get_weather(city)
+            response = s_res.get('main', "暂未查询到天气")
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
     def vp_zxz_v50(self, content):
@@ -236,7 +240,8 @@ class VpCommandService:
 
     def vp_ov_bz(self, content):
         """ov壁纸"""
-        file = self.service.get_sky_file('bz')
+        r_num = random.randint(1, 299)
+        file = self.service.get_sky_file('bz', {"r_num": r_num})
         fp = file.get('save_path')
         if fp:
             fp = Dir.wechat_dir(f'{fp}')

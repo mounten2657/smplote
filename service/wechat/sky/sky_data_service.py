@@ -38,7 +38,7 @@ class SkyDataService:
         if not file:
             self.down_sky_file(sky_type, extra)
         file = fdb.get_biz_file_info('VP_SKY', sky_type, fn)
-        return file
+        return file if file else {}
 
     def down_sky_file(self, sky_type='rw', extra=None):
         """
