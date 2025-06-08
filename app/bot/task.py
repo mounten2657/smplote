@@ -1,18 +1,20 @@
 from service.wechat.callback.vp_command_service import VpCommandService
-from tool.router.base_app_wx import BaseAppWx
-from tool.core import Env, Sys
+from tool.router.base_app_vp import BaseAppVp
+from tool.core import Sys
 
 
-class Task(BaseAppWx):
+class Task(BaseAppVp):
     """定时任务控制器"""
 
     def sky_rw(self):
         """sky任务 - 每天早上六点"""
         app_key = self.app_key
-        g_wxid = Env.get('VP_WXID_G2')
-        s_wxid = Env.get('VP_WXID_A2')
+        g_wxid = self.g_wxid
+        s_wxid = self.wxid
+        client = VpCommandService(app_key, g_wxid, s_wxid)
         tasks = {
-            "vp_sky_rw_task": lambda: VpCommandService.vp_sky_rw_task(app_key, g_wxid, s_wxid)
+            "vp_sky_rw": lambda: client.vp_sky_rw(),
+            "vp_sky_hs": lambda: client.vp_sky_hs(),
         }
         res = {name: Sys.delayed_task(1, task) for name, task in tasks.items()}
         return self.success(res)

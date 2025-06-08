@@ -15,7 +15,7 @@ class VpCommandService:
         self.config = Config.vp_config()
         self.app_config = self.config['app_list'][self.app_key]
         self.self_wxid = self.app_config['wxid']
-        self.g_wxid = g_wxid if g_wxid else self.app_config['g_wxid']
+        self.g_wxid = g_wxid if g_wxid else str(self.app_config['g_wxid']).split(',')[0]
         self.s_wxid = s_wxid if s_wxid else self.self_wxid
         room = self.client.get_room(self.g_wxid)
         user = Attr.select_item_by_where(room.get('member_list', []), {"wxid": self.s_wxid})
@@ -32,7 +32,45 @@ class VpCommandService:
 
     def vp_manual(self, content):
         """入口"""
-        response = '工号9527为您服务，提问请按101，百科请按102，任务请按201，红石请按202，身高请按203，其它请按103'
+        c_str = """✨工号 9527 为您服务：
+        
+        📢 可用命令列表：
+        
+        【基础功能】
+        [101] 或 #提问 - 智能问答
+        [102] 或 #百科 - 知识百科
+
+        【光遇专区】
+        [201] 或 #任务 - 每日任务查询
+        [202] 或 #红石 - 红石掉落时间
+        [203] 或 #身高 - 身高预测计算
+        #日历 - 季节日历查询
+        #先祖 - 旅行先祖查询
+        #代币 - 活动代币查询
+        #公告 - 游戏最新公告
+
+        【休闲娱乐】
+        #天气 - 实时天气查询
+        #v50 - 来个疯狂星期四
+        #文案 - 获取朋友圈文案
+        #壁纸 - 随机精美壁纸
+        #男友 - 虚拟男友聊天
+        #女友 - 虚拟女友聊天
+        #唱歌 - 随机歌曲
+
+        【管理员专用】
+        #点歌 - 点播歌曲
+        #设置 - 系统设置
+        #总结 - 群聊总结报告
+
+        💡 提示：直接发送对应指令即可使用功能
+        （如发送 "#任务" 查询任务）
+        
+        ⚡紧急联系：
+        呼叫人工服务：直接输入 [103]（需@机器人触发）
+        
+        """
+        response = c_str
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
     def vp_question(self, content):
@@ -85,7 +123,7 @@ class VpCommandService:
             Sys.delayed_task(15, lambda: self.client.send_voice_message(fp, self.g_wxid, self.extra))
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
-    def vp_sky_rw(self, content):
+    def vp_sky_rw(self, content=''):
         """sky任务"""
         content = '#任务' if '201' == content else content
         file = self.service.get_sky_file('rw')
@@ -108,13 +146,7 @@ class VpCommandService:
         response = '获取sky任务失败'
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
-    @staticmethod
-    def vp_sky_rw_task(app_key, g_wxid, s_wxid):
-        """定时任务专用方法"""
-        commander = VpCommandService(app_key, g_wxid, s_wxid)
-        return commander.vp_sky_rw('201')
-
-    def vp_sky_hs(self, content):
+    def vp_sky_hs(self, content=''):
         """sky红石"""
         content = '#红石' if '202' == content else content
         file = self.service.get_sky_file('hs')

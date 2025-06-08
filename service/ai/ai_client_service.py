@@ -61,7 +61,7 @@ class AiClientService:
             # 调用 web ai 接口
             if is_new:
                 content = f"{prompt}\r\n现在，请直接回答问题：{content}"
-            ret = client.call_ai_web(content, service, {"rid": extra.get('s_wxid', '')})
+            ret = client.call_ai_web(content, service, {"rid": f"{extra.get('s_wxid', '')}_{biz_code}"})
             if isinstance(ret, dict):
                 rid = ret.get('room')
                 response = ret.get('msg')

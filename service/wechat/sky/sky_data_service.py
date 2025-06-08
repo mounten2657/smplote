@@ -1,7 +1,7 @@
 import random
 from service.vpp.vpp_serve_service import VppServeService
 from model.wechat.wechat_file_model import WechatFileModel
-from tool.core import Time, Http, Env
+from tool.core import Time, Http, Env, Attr
 
 
 class SkyDataService:
@@ -77,6 +77,26 @@ class SkyDataService:
             r_num = extra.get('r_num') if extra.get('r_num') else random.randint(1, 24)
             fn = f"sky_{sky_type}_{r_num}.mp3"
             url = f"{self._ZXZ_API}/api/sjyjsj/m/{r_num}.mp3"
+        elif 'bz' == sky_type:
+            r_num = extra.get('r_num') if extra.get('r_num') else random.randint(1, 299)
+            fn = f"sky_{sky_type}_{r_num}.png"
+            if 0 == r_num % 2:
+                url = f"{self._ZXZ_API}//api/mhycos/?type=5&num=1"
+                res = Http.send_request('GET', url)
+                if isinstance(res, dict) and Attr.get_by_point(res, 'data.0.images'):
+                    img_list = Attr.get_by_point(res, 'data.0.images')
+                    i_num = random.randint(0, len(img_list) - 1)
+                    url = img_list[i_num]
+                else:
+                    url = ''
+            else:
+                fn = f"sky_{sky_type}_{r_num}.mp3"
+                url = f"{self._ZXZ_API}/api/ecy/?type=json"
+                res = Http.send_request('GET', url)
+                if isinstance(res, dict) and res.get('url'):
+                    url = res.get('url')
+                else:
+                    url = ''
         elif 'ng' == sky_type:
             r_num = extra.get('r_num') if extra.get('r_num') else random.randint(1, 199)
             fn = f"sky_{sky_type}_{r_num}.mp3"

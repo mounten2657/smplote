@@ -102,15 +102,14 @@ class VpCallbackService:
 
     @staticmethod
     def command_handler(data):
-        """微信消息指令处理入口"""
+        """微信群消息指令处理入口"""
         try:
             app_key = data['app_key']
             is_at = data['is_at']
-            is_my = data['is_my']
             s_wxid = data['send_wxid']
             g_wxid = data['g_wxid']
             content = data['content']
-            if not(content and (is_at or is_my)) or not g_wxid:
+            if not content or not g_wxid:
                 return False
             config = Config.vp_config()
             app_config = config['app_list'][app_key]
@@ -122,55 +121,58 @@ class VpCallbackService:
             if str(content).startswith(tuple(commands)):
                 is_admin = s_wxid in str(config['admin_list']).split(',')
                 commander = VpCommandService(app_key, g_wxid, s_wxid)
-                if '1' == content:
-                    return commander.vp_manual(content)
-                elif '101' == content or str(content).startswith('#提问'):
-                    return commander.vp_question(content)
-                elif '102' == content or str(content).startswith('#百科'):
-                    return commander.vp_science(content)
-                elif '103' == content:
-                    return commander.vp_self(content)
-                elif '201' == content or str(content).startswith('#任务'):
-                    return commander.vp_sky_rw(content)
-                elif '202' == content or str(content).startswith('#红石'):
-                    return commander.vp_sky_hs(content)
-                elif '203' == content or str(content).startswith('#身高'):
-                    return commander.vp_sky_sg(content)
-                elif str(content).startswith('#公告'):
-                    return commander.vp_sky_gg(content)
-                elif str(content).startswith('#日历'):
-                    return commander.vp_sky_rl(content)
-                elif str(content).startswith('#先祖'):
-                    return commander.vp_sky_xz(content)
-                elif str(content).startswith('#代币'):
-                    return commander.vp_sky_db(content)
-                elif str(content).startswith('#天气'):
-                    return commander.vp_zxz_tq(content)
-                elif str(content).startswith('#v50'):
-                    return commander.vp_zxz_v50(content)
-                elif str(content).startswith('#文案'):
-                    return commander.vp_ov_wa(content)
-                elif str(content).startswith('#壁纸'):
-                    return commander.vp_ov_bz(content)
-                elif str(content).startswith('#男友'):
-                    return commander.vp_bf(content)
-                elif str(content).startswith('#女友'):
-                    return commander.vp_gf(content)
-                elif str(content).startswith('#唱歌'):
-                    return commander.vp_ov_cg(content)
-                elif str(content).startswith('#点歌'):
-                    return commander.vp_dg(content)
-                elif not is_admin:
-                    # 拦截非管理员 - 以下功能都是只有管理员才能使用
-                    response = '只有管理员才能使用该功能'
-                elif str(content).startswith('#设置'):
-                    return commander.vp_setting(content)
-                elif str(content).startswith('#总结'):
-                    return commander.vp_report(content)
-                else:
-                    response = '暂未支持该功能……'
-                return commander.vp_normal_msg(response)
-            return False
+                content_str = str(content)
+                # 定义命令前缀与处理函数的映射关系
+                command_map = {
+                    # 数字命令
+                    '1': {
+                        '1': lambda: commander.vp_manual(content) if is_at else False,
+                        '101': lambda: commander.vp_question(content),
+                        '102': lambda: commander.vp_science(content),
+                        '103': lambda: commander.vp_self(content) if is_at else False,
+                    },
+                    '2': {
+                        '201': lambda: commander.vp_sky_rw(content),
+                        '202': lambda: commander.vp_sky_hs(content),
+                        '203': lambda: commander.vp_sky_sg(content),
+                    },
+                    # 特殊前缀命令（按优先级排序）
+                    '#提问': lambda: commander.vp_question(content),
+                    '#百科': lambda: commander.vp_science(content),
+                    '#任务': lambda: commander.vp_sky_rw(content),
+                    '#红石': lambda: commander.vp_sky_hs(content),
+                    '#身高': lambda: commander.vp_sky_sg(content),
+                    '#公告': lambda: commander.vp_sky_gg(content),
+                    '#日历': lambda: commander.vp_sky_rl(content),
+                    '#先祖': lambda: commander.vp_sky_xz(content),
+                    '#代币': lambda: commander.vp_sky_db(content),
+                    '#天气': lambda: commander.vp_zxz_tq(content),
+                    '#v50': lambda: commander.vp_zxz_v50(content),
+                    '#文案': lambda: commander.vp_ov_wa(content),
+                    '#壁纸': lambda: commander.vp_ov_bz(content),
+                    '#男友': lambda: commander.vp_bf(content),
+                    '#女友': lambda: commander.vp_gf(content),
+                    '#唱歌': lambda: commander.vp_ov_cg(content),
+                    '#点歌': lambda: commander.vp_dg(content) if is_admin else commander.vp_normal_msg('只有管理员才能使用该功能'),
+                    '#设置': lambda: commander.vp_setting(content) if is_admin else commander.vp_normal_msg('只有管理员才能使用该功能'),
+                    '#总结': lambda: commander.vp_report(content) if is_admin else commander.vp_normal_msg('只有管理员才能使用该功能'),
+                }
+                # 检查数字开头的命令
+                if content_str and content_str[0] in ('1', '2'):
+                    prefix_commands = command_map.get(content_str[0], {})
+                    handler = prefix_commands.get(content_str, lambda: False)
+                    return handler()
+                # 检查特殊前缀命令
+                for prefix, handler in command_map.items():
+                    if isinstance(handler, dict):
+                        continue  # 跳过已经处理过的数字前缀
+                    if content_str.startswith(prefix):
+                        return handler()
+                # 非管理员拦截（所有管理命令都已在上面处理）
+                if not is_admin:
+                    return commander.vp_normal_msg('只有管理员才能使用该功能')
+                # 默认返回
+                return False
         except Exception as e:
             err = Error.handle_exception_info(e)
             logger.error(f"消息指令处理失败 - {err}", "VP_CMD_ERR")
