@@ -19,7 +19,7 @@ class VpCommandService:
         self.g_wxid = g_wxid if g_wxid else str(self.app_config['g_wxid']).split(',')[0]
         self.s_wxid = s_wxid if s_wxid else self.self_wxid
         room = self.client.get_room(self.g_wxid)
-        user = Attr.select_item_by_where(room.get('member_list', []), {"wxid": self.s_wxid})
+        user = Attr.select_item_by_where(room.get('member_list', []), {"wxid": self.s_wxid}, {})
         self.s_wxid_name = user.get('display_name', '')
         self.g_wxid_name = room.get('nickname', '')
         self.s_user = {"id": self.s_wxid, "name": self.s_wxid_name}

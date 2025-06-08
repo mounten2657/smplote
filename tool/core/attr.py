@@ -135,9 +135,9 @@ class Attr:
         return list(deduplicated.values())
 
     @staticmethod
-    def select_item_by_where(data_list, where):
+    def select_item_by_where(data_list, where, default=None):
         """列表搜索"""
-        return next((item for item in data_list if all(item.get(key) == value for key, value in where.items())), None)
+        return next((item for item in data_list if all(item.get(key) == value for key, value in where.items())), default)
 
     @staticmethod
     def get_value_by_key_like(d: dict, search_key: str, default='') -> any:

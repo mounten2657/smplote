@@ -1,7 +1,7 @@
 import random
 from service.wechat.callback.vp_command_service import VpCommandService
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins, Attr, Time
+from tool.core import Ins, Attr, Time, Config
 
 
 @Ins.singleton
@@ -76,6 +76,12 @@ class WechatRoomModel(MysqlBaseModel):
             return False
         changes = self.extract_member_change(change_str)
         commander = VpCommandService(app_key, g_wxid)
+        # 不是特定群不发消息
+        config = Config.vp_config()
+        app_config = config['app_list'][app_key]
+        g_wxid_list = app_config['g_wxid']
+        if g_wxid not in g_wxid_list:
+            return False
         if changes.get('del'):  # 退群提醒
             del_list = changes.get('del')
             reason_list = ["群主没有发红包", "群主没有分配对象", "群主没有定期发放福利",
