@@ -69,6 +69,8 @@ class WechatUserModel(MysqlBaseModel):
 
     def check_user_info(self, user, info):
         """检查是否有变化"""
+        if not user['wxid']:
+            return 0
         pid = info['id']
         change_log = info['change_log'] if info['change_log'] else []
         # 比较两个信息，如果有变动，就插入变更日志
