@@ -27,7 +27,8 @@ class Error:
             if '<frozen' in frame_summary.filename:
                 file_name = frame_summary.filename
             else:
-                file_name = frame_summary.filename.split(app_name)[1].replace('\\', '/')[1:]
+                file_name = frame_summary.filename.split(app_name)
+                file_name = (file_name[1] if len(file_name) > 1 else file_name[0]).replace('\\', '/')[1:]
             file_line = f"{file_name}:{frame_summary.lineno}"
             file_line_list.append(file_line)
             tb = tb.tb_next
