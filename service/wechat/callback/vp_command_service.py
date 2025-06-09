@@ -253,7 +253,7 @@ class VpCommandService:
 
     def vp_ov_cg(self, content):
         """ov唱歌"""
-        r_num = random.randint(1, 199)
+        r_num = random.randint(1, 61)
         file = self.service.get_sky_file('ng', {"r_num": r_num})
         fp = file.get('save_path')
         if fp:

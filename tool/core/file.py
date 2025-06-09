@@ -157,11 +157,17 @@ class File:
         except Exception as e:
             raise RuntimeError(f"转Base64失败: {str(e)}")
 
-    # @staticmethod
-    # def get_mp3_duration(file_path):
-    #     """获取mp3文件时长"""
-    #     from pydub import AudioSegment
-    #     audio = AudioSegment.from_file(file_path, "mp3")
-    #     duration_ms = len(audio)  # 获取时长（毫秒）
-    #     duration_sec = duration_ms / 1000  # 转换为秒
-    #     return duration_sec
+    @staticmethod
+    def mp3_to_silk(mp3_path: str):
+        """将 mp3 转为 silk"""
+        try:
+            pcm_path = Path(mp3_path).with_suffix('.pcm')
+            silk_path = Path(mp3_path).with_suffix('.silk')
+            if not os.path.exists(pcm_path):
+                if 0 != os.system(f'/usr/bin/ffmpeg -y -i {mp3_path} -f s16le -ar 24000 -ac 1 {pcm_path}'):
+                    return ''
+            if 0 == os.system(f'/opt/shell/tool/silk-v3-decoder/silk/encoder {pcm_path} {silk_path} -tencent'):
+                return silk_path
+            return ''
+        except Exception as e:
+            raise RuntimeError(f"转silk文件失败: {str(e)}")

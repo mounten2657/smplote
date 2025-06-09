@@ -165,12 +165,15 @@ class VpClientFactory:
         """
         if not mp3_path or not to_wxid:
             return False
-        mp3_base64 = File.get_base64(mp3_path)
+        silk_path = File.mp3_to_silk(mp3_path)
+        if not silk_path:
+            return False
+        silk_base64 = File.get_base64(silk_path)
         api = '/message/SendVoice'
         body = {
           "ToUserName": to_wxid,
-          "VoiceData": mp3_base64,
-          "VoiceFormat": 2,
+          "VoiceData": silk_base64,
+          "VoiceFormat": 1,
           "VoiceSecond": 0
         }
         extra.update({"content": "[语音消息]", "c_type": "voice"})

@@ -93,7 +93,7 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, f"[语音消息] {p_msg_id}.{content_type}"]
         elif 'red' == content_type:  # 红包
             send_wxid, content = [s_wxid, f"[红包消息] [{content_link['title']}-{content_link['sender_title']}]"]
-            if self.g_wxid:  # 红包提醒
+            if self.g_wxid and self.g_wxid in self.a_g_wxid:  # 红包提醒
                 msg = f"【红包提醒】\r\n"
                 msg += f"[{content_link['title']}-{content_link['sender_title']}]\r\n"
                 msg += f"发送日期：{Time.date()}\r\n"
