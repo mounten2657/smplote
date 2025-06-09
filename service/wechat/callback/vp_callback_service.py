@@ -63,6 +63,11 @@ class VpCallbackService:
         p_msg_id = params.get('message', {}).get('msg_id', 0)
         db = CallbackQueueModel()
         info = db.get_by_msg_id(msg_id)
+        config = Config.vp_config()
+        app_config = config['app_list'][app_key]
+        # 拦截非允许群
+        if str(app_config['g_wxid_exc']) in str(params):
+            return False
         if info:
             # msg_id 唯一 - 已入库且处理成功就跳过
             if not (is_force or (is_retry and not info['is_succeed'])):
