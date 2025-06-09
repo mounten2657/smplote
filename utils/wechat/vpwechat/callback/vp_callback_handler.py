@@ -67,9 +67,9 @@ class VpCallbackHandler(VpBaseFactory):
             if f_wxid in str(app_config['g_wxid_exc']).split(','):  # 无用群
                 logger.warning(f"on message: 忽略消息[T3]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
-            # if f_wxid not in str(a_g_wxid).split(',') and not (is_my or is_sl):  # 仅限特定群、自己发的消息 和 私聊
-            #     logger.warning(f"on message: 忽略消息[T4]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
-            #     return False
+            if f_wxid not in str(a_g_wxid).split(',') and not (is_my or is_sl):  # 仅限特定群、自己发的消息 和 私聊
+                logger.warning(f"on message: 忽略消息[T4]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
         data.update({
             "app_key": self.app_key,
             "self_wxid": self_wxid,
