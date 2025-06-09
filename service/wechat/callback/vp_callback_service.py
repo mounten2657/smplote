@@ -66,7 +66,7 @@ class VpCallbackService:
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
         # 拦截非允许群
-        if str(app_config['g_wxid_exc']) in str(params):
+        if str(app_config['g_wxid_exc']) and str(app_config['g_wxid_exc']) in str(params):
             logger.warning(f"消息忽略 - 跳过 - [{p_msg_id}-{msg_id}]", 'VP_CALL_ING')
             return 'success'
         if info:
@@ -204,6 +204,12 @@ class VpCallbackService:
             s_wxid = data['send_wxid']
             t_wxid = data['to_wxid']
             self_wxid = data['self_wxid']
+            config = Config.vp_config()
+            app_config = config['app_list'][app_key]
+            # 拦截非允许群
+            if str(app_config['g_wxid_exc']) and str(app_config['g_wxid_exc']) in str(data):
+                logger.warning(f"消息忽略 - 跳过 - [{msg_id}]", 'VP_INS_ING')
+                return False
             # 先判断消息有没有入库 - 已入库就不继续执行了
             mdb = WechatMsgModel()
             m_info = mdb.get_msg_info(msg_id)
