@@ -166,6 +166,11 @@ class Str:
             return 0
 
     @staticmethod
+    def randint(start=1, end=100):
+        """返回随机整数"""
+        return random.randint(int(start), int(end))
+
+    @staticmethod
     def parse_json_string_ignore(value):
         # 尝试将值序列化为JSON
         try:

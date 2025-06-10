@@ -1,7 +1,6 @@
 import json
 import time
 import uuid
-import random
 import threading
 from retrying import retry
 from datetime import datetime
@@ -246,7 +245,7 @@ class RedisTaskQueue:
     def run_consumer(self):
         """异步延迟启动消费"""
         def run():
-            time.sleep(random.randint(1, 10))
+            time.sleep(Str.randint(1, 10))
             # 确保只能有一个消费者
             cache_key = 'LOCK_RTQ_CNS'
             if self.client.get(cache_key):

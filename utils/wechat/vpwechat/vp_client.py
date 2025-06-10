@@ -1,8 +1,9 @@
+import threading
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.factory.vp_socket_factory import VpSocketFactory
 from utils.wechat.vpwechat.factory.vp_client_factory import VpClientFactory
 from tool.db.cache.redis_client import RedisClient
-from tool.core import Logger, Sys, Ins, Attr
+from tool.core import Logger, Sys, Ins, Attr, Str, Time
 
 logger = Logger()
 
@@ -19,6 +20,7 @@ class VpClient(VpBaseFactory):
     def start_websocket(self):
         """延迟启动 websocket"""
         def ws_start():
+            Time.sleep(Str.randint(1, 10))
             # 确保只能有一个 socket
             redis = RedisClient()
             cache_key = 'LOCK_WSS_CNT'
@@ -28,9 +30,11 @@ class VpClient(VpBaseFactory):
             logger.debug('websocket starting', 'WS_STA')
             ws = VpSocketFactory(self.app_key)
             return ws.start()
-        res = Sys.delayed_task(3, ws_start)
-        logger.debug(f'websocket start done - {res}', 'WS_END')
-        return res
+        # res = Sys.delayed_task(3, ws_start)
+        thread = threading.Thread(target=ws_start, daemon=True)
+        thread.start()
+        logger.debug(f'websocket start done', 'WS_END')
+        return True
 
     def close_websocket(self, is_all=0):
         """关闭 websocket"""
