@@ -115,12 +115,16 @@ class VpCallbackService:
             s_wxid = data['send_wxid']
             g_wxid = data['g_wxid']
             content = data['content']
+            msg_time = data['msg_time']
             if not content or not g_wxid:
                 return False
             config = Config.vp_config()
             app_config = config['app_list'][app_key]
             # 拦截非允许群
             if g_wxid not in str(app_config['g_wxid']).split(','):
+                return False
+            # 超时的命令不予处理
+            if Time.now() - Time.tfd(msg_time) > 900:
                 return False
             commands = ",".join([config['command_list'], config['command_list_sky']]).split(',')
             content = Str.remove_at_user(content).strip()
