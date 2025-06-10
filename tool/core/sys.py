@@ -10,11 +10,13 @@ import dis
 from typing import Callable, Dict, Any
 from functools import wraps
 from tool.db.cache.redis_client import RedisClient
+from tool.core.logger import Logger
 
 # 任务存储：任务ID -> 任务状态/结果
 _task_registry: Dict[str, Dict[str, Any]] = {}
 _lock_key = "LOCK_SYS_CNS"
 _redis = RedisClient()
+logger = Logger()
 
 
 class Sys:
@@ -29,15 +31,14 @@ class Sys:
 
     def __init__(self):
         # 创建独立线程运行事件循环
-        self._loop = asyncio.new_event_loop()
+        self._loop = None
         self._loop_thread = None
-        self._running = False
-        self._start_loop()
 
     def _start_loop(self):
         """在独立线程中启动事件循环"""
         def loop_worker():
-            self._running = True
+            if not self._loop:
+                self._loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._loop)
             self._loop.run_forever()
         self._loop_thread = threading.Thread(target=loop_worker, daemon=True)
@@ -61,18 +62,21 @@ class Sys:
             else:
                 func(*args, **kwargs)
         # 安全地将任务提交到事件循环
-        if not self._running:
-            # raise RuntimeError(f'延迟任务未启动 - {e}')
-            return False
+        logger.debug('delay task executing', 'SYS_TSK_STA')
+        if not self._loop or self._loop.is_closed():
+            self._loop = asyncio.new_event_loop()
+            if not self._loop_thread or not self._loop_thread.is_alive():
+                self._start_loop()
         try:
             asyncio.run_coroutine_threadsafe(_execute_delayed(), self._loop)
         except Exception as e:
-            raise RuntimeError(f'提交延迟任务失败 - {e}')
+            msg = f'提交延迟任务失败 - {e}'
+            logger.debug(msg, 'SYS_TSK_ERR')
+            return False
 
     def stop_loop(self):
         """停止事件循环和工作线程"""
-        if self._loop and self._running:
-            self._running = False
+        if self._loop:
             # 安全关闭事件循环
             self._loop.call_soon_threadsafe(self._loop.stop)
             self._loop_thread.join(timeout=1.0)
