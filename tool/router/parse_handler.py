@@ -23,7 +23,7 @@ class ParseHandler:
         signal.signal(signal.SIGINT, ParseHandler.shutdown_handler)
         # 程序开始前先释放锁
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS', 'LOCK_SQL_CNT', 'LOCK_WSS_CNT']
-        list(map(lambda key: RedisClient().delete(key), key_list))
+        list(map(lambda key: RedisClient().delete(key, ['*']), key_list))
         app_config = Config.app_config()
         # 程序预热
         if int(app_config['APP_AUTO_START_WS']):
@@ -43,6 +43,8 @@ class ParseHandler:
             VpClient().close_websocket(is_all=1)
             # 等待资源释放完毕
             time.sleep(3)
+        key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS']
+        list(map(lambda key: RedisClient().delete(key, ['*']), key_list))
         print(f"PID[{pid}]: 清理完成，主程序结束")
         exit(0)
 

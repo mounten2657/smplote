@@ -163,8 +163,9 @@ class RedisClient:
         formatted_key, ttl = self._format_key(key_name, args)
         # 尝试将值序列化为JSON
         value = Str.parse_json_string_ignore(value)
-        self.client.expire(formatted_key, ttl)
-        return self.client.setnx(formatted_key, value)
+        res = self.client.setnx(formatted_key, value)
+        self.client.expire(formatted_key, int(ttl))
+        return res
 
     def delete(self, key_name, args=None):
         """
@@ -178,6 +179,10 @@ class RedisClient:
             删除结果
         """
         formatted_key, ttl = self._format_key(key_name, args)
+        if '*' in formatted_key:
+            formatted_key = self.client.keys(formatted_key)
+            if len(formatted_key):
+                return self.client.delete(*formatted_key)
+            else:
+                return False
         return self.client.delete(formatted_key)
-
-

@@ -1,6 +1,8 @@
 import json
 import time
 import uuid
+import random
+import threading
 from retrying import retry
 from datetime import datetime
 from typing import Any, Dict
@@ -244,17 +246,18 @@ class RedisTaskQueue:
     def run_consumer(self):
         """异步延迟启动消费"""
         def run():
+            time.sleep(random.randint(1, 10))
             # 确保只能有一个消费者
             cache_key = 'LOCK_RTQ_CNS'
             if self.client.get(cache_key):
                 return False
-            self.client.set(cache_key, 1)
+            if not self.client.set_nx(cache_key, 1):
+                return False
             uid = Str.uuid()
+            Sys.delayed_task(3, lambda: print('heartbeat'))
             logger.debug('redis task queue starting', 'RTQ_STA')
             return self.consume(uid)
-        res = Sys.delayed_task(3, run)
-        logger.debug(f'redis task queue start done - {res}', 'RTQ_END')
-        return res
-
-
-
+        thread = threading.Thread(target=run, daemon=True)
+        thread.start()
+        logger.debug(f'redis task queue start done', 'RTQ_END')
+        return True
