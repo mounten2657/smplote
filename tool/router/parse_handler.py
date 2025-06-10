@@ -4,7 +4,7 @@ import importlib
 import signal
 import logging
 import time
-from tool.core import Logger, Time, Http, Error, Attr, Config
+from tool.core import Logger, Time, Http, Error, Attr, Config, Sys
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.qywechat.qy_client import QyClient
@@ -18,6 +18,11 @@ class ParseHandler:
     @staticmethod
     def init_program():
         """初始化程序"""
+        def hot_load():
+            """程序预热"""
+            if int(app_config['APP_AUTO_START_WS']):
+                res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
+            res['que_start'] = RedisTaskQueue().run_consumer()   # 启动 redis task queue
         res = {}
         # 注册结束处理
         signal.signal(signal.SIGINT, ParseHandler.shutdown_handler)
@@ -25,10 +30,8 @@ class ParseHandler:
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS', 'LOCK_SQL_CNT', 'LOCK_WSS_CNT']
         list(map(lambda key: RedisClient().delete(key, ['*']), key_list))
         app_config = Config.app_config()
-        # 程序预热
-        if int(app_config['APP_AUTO_START_WS']):
-            res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
-        res['que_start'] = RedisTaskQueue().run_consumer()   # 启动 redis task queue
+        # 延迟启动
+        res['delay_task'] = Sys.delayed_task(1, hot_load)
         return res
 
     @staticmethod
