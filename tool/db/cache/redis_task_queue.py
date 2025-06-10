@@ -223,7 +223,7 @@ class RedisTaskQueue:
 
             except Exception as e:
                 logger.error(f"Consumer {worker_id} crashed: {e}", 'RTQ_CONSUMER_FATAL')
-                time.sleep(5)
+                time.sleep(1)
 
     def get_queue_stats(self) -> Dict[str, int]:
         """Get current queue status."""
