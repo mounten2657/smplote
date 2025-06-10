@@ -11,6 +11,14 @@ _task_registry: Dict[str, Dict[str, Any]] = {}
 
 class Sys:
 
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+            cls._instance.__init__()
+        return cls._instance
+
     def __init__(self):
         # 创建独立线程运行事件循环
         self._loop = asyncio.new_event_loop()
