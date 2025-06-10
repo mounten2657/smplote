@@ -78,12 +78,12 @@ class Config:
         return os.path.dirname(Config.sqlite_db_config(db_name)['path'])
 
     @staticmethod
-    def gewechat_config():
-        return Config.load_config('config/gewechat.json')
-
-    @staticmethod
     def logger_config():
         return Config.load_config('config/logger.json')
+
+    @staticmethod
+    def qq_config():
+        return Config.load_config('config/qq.json')
 
     @staticmethod
     def qy_config():
