@@ -22,17 +22,22 @@ logger = Logger()
 class Sys:
 
     _instance = None
+    _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super().__new__(cls)
-            cls._instance.__init__()
-        return cls._instance
+        with cls._lock:
+            if not cls._instance:
+                cls._instance = super().__new__(cls)
+                cls._instance._initialized = False
+            return cls._instance
 
     def __init__(self):
-        # 创建独立线程运行事件循环
-        self._loop = None
-        self._loop_thread = None
+        with self._lock:
+            if not self._initialized:
+                self._loop = None
+                self._loop_thread = None
+                self._process_id = str(id(self))
+                self._initialized = True
 
     def _start_loop(self):
         """在独立线程中启动事件循环"""
@@ -41,8 +46,12 @@ class Sys:
                 self._loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._loop)
             self._loop.run_forever()
-        self._loop_thread = threading.Thread(target=loop_worker, daemon=True)
-        self._loop_thread.start()
+        with self._lock:
+            if self._loop and self._loop.is_running():
+                logger.debug("Event loop already running", 'SYS_TSK_LOP')
+                return False
+            self._loop_thread = threading.Thread(target=loop_worker, daemon=True)
+            self._loop_thread.start()
 
     def _delayed_exec(self, delay_seconds: float, func: Callable, *args, **kwargs):
         """
