@@ -148,6 +148,24 @@ class RedisClient:
         value = Str.parse_json_string_ignore(value)
         return self.client.setex(formatted_key, ttl, value)
 
+    def set_nx(self, key_name, value, args=None):
+        """
+        设置Redis缓存值（使用setnx）
+
+        Args:
+            key_name: 缓存键名称（如"VP_USER_INFO"）
+            value: 要缓存的值（如果是对象会自动转为JSON字符串）
+            args: 格式化键所需的参数列表（可为None或空列表）
+
+        Returns:
+            Redis操作结果
+        """
+        formatted_key, ttl = self._format_key(key_name, args)
+        # 尝试将值序列化为JSON
+        value = Str.parse_json_string_ignore(value)
+        self.client.expire(formatted_key, ttl)
+        return self.client.setnx(formatted_key, value)
+
     def delete(self, key_name, args=None):
         """
         删除Redis缓存值

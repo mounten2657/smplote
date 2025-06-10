@@ -6,6 +6,7 @@ class RedisKeys:
     # 字符串类型
     CACHE_KEY_STRING = {
         # 锁相关
+        "LOCK_SYS_CNS": {"key": "lock_sys_consumer:%s", "ttl": 120},
         "LOCK_RTQ_CNS": {"key": "lock_redis_consumer", "ttl": 87400},
         "LOCK_SQL_CNT": {"key": "lock_mysql_connection", "ttl": 87400},
         "LOCK_WSS_CNT": {"key": "lock_wss_connection", "ttl": 87400},
