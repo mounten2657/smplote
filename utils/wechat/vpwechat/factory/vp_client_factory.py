@@ -48,7 +48,8 @@ class VpClientFactory:
         """插入到微信消息表"""
         d0_mid = Attr.get_by_point(res, 'Data.newMsgId', 0)
         d1_mid = Attr.get_by_point(res, 'Data.0.resp.newMsgId', d0_mid)
-        msg_id = Attr.get_by_point(res, 'Data.0.resp.chat_send_ret_list.0.newMsgId', d1_mid)
+        d2_mid = Attr.get_by_point(res, 'Data.0.resp.NewMsgId', d1_mid)
+        msg_id = Attr.get_by_point(res, 'Data.0.resp.chat_send_ret_list.0.newMsgId', d2_mid)
         if 'VP_SMG' in biz_code and msg_id:
             mdb = WechatMsgModel()
             content = extra.get('content')
