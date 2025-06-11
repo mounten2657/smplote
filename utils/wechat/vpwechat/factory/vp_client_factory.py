@@ -82,7 +82,7 @@ class VpClientFactory:
                 "pid": 0,
                 "aid": extra.get('aid', 0),
                 "lid": lid,
-                "content_link": {},
+                "content_link": extra,
             }
             mdb.add_msg(msg, self.app_key)
         return True
