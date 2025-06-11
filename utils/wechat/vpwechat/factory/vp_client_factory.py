@@ -204,7 +204,7 @@ class VpClientFactory:
         app_type = extra.get('app_type')
         if 'dg' == app_type:
             extra.update({"content": "[点歌消息]", "c_type": f"app_{app_type}"})
-        return self._api_call('POST', api, body, 'VP_SMG_IMG', extra)
+        return self._api_call('POST', api, body, 'VP_SMG_APP', extra)
 
     def get_room_info(self, g_wxid):
         """
