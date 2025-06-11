@@ -203,7 +203,10 @@ class VpCallbackService:
         try:
             res = {}
             app_key = data['app_key']
-            msg_id = data['msg_id']
+            msg_id = data.get('msg_id', 0)
+            if not msg_id:
+                logger.error(f"消息处理发生错误 - [{data}]", 'VP_INS_ERR')
+                return False
             msg_type = data['content_type']
             g_wxid = data['g_wxid']
             s_wxid = data['send_wxid']
