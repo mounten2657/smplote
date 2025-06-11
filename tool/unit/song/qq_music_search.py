@@ -5,29 +5,31 @@ from datetime import datetime
 from tool.core import Config, Api, Attr
 
 
-class QQMusicClient:
-    """QQ 音乐搜索器"""
+class QQMusicSearch:
+    """QQ音乐搜索器"""
 
     def __init__(self):
-        # 初始化时加载配置
         self.config = Config.qq_config()
+        self.appid = self.config['appid']
 
-    def get_song_xml(self, msg, user_album=''):
+    def music_parse(self, title):
         """
-        获取xml结构内容
-        :param str msg: 歌曲名
-        :param str user_album: 自定义歌曲封面
-        :return: 歌曲的xml结构
+        获取歌曲基本信息
+        :param srt title: 歌曲名
+        :return:  歌曲信息
         """
-        try:
-            res = self.qq_music_search(msg)
-            res = Attr.get_by_point(res, 'data.data.0', {})
-            if not res:
-                return ""
-            xml = f"<appmsg appid='wx5aa333606550dfd5' sdkver='0'>  <title>{res['name']}</title>  <des>{res['singer_name']}</des>  <type>76</type>  <url>{res['song_url']}</url>  <lowurl></lowurl>  <dataurl></dataurl>  <lowdataurl></lowdataurl>  <songalbumurl>{res['album_img'] if not user_album else user_album}</songalbumurl>  <songlyric></songlyric>  <appattach>    <cdnthumbaeskey/>    <aeskey/>  </appattach></appmsg>"
-            return xml
-        except Exception as e:
-            return ''
+        res = self.qq_music_search(title)
+        res = Attr.get_by_point(res, 'data.data.0', {})
+        if not res.get('song_url', ''):
+            return {}
+        return {
+            "id": res.get('mid', 0),
+            "name": res.get('name', ''),
+            "singer_name": res.get('singer_name', ''),
+            "song_url": res.get('song_url', ''),
+            "data_url": res.get('data_url', ''),
+            "album_img": res.get('album_img', ''),
+        }
 
     def qq_music_search(self, msg, n=0, type_='song', page_limit=1, count_limit=3, song_id=None):
         """
@@ -54,9 +56,9 @@ class QQMusicClient:
                     'song_url': song_url
                 }
                 return self._format_response(0, '解析成功', data)
-            return self._format_response(0, '解析失败，请检查歌曲id值是否正确', {'type': '歌曲解析'})
+            return self._format_response(101, '解析失败，请检查歌曲id值是否正确', {'type': '歌曲解析'})
         else:
-            return self._format_response(0, f'请求参数不存在{type_}', {})
+            return self._format_response(102, f'请求参数不存在{type_}', {})
 
     def get_qq_song(self, msg, page_limit, count_limit, n):
         """

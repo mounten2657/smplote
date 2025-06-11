@@ -1,0 +1,7 @@
+{
+    "appid": "wx8dd6ecd81906fd84",
+    "preset_key": "[ENV.WY_M_PRESET_KEY]",
+    "iv": "[ENV.WY_M_IV]",
+    "pub_key": "[ENV.WY_M_PUB_KEY]",
+    "modulus": "[ENV.WY_M_MODULUS]"
+}

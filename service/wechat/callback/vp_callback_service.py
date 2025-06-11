@@ -126,7 +126,7 @@ class VpCallbackService:
             # 超时的命令不予处理
             if Time.now() - Time.tfd(msg_time) > 900:
                 return False
-            commands = ",".join([config['command_list'], config['command_list_sky']]).split(',')
+            commands = ",".join([config['command_list'], config['command_list_yl'], config['command_list_sky']]).split(',')
             content = Str.remove_at_user(content).strip()
             if str(content).startswith(tuple(commands)):
                 is_admin = s_wxid in str(config['admin_list']).split(',')
@@ -156,6 +156,8 @@ class VpCallbackService:
                     '#日历': lambda: commander.vp_sky_rl(content),
                     '#先祖': lambda: commander.vp_sky_xz(content),
                     '#代币': lambda: commander.vp_sky_db(content),
+                    '#季蜡': lambda: commander.vp_sky_jl(content),
+                    '#身高': lambda: commander.vp_sky_sg(content),
                     '#天气': lambda: commander.vp_zxz_tq(content),
                     '#v50': lambda: commander.vp_zxz_v50(content),
                     '#文案': lambda: commander.vp_ov_wa(content),
@@ -163,8 +165,7 @@ class VpCallbackService:
                     '#男友': lambda: commander.vp_bf(content),
                     '#女友': lambda: commander.vp_gf(content),
                     '#唱歌': lambda: commander.vp_ov_cg(content),
-                    '#身高': lambda: commander.vp_sky_sg(content) if is_admin else commander.vp_normal_msg(admin_str),
-                    '#点歌': lambda: commander.vp_dg(content) if is_admin else commander.vp_normal_msg(admin_str),
+                    '#点歌': lambda: commander.vp_dg(content),
                     '#设置': lambda: commander.vp_setting(content) if is_admin else commander.vp_normal_msg(admin_str),
                     '#总结': lambda: commander.vp_report(content) if is_admin else commander.vp_normal_msg(admin_str),
                 }

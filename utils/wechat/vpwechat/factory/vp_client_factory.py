@@ -179,6 +179,33 @@ class VpClientFactory:
         extra.update({"content": "[语音消息]", "c_type": "voice"})
         return self._api_call('POST', api, body, 'VP_SMG_MP3', extra)
 
+    def send_app_message(self, xml, to_wxid, extra=None):
+        """
+        发送xml应用消息
+        :param xml: xml结构内容
+        :param to_wxid: 接收者wxid
+        :param extra: 额外参数
+        :return:  json - Data.isSendSuccess
+        {"Code":200,"Data":[{"isSendSuccess":true,"resp":{},"msgSource":"xml", "newMsgId":"xxx","toUSerName":"xxx"}],"Text":""}
+        """
+        if not xml or not to_wxid:
+            return False
+        api = '/message/SendAppMessage'
+        body = {
+            "AppList": [
+                {
+                    "ContentType": 0,
+                    "ContentXML": xml,
+                    "ToUserName": to_wxid
+                }
+            ]
+        }
+        extra.update({"content": "[应用消息]", "c_type": "app"})
+        app_type = extra.get('app_type')
+        if 'dg' == app_type:
+            extra.update({"content": "[点歌消息]", "c_type": f"app_{app_type}"})
+        return self._api_call('POST', api, body, 'VP_SMG_IMG', extra)
+
     def get_room_info(self, g_wxid):
         """
         获取群详情

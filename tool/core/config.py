@@ -102,4 +102,6 @@ class Config:
         config = Config.load_config('config/wx.json')
         return File.convert_to_abs_path(config, 'save_dir')
 
-
+    @staticmethod
+    def wy_config():
+        return Config.load_config('config/wy.json')

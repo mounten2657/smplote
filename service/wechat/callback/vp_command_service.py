@@ -2,6 +2,7 @@ import random
 from service.ai.command.ai_command_service import AiCommandService
 from service.wechat.sky.sky_data_service import SkyDataService
 from service.ai.report.ai_report_gen_service import AIReportGenService
+from tool.unit.song.music_search_client import MusicSearchClient
 from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
@@ -22,6 +23,7 @@ class VpCommandService:
         user = Attr.select_item_by_where(room.get('member_list', []), {"wxid": self.s_wxid}, {})
         self.s_wxid_name = user.get('display_name', '')
         self.g_wxid_name = room.get('nickname', '')
+        self.g_wxid_count = int(room.get('member_count', 0))
         self.s_user = {"id": self.s_wxid, "name": self.s_wxid_name}
         self.at_list = [{"wxid": self.s_wxid, "nickname": self.s_wxid_name}]
         self.extra = {"s_wxid": self.s_wxid, "s_wxid_name": self.s_wxid_name, "g_wxid": self.g_wxid, "g_wxid_name": self.g_wxid_name}
@@ -44,6 +46,7 @@ class VpCommandService:
     【光遇专区】
     #任务 或 [201] - 每日任务查询
     #红石 或 [202] - 红石掉落时间
+    #身高 或 [203] - 身高预测计算
     #日历 - 季节日历查询
     #先祖 - 旅行先祖查询
     #代币 - 活动代币查询
@@ -51,16 +54,15 @@ class VpCommandService:
 
     【休闲娱乐】
     #天气 - 实时天气查询
-    #v50 - 来个疯狂星期四
     #文案 - 获取朋友圈文案
+    #v50 - 来个疯狂星期四
     #壁纸 - 随机精美壁纸
     #男友 - 虚拟男友聊天
     #女友 - 虚拟女友聊天
     #唱歌 - 随机歌曲
+    #点歌 - 点播歌曲
 
     【管理员专用】
-    #身高 或 [203] - 身高预测计算
-    #点歌 - 点播歌曲
     #设置 - 系统设置
     #总结 - 群聊总结报告
 
@@ -170,6 +172,8 @@ class VpCommandService:
         code = str(content).replace('#身高', '').strip()
         if len(code) < 14:
             response = '请输入"#身高 [好友码]"进行查询，如： #身高 B1A9-KMV2-4ZG5'
+        elif self.g_wxid_count > 50:
+            response = '只有管理员才能使用该功能'
         else:
             s_res = self.service.get_sky_sg(code)
             response = s_res.get('main', "暂未查询到身高")
@@ -215,6 +219,17 @@ class VpCommandService:
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到代币'
+        return self.client.send_msg(response, self.g_wxid, [], self.extra)
+
+    def vp_sky_jl(self, content):
+        """sky季蜡"""
+        file = self.service.get_sky_file('jl')
+        fp = file.get('save_path')
+        if fp:
+            fp = Dir.wechat_dir(f'{fp}')
+            self.extra.update({"file": file})
+            return self.client.send_img_msg(fp, self.g_wxid, self.extra)
+        response = '暂未查询到季蜡'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
     def vp_zxz_tq(self, content):
@@ -265,7 +280,17 @@ class VpCommandService:
 
     def vp_dg(self, content):
         """点歌"""
-        response = '点歌功能正在开发中……'
+        s_type = 'qq'
+        code = str(content).replace('#点歌', '').strip()
+        if '#' in code:
+            code, t = code.rsplit('#', 1)
+            if str(t).lower() in ['qq', 'wy']:
+                s_type = t
+        xml = MusicSearchClient(s_type).get_song_xml(code)
+        if xml:
+            self.extra.update({'app_type': 'dg'})
+            return self.client.send_app_message(xml, self.g_wxid, self.extra)
+        response = '暂未找到该歌曲'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
     def vp_setting(self, content):
