@@ -90,31 +90,29 @@ class WechatRoomModel(MysqlBaseModel):
             del_list = changes.get('del')
             reason_list = ["群主没有发红包", "群主没有分配对象", "群主没有定期发放福利",
                            "没有滴到对象", "缺乏关爱", "生某人的气了", "一怒之下怒了一下",
-                           "蹭不到图", "跑图被丢", "没有CP", "被冥龙创哭", "emo了", "想静静"
+                           "蹭不到图", "跑图被丢", "没有CP", "被冥龙创哭", "emo了", "想静静",
+                           "没有吃到肯德基", "山高路远江湖再见，且行且珍惜！"
                            ]
             reason = random.choice(reason_list)
             for d in del_list:
-                msg = f"【退群提醒】\r\n"
-                msg += f"微信昵称：{d['display_name']}\r\n"
-                msg += f"退群日期：{Time.date()}\r\n"
-                msg += f"退群原因：{reason}\r\n"
-                msg += f"\r\n山高路远江湖再见，且行且珍惜！"
-                commander.vp_normal_msg(msg)
+                title = '【退群提醒】'
+                des = f"群内成员：{d['display_name']} {Time.date('%H:%M')} 退群\r\n"
+                des += f"退群原因：{reason}"
+                commander.vp_card_msg(title, des)
         if changes.get('add'):  # 入群提醒
             add_list = changes.get('add')
             for d in add_list:
-                msg = f"【欢迎新成员】\r\n"
-                msg += f"微信昵称：{d['display_name']}\r\n"
-                msg += f"入群日期：{Time.date()}\r\n"
-                commander.vp_normal_msg(msg)
+                title = f"【欢迎新成员】"
+                des = f"微信昵称：{d['display_name']}\r\n"
+                des += f"入群日期：{Time.date()}"
+                commander.vp_card_msg(title, des)
         if changes.get('update'):  # 修改昵称提醒
             update_list = changes.get('update')
             for d in update_list:
-                msg = f"【马甲修改】\r\n"
-                msg += f"原始昵称：{d['before']['display_name']}\r\n"
-                msg += f"新的昵称：{d['after']['display_name']}\r\n"
-                msg += f"修改日期：{Time.date()}\r\n"
-                commander.vp_normal_msg(msg)
+                title = f"【马甲变更】"
+                des = f"旧昵称：{d['before']['display_name']}\r\n"
+                des += f"新昵称：{d['after']['display_name']}"
+                commander.vp_card_msg(title, des)
         return True
 
     @staticmethod

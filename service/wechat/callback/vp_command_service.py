@@ -24,6 +24,7 @@ class VpCommandService:
         self.s_wxid_name = user.get('display_name', '')
         self.g_wxid_name = room.get('nickname', '')
         self.g_wxid_count = int(room.get('member_count', 0))
+        self.g_wxid_head = room.get('head_img_url', '')
         self.s_user = {"id": self.s_wxid, "name": self.s_wxid_name}
         self.at_list = [{"wxid": self.s_wxid, "nickname": self.s_wxid_name}]
         self.extra = {"s_wxid": self.s_wxid, "s_wxid_name": self.s_wxid_name, "g_wxid": self.g_wxid, "g_wxid_name": self.g_wxid_name}
@@ -286,10 +287,9 @@ class VpCommandService:
             code, t = code.rsplit('#', 1)
             if str(t).lower() in ['qq', 'wy']:
                 s_type = t
-        xml = MusicSearchClient(s_type).get_song_xml(code)
-        if xml:
-            self.extra.update({'app_type': 'dg'})
-            return self.client.send_app_message(xml, self.g_wxid, self.extra)
+        res = MusicSearchClient(s_type).get_song_data(code)
+        if res:
+            return self.client.send_dg_message(res, self.g_wxid, self.extra)
         response = '暂未找到该歌曲'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
@@ -317,3 +317,14 @@ class VpCommandService:
         ats = ats if ats else []
         extra = extra if extra else self.extra
         return self.client.send_msg(response, self.g_wxid, ats, extra)
+
+    def vp_card_msg(self, title, des, url='#', head='', extra=None):
+        """发送卡片群消息"""
+        extra = extra if extra else self.extra
+        res = {
+            "title": title,
+            "des": str(des).replace('%s_wxid_name%', self.s_wxid_name),
+            "url": url,
+            "thumb": head if head else self.g_wxid_head,
+        }
+        return self.client.send_card_message(res, self.g_wxid, extra)

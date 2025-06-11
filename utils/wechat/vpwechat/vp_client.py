@@ -63,9 +63,13 @@ class VpClient(VpBaseFactory):
         """发送语音消息"""
         return self.client.send_voice_message(mp3_path, to_wxid, extra)
 
-    def send_app_message(self, xml, to_wxid, extra=None):
-        """发送应用消息"""
-        return self.client.send_app_message(xml, to_wxid, extra)
+    def send_dg_message(self, res, to_wxid, extra=None):
+        """发送点歌消息"""
+        return self.client.send_dg_message(res, to_wxid, extra)
+
+    def send_card_message(self, res, to_wxid, extra=None):
+        """发送卡片消息"""
+        return self.client.send_card_message(res, to_wxid, extra)
 
     def get_login_status(self):
         """获取登陆状态"""

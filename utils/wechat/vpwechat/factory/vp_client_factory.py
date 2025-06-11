@@ -56,7 +56,8 @@ class VpClientFactory:
             c_type = extra.get('c_type')
             if not content or not c_type:
                 return False
-            content = content if 'VP_SMG' == biz_code else f"{content} {msg_id}.{c_type}"
+            if biz_code not in ['VP_SMG', 'VP_SMG_APP']:
+                content = f"{content} {msg_id}.{c_type}"
             msg = {
                 "msg_id": msg_id,
                 "content": content,
@@ -180,7 +181,7 @@ class VpClientFactory:
         extra.update({"content": "[语音消息]", "c_type": "voice"})
         return self._api_call('POST', api, body, 'VP_SMG_MP3', extra)
 
-    def send_app_message(self, xml, to_wxid, extra=None):
+    def _send_app_message(self, xml, to_wxid, extra=None):
         """
         发送xml应用消息
         :param xml: xml结构内容
@@ -201,11 +202,52 @@ class VpClientFactory:
                 }
             ]
         }
-        extra.update({"content": "[应用消息]", "c_type": "app"})
-        app_type = extra.get('app_type')
-        if 'dg' == app_type:
-            extra.update({"content": "[点歌消息]", "c_type": f"app_{app_type}"})
+        # extra.update({"content": "[应用消息]", "c_type": "app"})
         return self._api_call('POST', api, body, 'VP_SMG_APP', extra)
+
+    def send_dg_message(self, res, to_wxid, extra=None):
+        """
+        发送点歌消息
+        :param res: 歌曲信息
+        :param to_wxid: 接收者wxid
+        :param extra: 额外参数
+        :return:  json - Data.isSendSuccess
+        {"Code":200,"Data":[{"isSendSuccess":true,"resp":{},"msgSource":"xml", "newMsgId":"xxx","toUSerName":"xxx"}],"Text":""}
+        """
+        if not res or not to_wxid:
+            return False
+        try:
+            if not res['song_url']:
+                return ""
+            xml = f"<appmsg appid='{res['appid']}' sdkver='0'>  <title>{res['name']}</title>  <des>{res['singer_name']}</des>  <type>76</type>  <url>{res['song_url']}</url>  <lowurl></lowurl>  <dataurl>{res['data_url']}</dataurl>  <lowdataurl></lowdataurl>  <songalbumurl>{res['album_img']}</songalbumurl>  <songlyric></songlyric>  <appattach>    <cdnthumbaeskey/>    <aeskey/>  </appattach></appmsg>"
+        except Exception as e:
+            xml = ''
+        if not xml:
+            return False
+        extra.update({"content": f"[点歌消息] [{res['name']}-{res['singer_name']}.mp3]", "c_type": f"app_dg"})
+        return self._send_app_message(xml, to_wxid, extra)
+
+    def send_card_message(self, res, to_wxid, extra=None):
+        """
+        发送卡片消息
+        :param res: 卡片信息
+        :param to_wxid: 接收者wxid
+        :param extra: 额外参数
+        :return:  json - Data.isSendSuccess
+        {"Code":200,"Data":[{"isSendSuccess":true,"resp":{},"msgSource":"xml", "newMsgId":"xxx","toUSerName":"xxx"}],"Text":""}
+        """
+        if not res or not to_wxid:
+            return False
+        try:
+            if not res['title']:
+                return ""
+            xml = f"<appmsg appid='' sdkver='0'><title>{res['title']}</title><des>{res['des']}</des><type>5</type><url>{res['url']}</url><thumburl>{res['thumb']}</thumburl></appmsg>"
+        except Exception as e:
+            xml = ''
+        if not xml:
+            return False
+        extra.update({"content": f"[卡片消息] [{res['title']}.card]", "c_type": f"app_card"})
+        return self._send_app_message(xml, to_wxid, extra)
 
     def get_room_info(self, g_wxid):
         """
