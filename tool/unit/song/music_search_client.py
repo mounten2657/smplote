@@ -25,6 +25,7 @@ class MusicSearchClient:
         return {
             "id": res.get('id', 0),
             "appid": self.client.appid,
+            "app_name": self.s_type,
             "name": res.get('name', ''),
             "singer_name": res.get('singer_name', ''),
             "song_url": res.get('song_url', ''),

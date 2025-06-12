@@ -217,10 +217,13 @@ class VpClientFactory:
         if not res or not to_wxid:
             return False
         try:
-            eid = Str.base64_encode(res['id'])
             if not res['song_url']:
                 return ""
-            xml = f"<appmsg appid='{res['appid']}' sdkver='0'>  <title>{res['name']}</title>  <des>{res['singer_name']}</des>  <type>76</type>  <url>{res['song_url']}</url>  <lowurl></lowurl>  <dataurl>{res['data_url']}</dataurl>  <lowdataurl></lowdataurl>  <songalbumurl>{res['album_img']}</songalbumurl>  <songlyric></songlyric> <musicShareItem><mvCoverUrl><![CDATA[]]></mvCoverUrl><mvSingerName><![CDATA[]]></mvSingerName><musicDuration>0</musicDuration><mid><![CDATA[{eid}]]></mid></musicShareItem> <appattach>    <cdnthumbaeskey/>    <aeskey/>  </appattach></appmsg>"
+            share_info = ""
+            eid = Str.base64_encode(res['id'])
+            if 'QQ' == res['app_name']:
+                share_info = f"<musicShareItem><mvCoverUrl><![CDATA[]]></mvCoverUrl><mvSingerName><![CDATA[]]></mvSingerName><musicDuration>0</musicDuration><mid><![CDATA[{eid}]]></mid></musicShareItem>"
+            xml = f"<appmsg appid='{res['appid']}' sdkver='0'>  <title>{res['name']}</title>  <des>{res['singer_name']}</des>  <type>76</type>  <url>{res['song_url']}</url>  <lowurl></lowurl>  <dataurl>{res['data_url']}</dataurl>  <lowdataurl></lowdataurl>  <songalbumurl>{res['album_img']}</songalbumurl>  <songlyric></songlyric> {share_info} <appattach>    <cdnthumbaeskey/>    <aeskey/>  </appattach></appmsg>"
         except Exception as e:
             xml = ''
         if not xml:
