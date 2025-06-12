@@ -3,6 +3,7 @@ import time
 import json
 import html
 import random
+import base64
 import hashlib
 import urllib.parse
 from tool.core.env import Env
@@ -169,6 +170,39 @@ class Str:
     def randint(start=1, end=100):
         """返回随机整数"""
         return random.randint(int(start), int(end))
+
+    @staticmethod
+    def base64_encode(data: str, encoding: str = 'utf-8') -> str:
+        """
+        将字符串进行Base64编码
+        :param str data: 待编码的字符串
+        :param str encoding: 字符串编码格式，默认为'utf-8'
+        :return: 编码后的Base64字符串
+        """
+        try:
+            data_bytes = data.encode(encoding)
+            encoded_bytes = base64.b64encode(data_bytes)
+            encoded_str = encoded_bytes.decode(encoding)
+            return encoded_str
+        except Exception as e:
+            return ''
+
+    @staticmethod
+    def base64_decode(encoded_data: str, encoding: str = 'utf-8') -> str:
+        """
+        对Base64编码的字符串进行解码
+        :param str encoded_data: 待解码的Base64字符串
+        :param str encoding: 解码后的字符串编码格式，默认为'utf-8'
+        :return: 解码后的原始字符串
+        :raises ValueError: 当输入数据不是有效的Base64字符串时抛出
+        """
+        try:
+            encoded_bytes = encoded_data.encode(encoding)
+            decoded_bytes = base64.b64decode(encoded_bytes)
+            decoded_str = decoded_bytes.decode(encoding)
+            return decoded_str
+        except Exception as e:
+            return ''
 
     @staticmethod
     def parse_json_string_ignore(value):

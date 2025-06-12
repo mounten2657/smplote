@@ -30,7 +30,9 @@ class WYMusicSearch:
         sid = res.get('id', 0)
         if not sid:
             return {}
+        # song_url 备选 - 'https://y.music.163.com/m/song?id={sid}'
         return {
+            "id": sid,
             "name": res.get('name', ''),
             "singer_name": Attr.get_by_point(res, 'ar.0.name', ''),
             "song_url": f'https://music.163.com/#/song?id={sid}',
