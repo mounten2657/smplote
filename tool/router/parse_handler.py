@@ -1,14 +1,13 @@
 import os
+import signal
 import argparse
 import importlib
-import signal
 import logging
-import time
-from tool.core import Logger, Time, Http, Error, Attr, Config, Sys
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
+from tool.core import Logger, Time, Http, Error, Attr, Config, Sys
 
 logger = Logger()
 
@@ -45,7 +44,7 @@ class ParseHandler:
         if Config.is_prod():
             VpClient().close_websocket(is_all=1)
             # 等待资源释放完毕
-            time.sleep(3)
+            Time.sleep(3)
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS']
         list(map(lambda key: RedisClient().delete(key, ['*']), key_list))
         print(f"PID[{pid}]: 清理完成，主程序结束")
