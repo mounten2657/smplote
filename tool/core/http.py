@@ -1,9 +1,9 @@
+import re
 import json
 import requests
-import re
+from flask import request
 from urllib.parse import urlencode
 from typing import Union, Dict, Optional
-from flask import request, has_request_context
 from tool.core.attr import Attr
 
 
@@ -39,7 +39,7 @@ class Http:
             'method': method,
             'url': url,
             'headers': headers or {},
-            'timeout': 10,
+            'timeout': 30,
         }
 
         # 处理params参数
