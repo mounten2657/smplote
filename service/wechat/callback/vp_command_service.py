@@ -1,3 +1,4 @@
+import random
 from service.ai.command.ai_command_service import AiCommandService
 from service.wechat.sky.sky_data_service import SkyDataService
 from service.ai.report.ai_report_gen_service import AIReportGenService
@@ -5,7 +6,7 @@ from tool.unit.song.music_search_client import MusicSearchClient
 from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
-from tool.core import Config, Attr, Sys, Dir, Str
+from tool.core import Config, Attr, Sys, Dir
 
 
 class VpCommandService:
@@ -118,7 +119,7 @@ class VpCommandService:
         """转人工"""
         QyClient(self.app_key).send_msg(self.app_key, f'{self.s_wxid_name} 正在呼唤你，请尽快回复')
         response = '已发送至管理员……\r\n\r\n正在呼唤本人，请稍后……'
-        r_num = Str.randint(1, 24)
+        r_num = random.randint(1, 24)
         file = self.service.get_sky_file('yj', {"r_num": r_num})
         fp = file.get('save_path')
         if fp:
@@ -271,7 +272,7 @@ class VpCommandService:
 
     def vp_ov_bz(self, content):
         """ov壁纸"""
-        r_num = Str.randint(1, 999)
+        r_num = random.randint(1, 999)
         file = self.service.get_sky_file('bz', {"r_num": r_num})
         fp = file.get('save_path')
         if fp:
@@ -283,7 +284,7 @@ class VpCommandService:
 
     def vp_ov_cg(self, content):
         """ov唱歌"""
-        r_num = Str.randint(1, 61)
+        r_num = random.randint(1, 61)
         file = self.service.get_sky_file('ng', {"r_num": r_num})
         fp = file.get('save_path')
         if fp:
