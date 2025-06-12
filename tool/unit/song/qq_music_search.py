@@ -150,6 +150,7 @@ class QQMusicSearch:
         html_str = response.text
         match = re.search(r'>window.__ssrFirstPageData__ =(.*?)</script', html_str)
         json_str = match.group(1)
+        json_str = json_str.replace('undefined', '""')
         json_data = json.loads(json_str)
         return json_data
 
