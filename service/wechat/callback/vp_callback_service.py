@@ -211,7 +211,7 @@ class VpCallbackService:
             app_key = data['app_key']
             msg_id = data.get('msg_id', 0)
             if not msg_id:
-                logger.error(f"消息处理发生错误 - [{data}]", 'VP_INS_ERR')
+                logger.error(f"消息处理发生错误 - [{data}]", 'VP_IHD_ERR')
                 return False
             msg_type = data['content_type']
             g_wxid = data['g_wxid']
@@ -316,7 +316,7 @@ class VpCallbackService:
             return res
         except Exception as e:
             err = Error.handle_exception_info(e)
-            logger.error(f"消息入库失败 - {err}", "VP_INS_ERR")
+            logger.error(f"消息入库失败[{pid}] - {err}", "VP_INS_ERR")
             Sys.delayed_task(5, lambda: VpCallbackService.insert_handler_retry([pid]))
             return False
 
