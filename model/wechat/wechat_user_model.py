@@ -67,16 +67,18 @@ class WechatUserModel(MysqlBaseModel):
         }
         return self.insert(insert_data)
 
-    def check_user_info(self, user, info):
+    def check_user_info(self, user, info, g_wxid=''):
         """检查是否有变化"""
         if not user['wxid']:
             return 0
         pid = info['id']
         change_log = info['change_log'] if info['change_log'] else []
         # 比较两个信息，如果有变动，就插入变更日志
-        fields = ['p_wxid', 'user_type', 'wx_nickname', 'remark_name', 'head_img_url',
+        fields = ['p_wxid', 'wx_nickname', 'remark_name', 'head_img_url',
                   'sex', 'signature', 'country', 'province', 'sns_img_url', 'sns_privacy',
                   'description', 'phone_list', 'label_id_list', 'label_name_list', 'room_list']
+        if not g_wxid:
+            fields.append('user_type')
         change = Attr.data_diff(Attr.select_keys(info, fields), Attr.select_keys(user, fields), 'wxid')
         if change:
             update_data = {}
@@ -92,11 +94,6 @@ class WechatUserModel(MysqlBaseModel):
 
     def get_user_info(self, wxid):
         """获取用户信息"""
-        return self.where({"wxid": wxid}).first()
-
-    @Ins.cached('VP_USER_DB_INF')
-    def get_user_info_cache(self, wxid):
-        """获取用户信息 - 有缓存"""
         return self.where({"wxid": wxid}).first()
 
     def get_user_list(self, wxid_list, chunk_size=50):

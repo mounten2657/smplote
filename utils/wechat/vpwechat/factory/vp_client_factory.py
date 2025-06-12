@@ -290,18 +290,18 @@ class VpClientFactory:
         body = {"ChatRoomName": g_wxid}
         return self._api_call('POST', api, body, 'VP_GRP')
 
-    def get_friend_info(self, wxid, g_wxid=''):
+    def get_friend_info(self, wxid_list, g_wxid=''):
         """
         获取联系人详情
-        :param wxid: 联系人wxid
+        :param wxid_list: 联系人wxid 列表
         :param g_wxid: 群聊wxid
         :return: json - Data.contactList.0.description
         {"Code":200,"Data":{"contactCount":1,"contactList":[{"userName":{"str":"wxid_xxx"},"nickName":{"str":"x"},"quanPin":{"str":"ci"},"sex":1,"remark":{"str":"🏅x"},"contactType":0,"province":"Offaly","signature":"花开花落花相似，人来人往人不同","hasWeiXinHdHeadImg":1,"alias":"weixinhao","snsUserInfo":{"sns_flag":1,"sns_bgimg_id":"http://szmmsns.qpic.cn/mmsns/xxx/0","sns_bgobject_id":14563952301353996000,"sns_flagex":7297,"sns_privacy_recent":72},"country":"IE","bigHeadImgUrl":"https://wx.qlogo.cn/mmhead/ver_1/xxx/0","smallHeadImgUrl":"https://wx.qlogo.cn/mmhead/ver_1/xxx/132","myBrandList":"<brandlist count=\"0\" ver=\"706590051\"></brandlist>","customizedInfo":{"brand_flag":0},"headImgMd5":"7eac7bae5c4699b9e8144afb982ea2be","encryptUserName":"v3_020b3826fd030100000000002bc2091c073a78000000501ea9a3dba12f95f6b60a0536a1adb632e80122c59af9d83c544819c6c8f79b2efb48535619d714a85262e8075a629fb4af99d2be8fced109060c3b79ea98bf841bf523788e90d50c49221962@stranger","additionalContactList":{"item":{}},"chatroomVersion":0,"deleteFlag":0,"description":"ID：似水流年","labelIdlist":"13","phoneNumListInfo":{"count":1,"phoneNumList":[{"phoneNum":"131xxx"}]},"extFlag":0}],"ret":"AA=="},"Text":""}
         """
-        if not wxid:
+        if not wxid_list:
             return False
         api = '/friend/GetContactDetailsList'
-        body = {"RoomWxIDList": [g_wxid], "UserNames": [wxid]}
+        body = {"RoomWxIDList": [g_wxid], "UserNames": wxid_list}
         return self._api_call('POST', api, body, 'VP_FRD')
 
     def get_friend_relation(self, wxid):
@@ -333,7 +333,7 @@ class VpClientFactory:
                 f_wxid = message['to_wxid']
             else:
                 f_wxid = message['send_wxid']
-            fp = f"/friend/{f_wxid}"
+            fp = f"/friend/str({str(f_wxid).replace('@', '__')}"
         else:
             fp = f"/room/{str(message['g_wxid']).split('@')[0]}"
             fp += f"/{Time.date('%Y%m')}"  # 群聊文件较多，按月存储

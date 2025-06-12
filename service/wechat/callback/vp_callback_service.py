@@ -238,7 +238,7 @@ class VpCallbackService:
             qdb = CallbackQueueModel()
             res['upd_cnt_1'] = qdb.set_retry_count(pid, 1)
             user_list = [{"wxid": s_wxid}, {"wxid": t_wxid}]
-            room = {}
+            room = r_info = {}
             # 群聊入库
             if g_wxid:
                 room = client.get_room(g_wxid)
@@ -261,22 +261,33 @@ class VpCallbackService:
             udb = WechatUserModel()
             wxid_list = [d["wxid"] for d in user_list]
             u_list = udb.get_user_list(wxid_list)
-            # 用户入库
-            for u in user_list:
-                wxid = u['wxid']
-                if not wxid:
-                    continue
-                user = client.get_user(wxid, g_wxid)
-                user['user_type'] = 1 if user['is_friend'] else 2
-                user['room_list'] = {g_wxid: room['nickname']} if room else {}
-                u_info = Attr.select_item_by_where(u_list, {"wxid": wxid})
-                if not u_info:
-                    user['wx_nickname'] = user['nickname']
-                    res['ins_user'] = udb.add_user(user, app_key)
-                    u_info = udb.get_user_info(wxid)
-                if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 60):
-                    user['room_list'].update(u_info['room_list'])
-                    res['chk_user'] = udb.check_user_info(user, u_info)
+
+            def _user_update():
+                """用户入库"""
+                for u in user_list:
+                    wxid = u['wxid']
+                    if not wxid:
+                        continue
+                    user = client.get_user(wxid, g_wxid)
+                    user['room_list'] = {g_wxid: room['nickname']} if room else {}
+                    u_info = Attr.select_item_by_where(u_list, {"wxid": wxid})
+                    if not u_info:
+                        user['is_friend'] = client.get_user_is_friend(wxid)
+                        user['user_type'] = 1 if user['is_friend'] else 2
+                        user['wx_nickname'] = user['nickname']
+                        res['ins_user'] = udb.add_user(user, app_key)
+                        u_info = udb.get_user_info(wxid)
+                    if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 3600):
+                        if not g_wxid:
+                            user['is_friend'] = client.get_user_is_friend(wxid)
+                        user['user_type'] = 1 if user['is_friend'] else 2
+                        user['room_list'].update(u_info['room_list'])
+                        res['chk_user'] = udb.check_user_info(user, u_info, g_wxid)
+
+            # 用户入库耗时，需要限时
+            if (g_wxid and r_info and (Time.now() - Time.tfd(str(r_info['update_at'])) > 3600)) or not g_wxid:
+                _user_update()
+
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0
             data['g_wxid_name'] = room['nickname'] if room else ''

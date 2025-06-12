@@ -85,7 +85,6 @@ class VpClient(VpBaseFactory):
     def get_user(self, wxid, g_wxid=''):
         """获取完整的用户信息"""
         user_info = self.get_user_frd_inf(wxid, g_wxid)
-        relation = self.get_user_frd_ral(wxid)
         label = self.get_user_frd_lab()
         user_info = Attr.get_by_point(user_info, 'Data.contactList.0', {})
         label = Attr.get_by_point(label, 'Data.labelPairList', [])
@@ -108,7 +107,7 @@ class VpClient(VpBaseFactory):
             "label_id_list": Attr.get_by_point(user_info, 'labelIdlist', ''),
             "label_name_list": Attr.get_by_point(user_info, 'labelIdlist', ''),
             "phone_list": Attr.get_by_point(user_info, 'phoneNumListInfo.phoneNumList', []),
-            "is_friend": int(Attr.get_by_point(relation, 'Data.FriendRelation', -1) == 0),
+            "is_friend": 0 if g_wxid else self.get_user_is_friend(wxid),
         }
         # 转换处理
         user.update({
@@ -117,9 +116,13 @@ class VpClient(VpBaseFactory):
         })
         return user
 
+    def get_user_is_friend(self, wxid):
+        relation = self.get_user_frd_ral(wxid)
+        return int(Attr.get_by_point(relation, 'Data.FriendRelation', -1) == 0)
+
     @Ins.cached('VP_USER_FRD_INF')
     def get_user_frd_inf(self, wxid, g_wxid):
-        return self.client.get_friend_info(wxid, g_wxid)
+        return self.client.get_friend_info([wxid], g_wxid)
 
     @Ins.cached('VP_USER_FRD_RAL')
     def get_user_frd_ral(self, wxid):

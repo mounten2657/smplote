@@ -1,6 +1,7 @@
 import random
 from service.wechat.callback.vp_command_service import VpCommandService
 from tool.db.mysql_base_model import MysqlBaseModel
+from tool.db.cache.redis_client import RedisClient
 from tool.core import Ins, Attr, Time, Config
 
 
@@ -98,7 +99,9 @@ class WechatRoomModel(MysqlBaseModel):
                 title = '【退群提醒】'
                 des = f"群内成员：{d['display_name']} {Time.date('%H:%M')} 退群\r\n"
                 des += f"退群原因：{reason}"
+                self._del_user_cache(d['wxid'])
                 commander.vp_card_msg(title, des)
+            self._del_room_cache(g_wxid)
         if changes.get('add'):  # 入群提醒
             add_list = changes.get('add')
             for d in add_list:
@@ -106,13 +109,30 @@ class WechatRoomModel(MysqlBaseModel):
                 des = f"微信昵称：{d['display_name']}\r\n"
                 des += f"入群日期：{Time.date()}"
                 commander.vp_card_msg(title, des)
+            self._del_room_cache(g_wxid)
         if changes.get('update'):  # 修改昵称提醒
             update_list = changes.get('update')
             for d in update_list:
                 title = f"【马甲变更】"
                 des = f"旧昵称：{d['before']['display_name']}\r\n"
                 des += f"新昵称：{d['after']['display_name']}"
+                self._del_user_cache(d['wxid'])
                 commander.vp_card_msg(title, des)
+        return True
+
+    def _del_room_cache(self, g_wxid):
+        """删除群聊缓存"""
+        redis = RedisClient()
+        redis.delete('VP_ROOM_INFO', [g_wxid])
+        redis.delete('VP_ROOM_GRP_INF', [g_wxid])
+        redis.delete('VP_ROOM_GRP_USL', [g_wxid])
+        return True
+
+    def _del_user_cache(self, wxid):
+        """删除用户缓存"""
+        redis = RedisClient()
+        redis.delete('VP_USER_INFO', [wxid])
+        redis.delete('VP_USER_FRD_INF', [wxid])
         return True
 
     @staticmethod

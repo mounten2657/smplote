@@ -432,4 +432,20 @@ class Attr:
             return {k: diff_result[k]["val"] for k in sorted(diff_result.keys(), key=lambda x: [int(c) if c.isdigit() else c for c in re.split('([0-9]+)', x)])}
         return diff_result
 
+    @staticmethod
+    def chunk_ids(d_list, size=20, key='wxid'):
+        """
+        从字典列表中提取指定键的值并按指定大小分块
 
+        :param list d_list: 包含字典的列表，每个字典应包含指定的键
+        :param int size: 每块的最大元素数量，默认为20
+        :param str key: 要提取的键名，默认为 wxid
+        :return list: 分块后的结果列表，每个子列表包含指定数量的键值
+        """
+        # 提取所有指定键的值
+        wxid_list = [item.get(key) for item in d_list if key in item]
+        # 分块处理
+        chunked_result = []
+        for i in range(0, len(wxid_list), size):
+            chunked_result.append(wxid_list[i:i + size])
+        return chunked_result
