@@ -233,6 +233,21 @@ class VpCommandService:
         response = '暂未查询到季蜡'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
+    def vp_sky_permanent(self, content):
+        """sky常驻文件"""
+        code = str(content).replace('#', '').strip()
+        p_list = {"神龛": "sk", "献祭": "xj", "烛火": "zh"}
+        f_type = p_list.get(code, '')
+        if not f_type:
+            return False
+        file = self.service.get_sky_file(f_type)
+        fp = file.get('save_path')
+        if fp:
+            fp = Dir.wechat_dir(f'{fp}')
+            self.extra.update({"file": file})
+            return self.client.send_img_msg(fp, self.g_wxid, self.extra)
+        return False
+
     def vp_zxz_tq(self, content):
         """zxz天气"""
         city = str(content).replace('#天气', '').strip()

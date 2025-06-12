@@ -32,7 +32,7 @@ class SkyDataService:
         :param extra:  额外参数
         :return:  文件入库后的信息
         """
-        fn, url = self._get_sky_filename(sky_type, extra)
+        fn, url, fd = self._get_sky_filename(sky_type, extra)
         fdb = WechatFileModel()
         file = fdb.get_biz_file_info('VP_SKY', sky_type, fn)
         if not file:
@@ -47,10 +47,10 @@ class SkyDataService:
         :param extra:  额外参数
         :return:  文件ID
         """
-        fn, url = self._get_sky_filename(sky_type, extra)
+        fn, url, fd = self._get_sky_filename(sky_type, extra)
         if not fn or not url:
             return {}
-        file = self.client.download_website_file(url, 'VP_SKY', fn)
+        file = self.client.download_website_file(url, 'VP_SKY', fn, fd)
         fid = 0
         if file.get('url'):
             fdb = WechatFileModel()
@@ -72,6 +72,7 @@ class SkyDataService:
 
     def _get_sky_filename(self, sky_type, extra):
         """获取sky文件名称"""
+        fd = ''
         extra = extra if extra else {}
         if 'yj' == sky_type:
             r_num = extra.get('r_num', 24)
@@ -106,11 +107,16 @@ class SkyDataService:
             r_num = r_list[int(r_num) - 1]
             fn = f"sky_{sky_type}_{r_num}.mp3"
             url = f"{self._OVO_API}/api/muic/nscg/nscg/{r_num}.mp3"
+        elif sky_type in ['sk', 'xj', 'zh']:
+            # 常驻文件
+            fn = f"sky_{sky_type}.png"
+            url = f"http://localhost/fp"
+            fd = 'permanent/'
         else:
             api = self._OVO_API_FILE_LIST[sky_type]
             fn = f"sky_{sky_type}_{Time.date('%Y%m%d')}.png"
             url = f"{self._OVO_API}{api}?key={self.ovo_key}"
-        return fn, url
+        return fn, url, fd
 
     def get_sky_gg(self):
         """

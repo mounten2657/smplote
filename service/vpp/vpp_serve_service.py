@@ -20,17 +20,19 @@ class VppServeService:
         return VppServeClient().vp_download_file(fty, key, url, fp, fk, fd)
 
     @staticmethod
-    def download_website_file(url, biz_code, file_name):
+    def download_website_file(url, biz_code, file_name, file_dir=''):
         """
         下载外部网站文件 - 对外方法
         :param str url: 文件url
         :param str biz_code: 业务码
         :param str file_name: 文件名 - 无路径 - 带后缀
+        :param str file_dir: 文件路径 - 默认月份 - / 结尾
         :return: 可访问的文件链接 、文件md5 以及 文件大小
         """
         fty = 5001
         key = biz_code.upper()
-        fp = f"/website/{biz_code.lower().replace('vp_', '')}/{Time.date('%Y%m')}/{file_name}"
+        file_dir = file_dir if file_dir else f"{Time.date('%Y%m')}/"
+        fp = f"/website/{biz_code.lower().replace('vp_', '')}/{file_dir}{file_name}"
         fk = File.enc_dir(fp)
         res = VppServeClient().vp_download_file(fty, key, url, fp, fk, 0)
         data = res.get('data', {})

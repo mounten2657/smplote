@@ -118,6 +118,9 @@ class VpCallbackService:
             msg_time = data['msg_time']
             if not content or not g_wxid:
                 return False
+            # 重试的命令不予处理
+            if data.get('is_retry', 0):
+                return False
             config = Config.vp_config()
             app_config = config['app_list'][app_key]
             # 拦截非允许群
@@ -157,6 +160,9 @@ class VpCallbackService:
                     '#先祖': lambda: commander.vp_sky_xz(content),
                     '#代币': lambda: commander.vp_sky_db(content),
                     '#季蜡': lambda: commander.vp_sky_jl(content),
+                    '#神龛': lambda: commander.vp_sky_permanent(content),
+                    '#献祭': lambda: commander.vp_sky_permanent(content),
+                    '#烛火': lambda: commander.vp_sky_permanent(content),
                     '#身高': lambda: commander.vp_sky_sg(content),
                     '#天气': lambda: commander.vp_zxz_tq(content),
                     '#v50': lambda: commander.vp_zxz_v50(content),
