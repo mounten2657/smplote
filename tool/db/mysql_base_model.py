@@ -93,7 +93,7 @@ class MysqlBaseModel:
     def _get_connection(self):
         """获取线程安全的数据库连接"""
         global _mysql_pool
-        Time.sleep(Str.randint(1, 10))
+        Time.sleep(Str.randint(1, 10) / 10)
         # 双重检查锁定初始化连接池
         if _mysql_pool is None:
             with _pool_lock:
