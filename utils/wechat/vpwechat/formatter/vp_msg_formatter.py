@@ -163,7 +163,7 @@ class VpMsgFormatter(VpBaseFactory):
         elif 'gift' == content_type:  # 礼物
             send_wxid, content = [s_wxid, f"[礼物消息] [{content_link['skutitle']}]({content_link['url']})"]
         elif 'call' == content_type:  # 通话
-            send_wxid, content = [s_wxid, f"[通话消息] [{p_msg_id}.{content_type}"]
+            send_wxid, content = [s_wxid, f"[通话消息] [{p_msg_id}.{content_type}]"]
         elif 'wx_app' == content_type:  # 应用
             send_wxid, content = [s_wxid, f"[应用消息] [{content_link['title']}{content_link['des']}]({content_link['url']})"]
         elif self.is_my or self.is_sl:  # 自己的消息 或 私聊消息 - "{content}"
