@@ -162,6 +162,8 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, f"[分享消息] [{content_link['title']}]({content_link['url']})"]
         elif 'gift' == content_type:  # 礼物
             send_wxid, content = [s_wxid, f"[礼物消息] [{content_link['skutitle']}]({content_link['url']})"]
+        elif 'wx_app' == content_type:  # 应用
+            send_wxid, content = [s_wxid, f"[应用消息] [{content_link['title']}{content_link['des']}]({content_link['url']})"]
         elif self.is_my or self.is_sl:  # 自己的消息 或 私聊消息 - "{content}"
             content_type = 'text'
             content_link = {}
@@ -380,6 +382,17 @@ class VpMsgFormatter(VpBaseFactory):
                 "presentcntwording": Str.extract_xml_attr(content_text, 'presentcntwording'),
                 "fromusername": Str.extract_xml_attr(content_text, 'fromusername'),
             }
+        elif all(key in content_text for key in ('appmsg', 'title')):  # 应用 - "{s_wxid}:\n{<app_xml>}"
+            # 基本都是未识别的 xml
+            content_type = 'wx_app'
+            content_link = {
+                "title": Str.extract_xml_attr(content_text, 'title'),
+                "des": Str.extract_xml_attr(content_text, 'des'),
+                "url": Str.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
+                "fromusername": Str.extract_xml_attr(content_text, 'fromusername'),
+            }
+            if not content_link['url']:
+                content_link['url'] = Str.extract_xml_attr(content_text, 'tpurl').replace('&amp;', '&')
         else:  # 未识别 - 不放行
             content_type = 'unknown'
             content_link = {}
