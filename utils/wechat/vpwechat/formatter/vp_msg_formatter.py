@@ -162,6 +162,8 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, f"[分享消息] [{content_link['title']}]({content_link['url']})"]
         elif 'gift' == content_type:  # 礼物
             send_wxid, content = [s_wxid, f"[礼物消息] [{content_link['skutitle']}]({content_link['url']})"]
+        elif 'call' == content_type:  # 通话
+            send_wxid, content = [s_wxid, f"[通话消息] [{p_msg_id}.{content_type}"]
         elif 'wx_app' == content_type:  # 应用
             send_wxid, content = [s_wxid, f"[应用消息] [{content_link['title']}{content_link['des']}]({content_link['url']})"]
         elif self.is_my or self.is_sl:  # 自己的消息 或 私聊消息 - "{content}"
@@ -381,6 +383,12 @@ class VpMsgFormatter(VpBaseFactory):
                 "skutitle": Str.extract_xml_attr(content_text, 'skutitle'),
                 "presentcntwording": Str.extract_xml_attr(content_text, 'presentcntwording'),
                 "fromusername": Str.extract_xml_attr(content_text, 'fromusername'),
+            }
+        elif all(key in content_text for key in ('sysmsg', 'voipmt')):  # 通话 - "{s_wxid}:\n{<call_xml>}"
+            content_type = 'call'
+            content_link = {
+                "banner": Str.extract_xml_attr(content_text, 'banner'),
+                "invite": Str.extract_xml_attr(content_text, 'invite'),
             }
         elif all(key in content_text for key in ('appmsg', 'title')):  # 应用 - "{s_wxid}:\n{<app_xml>}"
             # 基本都是未识别的 xml
