@@ -1,4 +1,5 @@
 import re
+import ast
 import json
 import types
 import importlib
@@ -94,7 +95,10 @@ class Attr:
         try:
             return json.loads(data)
         except (json.JSONDecodeError, TypeError) as e:
-            return data
+            try:
+                return ast.literal_eval(data)
+            except:
+                return data
 
     @staticmethod
     def get_action_by_path(path, ins=0, *args, **kwargs):

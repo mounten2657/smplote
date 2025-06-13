@@ -22,7 +22,6 @@ class Transfer:
         try:
             # 解析目标方法路径
             module_name, class_name, method_name = desc.rsplit('.', 2)
-            print(module_name, class_name, method_name)
             # 动态导入模块
             module = importlib.import_module(module_name)
             class_ = getattr(module, class_name)

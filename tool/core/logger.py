@@ -259,6 +259,15 @@ class Logger:
                 "err_cause": ["execute_exception", "None"],
                 "err_file_list": [f"{log_name}:{log_level}"]
             }
+            data_str = str(data)
+            if isinstance(data, dict) and data.get('err_cause'):
+                err = data
+            elif ' - {' in data_str:
+                d_msg, d_str = data_str.split(' - ', 1)
+                d_json = Attr.parse_json_ignore(str(d_str).strip())
+                if d_json and d_json.get('err_msg'):
+                    d_json['err_msg'].insert(0, d_msg)
+                    err = d_json
             client = 'utils.wechat.qywechat.qy_client.QyClient.send_error_msg'
             Transfer.middle_exec(client, [], err, self.uuid)
 
