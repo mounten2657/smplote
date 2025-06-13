@@ -160,6 +160,8 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, f"[点歌消息] {content_link['title']}-{content_link['des']}.mp3"]
         elif 'share' == content_type:  # 分享
             send_wxid, content = [s_wxid, f"[分享消息] [{content_link['title']}]({content_link['url']})"]
+        elif 'gift' == content_type:  # 礼物
+            send_wxid, content = [s_wxid, f"[礼物消息] [{content_link['skutitle']}]({content_link['url']})"]
         elif self.is_my or self.is_sl:  # 自己的消息 或 私聊消息 - "{content}"
             content_type = 'text'
             content_link = {}
@@ -367,6 +369,16 @@ class VpMsgFormatter(VpBaseFactory):
                 "url": Str.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
                 "publisher_id": Str.extract_xml_attr(content_text, 'publisherId'),
                 "publisher_req_id": Str.extract_xml_attr(content_text, 'publisherReqId'),
+            }
+        elif all(key in content_text for key in ('appmsg', 'title', 'url', 'gift', '微信礼物')):  # 礼物 - "{s_wxid}:\n{<gift_xml>}"
+            content_type = 'gift'
+            content_link = {
+                "title": Str.extract_xml_attr(content_text, 'title'),
+                "des": Str.extract_xml_attr(content_text, 'des'),
+                "url": Str.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
+                "skutitle": Str.extract_xml_attr(content_text, 'skutitle'),
+                "presentcntwording": Str.extract_xml_attr(content_text, 'presentcntwording'),
+                "fromusername": Str.extract_xml_attr(content_text, 'fromusername'),
             }
         else:  # 未识别 - 不放行
             content_type = 'unknown'
