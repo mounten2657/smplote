@@ -13,6 +13,7 @@ from tool.core.config import Config
 from tool.core.str import Str
 from tool.core.attr import Attr
 from tool.core.http import Http
+from tool.core.transfer import Transfer
 
 # 全局日志队列和锁
 log_queue = Queue()
@@ -245,6 +246,10 @@ class Logger:
             return str(data)
 
     def write(self, data=None, msg="", log_name="app", log_level='info'):
+        # if log_level.lower() in ['error', 'critical']:
+        #     # 发送告警消息
+        #     client = 'utils.wechat.qywechat.qy_client.QyClient.send_error_msg'
+        #     Transfer.middle_exec(client, [], err, logger.uuid)
         extra = self.get_extra_data(data)
         extra = Logger._make_serializable(extra)
         log_type = 'http' if Http.is_http_request() else 'command'

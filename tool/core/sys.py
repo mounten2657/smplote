@@ -80,7 +80,7 @@ class Sys:
             asyncio.run_coroutine_threadsafe(_execute_delayed(), self._loop)
         except Exception as e:
             msg = f'提交延迟任务失败 - {e}'
-            logger.debug(msg, 'SYS_TSK_ERR')
+            logger.error(msg, 'SYS_TSK_ERR')
             return False
 
     def stop_loop(self):

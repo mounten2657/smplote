@@ -14,7 +14,8 @@ from.que import Que
 from.str import Str
 from.sys import Sys
 from.time import Time
+from.transfer import Transfer
 from.validator import Validator
 
-__all__ = ['Api', 'Attr', 'Config', 'Dir', 'Emoji', 'Error', 'Env', 'Http', 'Ins', 'File', 'Logger', 'Que', 'Str', 'Sys', 'Time', 'Validator']
+__all__ = ['Api', 'Attr', 'Config', 'Dir', 'Emoji', 'Error', 'Env', 'Http', 'Ins', 'File', 'Logger', 'Que', 'Str', 'Sys', 'Time', 'Transfer', 'Validator']
 

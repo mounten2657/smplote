@@ -333,7 +333,7 @@ class VpClientFactory:
                 f_wxid = message['to_wxid']
             else:
                 f_wxid = message['send_wxid']
-            fp = f"/friend/str({str(f_wxid).replace('@', '__')}"
+            fp = f"/friend/{str(f_wxid).replace('@', '__')}"
         else:
             fp = f"/room/{str(message['g_wxid']).split('@')[0]}"
             fp += f"/{Time.date('%Y%m')}"  # 群聊文件较多，按月存储
