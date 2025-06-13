@@ -34,7 +34,7 @@ class Error:
             tb = tb.tb_next
 
         result = {
-            "err_msg": exception_args,
+            "err_msg": list(exception_args),
             "err_cause": [current_exception_name, original_exception_name],
             "err_file_list": file_line_list
         }
