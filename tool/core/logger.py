@@ -246,16 +246,21 @@ class Logger:
             return str(data)
 
     def write(self, data=None, msg="", log_name="app", log_level='info'):
-        # if log_level.lower() in ['error', 'critical']:
-        #     # 发送告警消息
-        #     client = 'utils.wechat.qywechat.qy_client.QyClient.send_error_msg'
-        #     Transfer.middle_exec(client, [], err, logger.uuid)
         extra = self.get_extra_data(data)
         extra = Logger._make_serializable(extra)
         log_type = 'http' if Http.is_http_request() else 'command'
         logger_handle = self.setup_logger(log_type, log_name)
         method = getattr(logger_handle, log_level.lower())
         method(msg, extra=extra)
+        # 发送告警消息
+        if log_level.lower() in ['error', 'critical']:
+            err = {
+                "err_msg": [msg, str(data)],
+                "err_cause": ["execute_exception", "None"],
+                "err_file_list": [f"{log_name}:{log_level}"]
+            }
+            client = 'utils.wechat.qywechat.qy_client.QyClient.send_error_msg'
+            Transfer.middle_exec(client, [], err, self.uuid)
 
     def debug(self, data=None, msg="NULL", log_name="app"):
         self.write(data, msg, log_name, 'debug')
