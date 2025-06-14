@@ -23,6 +23,7 @@ class LogErrorMd:
         app_name = Env.get('APP_NAME', 'SMP')
         if isinstance(error_message, str):
             error_message = [error_message]
+        error_message = [str(item) for item in error_message]
         http_url = http_method = http_data = 'None'
         user_agent = ip = 'None'
         if Http.is_http_request():
