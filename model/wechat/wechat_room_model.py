@@ -116,7 +116,9 @@ class WechatRoomModel(MysqlBaseModel):
                 title = f"【马甲变更】"
                 des = f"旧昵称：{d['before']['display_name']}\r\n"
                 des += f"新昵称：{d['after']['display_name']}"
-                self._del_user_cache(d['after']['wxid'])
+                d_wxid = Attr.get_by_point(d, 'before.wxid', Attr.get_by_point(d, 'after.wxid', ''))
+                if d_wxid:
+                    self._del_user_cache(d_wxid)
                 commander.vp_card_msg(title, des)
         return True
 

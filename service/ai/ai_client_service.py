@@ -46,7 +46,12 @@ class AiClientService:
         # 获取对话文本
         context_list = tdb.get_context_list(cid, biz_code)
         messages = [{"role": "system", "content": prompt_text}]  # 角色设定
-        messages = AiClientService.get_chat_messages(context_list, messages, content)
+        if biz_code in ['GEN_REP']:
+            # 非连续对话
+            messages.append({"role": "user", "content": content})
+        else:
+            # 连续对话 - 需要读取之前的记录
+            messages = AiClientService.get_chat_messages(context_list, messages, content)
         # 插入新对话
         tid = tdb.add_context({
             "chat_id": cid,
