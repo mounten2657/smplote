@@ -1,4 +1,4 @@
-from tool.core import Ins, Http
+from tool.core import Ins, Http, Env
 from utils.wechat.qywechat.command.base_command import BaseCommand
 from service.ai.command.ai_command_service import AiCommandService
 
@@ -24,7 +24,9 @@ class AiCommand(BaseCommand):
 
     def exec_0_4(self):
         """AI 状态"""
-        return self.send_content()
+        res = Http.send_request('GET', f"https://{Env.get('APP_SERVER_HOST')}")
+        content = f"{res}"
+        return self.send_content(content)
 
     def qy_que(self):
         """AI 提问"""
