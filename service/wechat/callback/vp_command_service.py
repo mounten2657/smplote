@@ -246,6 +246,17 @@ class VpCommandService:
         response = '暂未查询到魔法'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
+    def vp_sky_dl(self, content):
+        """sky大蜡"""
+        file = self.service.get_sky_file('dl')
+        fp = file.get('save_path')
+        if fp:
+            fp = Dir.wechat_dir(f'{fp}')
+            self.extra.update({"file": file})
+            return self.client.send_img_msg(fp, self.g_wxid, self.extra)
+        response = '暂未查询到大蜡'
+        return self.client.send_msg(response, self.g_wxid, [], self.extra)
+
     def vp_sky_permanent(self, content):
         """sky常驻文件"""
         code = str(content).replace('#', '').strip()

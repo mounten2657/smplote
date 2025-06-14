@@ -163,6 +163,7 @@ class VpCallbackService:
                     '#代币': lambda: commander.vp_sky_db(content),
                     '#季蜡': lambda: commander.vp_sky_jl(content),
                     '#魔法': lambda: commander.vp_sky_mf(content),
+                    '#大蜡': lambda: commander.vp_sky_dl(content),
                     '#神龛': lambda: commander.vp_sky_permanent(content),
                     '#献祭': lambda: commander.vp_sky_permanent(content),
                     '#烛火': lambda: commander.vp_sky_permanent(content),
