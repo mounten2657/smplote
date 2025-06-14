@@ -19,7 +19,9 @@ class AiClientService:
         """
         client = AIClientManager()
         service = client.config['last_service']
-        if biz_code in ['VP_QUS', 'VP_SCI', 'VP_BF', 'VP_GF']:  # 群聊使用免费的web ai
+        web_al_list = ['VP_QUS', 'VP_SCI', 'VP_BF', 'VP_GF']
+        is_web_ai = biz_code in web_al_list
+        if is_web_ai:  # 群聊使用免费的web ai
             service = 'WebGpt'
         ai_config = client.config['services'][service]
         t_config = {"ai_type": service, "ai_model": ai_config['model']}
@@ -46,7 +48,7 @@ class AiClientService:
         # 获取对话文本
         context_list = tdb.get_context_list(cid, biz_code)
         messages = [{"role": "system", "content": prompt_text}]  # 角色设定
-        if biz_code in ['GEN_REP']:
+        if biz_code in ['GEN_REP'] or is_web_ai:
             # 非连续对话
             messages.append({"role": "user", "content": content})
         else:
@@ -62,7 +64,7 @@ class AiClientService:
         }, t_config)
         rid = 0
         start_time = Time.now(0)
-        if 'WebGpt' == service:
+        if is_web_ai:
             # 调用 web ai 接口
             if is_new:
                 content = f"{prompt}\r\n现在，请直接回答问题：{content}"
