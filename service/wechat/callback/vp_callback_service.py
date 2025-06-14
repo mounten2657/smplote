@@ -7,6 +7,7 @@ from model.wechat.wechat_room_model import WechatRoomModel
 from model.wechat.wechat_user_label_model import WechatUserLabelModel
 from model.wechat.wechat_user_model import WechatUserModel
 from model.wechat.wechat_msg_model import WechatMsgModel
+from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.core import Logger, Time, Error, Attr, Config, Str, Sys
 
@@ -264,6 +265,11 @@ class VpCallbackService:
 
             def _user_update():
                 """用户入库"""
+                if g_wxid:
+                    # 群聊更新限速
+                    Time.sleep(Str.randint(1, 10) / 10)
+                    if not RedisClient().set_nx('VP_ROOM_USR_LOCK', 1, [g_wxid]):
+                        return False
                 for u in user_list:
                     wxid = u['wxid']
                     if not wxid:
@@ -284,9 +290,9 @@ class VpCallbackService:
                         user['room_list'].update(u_info['room_list'])
                         res['chk_user'] = udb.check_user_info(user, u_info, g_wxid)
 
-            # 用户入库耗时，需要限时
+            # 用户入库耗时 - 延迟执行
             if (g_wxid and r_info and (Time.now() - Time.tfd(str(r_info['update_at'])) > 3600)) or not g_wxid:
-                _user_update()
+                Sys.delayed_task(3, _user_update)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0
