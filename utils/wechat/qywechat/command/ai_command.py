@@ -1,4 +1,4 @@
-from tool.core import Ins
+from tool.core import Ins, Http
 from utils.wechat.qywechat.command.base_command import BaseCommand
 from service.ai.command.ai_command_service import AiCommandService
 
@@ -20,13 +20,11 @@ class AiCommand(BaseCommand):
 
     def exec_0_3(self):
         """AI 日志"""
-        response, aid = AiCommandService.question(self.content, self.user, 'QY_QUS')
-        return self.send_content(response)
+        return self.send_content()
 
     def exec_0_4(self):
         """AI 状态"""
-        response, aid = AiCommandService.science(self.content, self.user, 'QY_SCI')
-        return self.send_content(response)
+        return self.send_content()
 
     def qy_que(self):
         """AI 提问"""
