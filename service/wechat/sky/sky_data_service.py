@@ -36,8 +36,7 @@ class SkyDataService:
         fdb = WechatFileModel()
         file = fdb.get_biz_file_info('VP_SKY', sky_type, fn)
         if not file:
-            self.down_sky_file(sky_type, extra)
-        file = fdb.get_biz_file_info('VP_SKY', sky_type, fn)
+            file = self.down_sky_file(sky_type, extra)
         return file if file else {}
 
     def down_sky_file(self, sky_type='rw', extra=None):
@@ -45,20 +44,18 @@ class SkyDataService:
         下载sky任务文件
         :param sky_type:  rw | hs | jl | mf | yj | rl | dl | xz | db | bz | ng
         :param extra:  额外参数
-        :return:  文件ID
+        :return:  文件信息
         """
         fn, url, fd = self._get_sky_filename(sky_type, extra)
         if not fn or not url:
             return {}
         file = self.client.download_website_file(url, 'VP_SKY', fn, fd)
-        fid = 0
+        f_info = {}
         if file.get('url'):
             fdb = WechatFileModel()
             f_info = fdb.get_file_info(file['md5'])
-            if f_info:
-                fid = f_info['id']
-            else:
-                fid = fdb.add_file(file, {
+            if not f_info:
+                fdb.add_file(file, {
                     "send_wxid": sky_type,
                     "send_wxid_name": fn,
                     "pid": 0,
@@ -67,8 +64,9 @@ class SkyDataService:
                     "to_wxid_name": '',
                     "g_wxid": Time.date('%Y%m%d'),
                     "g_wxid_name": self.api_type,
-            })
-        return fid
+                })
+                f_info = fdb.get_file_info(file['md5'])
+        return f_info
 
     def _get_sky_filename(self, sky_type, extra):
         """获取sky文件名称"""
