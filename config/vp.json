@@ -3,7 +3,7 @@
     "ws_port": "[ENV.VP_WS_PORT]",
     "ws_callback_path": "utils.wechat.vpwechat.callback.vp_callback_handler",
     "admin_key": "[ENV.VP_ADMIN_KEY]",
-    "command_list": "#设置,#天气,#提问,#百科,#总结,1,2",
+    "command_list": "#菜单,#设置,#天气,#提问,#百科,#总结,1,2",
     "command_list_yl": "#文案,#v50,#壁纸,#男友,#女友,#唱歌,#点歌",
     "command_list_sky": "#任务,#红石,#公告,#身高,#日历,#先祖,#代币,#季蜡,#神龛,#献祭,#烛火",
     "admin_list": "[ENV.VP_ADMIN_LIST]",

@@ -152,6 +152,7 @@ class VpCallbackService:
                         '203': lambda: commander.vp_sky_sg(content),
                     },
                     # 特殊前缀命令（按优先级排序）
+                    '#菜单': lambda: commander.vp_manual(content),
                     '#提问': lambda: commander.vp_question(content),
                     '#百科': lambda: commander.vp_science(content),
                     '#任务': lambda: commander.vp_sky_rw(content),
