@@ -1,4 +1,4 @@
-from tool.core import *
+from tool.core import Ins
 from utils.wechat.qywechat.command.base_command import BaseCommand
 from service.ai.command.ai_command_service import AiCommandService
 

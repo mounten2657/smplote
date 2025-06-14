@@ -414,3 +414,13 @@ class VpClientFactory:
         except Exception as e:
             logger.error(f'VP GRPC 请求错误: {e}', 'VP_GRPC_CALL_ERR')
             return {}
+
+    def wakeup_login(self):
+        """
+        唤醒登陆
+        :return: 操作结果
+        {"Code":200,"Data":{},"Text":""}
+        """
+        api = '/login/WakeUpLogin'
+        body = {"Check": False, "Proxy": ""}
+        return self._api_call('POST', api, body, 'VP_WKL')

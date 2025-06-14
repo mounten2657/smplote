@@ -219,6 +219,28 @@ class Sys:
         """延迟三秒后，拉取最新代码，并重启 flask """
         def pull_code():
             Sys.run_command('sudo /opt/shell/init/reload_flask.sh >>/tmp/reload_flask.log 2>&1')
-        return Sys.delayed_task(5, pull_code)
+        return Sys.delayed_task(3, pull_code)
 
+    @staticmethod
+    def delay_kill_gu():
+        """终止gu """
+        return Sys.delayed_task(3, lambda: Sys.run_command('sudo pkill -9 -f gunicorn'))
 
+    @staticmethod
+    def delay_reload_gu():
+        """重载gu """
+        def _exec():
+            Sys.run_command('sudo /opt/shell/init/init_flask.sh >>/tmp/init_flask.log 2>&1')
+        return Sys.delayed_task(3, _exec)
+
+    @staticmethod
+    def delay_kill_vp():
+        """终止vp """
+        return Sys.delayed_task(3, lambda: Sys.run_command('sudo pkill -9 -f stay'))
+
+    @staticmethod
+    def delay_reload_vp():
+        """重载vp """
+        def _exec():
+            Sys.run_command('sudo /opt/shell/init/init_wechatpad.sh >>/tmp/init_wechatpad.log 2>&1')
+        return Sys.delayed_task(3, _exec)

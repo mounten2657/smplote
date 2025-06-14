@@ -186,4 +186,14 @@ class VpClient(VpBaseFactory):
         return self.client.get_room_user_list(g_wxid)
 
     def download_file(self, message):
+        """下载文件"""
         return self.client.download_file(message)
+
+    def wakeup(self):
+        """唤醒登录"""
+        user_info = self.client.get_friend_info([self.self_wxid])
+        user_info = Attr.get_by_point(user_info, 'Data.contactList.0', {})
+        user_name = Attr.get_by_point(user_info, 'userName.str', '')
+        if user_name:
+            return {"Code": 202, "Data": {}, "Text": "设备在线无需重复登录"}
+        return self.client.wakeup_login()
