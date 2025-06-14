@@ -51,6 +51,8 @@ class VpCommandService:
     #日历 - 季节日历查询
     #先祖 - 旅行先祖查询
     #代币 - 活动代币查询
+    #季蜡 - 每日季蜡位置
+    #魔法 - 每日免费魔法
     #公告 - 游戏最新公告
 
     【休闲娱乐】
@@ -75,7 +77,7 @@ class VpCommandService:
         
         """
         response = c_str
-        return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
+        return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
     def vp_question(self, content):
         """AI问答"""
@@ -231,6 +233,17 @@ class VpCommandService:
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到季蜡'
+        return self.client.send_msg(response, self.g_wxid, [], self.extra)
+
+    def vp_sky_mf(self, content):
+        """sky魔法"""
+        file = self.service.get_sky_file('mf')
+        fp = file.get('save_path')
+        if fp:
+            fp = Dir.wechat_dir(f'{fp}')
+            self.extra.update({"file": file})
+            return self.client.send_img_msg(fp, self.g_wxid, self.extra)
+        response = '暂未查询到魔法'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
     def vp_sky_permanent(self, content):
