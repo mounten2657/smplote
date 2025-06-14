@@ -73,10 +73,12 @@ class AIReportGenService:
             return False
         nl = '\r' if Config.is_prod() else '\n'
         for m in m_list:
+            if 'revoke' == m['content_type']:
+                continue
             m['content'] = m['content'] if int(m['pid']) else f"[AI助手]{m['content']}"
             text = f"{nl}[{m['msg_time']}] {m['s_wxid_name']} :{nl}{m['content']}{nl}"
             text_list.append(text)
-            if  len(''.join(text_list)) > 63000:
+            if len(''.join(text_list)) > 63000:
                 break
         content = ''.join(reversed(text_list))
         File.save_file(content, fn_txt, False, False)
