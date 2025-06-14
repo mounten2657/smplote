@@ -19,24 +19,18 @@ class SmpCommand(BaseCommand):
         return self.send_content(content)
 
     def exec_2_2(self):
-        """SMP KVP"""
-        res = Sys.delay_kill_vp()
-        content = f"正在执行 KVP 命令 - {res}\r\n\r\n请稍后查看结果……"
-        return self.send_content(content)
-
-    def exec_2_3(self):
         """SMP RVP"""
         res = Sys.delay_reload_vp()
         content = f"正在执行 RVP 命令 - {res}\r\n\r\n请稍后查看结果……"
         return self.send_content(content)
 
-    def exec_2_4(self):
+    def exec_2_3(self):
         """SMP WLV"""
         res = VpClient().wakeup()
         content = f"{res}"
         return self.send_content(content)
 
-    def exec_2_5(self):
+    def exec_2_4(self):
         """SMP INF"""
         res = VpClient().get_login_status()
         content = f"{res}"

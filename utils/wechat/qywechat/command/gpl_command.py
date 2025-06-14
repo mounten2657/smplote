@@ -16,3 +16,11 @@ class GplCommand(BaseCommand):
     def exec_1_2(self):
         """GPL CMD-3"""
         return self.send_content()
+
+    def exec_1_3(self):
+        """GPL CMD-4"""
+        return self.send_content()
+
+    def exec_1_4(self):
+        """GPL CMD-5"""
+        return self.send_content()

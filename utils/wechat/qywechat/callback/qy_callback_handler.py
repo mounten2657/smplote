@@ -45,13 +45,16 @@ class QyCallbackHandler:
         logger.debug([msg_type, msg_event, msg_user, content], 'QY_MSG_DIS_STA')
         if msg_type == 'text':
             # 用户回复消息
-            commands = qy_config['command_list'].split(',')
+            # commands = qy_config['command_list'].split(',')
+            commands_map = {
+                "#提问": "qy_que",
+                "#百科": "qy_sci",
+            }
             admins = qy_config['admin_list'].split(',')
             if msg_user in admins:
-                # 仅管理员可用
-                for k,v in enumerate(commands):
-                    if content.lower().startswith(v):
-                        method = f"exec_0_{k}"
+                for k, v in commands_map.items():
+                    if content.lower().startswith(k):
+                        method = v
                         break
         elif msg_type == 'event' and msg_event == 'click':
             # 菜单点击事件

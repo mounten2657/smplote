@@ -7,24 +7,33 @@ from service.ai.command.ai_command_service import AiCommandService
 class AiCommand(BaseCommand):
 
     def exec_0_0(self):
-        """AI 设置"""
+        """AI 总览"""
         return self.send_content()
 
     def exec_0_1(self):
-        """AI 天气"""
+        """AI 风向"""
         return self.send_content()
 
     def exec_0_2(self):
-        """AI 点歌"""
+        """AI 实时"""
         return self.send_content()
 
     def exec_0_3(self):
-        """AI 提问"""
+        """AI 日志"""
         response, aid = AiCommandService.question(self.content, self.user, 'QY_QUS')
         return self.send_content(response)
 
     def exec_0_4(self):
-        """AI 百科"""
+        """AI 状态"""
         response, aid = AiCommandService.science(self.content, self.user, 'QY_SCI')
         return self.send_content(response)
 
+    def qy_que(self):
+        """AI 提问"""
+        response, aid = AiCommandService.question(self.content, self.user, 'QY_QUS')
+        return self.send_content(response)
+
+    def qy_sci(self):
+        """AI 百科"""
+        response, aid = AiCommandService.science(self.content, self.user, 'QY_SCI')
+        return self.send_content(response)

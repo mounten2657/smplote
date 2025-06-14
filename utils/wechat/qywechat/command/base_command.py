@@ -19,7 +19,7 @@ class BaseCommand:
         return True
 
     def exec_null(self):
-        return True
+        return False
 
     def send_content(self, content=None):
         content = content if content else self._DEFAULT_MSG
