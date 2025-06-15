@@ -48,7 +48,7 @@ class AiClientService:
         # 获取对话文本
         context_list = tdb.get_context_list(cid, biz_code)
         messages = [{"role": "system", "content": prompt_text}]  # 角色设定
-        if biz_code in ['GEN_REP'] or is_web_ai:
+        if biz_code in ['GEN_REP', 'QY_SCI'] or is_web_ai:
             # 非连续对话
             messages.append({"role": "user", "content": content})
         else:
