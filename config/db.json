@@ -14,8 +14,8 @@
             "password": "[ENV.DB_MYSQL_PASSWORD_DEFAULT]",
             "database": "[ENV.DB_MYSQL_DATABASE_DEFAULT]",
             "prefix": "[ENV.DB_MYSQL_PREFIX_DEFAULT]",
-            "pool_size": 20,
-            "connect_timeout": 5
+            "pool_size": 32,
+            "connect_timeout": 10
         }
     }
 }
