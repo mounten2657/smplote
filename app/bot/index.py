@@ -1,5 +1,5 @@
 from tool.router.base_app_wx import BaseAppWx
-from tool.core import *
+from tool.core import Config, Time
 from service.vps.open_nat_service import OpenNatService
 
 
@@ -14,7 +14,7 @@ class Index(BaseAppWx):
             "version": Config.app_config().get('SYS_VERSION'),
             "params": self.params,
             "is_prod": Config.is_prod(),
-            "wxid": self.wxid,
+            "app_key": self.app_key,
         }
         return self.success(response)
 
