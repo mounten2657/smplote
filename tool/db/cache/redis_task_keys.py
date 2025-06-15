@@ -8,5 +8,6 @@ class RedisTaskKeys:
         "VP_CH": "service.wechat.callback.vp_callback_service@VpCallbackService.callback_handler",
         "VP_CM": "service.wechat.callback.vp_callback_service@VpCallbackService.command_handler",
         "VP_IH": "service.wechat.callback.vp_callback_service@VpCallbackService.insert_handler",
+        "VP_USR": "service.wechat.callback.vp_callback_service@VpCallbackService.update_user",
     }
 
