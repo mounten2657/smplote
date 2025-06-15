@@ -99,8 +99,15 @@ class CallbackQueueModel(MysqlBaseModel):
 
     def get_list_by_id(self, id_list, callback_type='wechatpad'):
         """获取特定ID组的队列"""
-        if 1210 == int(id_list[0]):
-            return self.where({"id": {"opt": ">=", "val": 1210}}).where({'callback_type': callback_type}).get()
+        if -1 == int(id_list[0]):
+            # 处理失败的数据
+            where = {
+                "callback_type": callback_type,
+                "is_processed": 1,
+                "is_succeed": 0,
+                "create_at": {"opt": ">=", "val": Time.date("%Y-%m-%d 00:00:00")}
+            }
+            return self.where(where).get()
         return self.where_in('id', id_list).where({'callback_type': callback_type}).get()
 
     def get_by_msg_id(self, msg_id):

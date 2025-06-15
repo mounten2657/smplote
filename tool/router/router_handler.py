@@ -18,6 +18,7 @@ class RouterHandler:
     OPEN_ROUTE_LIST = [
         'bot/index/index',
         'bot/task/sky_rw',
+        'bot/task/vp_msg',
         'callback/gitee_callback/smplote',
     ]
 
