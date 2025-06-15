@@ -274,7 +274,6 @@ class MysqlBaseModel:
                 return []
             finally:
                 cursor.close()
-                self.connection.close()
 
         try:
             return self._execute_with_retry(_query)
@@ -343,7 +342,6 @@ class MysqlBaseModel:
                 raise
             finally:
                 cursor.close()
-                self.connection.close()
 
         try:
             return self._execute_with_retry(_update)
@@ -390,7 +388,6 @@ class MysqlBaseModel:
         if not self._table:
             raise ValueError("No table specified")
 
-        self.connection = self._get_connection()
         cursor = self.connection.cursor()
         insert_data = Attr.convert_to_json_string(insert_data)
 
@@ -448,7 +445,6 @@ class MysqlBaseModel:
         if not self._table:
             raise ValueError("No table specified")
 
-        self.connection = self._get_connection()
         cursor = self.connection.cursor()
 
         try:
