@@ -206,7 +206,7 @@ class Attr:
                 return {key: Attr.convert_to_json_dict(value) for key, value in obj.items()}
             # 处理时间类型
             if isinstance(obj, datetime):
-                return obj.isoformat()
+                return str(obj)
             # 其他类型（数字、布尔值等）直接返回
             return obj
         except Exception:
