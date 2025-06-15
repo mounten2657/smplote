@@ -89,7 +89,7 @@ class SkyDataService:
                 else:
                     url = ''
             else:
-                fn = f"sky_{sky_type}_{r_num}.mp3"
+                fn = f"sky_{sky_type}_{r_num}.png"
                 url = f"{self._ZXZ_API}/api/ecy/?type=json"
                 res = Http.send_request('GET', url)
                 if isinstance(res, dict) and res.get('url'):
