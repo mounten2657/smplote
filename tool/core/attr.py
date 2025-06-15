@@ -3,6 +3,7 @@ import ast
 import json
 import types
 import importlib
+from datetime import datetime
 from collections import OrderedDict
 
 
@@ -203,6 +204,9 @@ class Attr:
             # 处理字典
             if isinstance(obj, dict):
                 return {key: Attr.convert_to_json_dict(value) for key, value in obj.items()}
+            # 处理时间类型
+            if isinstance(obj, datetime):
+                return obj.isoformat()
             # 其他类型（数字、布尔值等）直接返回
             return obj
         except Exception:
