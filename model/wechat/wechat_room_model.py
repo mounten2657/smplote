@@ -97,8 +97,8 @@ class WechatRoomModel(MysqlBaseModel):
             reason = random.choice(reason_list)
             for d in del_list:
                 title = '【退群提醒】'
-                des = f"群内成员：{d['display_name']} {Time.date('%H:%M')} 退群\r\n"
-                des += f"退群原因：{reason}"
+                des = f"成员：{d['display_name']} {Time.date('%H:%M')} 退群\r\n"
+                des += f"原因：{reason}"
                 self._del_user_cache(d['wxid'])
                 commander.vp_card_msg(title, des)
             self._del_room_cache(g_wxid)

@@ -1,5 +1,6 @@
 import xmltodict
-from tool.core import *
+from tool.core import Logger, Str, Config
+from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.callback.qy_verify_handler import QyVerifyHandler
 from utils.wechat.qywechat.command.ai_command import AiCommand
 from utils.wechat.qywechat.command.gpl_command import GplCommand
@@ -29,6 +30,10 @@ class QyCallbackHandler:
         # 点击事件 # {'xml': {'ToUserName': 'ww36b39b33bbf1b2f0', 'FromUserName': 'WuJun', 'CreateTime': '1747014396', 'MsgType': 'event', 'AgentID': '1000002', 'Event': 'click', 'EventKey': '#sendmsg#_2_0#7599826077209668'}}
         # 文本消息 # {'xml': {'ToUserName': 'ww36b39b33bbf1b2f0', 'FromUserName': 'WuJun', 'CreateTime': '1747017605', 'MsgType': 'text', 'Content': '123456789', 'MsgId': '7503383482518056014', 'AgentID': '1000002'}}
         data = decrypt_result.get('xml', {})
+        # 加锁去重
+        md5 = Str.md5(str(data))
+        if not RedisClient().set_nx('LOCK_QY_CAL', 1, [md5]):
+            return False, data
         res = QyCallbackHandler._dispatch(data)
         return res, data
 

@@ -141,7 +141,7 @@ class VpCallbackService:
                 command_map = {
                     # 数字命令
                     '1': {
-                        '1': lambda: commander.vp_manual(content) if is_at else False,
+                        '1': lambda: commander.vp_manual(content),
                         '101': lambda: commander.vp_question(content),
                         '102': lambda: commander.vp_science(content),
                         '103': lambda: commander.vp_self(content) if is_at else False,
