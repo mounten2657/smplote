@@ -189,9 +189,13 @@ class VpClient(VpBaseFactory):
         """下载文件"""
         return self.client.download_file(message)
 
+    def get_login_user(self):
+        """获取登陆用户信息"""
+        return self.client.get_friend_info([self.self_wxid])
+
     def wakeup(self):
         """唤醒登录"""
-        user_info = self.client.get_friend_info([self.self_wxid])
+        user_info = self.get_login_user()
         user_info = Attr.get_by_point(user_info, 'Data.contactList.0', {})
         user_name = Attr.get_by_point(user_info, 'userName.str', '')
         if user_name:

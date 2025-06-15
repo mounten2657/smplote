@@ -1,4 +1,4 @@
-from tool.core import Ins, Sys
+from tool.core import Ins, Sys, Attr
 from utils.wechat.qywechat.command.base_command import BaseCommand
 from utils.wechat.vpwechat.vp_client import VpClient
 
@@ -33,5 +33,9 @@ class SmpCommand(BaseCommand):
     def exec_2_4(self):
         """SMP INF"""
         res = VpClient().get_login_status()
+        res = Attr.get_by_point(res, 'Data', {})
+        user_info = VpClient().get_login_user()
+        user_info = Attr.get_by_point(user_info, 'Data.contactList.0', user_info)
+        res['user'] = Attr.get_by_point(user_info, 'userName.str', user_info)
         content = f"{res}"
         return self.send_content(content)
