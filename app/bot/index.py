@@ -9,7 +9,7 @@ class Index(BaseAppWx):
         """首页入口"""
         current_timestamp = Time.now()
         response = {
-            "__doc__": "Hello, Smplote tool",
+            "__doc__": "Hello SMP",
             "timestamp": current_timestamp,
             "version": Config.app_config().get('SYS_VERSION'),
             "params": self.params,
