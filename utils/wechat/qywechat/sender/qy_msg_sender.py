@@ -15,7 +15,7 @@ class QyMsgSender(QyClientFactory, Que):
 
     def send_message(self, content, msg_type, app_key):
         """给 QyClient 提供的调用方法"""
-        Time.sleep(Str.randint(1, 10) / 10)
+        Time.sleep(Str.randint(1, 20) / 10)
         md5 = Str.md5(f"{str(content)}{str(msg_type)}{str(app_key)}")
         # 短时间内重复的消息不要重复发
         if not RedisClient().set_nx('LOCK_QY_MSG', 1, [md5]):
