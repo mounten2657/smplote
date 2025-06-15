@@ -100,7 +100,7 @@ class CallbackQueueModel(MysqlBaseModel):
     def get_list_by_id(self, id_list, callback_type='wechatpad'):
         """获取特定ID组的队列"""
         if -1 == int(id_list[0]):
-            # 处理失败的数据
+            # 处理未成功的数据
             where = {
                 "callback_type": callback_type,
                 "is_processed": 1,

@@ -21,6 +21,6 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def vp_msg(self):
-        """vp失败消息重试 - 每小时的10分"""
-        res = VpCallbackService.insert_handler_retry([-1])
+        """vp消息重试 - 每小时的10分"""
+        res = VpCallbackService.callback_handler_retry(self.app_key, {"ids": "-1"})
         return self.success(res)
