@@ -1,4 +1,5 @@
-from tool.core import *
+from tool.core import Logger, Str, Que, Time, Http
+from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.callback.qy_verify_handler import QyVerifyHandler
 from utils.wechat.qywechat.callback.qy_callback_handler import QyCallbackHandler
 from model.callback.callback_queue_model import CallbackQueueModel
@@ -11,6 +12,11 @@ class QyCallbackService(Que):
     def callback_handler(self, app_key, params):
         """推送事件入队列"""
         res = {}
+        # 加锁去重
+        Time.sleep(Str.randint(1, 20) / 10)
+        md5 = Str.md5(str(params))
+        if not RedisClient().set_nx('LOCK_QY_CAL', 1, [md5]):
+            return 'error'
         logger.info(params, 'QY_CALL_PAR')
         db = CallbackQueueModel()
         # 数据入库
