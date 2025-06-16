@@ -346,10 +346,11 @@ class VpClientFactory:
         fk = File.enc_dir(fp)
         return fp, fk
 
-    def download_file(self, message):
+    def download_file(self, message, is_retry = 0):
         """
         下载文件并返回文件基本信息（含可访问的文件链接）
         :param message: 标准消息结构体 - 来自队列表
+        :param is_retry: 是否重试
         :return: json - 文件基本信息
         {'code': 0, 'msg': 'success', 'data': {'url': 'https://static.xxx.com/src/static/file/wechat/36/39/33/aZmc21aZH1VOWRNA0TXaZSPEWBHaZDFP14HFUC0HIFSLT.mp4', 'md5': 'b8aaa43ffefe1f35a7e44aed72df6431', 'size': 954061}}
         """
@@ -412,6 +413,11 @@ class VpClientFactory:
             })
             return data
         except Exception as e:
+            if not is_retry:
+                # 提供一次重试机会
+                logger.warning(f'VP GRPC 请求重试: {e}', 'VP_GRPC_CALL_RTY')
+                Time.sleep(1)
+                return self.download_file(message, 1)
             logger.error(f'VP GRPC 请求错误: {e}', 'VP_GRPC_CALL_ERR')
             return {}
 
