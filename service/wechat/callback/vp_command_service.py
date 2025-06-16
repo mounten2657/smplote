@@ -3,11 +3,10 @@ from service.ai.command.ai_command_service import AiCommandService
 from service.wechat.sky.sky_data_service import SkyDataService
 from service.ai.report.ai_report_gen_service import AIReportGenService
 from tool.unit.song.music_search_client import MusicSearchClient
-from model.wechat.wechat_room_model import WechatRoomModel
 from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
-from tool.core import Config, Attr, Sys, Dir
+from tool.core import Config, Attr, Sys, Dir, Transfer
 
 
 class VpCommandService:
@@ -353,7 +352,8 @@ class VpCommandService:
             if 3 != len(code) or not code.isdigit() or '0' not in code:
                 return False
             gid, is_force = map(int, code.split('0', 1))
-            room = WechatRoomModel().get_info(gid)
+            rdb = 'model.wechat.wechat_room_model.WechatRoomModel.get_info'
+            room = Transfer.middle_exec(rdb, [], gid)
             if not room:
                 return False
             self.g_wxid = room['g_wxid']
