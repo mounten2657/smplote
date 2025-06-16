@@ -164,6 +164,8 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, f"[礼物消息] [{content_link['skutitle']}]({content_link['url']})"]
         elif 'call' == content_type:  # 通话
             send_wxid, content = [s_wxid, f"[通话消息] [{p_msg_id}.{content_type}]"]
+        elif 'location' == content_type:  # 位置
+            send_wxid, content = [s_wxid, f"[位置消息] [{content_link['label']} {content_link['poiname']}]({content_link['x']}, {content_link['y']})"]
         elif 'wx_app' == content_type:  # 应用
             send_wxid, content = [s_wxid, f"[应用消息] [{content_link['title']}{content_link['des']}]({content_link['url']})"]
         elif self.is_my or self.is_sl:  # 自己的消息 或 私聊消息 - "{content}"
@@ -389,6 +391,14 @@ class VpMsgFormatter(VpBaseFactory):
             content_link = {
                 "banner": Str.extract_xml_attr(content_text, 'banner'),
                 "invite": Str.extract_xml_attr(content_text, 'invite'),
+            }
+        elif all(key in content_text for key in ('msg', 'location', 'label')):  # 位置 - "{s_wxid}:\n{<location_xml>}"
+            content_type = 'location'
+            content_link = {
+                "label": Str.extract_attr(content_text, 'label'),
+                "x": Str.extract_attr(content_text, 'x'),
+                "y": Str.extract_attr(content_text, 'y'),
+                "poiname": Str.extract_attr(content_text, 'poiname'),
             }
         elif all(key in content_text for key in ('appmsg', 'title')):  # 应用 - "{s_wxid}:\n{<app_xml>}"
             # 基本都是未识别的 xml
