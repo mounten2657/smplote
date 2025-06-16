@@ -30,7 +30,11 @@ class RedisTaskQueue:
             delay=5  # Execute after 5 seconds
         )
     """
-    def __init__(self, queue_name: str = 'rtq_callback_queue'):
+
+    queue_list = ['rtq_callback_queue', 'rtq_usr_queue']
+    default_queue = queue_list[0]
+
+    def __init__(self, queue_name: str = default_queue):
         """
         Args:
             queue_name: Base name for all Redis keys
@@ -137,9 +141,9 @@ class RedisTaskQueue:
 
             # Dynamic method invocation
             action = Attr.get_action_by_path(task_data['spec'])
-            logger.debug(f"正在执行队列任务: {task_data['spec']}", 'RTQ_TASK_EXEC_PAR')
+            logger.debug(f"正在执行队列任务[{self.queue_name}]: {task_data['spec']}", 'RTQ_TASK_EXEC_PAR')
             res = action(*task_data['args'], **task_data['kwargs'])
-            logger.debug(f"队列任务执行结果: {res}", 'RTQ_TASK_EXEC_RET')
+            logger.debug(f"队列任务执行结果[{self.queue_name}]: {res}", 'RTQ_TASK_EXEC_RET')
             return True
         except ImportError as e:
             logger.error(f"Module import failed: {e}", 'RTQ_TASK_MODULE_ERROR')
@@ -147,7 +151,7 @@ class RedisTaskQueue:
         except Exception as e:
             task_data['attempts'] += 1
             logger.warning(
-                f"Task {task_id} failed (attempt {task_data['attempts']}): {e}",
+                f"Task[{self.queue_name}] {task_id} failed (attempt {task_data['attempts']}): {e}",
                 'RTQ_TASK_RETRY'
             )
             raise
@@ -242,21 +246,25 @@ class RedisTaskQueue:
             raise ValueError(f'Not register service - {sk}')
         return self.submit(service, data)
 
-    def run_consumer(self):
+    @staticmethod
+    def run_consumer():
         """异步延迟启动消费"""
-        def run():
+        def run(queue_name):
+            redis = RedisClient()
             time.sleep(Str.randint(1, 10))
-            # 确保只能有一个消费者
+            # 确保每个队列只能有一个消费者
             cache_key = 'LOCK_RTQ_CNS'
-            if self.client.get(cache_key):
+            if redis.get(cache_key, [queue_name]):
                 return False
-            if not self.client.set_nx(cache_key, 1):
+            if not redis.set_nx(cache_key, 1, [queue_name]):
                 return False
             uid = Str.uuid()
-            Sys.delayed_task(3, lambda: print('heartbeat'))
-            logger.debug('redis task queue starting', 'RTQ_STA')
-            return self.consume(uid)
-        thread = threading.Thread(target=run, daemon=True)
-        thread.start()
-        logger.debug(f'redis task queue start done', 'RTQ_END')
+            print(f'heartbeat - {queue_name}')
+            logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
+            return RedisTaskQueue(queue_name).consume(uid)
+        for qn in RedisTaskQueue.queue_list:
+            time.sleep(1)
+            logger.debug(f'redis task queue loading - {qn}', 'RTQ_LOD')
+            thread = threading.Thread(target=run, args=(qn,), daemon=True)
+            thread.start()
         return True

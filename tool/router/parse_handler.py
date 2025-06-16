@@ -21,7 +21,7 @@ class ParseHandler:
             """程序预热"""
             if int(app_config['APP_AUTO_START_WS']):
                 res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
-            res['que_start'] = RedisTaskQueue().run_consumer()   # 启动 redis task queue
+            res['que_start'] = RedisTaskQueue.run_consumer()   # 启动 redis task queue
         res = {}
         # 注册结束处理
         signal.signal(signal.SIGINT, ParseHandler.shutdown_handler)

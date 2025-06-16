@@ -7,7 +7,7 @@ class RedisKeys:
     CACHE_KEY_STRING = {
         # 锁相关
         "LOCK_SYS_CNS": {"key": "lock_sys_consumer:%s", "ttl": 120},
-        "LOCK_RTQ_CNS": {"key": "lock_redis_consumer", "ttl": 87400},
+        "LOCK_RTQ_CNS": {"key": "lock_redis_consumer:%s", "ttl": 87400},
         "LOCK_SQL_CNT": {"key": "lock_mysql_connection", "ttl": 87400},
         "LOCK_WSS_CNT": {"key": "lock_wss_connection", "ttl": 87400},
         "LOCK_AI_VP_QUS": {"key": "lock_ai_vp_qus:%s", "ttl": 60},

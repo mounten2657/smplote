@@ -342,6 +342,7 @@ class VpCommandService:
     def vp_report(self, content):
         """总结"""
         is_force = 0
+        s_g_wxid = self.g_wxid
         code = str(content).replace('#总结', '').strip()
         if self.g_wxid != self.a_g_wxid:
             if '' != code:
@@ -356,6 +357,7 @@ class VpCommandService:
             room = Transfer.middle_exec(rdb, [], gid)
             if not room:
                 return False
+            s_g_wxid = self.a_g_wxid
             self.g_wxid = room['g_wxid']
             self.g_wxid_name = room['nickname']
             self.extra.update({
@@ -367,7 +369,7 @@ class VpCommandService:
         fn_img = AIReportGenService.get_report_img(self.extra, 'simple', is_force)
         if fn_img:
             self.extra.update({"fn_img": fn_img})
-            return self.client.send_img_msg(fn_img, self.g_wxid, self.extra)
+            return self.client.send_img_msg(fn_img, s_g_wxid, self.extra)
         return False
 
     def vp_normal_msg(self, response, ats=None, extra=None):
