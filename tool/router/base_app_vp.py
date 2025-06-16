@@ -41,7 +41,7 @@ class BaseAppVp(BaseApp):
 
     @property
     def g_wxid(self):
-        self._g_wxid = str(self.app_config['g_wxid']).split(',')[0]
+        self._g_wxid = self.vp_config['admin_group']
         return self._g_wxid
 
     @property

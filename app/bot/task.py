@@ -8,7 +8,7 @@ class Task(BaseAppVp):
     """定时任务控制器"""
 
     def sky_rw(self):
-        """sky任务 - 每天上午的六点"""
+        """sky任务 - 每天上午的06点05分"""
         app_key = self.app_key
         g_wxid = self.g_wxid
         s_wxid = self.wxid

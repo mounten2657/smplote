@@ -3,6 +3,7 @@ from service.ai.command.ai_command_service import AiCommandService
 from service.wechat.sky.sky_data_service import SkyDataService
 from service.ai.report.ai_report_gen_service import AIReportGenService
 from tool.unit.song.music_search_client import MusicSearchClient
+from model.wechat.wechat_room_model import WechatRoomModel
 from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
@@ -17,7 +18,8 @@ class VpCommandService:
         self.config = Config.vp_config()
         self.app_config = self.config['app_list'][self.app_key]
         self.self_wxid = self.app_config['wxid']
-        self.g_wxid = g_wxid if g_wxid else str(self.app_config['g_wxid']).split(',')[0]
+        self.a_g_wxid = self.config['admin_group']
+        self.g_wxid = g_wxid if g_wxid else self.a_g_wxid
         self.s_wxid = s_wxid if s_wxid else self.self_wxid
         room = self.client.get_room(self.g_wxid)
         user = Attr.select_item_by_where(room.get('member_list', []), {"wxid": self.s_wxid}, {})
@@ -342,8 +344,24 @@ class VpCommandService:
         """总结"""
         is_force = 0
         code = str(content).replace('#总结', '').strip()
-        if '1' == code:
-            is_force = 1
+        if self.g_wxid != self.a_g_wxid:
+            if '' != code:
+                return False
+        else:
+            if '' == code:
+                return False
+            if 3 != len(code) or not code.isdigit() or '0' not in code:
+                return False
+            gid, is_force = map(int, code.split('0', 1))
+            room = WechatRoomModel().get_info(gid)
+            if not room:
+                return False
+            self.g_wxid = room['g_wxid']
+            self.g_wxid_name = room['nickname']
+            self.extra.update({
+                "g_wxid": self.g_wxid,
+                "g_wxid_name": self.g_wxid_name
+            })
         # response = '数据收集中...\r\n\r\n正在进行总结，请稍后……'
         # self.client.send_msg(response, self.g_wxid, [], self.extra)
         fn_img = AIReportGenService.get_report_img(self.extra, 'simple', is_force)
