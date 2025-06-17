@@ -232,6 +232,9 @@ class MysqlBaseModel:
             where_parts.append(f"{field} IN ({placeholders})")
             params.extend(values)
 
+        if not where_parts:
+            raise ValueError("No where condition specified")
+
         where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
 
         # 处理自定义SQL条件
@@ -265,11 +268,20 @@ class MysqlBaseModel:
         finally:
             cursor.close()
 
-    def first(self) -> Optional[Dict]:
+    @with_connection
+    def first(self, conn) -> Optional[Dict]:
         """获取第一条记录"""
         self.limit(0, 1)
-        results = self.get()
-        return results[0] if results else None
+        sql, params = self._build_query()
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute(sql, params)
+            results = cursor.fetchall()
+            self._reset_query()
+            res = Attr.convert_to_json_dict(results)
+            return res[0] if res else {}
+        finally:
+            cursor.close()
 
     @with_connection
     def query_sql(self, conn, sql: str) -> List[Dict]:

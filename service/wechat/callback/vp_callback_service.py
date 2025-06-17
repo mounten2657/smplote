@@ -214,7 +214,7 @@ class VpCallbackService:
             res = {}
             app_key = data['app_key']
             msg_id = data.get('msg_id', 0)
-            if not msg_id:
+            if not pid or not Attr.has_keys(data, ['msg_id', 'content']):
                 logger.error(f"消息处理发生错误{[pid]} - [{data}]", 'VP_IHD_ERR')
                 return False
             msg_type = data['content_type']
@@ -246,6 +246,9 @@ class VpCallbackService:
             # 群聊入库
             if g_wxid:
                 room = client.get_room(g_wxid)
+                if not room.get('g_wxid'):
+                    logger.warning(f"获取群聊信息失败 - 跳过 - [{g_wxid}]", 'VP_INS_ING')
+                    return False
                 rdb = WechatRoomModel()
                 r_info = rdb.get_room_info(g_wxid)
                 if not r_info:
@@ -330,6 +333,9 @@ class VpCallbackService:
             if not wxid:
                 continue
             user = client.get_user(wxid, g_wxid)
+            if not user.get('wxid'):
+                logger.warning(f"获取用户信息失败 - 跳过 - [{wxid}]", 'VP_INS_ING')
+                continue
             user['room_list'] = {g_wxid: room['nickname']} if room else {}
             u_info = Attr.select_item_by_where(u_list, {"wxid": wxid})
             if not u_info:
