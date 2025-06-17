@@ -275,8 +275,7 @@ class VpCallbackService:
                     "user_list": user_list,
                     "room": room
                 }
-                # res['update_user'] = RedisTaskQueue('rtq_usr_queue').add_task('VP_USR', t_data)
-                res['update_user'] = RedisTaskQueue().add_task('VP_USR', t_data)
+                res['update_user'] = RedisTaskQueue('rtq_usr_queue').add_task('VP_USR', t_data)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0

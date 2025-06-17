@@ -1,17 +1,17 @@
-import time
-import threading
+from gevent.lock import Semaphore
 import mysql.connector
 from typing import Union, List, Dict, Optional, Any
+from functools import wraps
+from dbutils.persistent_db import PersistentDB
 from tool.core import Logger, Error, Config, Attr, Time, Str
-from mysql.connector import pooling
 
 _mysql_pool = None
-_pool_lock = threading.Lock()
+_pool_lock = Semaphore()  # 使用 gevent 的协程锁
 
 
 class MysqlBaseModel:
     """
-    Mysql db handler
+    Mysql db handler (gevent-compatible version)
     ### Usage examples
       **> Query classes**
          # Initialize the database connection
@@ -82,55 +82,60 @@ class MysqlBaseModel:
 
     _db_config = Config.mysql_db_config()
     _table = None   # 表名，子类继承时指定
+    _pool = None
 
     def __init__(self):
         self.logger = Logger()
-        self.connection = self._get_connection()
         self.prefix = self._db_config['prefix']
-        self._table = self.prefix + self._table
+        self._table = self.prefix + self._table if self._table else None
         self._reset_query()
 
-    def _get_connection(self):
-        """获取线程安全的数据库连接"""
+    @classmethod
+    def get_pool(cls):
+        """获取协程安全的数据库连接池"""
         global _mysql_pool
         Time.sleep(Str.randint(1, 30) / 10)  # LOCK_SQL_CNT
         # 双重检查锁定初始化连接池
         if _mysql_pool is None:
             with _pool_lock:
                 if _mysql_pool is None:
-                    self.logger.warning("----Initializing MySQL connection pool----", 'DB_CONN', 'mysql')
-                    _mysql_pool = pooling.MySQLConnectionPool(
-                        pool_name="smp",
-                        pool_size=self._db_config['pool_size'],
-                        host=self._db_config['host'],
-                        port=self._db_config['port'],
-                        user=self._db_config['user'],
-                        password=self._db_config['password'],
-                        database=self._db_config['database'],
-                        connect_timeout=self._db_config['connect_timeout'],
-                        autocommit=False,
-                        pool_reset_session=True
+                    logger = Logger()
+                    logger.warning("----Initializing gevent-compatible MySQL pool----", 'DB_CONN', 'mysql')
+                    _mysql_pool = PersistentDB(
+                        creator=lambda: mysql.connector.connect(
+                            host=cls._db_config['host'],
+                            port=cls._db_config['port'],
+                            user=cls._db_config['user'],
+                            password=cls._db_config['password'],
+                            database=cls._db_config['database'],
+                            use_pure=True
+                        ),
+                        maxusage=1000,
+                        setsession=['SET autocommit=0'],
+                        ping=1
                     )
+        return _mysql_pool
 
-        # 从连接池获取连接
+    def _get_connection(self):
+        """获取数据库连接（每个greenlet独立连接）"""
         try:
-            conn = _mysql_pool.get_connection()
-            if not conn.is_connected():
-                conn.reconnect(attempts=3, delay=1)
+            conn = self.get_pool().connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
             return conn
         except mysql.connector.Error as e:
-            self.logger.error(f"Failed to get DB connection: {e}", 'DB_CONN', 'mysql')
+            self.logger.error(f"Connection ping failed: {e}", 'DB_CONN', 'mysql')
             raise
 
     def _release_connection(self, conn):
         """安全释放连接回连接池"""
         try:
-            if conn.is_connected():
-                conn.close()
+            conn.close()  # PersistentDB 会处理实际回收
         except Exception as e:
             self.logger.warning(f"Error releasing connection: {str(e)}", 'DB_CONN', 'mysql')
 
     def _reset_query(self):
+        """重置查询构造器状态"""
         self._select = ['*']
         self._wheres = []
         self._where_ins = []
@@ -139,15 +144,30 @@ class MysqlBaseModel:
         self._limit_offset = None
         self._limit_count = None
 
+    @staticmethod
+    def with_connection(func):
+        """连接管理装饰器"""
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            conn = self._get_connection()
+            try:
+                return func(self, conn, *args, **kwargs)
+            finally:
+                self._release_connection(conn)
+        return wrapper
+
     def table(self, table_name: str) -> 'MysqlBaseModel':
+        """设置表名"""
         self._table = table_name
         return self
 
     def select(self, columns: List[str]) -> 'MysqlBaseModel':
+        """设置查询字段"""
         self._select = columns
         return self
 
     def where(self, conditions: Dict) -> 'MysqlBaseModel':
+        """添加WHERE条件"""
         for field, condition in conditions.items():
             if isinstance(condition, dict):
                 operator = condition['opt'].upper()
@@ -158,19 +178,20 @@ class MysqlBaseModel:
         return self
 
     def where_in(self, key: str, values: List[Any]) -> 'MysqlBaseModel':
-        """IN condition query method"""
+        """IN条件查询"""
         if values:
             self._where_ins.append((key, values))
         return self
 
     def where_sql(self, sql: str) -> 'MysqlBaseModel':
-        """custom sql condition query method"""
+        """自定义SQL条件"""
         if sql:
             self._where_sqls.append(sql)
         return self
 
     def order(self, column: str, des: str) -> 'MysqlBaseModel':
-        self._order_str = self._order_str if self._order_str  else ''
+        """设置排序"""
+        self._order_str = self._order_str if self._order_str else ''
         if not self._order_str:
             self._order_str = f" ORDER BY {column} {des.upper()} "
         else:
@@ -178,22 +199,24 @@ class MysqlBaseModel:
         return self
 
     def limit(self, offset: int, count: int) -> 'MysqlBaseModel':
+        """设置分页"""
         self._limit_offset = offset
         self._limit_count = count
         return self
 
     def _build_query(self) -> tuple:
+        """构建查询SQL"""
         if not self._table:
             raise ValueError("No table specified")
 
-        # SELECT part
+        # SELECT部分
         select_clause = ', '.join(self._select)
 
-        # WHERE part
+        # WHERE部分
         where_parts = []
         params = []
 
-        # Process ordinary WHERE conditions
+        # 处理普通WHERE条件
         for field, operator, value in self._wheres:
             if operator == 'IN':
                 placeholders = ', '.join(['%s'] * len(value))
@@ -203,7 +226,7 @@ class MysqlBaseModel:
                 where_parts.append(f"{field} {operator} %s")
                 params.append(value)
 
-        # Process WHERE IN conditions
+        # 处理WHERE IN条件
         for field, values in self._where_ins:
             placeholders = ', '.join(['%s'] * len(values))
             where_parts.append(f"{field} IN ({placeholders})")
@@ -211,10 +234,11 @@ class MysqlBaseModel:
 
         where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
 
-        for values in self._where_sqls:
-            where_clause += f" {values} "
+        # 处理自定义SQL条件
+        for sql in self._where_sqls:
+            where_clause += f" {sql} "
 
-        # LIMIT part
+        # LIMIT部分
         limit_clause = ''
         if self._limit_count is not None:
             if self._limit_offset is not None:
@@ -228,140 +252,117 @@ class MysqlBaseModel:
         self.logger.debug({"sql": sql.strip(), "params": params}, 'DB_SQL_SELECT', 'mysql')
         return sql.strip(), params
 
-    def get(self) -> List[Dict]:
+    @with_connection
+    def get(self, conn) -> List[Dict]:
+        """执行查询并返回所有结果"""
         sql, params = self._build_query()
-        cursor = self.connection.cursor(dictionary=True)
-        cursor.execute(sql, params)
-        results = cursor.fetchall()
-        self._reset_query()
-        results = Attr.convert_to_json_dict(results)
-        return results
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute(sql, params)
+            results = cursor.fetchall()
+            self._reset_query()
+            return Attr.convert_to_json_dict(results)
+        finally:
+            cursor.close()
 
     def first(self) -> Optional[Dict]:
+        """获取第一条记录"""
         self.limit(0, 1)
         results = self.get()
         return results[0] if results else None
 
-    def _execute_with_retry(self, operation, max_retries=3, *args, **kwargs):
-        """带重试机制的数据库操作"""
-        last_exception = None
-        for attempt in range(max_retries):
-            try:
-                return operation(*args, **kwargs)
-            except (mysql.connector.Error, AttributeError) as e:
-                last_exception = e
-                if "Connection" in str(e) or not self.connection.is_connected():
-                    self.logger.warning(f"DB connection error (attempt {attempt + 1}): {e}", 'DB_CONN', 'mysql')
-                    try:
-                        self.connection.reconnect(attempts=1, delay=1)
-                    except:
-                        self.connection = self._get_connection()
-                time.sleep(0.5 * (attempt + 1))
-
-        self.logger.error(f"DB operation failed after {max_retries} attempts: {last_exception}", 'DB_CONN', 'mysql')
-        raise last_exception
-
-    def query_sql(self, sql: str) -> List[Dict]:
-        """Execute a query SQL statement"""
-
-        def _query():
-            cursor = self.connection.cursor(dictionary=True)
-            try:
-                self.logger.debug({"sql": sql.strip(), "params": {}}, 'DB_SQL_QUERY', 'mysql')
-                cursor.execute(sql)
-                if sql.lstrip().upper().startswith('SELECT'):
-                    return cursor.fetchall()
-                return []
-            finally:
-                cursor.close()
-
+    @with_connection
+    def query_sql(self, conn, sql: str) -> List[Dict]:
+        """执行原生查询SQL"""
+        cursor = conn.cursor(dictionary=True)
         try:
-            return self._execute_with_retry(_query)
+            self.logger.debug({"sql": sql.strip(), "params": {}}, 'DB_SQL_QUERY', 'mysql')
+            cursor.execute(sql)
+            if sql.lstrip().upper().startswith('SELECT'):
+                return cursor.fetchall()
+            return []
         except Exception as e:
             err = Error.handle_exception_info(e)
             self.logger.exception(err, 'DB_EXP_QUERY_SQL', 'mysql')
             return []
         finally:
+            cursor.close()
             self._reset_query()
 
-    def exec_sql(self, sql: str) -> bool:
-        """Execute a non-query SQL statement"""
-        cursor = self.connection.cursor()
+    @with_connection
+    def exec_sql(self, conn, sql: str) -> bool:
+        """执行非查询SQL"""
+        cursor = conn.cursor()
         try:
             self.logger.info({"sql": sql.strip(), "params": {}}, 'DB_SQL_EXEC', 'mysql')
             cursor.execute(sql)
-            self.connection.commit()
+            conn.commit()
             return True
         except Exception as e:
-            self.connection.rollback()
+            conn.rollback()
             err = Error.handle_exception_info(e)
             self.logger.exception(err, 'DB_EXP_EXEC_SQL', 'mysql')
             return False
         finally:
+            cursor.close()
             self._reset_query()
 
-    def update(self, conditions: Union[Dict, List[Dict]], update_data: Union[Dict, List[Dict]]) -> int:
+    @with_connection
+    def update(self, conn, conditions: Union[Dict, List[Dict]], update_data: Union[Dict, List[Dict]]) -> int:
         """
-        Update records (supports single and batch updates)
-        :param conditions: Condition dictionary or list of condition dictionaries
-        :param update_data: Update data dictionary or list of update data dictionaries
-        :return: Number of affected rows
+        更新记录（支持单条和批量更新）
+        :param conditions: 条件字典或字典列表
+        :param update_data: 更新数据字典或字典列表
+        :return: 受影响的行数
         """
         if not self._table:
             raise ValueError("No table specified")
 
-        def _update():
-            cursor = self.connection.cursor()
-            try:
-                update_data_converted = Attr.convert_to_json_string(update_data)
-                affected_rows = 0
-
-                # Batch update mode
-                if isinstance(conditions, list) and isinstance(update_data_converted, list):
-                    if len(conditions) != len(update_data_converted):
-                        raise ValueError("Conditions and update data lists must have the same length")
-
-                    for cond, data in zip(conditions, update_data_converted):
-                        sql, params = self._build_update_query(cond, data)
-                        cursor.execute(sql, params)
-                        affected_rows += cursor.rowcount
-
-                # Single update mode
-                else:
-                    if isinstance(conditions, list) or isinstance(update_data_converted, list):
-                        raise ValueError("Mixed single/batch update parameters")
-
-                    sql, params = self._build_update_query(conditions, update_data_converted)
-                    cursor.execute(sql, params)
-                    affected_rows = cursor.rowcount
-
-                self.connection.commit()
-                return affected_rows
-            except:
-                self.connection.rollback()
-                raise
-            finally:
-                cursor.close()
-
+        cursor = conn.cursor()
         try:
-            return self._execute_with_retry(_update)
+            update_data_converted = Attr.convert_to_json_string(update_data)
+            affected_rows = 0
+
+            # 批量更新模式
+            if isinstance(conditions, list) and isinstance(update_data_converted, list):
+                if len(conditions) != len(update_data_converted):
+                    raise ValueError("Conditions and update data lists must have the same length")
+
+                for cond, data in zip(conditions, update_data_converted):
+                    sql, params = self._build_update_query(cond, data)
+                    cursor.execute(sql, params)
+                    affected_rows += cursor.rowcount
+
+            # 单条更新模式
+            else:
+                if isinstance(conditions, list) or isinstance(update_data_converted, list):
+                    raise ValueError("Mixed single/batch update parameters")
+
+                sql, params = self._build_update_query(conditions, update_data_converted)
+                cursor.execute(sql, params)
+                affected_rows = cursor.rowcount
+
+            conn.commit()
+            return affected_rows
         except Exception as e:
+            conn.rollback()
             err = Error.handle_exception_info(e)
             self.logger.exception(err, 'DB_EXP_UPDATE', 'mysql')
             return 0
         finally:
+            cursor.close()
             self._reset_query()
 
     def _build_update_query(self, conditions: Dict, update_data: Dict) -> tuple[str, list]:
-        """Build an UPDATE statement"""
-        # SET part
+        """构建UPDATE语句"""
+        # SET部分
         set_parts = []
         set_params = []
         for field, value in update_data.items():
             set_parts.append(f"{field} = %s")
             set_params.append(value)
 
-        # WHERE part
+        # WHERE部分
         where_parts = []
         where_params = []
         for field, condition in conditions.items():
@@ -379,16 +380,17 @@ class MysqlBaseModel:
         self.logger.info({"sql": sql.strip(), "params": set_params + where_params}, 'DB_SQL_UPDATE', 'mysql')
         return sql, set_params + where_params
 
-    def insert(self, insert_data: Union[Dict, List[Dict]]) -> int:
+    @with_connection
+    def insert(self, conn, insert_data: Union[Dict, List[Dict]]) -> int:
         """
-        添加单条或多条数据
+        插入单条或多条数据
         :param insert_data: 单条数据字典或多条数据列表
         :return: 插入成功的记录数
         """
         if not self._table:
             raise ValueError("No table specified")
 
-        cursor = self.connection.cursor()
+        cursor = conn.cursor()
         insert_data = Attr.convert_to_json_string(insert_data)
 
         try:
@@ -423,32 +425,32 @@ class MysqlBaseModel:
                 inserted_rows = cursor.lastrowid
 
             else:
-                raise TypeError("add_data must be a dictionary or a list of dictionaries")
+                raise TypeError("insert_data must be a dictionary or a list of dictionaries")
 
-            self.connection.commit()
+            conn.commit()
             return inserted_rows
-
         except Exception as e:
-            self.connection.rollback()
+            conn.rollback()
             err = Error.handle_exception_info(e)
             self.logger.exception(err, 'DB_EXP_INSERT', 'mysql')
             return 0
         finally:
+            cursor.close()
             self._reset_query()
 
-    def delete(self, conditions: Dict) -> int:
+    @with_connection
+    def delete(self, conn, conditions: Dict) -> int:
         """
-        Delete records
-        :param conditions: Condition dictionary
-        :return: Number of affected rows
+        删除记录
+        :param conditions: 条件字典
+        :return: 受影响的行数
         """
         if not self._table:
             raise ValueError("No table specified")
 
-        cursor = self.connection.cursor()
-
+        cursor = conn.cursor()
         try:
-            # Build WHERE conditions
+            # 构建WHERE条件
             where_parts = []
             params = []
             for field, condition in conditions.items():
@@ -467,22 +469,16 @@ class MysqlBaseModel:
 
             cursor.execute(sql, params)
             affected_rows = cursor.rowcount
-            self.connection.commit()
+            conn.commit()
             return affected_rows
-
         except Exception as e:
-            self.connection.rollback()
+            conn.rollback()
             err = Error.handle_exception_info(e)
             self.logger.exception(err, 'DB_EXP_DELETE', 'mysql')
             return 0
         finally:
+            cursor.close()
             self._reset_query()
-
-    def close(self):
-        """显式关闭数据库连接"""
-        if hasattr(self, 'connection') and self.connection:
-            self._release_connection(self.connection)
-            self.logger.info("MySQL connection closed", 'DB_CONN', 'mysql')
 
     def get_info(self, pid):
         """根据主键获取第一条记录"""

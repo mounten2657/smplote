@@ -31,8 +31,7 @@ class RedisTaskQueue:
         )
     """
 
-    # queue_list = ['rtq_callback_queue', 'rtq_usr_queue']
-    queue_list = ['rtq_callback_queue']
+    queue_list = ['rtq_callback_queue', 'rtq_usr_queue']
     default_queue = queue_list[0]
 
     def __init__(self, queue_name: str = default_queue):
