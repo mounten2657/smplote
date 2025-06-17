@@ -166,6 +166,8 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, f"[通话消息] [{p_msg_id}.{content_type}]"]
         elif 'location' == content_type:  # 位置
             send_wxid, content = [s_wxid, f"[位置消息] [{content_link['label']} {content_link['poiname']}]({content_link['x']}, {content_link['y']})"]
+        elif 'location_share' == content_type:  # 位置共享
+            send_wxid, content = [s_wxid, f"[位置共享消息] {content_link['title']}"]
         elif 'wx_app' == content_type:  # 应用
             send_wxid, content = [s_wxid, f"[应用消息] [{content_link['title']}{content_link['des']}]({content_link['url']})"]
         elif self.is_my or self.is_sl:  # 自己的消息 或 私聊消息 - "{content}"
@@ -400,6 +402,20 @@ class VpMsgFormatter(VpBaseFactory):
                 "y": Str.extract_attr(content_text, 'y'),
                 "poiname": Str.extract_attr(content_text, 'poiname'),
             }
+        elif '位置共享' in content_text:
+            if '结束' in content_text:
+                content_type = 'location_share'
+                content_link = {"tag": "LS_END", "title": "位置共享已结束"}
+            elif '发起' in content_text:
+                content_type = 'location_share'
+                content_link = {"tag": "LS_START", "title": "发起了位置共享"}
+            else:
+                content_type = 'unknown'
+                content_link = {}
+        elif any(key in content_text for key in ('talkroominfo', 'trackmsg')):  # 位置共享数据 - "{s_wxid}:\n{<lsd_xml>}"
+            # 太多了不要
+            content_type = 'unknown'
+            content_link = {}
         elif all(key in content_text for key in ('appmsg', 'title')):  # 应用 - "{s_wxid}:\n{<app_xml>}"
             # 基本都是未识别的 xml
             content_type = 'wx_app'
@@ -464,6 +480,7 @@ class VpMsgFormatter(VpBaseFactory):
         try:
             root = ElementTree.fromstring(msg_source)
             at_user_node = root.find('atuserlist')
-            return at_user_node.text if at_user_node is not None else ''
+            at_user = at_user_node.text if at_user_node is not None else ''
+            return at_user if at_user else ''
         except ElementTree.ParseError:
             return ''
