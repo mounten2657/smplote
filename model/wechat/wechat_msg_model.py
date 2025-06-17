@@ -59,7 +59,7 @@ class WechatMsgModel(MysqlBaseModel):
             "t_wxid_name": msg['to_wxid_name'] if msg['to_wxid_name'] else msg['to_wxid'],
             "f_wxid": msg['from_wxid'],
             "f_wxid_name": msg['from_wxid_name'] if msg['from_wxid_name'] else msg['from_wxid'],
-            "at_user": msg['at_user'],
+            "at_user": msg['at_user'] if msg['at_user'] else '',
             "p_msg_id": msg['p_msg_id'],
             "fid": msg['fid'],
             "pid": msg['pid'],
