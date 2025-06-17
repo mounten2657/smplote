@@ -168,6 +168,8 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, f"[位置消息] [{content_link['label']} {content_link['poiname']}]({content_link['x']}, {content_link['y']})"]
         elif 'location_share' == content_type:  # 位置共享
             send_wxid, content = [s_wxid, f"[位置共享消息] {content_link['title']}"]
+        elif 'location_share_data' == content_type:  # 位置共享数据
+            send_wxid, content = [s_wxid, '']
         elif 'wx_app' == content_type:  # 应用
             send_wxid, content = [s_wxid, f"[应用消息] [{content_link['title']}{content_link['des']}]({content_link['url']})"]
         elif self.is_my or self.is_sl:  # 自己的消息 或 私聊消息 - "{content}"
@@ -414,7 +416,7 @@ class VpMsgFormatter(VpBaseFactory):
                 content_link = {}
         elif any(key in content_text for key in ('talkroominfo', 'trackmsg')):  # 位置共享数据 - "{s_wxid}:\n{<lsd_xml>}"
             # 太多了不要
-            content_type = 'unknown'
+            content_type = 'location_share_data'
             content_link = {}
         elif all(key in content_text for key in ('appmsg', 'title')):  # 应用 - "{s_wxid}:\n{<app_xml>}"
             # 基本都是未识别的 xml

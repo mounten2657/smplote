@@ -9,7 +9,7 @@ class WechatMsgModel(MysqlBaseModel):
         - id - int - 主键ID
         - msg_id - bigint - 消息ID
         - content - longtext - 消息内容
-        - content_type - varchar(8) - 识别消息类型
+        - content_type - varchar(16) - 识别消息类型
         - msg_time - datetime - 消息时间
         - s_wxid - varchar(32) - 发送方wxid
         - s_wxid_name - varchar(64) - 发送方名称
