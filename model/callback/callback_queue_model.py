@@ -114,8 +114,8 @@ class CallbackQueueModel(MysqlBaseModel):
         """wechatpad 专用 - 通过消息ID获取，主要用于消息去重"""
         condition = {'callback_type': 'wechatpad', 'h_value': msg_id}
         return (self.where(condition)
-                .where_in('is_processed', [0, 1])
-                .where_in('is_succeed', [0, 1])
+                # .where_in('is_processed', [0, 1])
+                # .where_in('is_succeed', [0, 1])
                 .first())
 
 
