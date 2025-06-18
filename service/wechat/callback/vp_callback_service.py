@@ -271,14 +271,16 @@ class VpCallbackService:
 
             # 用户入库耗时 - 改为队列中执行
             if (g_wxid and r_info and (Time.now() - Time.tfd(str(r_info['update_at'])) > 3600)) or not g_wxid:
-                t_data = {
-                    "app_key": app_key,
-                    "g_wxid": g_wxid,
-                    "u_list": u_list,
-                    "user_list": user_list,
-                    "room": room
-                }
-                res['update_user'] = RedisTaskQueue('rtq_usr_queue').add_task('VP_USR', t_data)
+                # 特定群才更新
+                if g_wxid in str(app_config['g_wxid']).split(','):
+                    t_data = {
+                        "app_key": app_key,
+                        "g_wxid": g_wxid,
+                        "u_list": u_list,
+                        "user_list": user_list,
+                        "room": room
+                    }
+                    res['update_user'] = RedisTaskQueue('rtq_usr_queue').add_task('VP_USR', t_data)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0
