@@ -401,7 +401,7 @@ class MysqlBaseModel:
                 placeholders = ', '.join(['%s'] * len(insert_data))
                 values = list(insert_data.values())
 
-                sql = f"INSERT INTO {self._state._table} ({columns}) VALUES ({placeholders})"
+                sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
                 self.logger.info({"sql": sql.strip(), "params": values}, 'DB_SQL_INSERT', 'mysql')
                 cursor.execute(sql, values)
                 inserted_rows = cursor.lastrowid
