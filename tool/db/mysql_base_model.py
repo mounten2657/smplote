@@ -498,4 +498,3 @@ class QueryState(threading.local):
         self._order_str = None
         self._limit_offset = None
         self._limit_count = None
-        self._table = None
