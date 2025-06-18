@@ -49,6 +49,11 @@ class VppServerStub(object):
                 request_serializer=vpp__serve__pb2.WkHtmlRequest.SerializeToString,
                 response_deserializer=vpp__serve__pb2.CommonResponse.FromString,
                 _registered_method=True)
+        self.cs7_rgu = channel.unary_unary(
+                '/vpp_serve.VppServer/cs7_rgu',
+                request_serializer=vpp__serve__pb2.Cs7ShRequest.SerializeToString,
+                response_deserializer=vpp__serve__pb2.CommonResponse.FromString,
+                _registered_method=True)
 
 
 class VppServerServicer(object):
@@ -72,6 +77,12 @@ class VppServerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def cs7_rgu(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_VppServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -88,6 +99,11 @@ def add_VppServerServicer_to_server(servicer, server):
             'wk_html_2_pdf': grpc.unary_unary_rpc_method_handler(
                     servicer.wk_html_2_pdf,
                     request_deserializer=vpp__serve__pb2.WkHtmlRequest.FromString,
+                    response_serializer=vpp__serve__pb2.CommonResponse.SerializeToString,
+            ),
+            'cs7_rgu': grpc.unary_unary_rpc_method_handler(
+                    servicer.cs7_rgu,
+                    request_deserializer=vpp__serve__pb2.Cs7ShRequest.FromString,
                     response_serializer=vpp__serve__pb2.CommonResponse.SerializeToString,
             ),
     }
@@ -171,6 +187,33 @@ class VppServer(object):
             target,
             '/vpp_serve.VppServer/wk_html_2_pdf',
             vpp__serve__pb2.WkHtmlRequest.SerializeToString,
+            vpp__serve__pb2.CommonResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def cs7_rgu(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vpp_serve.VppServer/cs7_rgu',
+            vpp__serve__pb2.Cs7ShRequest.SerializeToString,
             vpp__serve__pb2.CommonResponse.FromString,
             options,
             channel_credentials,

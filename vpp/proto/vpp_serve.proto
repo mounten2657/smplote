@@ -22,9 +22,14 @@ message WkHtmlRequest {
   string fo = 2;
 }
 
+message Cs7ShRequest {
+  string p = 1;
+}
+
 service VppServer {
   rpc vp_cdn_download (VpFileRequest) returns (CommonResponse);
   rpc wk_html_2_img (WkHtmlRequest) returns (CommonResponse);
   rpc wk_html_2_pdf (WkHtmlRequest) returns (CommonResponse);
+  rpc cs7_rgu (Cs7ShRequest) returns (CommonResponse);
 }
 

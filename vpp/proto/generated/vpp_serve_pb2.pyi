@@ -80,3 +80,18 @@ class WkHtmlRequest(google.protobuf.message.Message):
     def ClearField(self, field_name: typing.Literal["fo", b"fo", "fp", b"fp"]) -> None: ...
 
 global___WkHtmlRequest = WkHtmlRequest
+
+@typing.final
+class Cs7ShRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    P_FIELD_NUMBER: builtins.int
+    p: builtins.str
+    def __init__(
+        self,
+        *,
+        p: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["p", b"p"]) -> None: ...
+
+global___Cs7ShRequest = Cs7ShRequest

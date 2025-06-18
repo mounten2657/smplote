@@ -7,6 +7,7 @@ from vpp.proto.generated.vpp_serve_pb2 import *
 from vpp.proto.generated.vpp_serve_pb2_grpc import *
 from vpp.api.wechat.pad.vp_file_api import VpFileApi
 from vpp.api.lib.wk.wk_html_api import WkHtmlApi
+from vpp.api.lib.sys.cs7_sh_api import Cs7ShApi
 
 
 class VppServer:
@@ -14,6 +15,7 @@ class VppServer:
     def __init__(self):
         self.file_api = VpFileApi()
         self.wk_api = WkHtmlApi()
+        self.cs7_api = Cs7ShApi()
 
     def vp_cdn_download(self, request, context):
         """下载文件"""
@@ -33,6 +35,10 @@ class VppServer:
         return self._exec_api(context, lambda: self.wk_api.wk_html_to_pdf(
                 fp=request.fp, fo=request.fo
         ))
+
+    def cs7_rgu(self, request, context):
+        """重启gunicorn"""
+        return self._exec_api(context, lambda: self.cs7_api.restart_gunicorn(p=request.p))
 
     @staticmethod
     def _exec_api(context, func: Callable, *args, **kwargs):
