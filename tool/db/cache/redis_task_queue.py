@@ -250,14 +250,14 @@ class RedisTaskQueue:
     def run_consumer():
         """异步延迟启动消费"""
         def run(queue_name):
-            redis = RedisClient()
-            time.sleep(Str.randint(1, 10))
-            # 确保每个队列只能有一个消费者
-            cache_key = 'LOCK_RTQ_CNS'
-            if redis.get(cache_key, [queue_name]):
-                return False
-            if not redis.set_nx(cache_key, 1, [queue_name]):
-                return False
+            # redis = RedisClient()
+            # time.sleep(Str.randint(1, 10))
+            # # 确保每个队列只能有一个消费者
+            # cache_key = 'LOCK_RTQ_CNS'
+            # if redis.get(cache_key, [queue_name]):
+            #     return False
+            # if not redis.set_nx(cache_key, 1, [queue_name]):
+            #     return False
             uid = Str.uuid()
             print(f'heartbeat - {queue_name}')
             logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
