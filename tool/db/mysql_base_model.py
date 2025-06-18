@@ -486,6 +486,8 @@ class MysqlBaseModel:
 class QueryState(threading.local):
     """线程/协局局部存储的查询状态"""
 
+    _table = None
+
     def __init__(self):
         super().__init__()
         self.reset()
