@@ -31,7 +31,12 @@ class RedisTaskQueue:
         )
     """
 
-    queue_list = ['rtq_callback_queue', 'rtq_usr_queue']
+    queue_list = [
+        'rtq_vp_ch_queue',
+        'rtq_vp_cm_queue',
+        'rtq_vp_ih_queue',
+        'rtq_vp_usr_queue',
+    ]
     default_queue = queue_list[0]
 
     def __init__(self, queue_name: str = default_queue):
@@ -228,7 +233,7 @@ class RedisTaskQueue:
 
             except Exception as e:
                 logger.error(f"Consumer {worker_id} crashed: {e}", 'RTQ_CONSUMER_FATAL')
-                # time.sleep(1)
+                time.sleep(0.1)
 
     def get_queue_stats(self) -> Dict[str, int]:
         """Get current queue status."""

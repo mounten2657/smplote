@@ -98,9 +98,9 @@ class VpCallbackService:
         logger.debug(res['rev_handler'], 'VP_CALL_HD_RES')
         data['pid'] = pid
         # 消息数据入库 - 异步
-        res['ins_handler'] = RedisTaskQueue().add_task('VP_IH', data)
+        res['ins_handler'] = RedisTaskQueue('rtq_vp_ih_queue').add_task('VP_IH', data)
         # 消息指令处理 - 异步
-        res['cmd_handler'] = RedisTaskQueue().add_task('VP_CM', data)
+        res['cmd_handler'] = RedisTaskQueue('rtq_vp_cm_queue').add_task('VP_CM', data)
         update_data = {"process_result": res, "process_params": data}
         if res['rev_handler']:
             update_data.update({"is_succeed": 1})
@@ -278,7 +278,7 @@ class VpCallbackService:
                     "user_list": user_list,
                     "room": room
                 }
-                res['update_user'] = RedisTaskQueue('rtq_usr_queue').add_task('VP_USR', t_data)
+                res['update_user'] = RedisTaskQueue('rtq_vp_usr_queue').add_task('VP_USR', t_data)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0

@@ -16,7 +16,7 @@ class VpCallbackHandler(VpBaseFactory):
             return False
         time.sleep(0.01)  # 避免满载
         # 先入队列，再由队列发起回调处理
-        res = RedisTaskQueue().add_task('VP_CH', data)
+        res = RedisTaskQueue('rtq_vp_ch_queue').add_task('VP_CH', data)
         return res
 
     def on_message_filter(self, data):
