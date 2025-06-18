@@ -201,7 +201,7 @@ class MysqlBaseModel:
     def _build_query(self) -> tuple:
         """构建查询SQL（线程安全）"""
         with self._query_lock:
-            if not self._state._table:
+            if not self._table:
                 raise ValueError("No table specified")
 
             # SELECT部分
@@ -246,7 +246,7 @@ class MysqlBaseModel:
 
             order_str = self._state._order_str if self._state._order_str else ''
 
-            sql = f"SELECT {select_clause} FROM {self._state._table} WHERE {where_clause} {order_str} {limit_clause}"
+            sql = f"SELECT {select_clause} FROM {self._table} WHERE {where_clause} {order_str} {limit_clause}"
             self.logger.debug({"sql": sql.strip(), "params": params}, 'DB_SQL_SELECT', 'mysql')
             return sql.strip(), params
 
