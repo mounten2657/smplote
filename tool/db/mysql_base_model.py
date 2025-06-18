@@ -97,7 +97,7 @@ class MysqlBaseModel:
     def get_pool(cls):
         """获取协程安全的数据库连接池"""
         global _mysql_pool
-        Time.sleep(Str.randint(1, 30) / 10)  # LOCK_SQL_CNT
+        Time.sleep(Str.randint(1, 30) / 10)
         # 双重检查锁定初始化连接池
         if _mysql_pool is None:
             with _pool_lock:
