@@ -214,8 +214,7 @@ class VpCallbackService:
             res = {}
             app_key = data['app_key']
             msg_id = data.get('msg_id', 0)
-            content = data.get('content', '')
-            if not msg_id or not pid or not content:
+            if not msg_id or not pid:
                 logger.error(f"消息处理发生错误{[pid]} - [{data}]", 'VP_IHD_ERR')
                 return False
             msg_type = data['content_type']

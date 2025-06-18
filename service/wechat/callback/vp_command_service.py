@@ -1,4 +1,6 @@
 import random
+import time
+
 from service.ai.command.ai_command_service import AiCommandService
 from service.wechat.sky.sky_data_service import SkyDataService
 from service.ai.report.ai_report_gen_service import AIReportGenService
@@ -160,6 +162,11 @@ class VpCommandService:
         content = '#红石' if '202' == content else content
         file = self.service.get_sky_file('hs')
         fp = file.get('save_path')
+        if not fp:
+            # 重试一次
+            time.sleep(2)
+            file = self.service.get_sky_file('hs')
+            fp = file.get('save_path')
         if fp:
             fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})

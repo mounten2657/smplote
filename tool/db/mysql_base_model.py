@@ -1,12 +1,13 @@
-from gevent.lock import Semaphore
+import threading
 import mysql.connector
+from gevent.lock import Semaphore
 from typing import Union, List, Dict, Optional, Any
 from functools import wraps
 from dbutils.persistent_db import PersistentDB
 from tool.core import Logger, Error, Config, Attr, Time, Str
 
 _mysql_pool = None
-_pool_lock = Semaphore()  # 使用 gevent 的协程锁
+_pool_lock = Semaphore()
 
 
 class MysqlBaseModel:
@@ -80,6 +81,7 @@ class MysqlBaseModel:
           print(f"Deleted {deleted} old records")
     """
 
+    _query_lock = threading.Lock()
     _db_config = Config.mysql_db_config()
     _table = None   # 表名，子类继承时指定
     _pool = None
@@ -87,8 +89,8 @@ class MysqlBaseModel:
     def __init__(self):
         self.logger = Logger()
         self.prefix = self._db_config['prefix']
-        self._table = self.prefix + self._table if self._table else None
-        self._reset_query()
+        self._state = QueryState()
+        self._state._table = self.prefix + self._table if self._table else None
 
     @classmethod
     def get_pool(cls):
@@ -134,16 +136,6 @@ class MysqlBaseModel:
         except Exception as e:
             self.logger.warning(f"Error releasing connection: {str(e)}", 'DB_CONN', 'mysql')
 
-    def _reset_query(self):
-        """重置查询构造器状态"""
-        self._select = ['*']
-        self._wheres = []
-        self._where_ins = []
-        self._where_sqls = []
-        self._order_str = None
-        self._limit_offset = None
-        self._limit_count = None
-
     @staticmethod
     def with_connection(func):
         """连接管理装饰器"""
@@ -154,16 +146,17 @@ class MysqlBaseModel:
                 return func(self, conn, *args, **kwargs)
             finally:
                 self._release_connection(conn)
+                self._state.reset()  # 连接释放后重置状态
         return wrapper
 
     def table(self, table_name: str) -> 'MysqlBaseModel':
         """设置表名"""
-        self._table = table_name
+        self._state._table = table_name
         return self
 
     def select(self, columns: List[str]) -> 'MysqlBaseModel':
         """设置查询字段"""
-        self._select = columns
+        self._state._select = columns
         return self
 
     def where(self, conditions: Dict) -> 'MysqlBaseModel':
@@ -172,88 +165,89 @@ class MysqlBaseModel:
             if isinstance(condition, dict):
                 operator = condition['opt'].upper()
                 value = condition['val']
-                self._wheres.append((field, operator, value))
+                self._state._wheres.append((field, operator, value))
             else:
-                self._wheres.append((field, '=', condition))
+                self._state._wheres.append((field, '=', condition))
         return self
 
     def where_in(self, key: str, values: List[Any]) -> 'MysqlBaseModel':
         """IN条件查询"""
         if values:
-            self._where_ins.append((key, values))
+            self._state._where_ins.append((key, values))
         return self
 
     def where_sql(self, sql: str) -> 'MysqlBaseModel':
         """自定义SQL条件"""
         if sql:
-            self._where_sqls.append(sql)
+            self._state._where_sqls.append(sql)
         return self
 
     def order(self, column: str, des: str) -> 'MysqlBaseModel':
         """设置排序"""
-        self._order_str = self._order_str if self._order_str else ''
-        if not self._order_str:
-            self._order_str = f" ORDER BY {column} {des.upper()} "
+        self._state._order_str = self._state._order_str if self._state._order_str else ''
+        if not self._state._order_str:
+            self._state._order_str = f" ORDER BY {column} {des.upper()} "
         else:
-            self._order_str += f", {column} {des.upper()} "
+            self._state._order_str += f", {column} {des.upper()} "
         return self
 
     def limit(self, offset: int, count: int) -> 'MysqlBaseModel':
         """设置分页"""
-        self._limit_offset = offset
-        self._limit_count = count
+        self._state._limit_offset = offset
+        self._state._limit_count = count
         return self
 
     def _build_query(self) -> tuple:
-        """构建查询SQL"""
-        if not self._table:
-            raise ValueError("No table specified")
+        """构建查询SQL（线程安全）"""
+        with self._query_lock:
+            if not self._state._table:
+                raise ValueError("No table specified")
 
-        # SELECT部分
-        select_clause = ', '.join(self._select)
+            # SELECT部分
+            select_clause = ', '.join(self._state._select)
 
-        # WHERE部分
-        where_parts = []
-        params = []
+            # WHERE部分
+            where_parts = []
+            params = []
 
-        # 处理普通WHERE条件
-        for field, operator, value in self._wheres:
-            if operator == 'IN':
-                placeholders = ', '.join(['%s'] * len(value))
+            # 处理普通WHERE条件
+            for field, operator, value in self._state._wheres:
+                if operator == 'IN':
+                    placeholders = ', '.join(['%s'] * len(value))
+                    where_parts.append(f"{field} IN ({placeholders})")
+                    params.extend(value)
+                else:
+                    where_parts.append(f"{field} {operator} %s")
+                    params.append(value)
+
+            # 处理WHERE IN条件
+            for field, values in self._state._where_ins:
+                placeholders = ', '.join(['%s'] * len(values))
                 where_parts.append(f"{field} IN ({placeholders})")
-                params.extend(value)
-            else:
-                where_parts.append(f"{field} {operator} %s")
-                params.append(value)
+                params.extend(values)
 
-        # 处理WHERE IN条件
-        for field, values in self._where_ins:
-            placeholders = ', '.join(['%s'] * len(values))
-            where_parts.append(f"{field} IN ({placeholders})")
-            params.extend(values)
+            if not where_parts and not self._state._where_sqls:
+                raise ValueError("No where condition specified")
 
-        if not where_parts:
-            raise ValueError("No where condition specified")
+            where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
 
-        where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
+            # 处理自定义SQL条件
+            for sql in self._state._where_sqls:
+                where_clause += f" {sql} "
 
-        # 处理自定义SQL条件
-        for sql in self._where_sqls:
-            where_clause += f" {sql} "
+            # LIMIT部分
+            limit_clause = ''
+            if self._state._limit_count is not None:
+                if self._state._limit_offset is not None:
+                    limit_clause = f"LIMIT {self._state._limit_offset}, {self._state._limit_count}"
+                else:
+                    limit_clause = f"LIMIT {self._state._limit_count}"
 
-        # LIMIT部分
-        limit_clause = ''
-        if self._limit_count is not None:
-            if self._limit_offset is not None:
-                limit_clause = f"LIMIT {self._limit_offset}, {self._limit_count}"
-            else:
-                limit_clause = f"LIMIT {self._limit_count}"
+            order_str = self._state._order_str if self._state._order_str else ''
 
-        order_str = self._order_str if self._order_str else ''
-
-        sql = f"SELECT {select_clause} FROM {self._table} WHERE {where_clause} {order_str} {limit_clause}"
-        self.logger.debug({"sql": sql.strip(), "params": params}, 'DB_SQL_SELECT', 'mysql')
-        return sql.strip(), params
+            sql = f"SELECT {select_clause} FROM {self._state._table} WHERE {where_clause} {order_str} {limit_clause}"
+            self.logger.debug({"sql": sql.strip(), "params": params}, 'DB_SQL_SELECT', 'mysql')
+            return sql.strip(), params
 
     @with_connection
     def get(self, conn) -> List[Dict]:
@@ -262,9 +256,7 @@ class MysqlBaseModel:
         cursor = conn.cursor(dictionary=True)
         try:
             cursor.execute(sql, params)
-            results = cursor.fetchall()
-            self._reset_query()
-            return Attr.convert_to_json_dict(results)
+            return Attr.convert_to_json_dict(cursor.fetchall())
         finally:
             cursor.close()
 
@@ -276,10 +268,8 @@ class MysqlBaseModel:
         cursor = conn.cursor(dictionary=True)
         try:
             cursor.execute(sql, params)
-            results = cursor.fetchall()
-            self._reset_query()
-            res = Attr.convert_to_json_dict(results)
-            return res[0] if res else {}
+            results = Attr.convert_to_json_dict(cursor.fetchall())
+            return results[0] if results else {}
         finally:
             cursor.close()
 
@@ -299,7 +289,6 @@ class MysqlBaseModel:
             return []
         finally:
             cursor.close()
-            self._reset_query()
 
     @with_connection
     def exec_sql(self, conn, sql: str) -> bool:
@@ -317,7 +306,6 @@ class MysqlBaseModel:
             return False
         finally:
             cursor.close()
-            self._reset_query()
 
     @with_connection
     def update(self, conn, conditions: Union[Dict, List[Dict]], update_data: Union[Dict, List[Dict]]) -> int:
@@ -327,7 +315,7 @@ class MysqlBaseModel:
         :param update_data: 更新数据字典或字典列表
         :return: 受影响的行数
         """
-        if not self._table:
+        if not self._state._table:
             raise ValueError("No table specified")
 
         cursor = conn.cursor()
@@ -363,34 +351,34 @@ class MysqlBaseModel:
             return 0
         finally:
             cursor.close()
-            self._reset_query()
 
     def _build_update_query(self, conditions: Dict, update_data: Dict) -> tuple[str, list]:
         """构建UPDATE语句"""
-        # SET部分
-        set_parts = []
-        set_params = []
-        for field, value in update_data.items():
-            set_parts.append(f"{field} = %s")
-            set_params.append(value)
+        with self._query_lock:
+            # SET部分
+            set_parts = []
+            set_params = []
+            for field, value in update_data.items():
+                set_parts.append(f"{field} = %s")
+                set_params.append(value)
 
-        # WHERE部分
-        where_parts = []
-        where_params = []
-        for field, condition in conditions.items():
-            if isinstance(condition, dict):
-                operator = condition['opt'].upper()
-                value = condition['val']
-                where_parts.append(f"{field} {operator} %s")
-                where_params.append(value)
-            else:
-                where_parts.append(f"{field} = %s")
-                where_params.append(condition)
+            # WHERE部分
+            where_parts = []
+            where_params = []
+            for field, condition in conditions.items():
+                if isinstance(condition, dict):
+                    operator = condition['opt'].upper()
+                    value = condition['val']
+                    where_parts.append(f"{field} {operator} %s")
+                    where_params.append(value)
+                else:
+                    where_parts.append(f"{field} = %s")
+                    where_params.append(condition)
 
-        where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
-        sql = f"UPDATE {self._table} SET {', '.join(set_parts)} WHERE {where_clause}"
-        self.logger.info({"sql": sql.strip(), "params": set_params + where_params}, 'DB_SQL_UPDATE', 'mysql')
-        return sql, set_params + where_params
+            where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
+            sql = f"UPDATE {self._state._table} SET {', '.join(set_parts)} WHERE {where_clause}"
+            self.logger.info({"sql": sql.strip(), "params": set_params + where_params}, 'DB_SQL_UPDATE', 'mysql')
+            return sql, set_params + where_params
 
     @with_connection
     def insert(self, conn, insert_data: Union[Dict, List[Dict]]) -> int:
@@ -399,7 +387,7 @@ class MysqlBaseModel:
         :param insert_data: 单条数据字典或多条数据列表
         :return: 插入成功的记录数
         """
-        if not self._table:
+        if not self._state._table:
             raise ValueError("No table specified")
 
         cursor = conn.cursor()
@@ -412,7 +400,7 @@ class MysqlBaseModel:
                 placeholders = ', '.join(['%s'] * len(insert_data))
                 values = list(insert_data.values())
 
-                sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
+                sql = f"INSERT INTO {self._state._table} ({columns}) VALUES ({placeholders})"
                 self.logger.info({"sql": sql.strip(), "params": values}, 'DB_SQL_INSERT', 'mysql')
                 cursor.execute(sql, values)
                 inserted_rows = cursor.lastrowid
@@ -431,7 +419,7 @@ class MysqlBaseModel:
                 placeholders = ', '.join(['%s'] * len(first_keys))
                 value_groups = [tuple(item.values()) for item in insert_data]
 
-                sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
+                sql = f"INSERT INTO {self._state._table} ({columns}) VALUES ({placeholders})"
                 self.logger.info({"sql": sql.strip(), "params": value_groups}, 'DB_SQL_INSERT', 'mysql')
                 cursor.executemany(sql, value_groups)
                 inserted_rows = cursor.lastrowid
@@ -448,7 +436,6 @@ class MysqlBaseModel:
             return 0
         finally:
             cursor.close()
-            self._reset_query()
 
     @with_connection
     def delete(self, conn, conditions: Dict) -> int:
@@ -457,7 +444,7 @@ class MysqlBaseModel:
         :param conditions: 条件字典
         :return: 受影响的行数
         """
-        if not self._table:
+        if not self._state._table:
             raise ValueError("No table specified")
 
         cursor = conn.cursor()
@@ -476,7 +463,7 @@ class MysqlBaseModel:
                     params.append(condition)
 
             where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
-            sql = f"DELETE FROM {self._table} WHERE {where_clause}"
+            sql = f"DELETE FROM {self._state._table} WHERE {where_clause}"
             self.logger.info({"sql": sql.strip(), "params": params}, 'DB_SQL_DELETE', 'mysql')
 
             cursor.execute(sql, params)
@@ -490,8 +477,25 @@ class MysqlBaseModel:
             return 0
         finally:
             cursor.close()
-            self._reset_query()
 
     def get_info(self, pid):
         """根据主键获取第一条记录"""
         return self.where({"id": pid}).first()
+
+
+class QueryState(threading.local):
+    """线程/协局局部存储的查询状态"""
+
+    def __init__(self):
+        super().__init__()
+        self.reset()
+
+    def reset(self):
+        self._select = ['*']
+        self._wheres = []
+        self._where_ins = []
+        self._where_sqls = []
+        self._order_str = None
+        self._limit_offset = None
+        self._limit_count = None
+        self._table = None
