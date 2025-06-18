@@ -355,7 +355,7 @@ class VpCallbackService:
                     logger.warning(f"获取用户信息失败 - 跳过 - [{wxid}]", 'VP_INS_ING')
                     continue
                 user['room_list'] = {g_wxid: room['nickname']} if room else {}
-                if not g_wxid:
+                if g_wxid:
                     user['is_friend'] = client.get_user_is_friend(wxid)
                 user['user_type'] = 1 if user['is_friend'] else 2
                 user['room_list'].update(u_info['room_list'])
