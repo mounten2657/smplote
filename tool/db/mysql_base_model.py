@@ -152,7 +152,7 @@ class MysqlBaseModel:
     def table(self, table_name: str) -> 'MysqlBaseModel':
         """设置表名"""
         self._table = table_name
-        self._state._table = table_name
+        self._state._table = self._table
         return self
 
     def select(self, columns: List[str]) -> 'MysqlBaseModel':
