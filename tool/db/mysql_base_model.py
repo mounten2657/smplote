@@ -89,8 +89,9 @@ class MysqlBaseModel:
     def __init__(self):
         self.logger = Logger()
         self.prefix = self._db_config['prefix']
+        self._table = self.prefix + self._table if self._table else None
         self._state = QueryState()
-        self._state._table = self.prefix + self._table if self._table else None
+        self._state._table = self._table
 
     @classmethod
     def get_pool(cls):
@@ -315,7 +316,7 @@ class MysqlBaseModel:
         :param update_data: 更新数据字典或字典列表
         :return: 受影响的行数
         """
-        if not self._state._table:
+        if not self._table:
             raise ValueError("No table specified")
 
         cursor = conn.cursor()
@@ -376,7 +377,7 @@ class MysqlBaseModel:
                     where_params.append(condition)
 
             where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
-            sql = f"UPDATE {self._state._table} SET {', '.join(set_parts)} WHERE {where_clause}"
+            sql = f"UPDATE {self._table} SET {', '.join(set_parts)} WHERE {where_clause}"
             self.logger.info({"sql": sql.strip(), "params": set_params + where_params}, 'DB_SQL_UPDATE', 'mysql')
             return sql, set_params + where_params
 
@@ -387,7 +388,7 @@ class MysqlBaseModel:
         :param insert_data: 单条数据字典或多条数据列表
         :return: 插入成功的记录数
         """
-        if not self._state._table:
+        if not self._table:
             raise ValueError("No table specified")
 
         cursor = conn.cursor()
@@ -419,7 +420,7 @@ class MysqlBaseModel:
                 placeholders = ', '.join(['%s'] * len(first_keys))
                 value_groups = [tuple(item.values()) for item in insert_data]
 
-                sql = f"INSERT INTO {self._state._table} ({columns}) VALUES ({placeholders})"
+                sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
                 self.logger.info({"sql": sql.strip(), "params": value_groups}, 'DB_SQL_INSERT', 'mysql')
                 cursor.executemany(sql, value_groups)
                 inserted_rows = cursor.lastrowid
@@ -444,7 +445,7 @@ class MysqlBaseModel:
         :param conditions: 条件字典
         :return: 受影响的行数
         """
-        if not self._state._table:
+        if not self._table:
             raise ValueError("No table specified")
 
         cursor = conn.cursor()
@@ -463,7 +464,7 @@ class MysqlBaseModel:
                     params.append(condition)
 
             where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
-            sql = f"DELETE FROM {self._state._table} WHERE {where_clause}"
+            sql = f"DELETE FROM {self._table} WHERE {where_clause}"
             self.logger.info({"sql": sql.strip(), "params": params}, 'DB_SQL_DELETE', 'mysql')
 
             cursor.execute(sql, params)
