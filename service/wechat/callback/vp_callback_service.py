@@ -271,16 +271,14 @@ class VpCallbackService:
 
             # 用户入库耗时 - 改为队列中执行
             if (g_wxid and r_info and (Time.now() - Time.tfd(str(r_info['update_at'])) > 3600)) or not g_wxid:
-                # 特定群才更新
-                if g_wxid in str(app_config['g_wxid']).split(','):
-                    t_data = {
-                        "app_key": app_key,
-                        "g_wxid": g_wxid,
-                        "u_list": u_list,
-                        "user_list": user_list,
-                        "room": room
-                    }
-                    res['update_user'] = RedisTaskQueue('rtq_usr_queue').add_task('VP_USR', t_data)
+                t_data = {
+                    "app_key": app_key,
+                    "g_wxid": g_wxid,
+                    "u_list": u_list,
+                    "user_list": user_list,
+                    "room": room
+                }
+                res['update_user'] = RedisTaskQueue('rtq_usr_queue').add_task('VP_USR', t_data)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0
@@ -325,6 +323,8 @@ class VpCallbackService:
         room = data['room']
         client = VpClient(app_key)
         udb = WechatUserModel()
+        config = Config.vp_config()
+        app_config = config['app_list'][app_key]
         if g_wxid:
             # 群聊更新限速
             Time.sleep(Str.randint(1, 10) / 10)
@@ -334,19 +334,27 @@ class VpCallbackService:
             wxid = u['wxid']
             if not wxid:
                 continue
-            user = client.get_user(wxid, g_wxid)
-            if not user.get('wxid'):
-                logger.warning(f"获取用户信息失败 - 跳过 - [{wxid}]", 'VP_INS_ING')
-                continue
-            user['room_list'] = {g_wxid: room['nickname']} if room else {}
             u_info = Attr.select_item_by_where(u_list, {"wxid": wxid})
             if not u_info:
+                user = client.get_user(wxid, g_wxid)
+                if not user.get('wxid'):
+                    logger.warning(f"获取用户信息失败 - 跳过 - [{wxid}]", 'VP_INS_ING')
+                    continue
+                user['room_list'] = {g_wxid: room['nickname']} if room else {}
                 user['is_friend'] = client.get_user_is_friend(wxid)
                 user['user_type'] = 1 if user['is_friend'] else 2
                 user['wx_nickname'] = user['nickname']
                 res['ins_user'] = udb.add_user(user, app_key)
                 u_info = udb.get_user_info(wxid)
             if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 3600):
+                # 特定群才更新
+                if g_wxid and g_wxid not in str(app_config['g_wxid']).split(','):
+                    continue
+                user = client.get_user(wxid, g_wxid)
+                if not user.get('wxid'):
+                    logger.warning(f"获取用户信息失败 - 跳过 - [{wxid}]", 'VP_INS_ING')
+                    continue
+                user['room_list'] = {g_wxid: room['nickname']} if room else {}
                 if not g_wxid:
                     user['is_friend'] = client.get_user_is_friend(wxid)
                 user['user_type'] = 1 if user['is_friend'] else 2
