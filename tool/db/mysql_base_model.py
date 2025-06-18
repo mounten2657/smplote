@@ -1,8 +1,8 @@
 import threading
 import mysql.connector
+from functools import wraps
 from gevent.lock import Semaphore
 from typing import Union, List, Dict, Optional, Any
-from functools import wraps
 from dbutils.persistent_db import PersistentDB
 from tool.core import Logger, Error, Config, Attr, Time, Str
 
