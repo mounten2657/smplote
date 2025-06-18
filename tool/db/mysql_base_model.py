@@ -90,8 +90,7 @@ class MysqlBaseModel:
         self.logger = Logger()
         self.prefix = self._db_config['prefix']
         self._table = self.prefix + self._table if self._table else None
-        self._state = QueryState()
-        self._state._table = self._table
+        self._state = QueryState(self._table)
 
     @classmethod
     def get_pool(cls):
@@ -152,6 +151,7 @@ class MysqlBaseModel:
 
     def table(self, table_name: str) -> 'MysqlBaseModel':
         """设置表名"""
+        self._table = table_name
         self._state._table = table_name
         return self
 
@@ -489,8 +489,9 @@ class QueryState(threading.local):
 
     _table = None
 
-    def __init__(self):
+    def __init__(self, table):
         super().__init__()
+        self._table = table
         self.reset()
 
     def reset(self):
