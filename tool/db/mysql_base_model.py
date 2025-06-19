@@ -483,6 +483,12 @@ class MysqlBaseModel:
         """根据主键获取第一条记录"""
         return self.where({"id": pid}).first()
 
+    def get_count(self, where):
+        """获取总条数"""
+        info = (self.where(where)
+                .select(['count(1) as count'])
+                .first())
+        return info['count'] if info else 0
 
 class QueryState(threading.local):
     """线程/协局局部存储的查询状态"""

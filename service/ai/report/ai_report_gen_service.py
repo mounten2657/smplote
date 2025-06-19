@@ -75,6 +75,8 @@ class AIReportGenService:
         for m in m_list:
             if 'revoke' == m['content_type']:
                 continue
+            if any(key in m['content'] for key in ('<sysmsg', '<msg', '<?xml')):
+                continue
             m['content'] = m['content'] if int(m['pid']) else f"[AI助手]{m['content']}"
             if m['s_wxid_name'] == data['g_wxid_name']:
                 m['s_wxid_name'] = '系统消息'

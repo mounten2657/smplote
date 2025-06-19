@@ -78,8 +78,13 @@ class WechatMsgModel(MysqlBaseModel):
     def get_msg_list(self, g_wxid, m_date=''):
         """获取消息列表 - 今日的最近1000条"""
         m_date = m_date if m_date else Time.date("%Y-%m-%d 00:00:00")
-        return (((self.where({"g_wxid": g_wxid})
-                  .where({"msg_time": {"opt": ">=", "val": m_date}})
+        m_where = {"g_wxid": g_wxid, "msg_time": {"opt": ">=", "val": m_date}}
+        m_count = self.get_count(m_where)
+        if m_count < 200:
+            # 今日数据小于200条，改为从最近三天的数据获取数据
+            m_date = Time.dft(Time.now() - 3 * 86400, "%Y-%m-%d 00:00:00")
+            m_where = {"g_wxid": g_wxid, "msg_time": {"opt": ">=", "val": m_date}}
+        return (((self.where(m_where)
                   .order('msg_time', 'desc'))
                   .limit(0, 1000))
                   .get())

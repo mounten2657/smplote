@@ -97,6 +97,7 @@ class RedisTaskQueue:
                 redis.call('HSET', processing_q..':workers', worker_id, task)
                 redis.call('HSET', processing_q..':heartbeats', task_data.id, ARGV[2])
                 redis.call('EXPIRE', processing_q..':heartbeats', expire_sec)
+                redis.call('EXPIRE', processing_q..':workers', expire_sec)
                 return task
             """)
 

@@ -74,7 +74,8 @@ class Emoji:
                     f"{Emoji.EMOJI_CDN_URL}/{emoji_trans}?style={Emoji.EMOJI_STYLE}",
                     local_path
                 )
-            except:
+            except Exception as e:
+                print(f'{e}')
                 local_path = default_path
         return local_path
 

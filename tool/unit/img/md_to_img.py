@@ -26,8 +26,8 @@ class MdToImg:
     def gen_md_html(md_path):
         md_obj = MDToHtml(md=md_path)
         html_path = Path(md_path).with_suffix('.html')
-        full_html = Emoji.replace_emoji_to_img(md_obj.html)
-        # full_html = md_obj.html
+        # full_html = Emoji.replace_emoji_to_img(md_obj.html)
+        full_html = md_obj.html
         md_obj.save_html(html_path, full_html)
         return html_path
 

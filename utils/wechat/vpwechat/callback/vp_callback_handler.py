@@ -68,6 +68,9 @@ class VpCallbackHandler(VpBaseFactory):
             if all(key in contents for key in ('announcement', 'sourceid', 'htmlid')):  # 群公告
                 logger.warning(f"on message: 忽略消息[T22]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
+            if all(key in contents for key in ('sysmsg', 'secmsg', 'session')):  # 群系统通知
+                logger.warning(f"on message: 忽略消息[T23]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
             if f_wxid in str(app_config['g_wxid_exc']).split(','):  # 无用群
                 logger.warning(f"on message: 忽略消息[T3]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
