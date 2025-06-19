@@ -32,7 +32,10 @@ class RedisTaskQueue:
     """
 
     queue_list = [
-        'rtq_vp_ch_queue',
+        'rtq_vp_ch1_queue',
+        'rtq_vp_ch2_queue',
+        'rtq_vp_ch3_queue',
+        'rtq_vp_ch4_queue',
         'rtq_vp_cm_queue',
         'rtq_vp_ih_queue',
         'rtq_vp_usr_queue',

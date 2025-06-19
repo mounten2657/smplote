@@ -1,8 +1,7 @@
-import time
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.formatter.vp_msg_formatter import VpMsgFormatter
-from tool.core import Logger, Error
+from tool.core import Logger, Error, Str, Time
 
 logger = Logger()
 
@@ -14,9 +13,9 @@ class VpCallbackHandler(VpBaseFactory):
         data = self.on_message_filter(data)  # 消息过滤
         if not data:
             return False
-        time.sleep(0.01)  # 避免满载
-        # 先入队列，再由队列发起回调处理
-        res = RedisTaskQueue('rtq_vp_ch_queue').add_task('VP_CH', data)
+        Time.sleep(0.01)  # 避免满载
+        # 先入队列，再由队列发起回调处理 - 队列分流，开4个队列一起消费
+        res = RedisTaskQueue(f'rtq_vp_ch{Str.randint(1, 4)}_queue').add_task('VP_CH', data)
         return res
 
     def on_message_filter(self, data):

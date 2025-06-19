@@ -346,6 +346,7 @@ class VpCallbackService:
                 user['wx_nickname'] = user['nickname']
                 res['ins_user'] = udb.add_user(user, app_key)
                 u_info = udb.get_user_info(wxid)
+                udb.check_img_info(u_info, u_info['head_img_url'], u_info['sns_img_url'])
             if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 3600):
                 # 特定群才更新
                 if g_wxid and g_wxid not in str(app_config['g_wxid']).split(','):

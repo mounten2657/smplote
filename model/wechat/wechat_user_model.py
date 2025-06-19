@@ -1,5 +1,7 @@
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins, Attr, Time
+from tool.core import Ins, Attr, Time, Str
+from service.vpp.vpp_serve_service import VppServeService
+from model.wechat.wechat_file_model import WechatFileModel
 
 
 @Ins.singleton
@@ -13,6 +15,7 @@ class WechatUserModel(MysqlBaseModel):
         - wx_nickname - varchar(64) - 微信昵称
         - remark_name - varchar(64) - 备注名
         - head_img_url - varchar(255) - 头像地址
+        - h_fid - bigint(20) - 头像文件id
         - quan_pin - varchar(64) - 昵称全拼
         - encry_name - varchar(512) - 加密昵称
         - sex - tinyint(1) - 性别(0未知1男2女)
@@ -20,6 +23,7 @@ class WechatUserModel(MysqlBaseModel):
         - country - varchar(32) - 国家
         - province - varchar(32) - 城市
         - sns_img_url - varchar(512) - 朋友圈背景
+        - s_fid - bigint(20) - 背景文件id
         - sns_privacy - bigint - 朋友圈时效
         - description - varchar(255) - 填写的备注
         - phone_list - varchar(255) - 填写的电话列表
@@ -48,6 +52,7 @@ class WechatUserModel(MysqlBaseModel):
             "wx_nickname": user['wx_nickname'],
             "remark_name": user['remark_name'],
             "head_img_url": user['head_img_url'],
+            "h_fid": user.get('h_fid', 0),
             "quan_pin": user['quan_pin'],
             "encry_name": user['encry_name'],
             "sex": user['sex'],
@@ -55,6 +60,7 @@ class WechatUserModel(MysqlBaseModel):
             "country": user['country'],
             "province": user['province'],
             "sns_img_url": user['sns_img_url'],
+            "s_fid": user.get('s_fid', 0),
             "sns_privacy": user['sns_privacy'],
             "description": user['description'],
             "phone_list": user['phone_list'],
@@ -74,8 +80,8 @@ class WechatUserModel(MysqlBaseModel):
         pid = info['id']
         change_log = info['change_log'] if info['change_log'] else []
         # 比较两个信息，如果有变动，就插入变更日志
-        fields = ['p_wxid', 'wx_nickname', 'remark_name', 'head_img_url',
-                  'sex', 'signature', 'country', 'province', 'sns_img_url', 'sns_privacy',
+        fields = ['p_wxid', 'wx_nickname', 'remark_name', 'head_img_url', 'h_fid',
+                  'sex', 'signature', 'country', 'province', 'sns_img_url', 'sns_privacy', 's_fid',
                   'description', 'phone_list', 'label_id_list', 'label_name_list', 'room_list']
         if not g_wxid:
             fields.append('user_type')
@@ -90,7 +96,52 @@ class WechatUserModel(MysqlBaseModel):
                 change_log.pop(0)
             update_data['change_log'] = change_log
             self.update({"id": pid}, update_data)
+            h_img = update_data.get('head_img_url')
+            s_img = update_data.get('sns_img_url')
+            if h_img or s_img:
+                self.check_img_info(info, h_img, s_img)
         return True
+
+    def check_img_info(self, info, h_img, s_img):
+        """更新用户图片"""
+        pid = info['id']
+        wxid = info['wxid']
+        client = VppServeService()
+        update_data = {}
+        if h_img:
+            f_info = self._download_user_img(client, h_img, 'head', wxid)
+            if f_info:
+                update_data['h_fid'] = f_info['id']
+        if s_img:
+            f_info = self._download_user_img(client, s_img, 'sns', wxid)
+            if f_info:
+                update_data['s_fid'] = f_info['id']
+        if update_data:
+            self.update({"id": pid}, update_data)
+        return update_data
+
+    def _download_user_img(self, client, img_url, f_type, wxid):
+        """下载用户图片"""
+        f_info = {}
+        fn = Str.md5(img_url) + '.png'
+        fd = f"{f_type}/{Time.date('%Y%m')}/"
+        file = client.download_website_file(img_url, 'VP_USER', fn, fd)
+        if file.get('url'):
+            fdb = WechatFileModel()
+            f_info = fdb.get_file_info(file['md5'])
+            if not f_info:
+                fdb.add_file(file, {
+                    "send_wxid": wxid,
+                    "send_wxid_name": fn,
+                    "pid": 0,
+                    "msg_id": 0,
+                    "to_wxid": '',
+                    "to_wxid_name": '',
+                    "g_wxid": Time.date('%Y%m%d'),
+                    "g_wxid_name": f_type,
+                })
+                f_info = fdb.get_file_info(file['md5'])
+        return f_info
 
     def get_user_info(self, wxid):
         """获取用户信息"""
