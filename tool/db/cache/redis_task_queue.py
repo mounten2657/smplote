@@ -5,7 +5,7 @@ import threading
 from retrying import retry
 from datetime import datetime
 from typing import Any, Dict
-from tool.core import Logger, Sys, Ins, Str, Attr
+from tool.core import Logger, Ins, Str, Attr
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_keys import RedisTaskKeys
 
@@ -14,7 +14,7 @@ logger = Logger()
 
 @Ins.singleton
 class RedisTaskQueue:
-    """Redis-based distributed task queue with process/thread safety.
+    """Redis-based distributed task queue with process/thread safety. - LIFO
 
     Features:
         - Atomic task claiming via Redis RPOPLPUSH
@@ -64,12 +64,13 @@ class RedisTaskQueue:
                 local delay_q = KEYS[2]
                 local delay = tonumber(ARGV[1])
                 local task = ARGV[2]
+                local timestamp = tonumber(ARGV[3])
 
                 if delay > 0 then
                     local execute_at = tonumber(redis.call('TIME')[1]) + delay
                     return redis.call('ZADD', delay_q, execute_at, task)
                 else
-                    return redis.call('LPUSH', main_q, task)
+                    return redis.call('ZADD', main_q, timestamp, task)
                 end
             """)
 
@@ -79,13 +80,18 @@ class RedisTaskQueue:
                 local processing_q = KEYS[2]
                 local worker_id = ARGV[1]
 
-                local task = redis.call('RPOPLPUSH', main_q, processing_q)
-                if task then
+                local tasks = redis.call('ZREVRANGE', main_q, 0, 0)
+                if #tasks == 0 then
+                    return nil
+                end
+    
+                local task = tasks[1]
+                redis.call('ZREM', main_q, task)
+                redis.call('LPUSH', processing_q, task)
+    
                     redis.call('HSET', processing_q..':workers', worker_id, task)
                     redis.call('HSET', processing_q..':heartbeats', task, ARGV[2])
                     return task
-                end
-                return nil
             """)
 
     def _migrate_delayed_tasks(self):
@@ -101,12 +107,10 @@ class RedisTaskQueue:
 
         if tasks:
             pipeline = self.redis.pipeline()
-            pipeline.lpush(self.queue_name, *tasks)
-            pipeline.zremrangebyscore(
-                self.delayed_queue,
-                0,
-                now
-            )
+            timestamp = int(time.time() * 1000)
+            for task in tasks:
+                pipeline.zadd(self.queue_name, {task: timestamp})
+            pipeline.zremrangebyscore(self.delayed_queue, 0, now)
             pipeline.execute()
 
     def submit(self, task_spec: str, *args, delay: int = 0, **kwargs) -> str:
@@ -131,9 +135,10 @@ class RedisTaskQueue:
             'attempts': 0
         })
 
+        timestamp = int(time.time() * 1000)
         self._enqueue_script(
             keys=[self.queue_name, self.delayed_queue],
-            args=[delay, task_data]
+            args=[delay, task_data, timestamp]
         )
         return task_id
 
