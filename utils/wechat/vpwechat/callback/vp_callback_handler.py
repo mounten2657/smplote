@@ -13,9 +13,14 @@ class VpCallbackHandler(VpBaseFactory):
         data = self.on_message_filter(data)  # 消息过滤
         if not data:
             return False
-        Time.sleep(0.1)  # 避免满载
+        message = data['message']
+        msg_id = message.get('new_msg_id', 0)
+        if not int(msg_id):
+            return False
+        Time.sleep(0.01)  # 避免满载
+        i = int(msg_id) % 4 + 1
         # 先入队列，再由队列发起回调处理 - 队列分流，开4个队列一起消费
-        res = RedisTaskQueue(f'rtq_vp_ch{Str.randint(1, 4)}_queue').add_task('VP_CH', data)
+        res = RedisTaskQueue(f'rtq_vp_ch{i}_queue').add_task('VP_CH', data)
         return res
 
     def on_message_filter(self, data):
