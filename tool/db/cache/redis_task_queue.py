@@ -89,8 +89,8 @@ class RedisTaskQueue:
                     return nil
                 end
     
-                local task_json = tasks[1]
-                local task_data = cjson.decode(task_json)
+                local task = tasks[1]
+                local task_data = cjson.decode(task)
                 redis.call('ZREM', main_q, task)
                 redis.call('LPUSH', processing_q, task)
     
