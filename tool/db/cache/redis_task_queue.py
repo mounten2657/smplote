@@ -31,6 +31,8 @@ class RedisTaskQueue:
         )
     """
 
+    ARGS_UNIQUE_KEY = True
+
     queue_list = [
         'rtq_vp_ch1_queue',
         'rtq_vp_ch2_queue',
