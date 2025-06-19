@@ -65,13 +65,17 @@ class Emoji:
     @staticmethod
     def get_emoji_local_path(emoji_char):
         emoji_hex = emoji_char.lower() # eg: 1F951 -> 1f951
+        default_path = f"{Emoji.EMOJI_CACHE_DIR}/2753.png"  # 2753 红问号 | 2754 白问号
         local_path = f"{Emoji.EMOJI_CACHE_DIR}/{emoji_hex}.png"
         if not os.path.exists(local_path):
-            emoji_trans = Emoji.s_unicode_to_utf8_hex(emoji_hex)  # 1f951 -> %F0%9F%A5%91
-            urlretrieve(
-                f"{Emoji.EMOJI_CDN_URL}/{emoji_trans}?style={Emoji.EMOJI_STYLE}",
-                local_path
-            )
+            try:
+                emoji_trans = Emoji.s_unicode_to_utf8_hex(emoji_hex)  # 1f951 -> %F0%9F%A5%91
+                urlretrieve(
+                    f"{Emoji.EMOJI_CDN_URL}/{emoji_trans}?style={Emoji.EMOJI_STYLE}",
+                    local_path
+                )
+            except:
+                local_path = default_path
         return local_path
 
     @staticmethod

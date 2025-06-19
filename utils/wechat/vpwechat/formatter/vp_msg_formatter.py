@@ -427,6 +427,10 @@ class VpMsgFormatter(VpBaseFactory):
                 "url": Str.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
                 "fromusername": Str.extract_xml_attr(content_text, 'fromusername'),
             }
+            nickname = Str.extract_xml_attr(content_text, 'nickname')
+            desc = Str.extract_xml_attr(content_text, 'desc')
+            if nickname and desc:
+                content_link['title'], content_link['des'] = nickname, desc
             if not content_link['url']:
                 content_link['url'] = Str.extract_xml_attr(content_text, 'tpurl').replace('&amp;', '&')
         else:  # 未识别 - 不放行
