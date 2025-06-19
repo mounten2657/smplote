@@ -5,7 +5,7 @@ import threading
 from retrying import retry
 from datetime import datetime
 from typing import Any, Dict
-from tool.core import Logger, Ins, Str, Attr
+from tool.core import Logger, Ins, Str, Attr, Time
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_keys import RedisTaskKeys
 
@@ -82,6 +82,7 @@ class RedisTaskQueue:
                 local main_q = KEYS[1]
                 local processing_q = KEYS[2]
                 local worker_id = ARGV[1]
+                local expire_sec = tonumber(ARGV[3])
 
                 local tasks = redis.call('ZREVRANGE', main_q, 0, 0)
                 if #tasks == 0 then
@@ -94,6 +95,7 @@ class RedisTaskQueue:
     
                     redis.call('HSET', processing_q..':workers', worker_id, task)
                     redis.call('HSET', processing_q..':heartbeats', task, ARGV[2])
+                    redis.call('EXPIRE', processing_q..':heartbeats', expire_sec)
                     return task
             """)
 
@@ -162,6 +164,8 @@ class RedisTaskQueue:
             logger.debug(f"正在执行队列任务[{self.queue_name}]: {task_data['spec']}", 'RTQ_TASK_EXEC_PAR')
             res = action(*task_data['args'], **task_data['kwargs'])
             logger.debug(f"队列任务执行结果[{self.queue_name}]: {res}", 'RTQ_TASK_EXEC_RET')
+            # heartbeat recycle
+            self.redis.hdel(f"{self.processing_queue}:heartbeats",task_id)
             return True
         except ImportError as e:
             logger.error(f"Module import failed: {e}", 'RTQ_TASK_MODULE_ERROR')
@@ -214,7 +218,7 @@ class RedisTaskQueue:
                     # Claim task atomically
                     task_data = self._claim_script(
                         keys=[self.queue_name, self.processing_queue],
-                        args=[worker_id, datetime.now().isoformat()]
+                        args=[worker_id, datetime.now().isoformat(), 300]
                     )
                     if not task_data:
                         break
