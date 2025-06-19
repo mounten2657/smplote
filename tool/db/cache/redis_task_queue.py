@@ -38,8 +38,9 @@ class RedisTaskQueue:
         'rtq_vp_ch2_queue',
         'rtq_vp_ch3_queue',
         'rtq_vp_ch4_queue',
+        'rtq_vp_ih1_queue',
+        'rtq_vp_ih2_queue',
         'rtq_vp_cm_queue',
-        'rtq_vp_ih_queue',
         'rtq_vp_usr_queue',
     ]
     default_queue = queue_list[0]
