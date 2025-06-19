@@ -218,7 +218,7 @@ class RedisTaskQueue:
                     # Claim task atomically
                     task_data = self._claim_script(
                         keys=[self.queue_name, self.processing_queue],
-                        args=[worker_id, datetime.now().isoformat(), 300]
+                        args=[worker_id, datetime.now().isoformat(), 3600]
                     )
                     if not task_data:
                         break
