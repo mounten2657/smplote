@@ -89,12 +89,13 @@ class RedisTaskQueue:
                     return nil
                 end
     
-                local task = tasks[1]
+                local task_json = tasks[1]
+                local task_data = cjson.decode(task_json)
                 redis.call('ZREM', main_q, task)
                 redis.call('LPUSH', processing_q, task)
     
                 redis.call('HSET', processing_q..':workers', worker_id, task)
-                redis.call('HSET', processing_q..':heartbeats', task, ARGV[2])
+                redis.call('HSET', processing_q..':heartbeats', task_data.id, ARGV[2])
                 redis.call('EXPIRE', processing_q..':heartbeats', expire_sec)
                 return task
             """)
@@ -165,7 +166,7 @@ class RedisTaskQueue:
             res = action(*task_data['args'], **task_data['kwargs'])
             logger.debug(f"队列任务执行结果[{self.queue_name}]: {res}", 'RTQ_TASK_EXEC_RET')
             # heartbeat recycle
-            self.redis.hdel(f"{self.processing_queue}:heartbeats",json.dumps(task_data))
+            self.redis.hdel(f"{self.processing_queue}:heartbeats",task_id)
             return True
         except ImportError as e:
             logger.error(f"Module import failed: {e}", 'RTQ_TASK_MODULE_ERROR')
