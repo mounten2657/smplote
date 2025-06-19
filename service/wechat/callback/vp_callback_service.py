@@ -56,7 +56,7 @@ class VpCallbackService:
     def callback_handler(self, params):
         """推送事件预处理"""
         res = {}
-        logger.info(params['message'], 'VP_CALL_PAR')
+        logger.debug(params['message'], 'VP_CALL_PAR')
         is_retry = params.get('is_retry', 0)  # 消息回放
         is_force = params.get('is_force', 0)  # 强制更新
         app_key = params.get('app_key')

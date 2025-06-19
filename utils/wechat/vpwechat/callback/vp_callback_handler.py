@@ -1,7 +1,7 @@
-from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.formatter.vp_msg_formatter import VpMsgFormatter
-from tool.core import Logger, Error, Str, Time
+from tool.db.cache.redis_task_queue import RedisTaskQueue
+from tool.core import Logger, Error, Time
 
 logger = Logger()
 
