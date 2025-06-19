@@ -165,7 +165,7 @@ class RedisTaskQueue:
             res = action(*task_data['args'], **task_data['kwargs'])
             logger.debug(f"队列任务执行结果[{self.queue_name}]: {res}", 'RTQ_TASK_EXEC_RET')
             # heartbeat recycle
-            self.redis.hdel(f"{self.processing_queue}:heartbeats",task_id)
+            self.redis.pipeline().hdel(f"{self.processing_queue}:heartbeats",task_id)
             return True
         except ImportError as e:
             logger.error(f"Module import failed: {e}", 'RTQ_TASK_MODULE_ERROR')
