@@ -98,7 +98,7 @@ class VpCallbackService:
         logger.debug(res['rev_handler'], 'VP_CALL_HD_RES')
         data['pid'] = pid
         msg_id = int(data['msg_id'])
-        i = msg_id % 2 + 1
+        i = msg_id % 4 + 1
         # 消息数据入库 - 异步
         res['ins_handler'] = RedisTaskQueue(f'rtq_vp_ih{i}_queue').add_task('VP_IH', data)
         # 消息指令处理 - 异步
