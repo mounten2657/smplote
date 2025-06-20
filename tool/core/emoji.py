@@ -35,8 +35,11 @@ class Emoji:
             emoji_hex_list = [x for x in emoji_hex_list if str(x).lower() != 'fe0f']  # 跳过连接符
             eh = '-'.join(emoji_hex_list)
             emoji_path = Emoji.get_emoji_local_path(eh)
-            emoji_base64 = Emoji.image_to_base64(emoji_path)
-            return f'<img src="data:image/png;base64,{emoji_base64}" width="18" height="18" alt="{emoji_char}">'
+            img_str = ''
+            for ep in emoji_path:
+                emoji_base64 = Emoji.image_to_base64(ep)
+                img_str += f'<img src="data:image/png;base64,{emoji_base64}" width="18" height="18" alt="{emoji_char}">'
+            return img_str
         # 匹配所有表情符号（包括Unicode 15.0新表情）
         emoji_pattern = re.compile(
             r"["
@@ -71,8 +74,20 @@ class Emoji:
                 )
             except Exception as e:
                 print(f'{e}')
-                local_path = default_path
-        return local_path
+                # 判断是否为多表情
+                if '-' in emoji_hex:
+                    l_list = []
+                    for eh in emoji_hex.split('-'):
+                        try:
+                            l_path = f"{Emoji.EMOJI_CACHE_DIR}/{eh}.png"
+                            emoji_trans = Emoji.hex_to_url_encoded(eh)
+                            urlretrieve(f"{Emoji.EMOJI_CDN_URL}/{emoji_trans}?style={Emoji.EMOJI_STYLE}", l_path)
+                            l_list.append(l_path)
+                        except Exception as e:
+                            print(f"{e}")
+                    return l_list
+                return [default_path]
+        return [local_path]
 
     @staticmethod
     def emoji_char_to_url_encode(emoji_char: str):
