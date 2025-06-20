@@ -1,9 +1,10 @@
 import os
 import re
-import urllib.parse
+import codecs
 import base64
 import requests
 from urllib.request import urlretrieve
+from urllib.parse import quote, unquote
 from tool.core.dir import Dir
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
@@ -31,16 +32,11 @@ class Emoji:
         def replace_with_img(match):
             emoji_char = match.group()  # eg: emoji_char = 🥑 , preg matched \U0001F951
             emoji_hex_list = [f"{ord(c):x}" for c in emoji_char]  # 有可能是组合表情: ❤️-> ['2764', 'fe0f']
-            img_str = ''
-            for eh in emoji_hex_list:
-                if eh == 'fe0f':  # 跳过连接符
-                    continue
-                emoji_path = Emoji.get_emoji_local_path(eh)
-                emoji_base64 = Emoji.image_to_base64(emoji_path)
-                # emoji_path = Emoji.path_to_file_uri(emoji_path)
-                # img_str += f'<img src="{emoji_path}" width="20" height="20" alt="{emoji_char}">'
-                img_str += f'<img src="data:image/png;base64,{emoji_base64}" width="18" height="18" alt="{emoji_char}">'
-            return img_str
+            emoji_hex_list = [x for x in emoji_hex_list if str(x).lower() != 'fe0f']  # 跳过连接符
+            eh = '-'.join(emoji_hex_list)
+            emoji_path = Emoji.get_emoji_local_path(eh)
+            emoji_base64 = Emoji.image_to_base64(emoji_path)
+            return f'<img src="data:image/png;base64,{emoji_base64}" width="18" height="18" alt="{emoji_char}">'
         # 匹配所有表情符号（包括Unicode 15.0新表情）
         emoji_pattern = re.compile(
             r"["
@@ -54,7 +50,6 @@ class Emoji:
             r'\U0000E000-\U0000F8FF'
             r'\U0001F900-\U0001F9FF'
             r'\U0001FA70-\U0001FAFF'
-            # r'\U000024C2-\U0001F251'  # 意义不明，暂时注释
             r"\u200d"  # 零宽度连接符（用于组合表情）
             r"\uFE0F"  # 变体选择符
             r"]+",
@@ -63,13 +58,13 @@ class Emoji:
         return emoji_pattern.sub(replace_with_img, text)
 
     @staticmethod
-    def get_emoji_local_path(emoji_char):
-        emoji_hex = emoji_char.lower() # eg: 1F951 -> 1f951
+    def get_emoji_local_path(emoji_hex):
+        emoji_hex = emoji_hex.lower() # eg: 1F951 -> 1f951
         default_path = f"{Emoji.EMOJI_CACHE_DIR}/2753.png"  # 2753 红问号 | 2754 白问号
         local_path = f"{Emoji.EMOJI_CACHE_DIR}/{emoji_hex}.png"
         if not os.path.exists(local_path):
             try:
-                emoji_trans = Emoji.s_unicode_to_utf8_hex(emoji_hex)  # 1f951 -> %F0%9F%A5%91
+                emoji_trans = Emoji.hex_to_url_encoded(emoji_hex)  # 1f951 -> %F0%9F%A5%91
                 urlretrieve(
                     f"{Emoji.EMOJI_CDN_URL}/{emoji_trans}?style={Emoji.EMOJI_STYLE}",
                     local_path
@@ -80,59 +75,52 @@ class Emoji:
         return local_path
 
     @staticmethod
-    def unicode_to_utf8_hex(code_point):
+    def emoji_char_to_url_encode(emoji_char: str):
         """
-        将 Unicode 码点转换为 UTF - 8 编码的十六进制表示
-        :param code_point: Unicode 码点，如 0x1F951
-        :return: UTF - 8 编码的十六进制表示，如 %F0%9F%A5%91
+        emoji char to url encode
+        :param emoji_char:  👸🏻
+        :return: %F0%9F%91%B8%F0%9F%8F%BB
         """
-        char = chr(int(code_point, 16))
-        utf8_bytes = char.encode('utf-8')
-        hex_string = ''.join(f'%{byte:02X}' for byte in utf8_bytes)
-        return hex_string
+        url_encode = quote(emoji_char, safe='')
+        return url_encode.upper().replace('%EF%B8%8F', '')
 
     @staticmethod
-    def s_unicode_to_utf8_hex(emoji_hex):
+    def url_encode_to_hex(url_encode: str, separator='-') -> str:
         """
-        将 Unicode 码点转换为 UTF - 8 编码的十六进制表示
-        :param emoji_hex: 简版 Unicode 码点，如 1f951
-        :return: UTF - 8 编码的十六进制表示，如 %F0%9F%A5%91
+        url encode to hex
+        :param url_encode:  %F0%9F%91%B8%F0%9F%8F%BB
+        :param separator: -
+        :return:  1f478-1f3fb
         """
-        return Emoji.unicode_to_utf8_hex('0x' + emoji_hex.upper())
+        hex_list = [f"{ord(c):x}" for c in unquote(url_encode)]
+        hex_list = [x for x in hex_list if str(x).lower() != 'fe0f']
+        return separator.join(hex_list)
 
     @staticmethod
-    def utf8_hex_to_unicode(utf8_hex):
+    def hex_to_url_encoded(hex_str: str, separator='-') -> str:
         """
-        将十六进制表示的 UTF - 8 编码转换为 Unicode 码点
-        :param utf8_hex: 十六进制表示的 UTF - 8 编码，如 %F0%9F%A5%91
-        :return: Unicode 码点，如 0x1F951
+        hex to url encode
+        :param hex_str: 1f478-1f3fb
+        :param separator: -
+        :return: %F0%9F%91%B8%F0%9F%8F%BB
         """
-        # 去除 % 符号
-        pure_hex = utf8_hex.replace('%', '')
-        # 将十六进制字符串转换为字节对象
-        utf8_bytes = bytes.fromhex(pure_hex)
-        # 对字节对象进行 UTF - 8 解码
-        char = utf8_bytes.decode('utf-8')
-        # 获取 Unicode 码点
-        code_point = ord(char)
-        return code_point
+        hex_codes = hex_str.split(separator)
+        encoded = []
 
-    @staticmethod
-    def path_to_file_uri(path):
-        # 先将反斜杠替换为正斜杠
-        path = path.replace('\\', '/')
-        # 分割路径，获取盘符和后面的路径
-        if ':' in path:
-            drive, rest_path = path.split(':', 1)
-            # 对除盘符和冒号外的部分进行编码
-            encoded_rest_path = urllib.parse.quote(rest_path)
-            # 拼接成完整的 URI
-            file_uri = f'file://{drive}:{encoded_rest_path}'
-        else:
-            # 如果没有盘符，直接编码路径
-            encoded_path = urllib.parse.quote(path)
-            file_uri = f'file://{encoded_path}'
-        return file_uri
+        for code in hex_codes:
+            code = code.strip().lstrip('U+').lstrip('0x')
+            try:
+                # 转换为整数
+                code_point = int(code, 16)
+                # 处理高码点字符
+                char = chr(code_point) if code_point <= 0xFFFF else codecs.decode(f"\\U{code.zfill(8)}", 'unicode_escape')
+                # 转换为 UTF-8 字节并编码
+                utf8_bytes = char.encode('utf-8')
+                encoded.append(''.join([f"%{byte:02X}" for byte in utf8_bytes]))
+            except (ValueError, UnicodeEncodeError):
+                continue
+
+        return ''.join(encoded)
 
     @staticmethod
     def image_to_base64(image_path):
@@ -152,7 +140,7 @@ class Emoji:
     def download_emoji(emoji_hex):
         emoji_hex = emoji_hex.lower()  # 1F951 -> 1f951
         save_dir = Emoji.EMOJI_CACHE_DIR
-        emoji_trans = Emoji.s_unicode_to_utf8_hex(emoji_hex)  # 1f951 -> %F0%9F%A5%91
+        emoji_trans = Emoji.hex_to_url_encoded(emoji_hex)  # 1f951 -> %F0%9F%A5%91
         url = f"{Emoji.EMOJI_CDN_URL}/{emoji_trans}?style={Emoji.EMOJI_STYLE}"
         try:
             response = requests.get(url, stream=True, timeout=10)
