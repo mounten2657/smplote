@@ -10,7 +10,7 @@ class SkyDataService:
     _OVO_API = 'https://ovoav.com'
     _OVO_API_FILE_LIST = {
         "rw": "/api/sky/rwtp/rwt",
-        "hs": "/api/skygm/hs",
+        "hs": "/api/sky/hstp/hs",
         "rl": "/api/sky/rltp/rl",
         "mf": "/api/sky/mftp/mf",
         "jl": "/api/sky/jlwz/jl",
