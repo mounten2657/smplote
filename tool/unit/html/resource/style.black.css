@@ -811,7 +811,7 @@ img {
 img, svg {
     background-color: transparent;
     vertical-align: text-top;
-    padding-top: 3px;
+    padding-top: 1px;
     margin-right: 2px;
 }
 
