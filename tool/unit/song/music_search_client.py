@@ -21,14 +21,17 @@ class MusicSearchClient:
         :param str album: 自定义歌曲封面
         :return: 歌曲的基本信息
         """
-        res = self.client.music_parse(title.strip())
-        return {
-            "id": res.get('id', 0),
-            "appid": self.client.appid,
-            "app_name": self.s_type,
-            "name": res.get('name', ''),
-            "singer_name": res.get('singer_name', ''),
-            "song_url": res.get('song_url', ''),
-            "data_url": res.get('data_url', ''),
-            "album_img": album if album else res.get('album_img', album),
-        }
+        try:
+            res = self.client.music_parse(title.strip())
+            return {
+                "id": res.get('id', 0),
+                "appid": self.client.appid,
+                "app_name": self.s_type,
+                "name": res.get('name', ''),
+                "singer_name": res.get('singer_name', ''),
+                "song_url": res.get('song_url', ''),
+                "data_url": res.get('data_url', ''),
+                "album_img": album if album else res.get('album_img', album),
+            }
+        except Exception as e:
+            raise RuntimeError(f"搜索歌曲失败: {str(e)}")

@@ -95,6 +95,9 @@ class QQMusicSearch:
         info_list = json_data["music.search.SearchCgiService"]["data"]["body"]["song"]["list"]
         data_list = []
 
+        if not info_list:
+            raise ValueError(f"暂无歌曲信息： {msg}")
+
         if n is not None:
             n = int(n)
             info = info_list[n]
