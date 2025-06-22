@@ -44,6 +44,9 @@ class WechatUserModel(MysqlBaseModel):
         """数据入库"""
         if not user['wxid']:
             return 0
+        info = self.get_user_info(user['wxid'])
+        if info:
+            return info['id']
         insert_data = {
             "app_key": app_key,
             "wxid": user['wxid'],
