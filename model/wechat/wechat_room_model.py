@@ -33,6 +33,9 @@ class WechatRoomModel(MysqlBaseModel):
         """数据入库"""
         if not room['g_wxid']:
             return 0
+        info = self.get_room_info(room['wxid'])
+        if info:
+            return info['id']
         insert_data = {
             "app_key": app_key,
             "g_wxid": room['g_wxid'],
