@@ -33,18 +33,7 @@ class RedisTaskQueue:
 
     ARGS_UNIQUE_KEY = True
 
-    queue_list = [
-        'rtq_vp_ch1_queue',
-        'rtq_vp_ch2_queue',
-        'rtq_vp_ch3_queue',
-        'rtq_vp_ch4_queue',
-        'rtq_vp_ih1_queue',
-        'rtq_vp_ih2_queue',
-        'rtq_vp_ih3_queue',
-        'rtq_vp_ih4_queue',
-        'rtq_vp_cm_queue',
-        'rtq_vp_usr_queue',
-    ]
+    queue_list = RedisTaskKeys.RTQ_QUEUE_LIST
     default_queue = queue_list[0]
 
     def __init__(self, queue_name: str = default_queue):
