@@ -159,7 +159,10 @@ class VpMsgFormatter(VpBaseFactory):
         elif 'song' == content_type:  # 点歌
             send_wxid, content = [s_wxid, f"[点歌消息] {content_link['title']}-{content_link['des']}.mp3"]
         elif 'share' == content_type:  # 分享
-            send_wxid, content = [s_wxid, f"[分享消息] [{content_link['title']}]({content_link['url']})"]
+            s_title = content_link['title']
+            if content_link['des']:
+                s_title += f" | {content_link['des']}"
+            send_wxid, content = [s_wxid, f"[分享消息] [{s_title}]({content_link['url']})"]
         elif 'gift' == content_type:  # 礼物
             send_wxid, content = [s_wxid, f"[礼物消息] [{content_link['skutitle']}]({content_link['url']})"]
         elif 'call' == content_type:  # 通话

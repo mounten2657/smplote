@@ -4,7 +4,7 @@
 
 ## 功能特点
 
-- 🔒 本地数据库解密
+- 🔒 本地微信数据库解密 + 本地实时微信消息存储
 - 🤖 支持多种AI服务（DeepSeek、Kimi、通义千问、豆包等）
 - 📝 自定义提示词模板
 - 💬 自动获取群聊消息
@@ -33,20 +33,19 @@ pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```bash
 python main.py    # 启动 flask 通过接口激活各模块功能，访问： http://localhost:9090
 python main.py -m bot.index.index                                # 首页基本信息
-python main.py -m bot.send_msg.auto_reply                        # 自动回复机器人（进程常驻+扫码登陆）
-python main.py -m db.refresh_chat_db.refresh_wx_info             # 解密并刷新本地微信账户信息
-python main.py -m db.refresh_chat_db.refresh_wx_core_db          # 解密并刷新本地微信核心数据库
-python main.py -m db.refresh_chat_db.refresh_wx_real_time_db     # 解密并刷新本地微信实时数据库
-python main.py -m db.get_chat_info.check_info                    # 检查当前微信配置
-python main.py -m db.get_chat_info.get_wx_info                   # 获取本地保存的微信信息
-python main.py -m db.get_chat_info.get_users                     # 获取所有能见的微信用户信息并保存
-python main.py -m db.get_chat_info.get_chats                     # 获取所有聊天记录信息并保存
-python main.py -m db.get_chat_info.get_sessions                  # 获取所有会话基本信息并保存
-python main.py -m db.get_chat_info.get_rooms                     # 获取每个群聊的全部用户信息并保存
-python main.py -m db.export_chat.export_group_users              # 导出特定群成员信息
-python main.py -m db.export_chat.export_group_chats              # 导出特定群聊天记录
-python main.py -m report.daily_report.gen_report                 # 生成日报并保存md文件
-python main.py -m report.daily_report.gen_md_img                 # 基于md日报生成图片
+python main.py -m wd.refresh_chat_db.refresh_wx_info             # 解密并刷新本地微信账户信息
+python main.py -m wd.refresh_chat_db.refresh_wx_core_db          # 解密并刷新本地微信核心数据库
+python main.py -m wd.refresh_chat_db.refresh_wx_real_time_db     # 解密并刷新本地微信实时数据库
+python main.py -m wd.get_chat_info.check_info                    # 检查当前微信配置
+python main.py -m wd.get_chat_info.get_wx_info                   # 获取本地保存的微信信息
+python main.py -m wd.get_chat_info.get_users                     # 获取所有能见的微信用户信息并保存
+python main.py -m wd.get_chat_info.get_chats                     # 获取所有聊天记录信息并保存
+python main.py -m wd.get_chat_info.get_sessions                  # 获取所有会话基本信息并保存
+python main.py -m wd.get_chat_info.get_rooms                     # 获取每个群聊的全部用户信息并保存
+python main.py -m wd.export_chat.export_group_users              # 导出特定群成员信息
+python main.py -m wd.export_chat.export_group_chats              # 导出特定群聊天记录
+python main.py -m wd.daily_report.gen_report                     # 生成日报并保存md文件
+python main.py -m wd.daily_report.gen_md_img                     # 基于md生成日报图片
 ```
 
 ## 使用说明

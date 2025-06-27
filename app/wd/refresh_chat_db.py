@@ -1,6 +1,6 @@
 from tool.router.base_app_wx import BaseAppWx
 from tool.core import *
-from service.wechat.report.get_wx_info_service import GetWxInfoService
+from service.wechat.wd.get_wx_info_service import GetWxInfoService
 
 
 class RefreshChatDb(BaseAppWx):

@@ -1,5 +1,5 @@
 from tool.router.base_app_wx import BaseAppWx
-from service.wechat.report.get_wx_info_service import GetWxInfoService
+from service.wechat.wd.get_wx_info_service import GetWxInfoService
 
 
 class GetChatInfo(BaseAppWx):

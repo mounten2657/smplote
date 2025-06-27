@@ -4,7 +4,7 @@ from pywxdump import *
 from tool.core import *
 from tool.unit.img.md_to_img import MdToImg
 from service.ai.report.ai_report_gen_service import AIReportGenService
-from service.wechat.report.get_wx_info_service import GetWxInfoService
+from service.wechat.wd.get_wx_info_service import GetWxInfoService
 from model.wechat.sqlite.wx_core_model import WxCoreModel
 
 

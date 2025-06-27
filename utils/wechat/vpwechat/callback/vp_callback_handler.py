@@ -1,12 +1,26 @@
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.formatter.vp_msg_formatter import VpMsgFormatter
 from tool.db.cache.redis_task_queue import RedisTaskQueue
-from tool.core import Logger, Error, Time
+from tool.db.cache.redis_client import RedisClient
+from tool.core import Logger, Error, Time, Sys, Str
 
 logger = Logger()
 
 
 class VpCallbackHandler(VpBaseFactory):
+
+    def on_error(self, data):
+        """ws 连接错误处理"""
+        Time.sleep(Str.randint(1, 5))
+        redis = RedisClient()
+        cache_key = 'LOCK_WS_ON_ERR'
+        if redis.get(cache_key) or not redis.set_nx(cache_key, 1):
+            return False
+        # 重启 vp 和 gu
+        res = {'err': data, 'rvp': Sys.delay_reload_vp()}
+        Time.sleep(15)
+        res['rgu'] = Sys.delay_reload_gu()
+        return res
 
     def on_message(self, data):
         """监听来自 ws 的回调消息"""

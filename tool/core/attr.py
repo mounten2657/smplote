@@ -1,3 +1,4 @@
+import decimal
 import re
 import ast
 import json
@@ -12,11 +13,13 @@ class Attr:
     def get(data, key, default=None):
         try:
             # 尝试以对象属性的方式获取值
-            return getattr(data, key)
+            res = getattr(data, key)
+            return res if res is not None else default
         except (AttributeError, TypeError):
             try:
                 # 尝试以字典键的方式获取值
-                return data[key]
+                res = data[key]
+                return res if res is not None else default
             except (KeyError, TypeError):
                 # 若都失败，返回默认值
                 return default
@@ -207,6 +210,9 @@ class Attr:
             # 处理时间类型
             if isinstance(obj, datetime):
                 return str(obj)
+            # 处理decimal
+            if isinstance(obj, decimal.Decimal):
+                return float(obj)
             # 其他类型（数字、布尔值等）直接返回
             return obj
         except Exception:
@@ -457,3 +463,17 @@ class Attr:
         for i in range(0, len(wxid_list), size):
             chunked_result.append(wxid_list[i:i + size])
         return chunked_result
+
+    @staticmethod
+    def chunk_list(lst, chunk_size=50):
+        """
+        将列表按指定大小分块
+        示例:
+            chunk_list([11, 22, 33, 44, 55], 2)
+            [[11, 22], [33, 44], [55]]
+
+        :param list lst: 待分块的列表
+        :param int chunk_size: 每块的大小
+        :return list: 分块后的列表列表
+        """
+        return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]

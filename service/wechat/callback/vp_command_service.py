@@ -2,7 +2,7 @@ import random
 import time
 
 from service.ai.command.ai_command_service import AiCommandService
-from service.wechat.sky.sky_data_service import SkyDataService
+from service.sky.sky_data_service import SkyDataService
 from service.ai.report.ai_report_gen_service import AIReportGenService
 from tool.unit.song.music_search_client import MusicSearchClient
 from tool.db.cache.redis_client import RedisClient

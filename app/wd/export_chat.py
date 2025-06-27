@@ -1,5 +1,5 @@
 from tool.router.base_app_wx import BaseAppWx
-from service.wechat.report.export_wx_info_service import ExportWxInfoService
+from service.wechat.wd.export_wx_info_service import ExportWxInfoService
 
 
 class ExportChat(BaseAppWx):
