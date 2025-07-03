@@ -7,10 +7,10 @@ class WechatFileModel(MysqlBaseModel):
     """
     微信文件表
         - id - bigint - 主键ID
-        - url - varchar(255) - 文件链接
-        - fake_path - varchar(255) - 虚拟路径
-        - save_path - varchar(255) - 真实路径
-        - file_name - varchar(255) - 文件名
+        - url - varchar(1024) - 文件链接
+        - fake_path - varchar(1024) - 虚拟路径
+        - save_path - varchar(512) - 真实路径
+        - file_name - varchar(512) - 文件名
         - biz_code - varchar(32) - 业务代码
         - s_wxid - varchar(32) - 发送人wxid
         - s_wxid_name - varchar(64) - 发送人昵称

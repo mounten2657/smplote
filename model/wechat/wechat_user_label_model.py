@@ -20,14 +20,14 @@ class WechatUserLabelModel(MysqlBaseModel):
         """数据入库"""
         # 先删除再入库
         self.delete({"wxid": wxid})
-        insert_data = []
+        insert_list = []
         for lab in label:
-            insert_data.append({
+            insert_list.append({
                 "wxid": wxid,
                 "l_id": lab['labelId'],
                 "l_name": lab['labelName'],
             })
-        return self.insert(insert_data)
+        return self.insert(insert_list)
 
     def get_label(self, wxid):
         """获取用户标签列表"""

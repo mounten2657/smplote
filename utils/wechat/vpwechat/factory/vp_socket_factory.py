@@ -44,11 +44,13 @@ class VpSocketFactory(VpBaseFactory):
 
     def _on_error(self, ws, error):
         logger.error(f"[{self.app_key}]连接错误: {error}", "VP_ERR")
+        self._stop_event = True
         self._handler_exec('on_error', {"message": error})
 
     def _on_close(self, ws, close_status_code, close_msg):
         logger.info(f"[{self.app_key}]连接关闭: {close_status_code} {close_msg}", "VP_CLD")
         self.is_running = False
+        self._stop_event = True
         self._handler_exec('on_close', {"message": close_msg, "code": close_status_code})
 
     def _on_open(self, ws):

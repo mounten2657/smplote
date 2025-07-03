@@ -115,14 +115,14 @@ class WechatRoomModel(MysqlBaseModel):
             self._del_room_cache(g_wxid)
         if changes.get('update'):  # 修改昵称提醒
             update_list = changes.get('update')
-            for d in update_list:
-                title = f"【马甲变更】"
-                des = f"旧昵称：{d['before']['display_name']}\r\n"
-                des += f"新昵称：{d['after']['display_name']}"
-                d_wxid = Attr.get_by_point(d, 'before.wxid', Attr.get_by_point(d, 'after.wxid', ''))
-                if d_wxid:
-                    self._del_user_cache(d_wxid)
-                commander.vp_card_msg(title, des)
+            # for d in update_list:
+            #     title = f"【马甲变更】"
+            #     des = f"旧昵称：{d['before']['display_name']}\r\n"
+            #     des += f"新昵称：{d['after']['display_name']}"
+            #     d_wxid = Attr.get_by_point(d, 'before.wxid', Attr.get_by_point(d, 'after.wxid', ''))
+            #     if d_wxid:
+            #         self._del_user_cache(d_wxid)
+            #     commander.vp_card_msg(title, des)
         return True
 
     def _del_room_cache(self, g_wxid):

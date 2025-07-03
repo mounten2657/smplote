@@ -155,6 +155,10 @@ class MysqlBaseModel:
         self._state._table = self._table
         return self
 
+    def table_name(self):
+        """获取表名"""
+        return self._table
+
     def select(self, columns: List[str]) -> 'MysqlBaseModel':
         """设置查询字段"""
         self._state._select = columns
@@ -416,7 +420,7 @@ class MysqlBaseModel:
                 if not all(set(item.keys()) == first_keys for item in insert_data):
                     raise ValueError("All dictionaries in the list must have the same keys")
 
-                columns = ', '.join(first_keys)
+                columns = ', '.join(insert_data[0].keys())
                 placeholders = ', '.join(['%s'] * len(first_keys))
                 value_groups = [tuple(item.values()) for item in insert_data]
 

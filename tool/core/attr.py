@@ -4,7 +4,7 @@ import ast
 import json
 import types
 import importlib
-from datetime import datetime
+from datetime import datetime, date
 from collections import OrderedDict
 
 
@@ -133,6 +133,14 @@ class Attr:
             return d
 
     @staticmethod
+    def kv_list_to_dict(a_list, default=None):
+        """将kv列表转为字典"""
+        if not a_list or not isinstance(a_list, list):
+            return {}
+        default = default if default else {"e_des": ""}
+        return {**a_list[0], **{d['e_key']: d['e_val'] for d in a_list}, **default}
+
+    @staticmethod
     def deduplicate_list(data, key):
         """对列表根据指定key进行去重"""
         # 使用OrderedDict去重（后出现的记录会覆盖前面的）
@@ -146,6 +154,14 @@ class Attr:
     def select_item_by_where(data_list, where, default=None):
         """列表搜索"""
         return next((item for item in data_list if all(item.get(key) == value for key, value in where.items())), default)
+
+    @staticmethod
+    def group_item_by_key(data_list, key):
+        """列表分组"""
+        result = {}
+        for item in data_list:
+            result.setdefault(item[key], []).append(item)
+        return result
 
     @staticmethod
     def get_value_by_key_like(d: dict, search_key: str, default='') -> any:
@@ -208,7 +224,7 @@ class Attr:
             if isinstance(obj, dict):
                 return {key: Attr.convert_to_json_dict(value) for key, value in obj.items()}
             # 处理时间类型
-            if isinstance(obj, datetime):
+            if isinstance(obj, datetime) or isinstance(obj, date):
                 return str(obj)
             # 处理decimal
             if isinstance(obj, decimal.Decimal):

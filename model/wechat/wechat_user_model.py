@@ -83,8 +83,8 @@ class WechatUserModel(MysqlBaseModel):
         pid = info['id']
         change_log = info['change_log'] if info['change_log'] else []
         # 比较两个信息，如果有变动，就插入变更日志
-        fields = ['p_wxid', 'wx_nickname', 'remark_name', 'head_img_url', 'h_fid',
-                  'sex', 'signature', 'country', 'province', 'sns_img_url', 'sns_privacy', 's_fid',
+        fields = ['p_wxid', 'wx_nickname', 'remark_name', 'head_img_url',
+                  'sex', 'signature', 'country', 'province', 'sns_img_url', 'sns_privacy',
                   'description', 'phone_list', 'label_id_list', 'label_name_list', 'room_list']
         if not g_wxid:
             fields.append('user_type')
@@ -111,15 +111,25 @@ class WechatUserModel(MysqlBaseModel):
         wxid = info['wxid']
         client = VppServeService()
         update_data = {}
+        change = {}
         if h_img:
             f_info = self._download_user_img(client, h_img, 'head', wxid)
             if f_info:
                 update_data['h_fid'] = f_info['id']
+                if f_info['id'] != info['h_fid']:
+                    change['h_fid'] = f"{info['h_fid']}-->{f_info['id']}"
         if s_img:
             f_info = self._download_user_img(client, s_img, 'sns', wxid)
             if f_info:
                 update_data['s_fid'] = f_info['id']
+                if f_info['id'] != info['s_fid']:
+                    change['s_fid'] = f"{info['s_fid']}-->{f_info['id']}"
         if update_data:
+            if change:
+                change_log = info['change_log']
+                change['_dt'] = Time.date()
+                change_log.append(change)
+                update_data['change_log'] = change_log
             self.update({"id": pid}, update_data)
         return update_data
 

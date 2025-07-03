@@ -123,7 +123,7 @@ class VpCommandService:
 
     def vp_self(self, content):
         """转人工"""
-        QyClient(self.app_key).send_msg(self.app_key, f'{self.s_wxid_name} 正在呼唤你，请尽快回复')
+        QyClient(self.app_key).send_msg(f'{self.s_wxid_name} 正在呼唤你，请尽快回复')
         response = '已发送至管理员……\r\n\r\n正在呼唤本人，请稍后……'
         r_num = random.randint(1, 24)
         file = self.service.get_sky_file('yj', {"r_num": r_num})

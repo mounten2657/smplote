@@ -34,17 +34,20 @@ class Time:
         time.sleep(f)
 
     @staticmethod
-    def tfd(date_str):
+    def tfd(date_str, date_format="%Y-%m-%d %H:%M:%S"):
         """
         将日期字符串转换为时间戳（秒级） - timestamp_from_date
-        :param date_str: 格式 "YYYY-MM-DD HH:MM:SS"（如 "2025-04-10 09:19:59"）
+        :param date_str: 日期字符串（如 "2025-04-10 09:19:59"）
+        :param date_format: 日期格式（如 "%Y-%m-%d %H:%M:%S"）
         :return: 时间戳（整数，如 1744247999）
         """
+        if not date_str:
+            return 0
         try:
-            dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+            dt = datetime.strptime(date_str, date_format)
             return int(dt.timestamp())
         except ValueError as e:
-            raise ValueError(f"日期格式错误，应为 'YYYY-MM-DD HH:MM:SS'。原始错误: {e}")
+            raise ValueError(f"日期格式错误，应为 '{date_format}'。原始错误: {e}")
 
     @staticmethod
     def dft(timestamp, date_format="%Y-%m-%d %H:%M:%S"):
@@ -54,11 +57,48 @@ class Time:
         :param date_format: 日期格式（如 "%Y-%m-%d %H:%M:%S"）
         :return: 默认格式 "YYYY-MM-DD HH:MM:SS"（如 "2025-04-10 09:19:59"）
         """
+        if not timestamp:
+            timestamp = 0
         try:
             dt = datetime.fromtimestamp(timestamp)
             return dt.strftime(date_format)
         except (TypeError, OverflowError) as e:
             raise ValueError(f"时间戳无效。原始错误: {e}")
+
+    @staticmethod
+    def month_last_day(date):
+        """
+        获取指定月的最后一天
+        :param date:  日期 - Ym （如： 202503）
+        :return: Ymd
+        """
+        n_date = Time.dft(Time.tfd(f'{date}28', '%Y%m%d') + 5 * 86400, '%Y%m01')
+        return Time.dft(Time.tfd(n_date, '%Y%m%d') - 1, '%Y%m%d')
+
+    @staticmethod
+    def recent_season_day(n=0):
+        """
+        获取季度的最后一天
+        :param n: 向前推几个季度
+        :return: Ymd
+        """
+        date = Time.date()
+        y = int(Time.dft(Time.tfd(date), '%Y'))
+        m = int(Time.dft(Time.tfd(date), '%m'))
+        for i in range(1, n + 2):
+            if i > 1:
+                m = int(m) - 3 if int(m) > 3 else 12
+            if m <= 3:
+                m = '03'
+            elif m <= 6:
+                m = '06'
+            elif m <= 9:
+                m = '09'
+            else:
+                m = '12'
+                y -= 1
+        n_date = f"{y}{m}"
+        return Time.month_last_day(n_date)
 
     @staticmethod
     def start_end_time_list(

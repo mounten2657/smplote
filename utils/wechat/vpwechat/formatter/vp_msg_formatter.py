@@ -93,12 +93,12 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, f"[语音消息] {p_msg_id}.{content_type}"]
         elif 'red' == content_type:  # 红包
             send_wxid, content = [s_wxid, f"[红包消息] [{content_link['title']}-{content_link['sender_title']}]"]
-            if self.g_wxid and self.g_wxid in self.a_g_wxid:  # 红包提醒
-                title = "【红包提醒】"
-                des = f"[%s_wxid_name% {Time.date('%H:%M')} 发送红包]\r\n"
-                des += f"[@艾特位招租]"
-                commander = VpCommandService(self.app_key, self.g_wxid, send_wxid)
-                commander.vp_card_msg(title, des)
+            # if self.g_wxid and self.g_wxid in self.a_g_wxid:  # 红包提醒
+            #     title = "【红包提醒】"
+            #     des = f"[%s_wxid_name% {Time.date('%H:%M')} 发送红包]\r\n"
+            #     des += f"[@艾特位招租]"
+            #     commander = VpCommandService(self.app_key, self.g_wxid, send_wxid)
+            #     commander.vp_card_msg(title, des)
         elif 'transfer' == content_type:  # 转账
             s_wxid = content_link['payer_username']
             t_wxid = content_link['receiver_username']

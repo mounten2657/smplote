@@ -5,7 +5,7 @@ import threading
 from retrying import retry
 from datetime import datetime
 from typing import Any, Dict
-from tool.core import Logger, Ins, Str, Attr
+from tool.core import Logger, Ins, Str, Attr, Error
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_keys import RedisTaskKeys
 
@@ -138,7 +138,7 @@ class RedisTaskQueue:
         )
         return task_id
 
-    @retry(stop_max_attempt_number=3, wait_exponential_multiplier=1000)
+    @retry(stop_max_attempt_number=2, wait_exponential_multiplier=1000)
     def _execute_task(self, task_data: Dict[str, Any]) -> bool:
         """Execute task with retry and heartbeat."""
         task_id = task_data['id']
@@ -162,9 +162,10 @@ class RedisTaskQueue:
             logger.error(f"Module import failed: {e}", 'RTQ_TASK_MODULE_ERROR')
             raise
         except Exception as e:
+            err = Error.handle_exception_info(e)
             task_data['attempts'] += 1
-            logger.warning(
-                f"Task[{self.queue_name}] {task_id} failed (attempt {task_data['attempts']}): {e}",
+            logger.error(
+                f"Task[{self.queue_name}] {task_id} failed (attempt {task_data['attempts']}) - {err}",
                 'RTQ_TASK_RETRY'
             )
             raise
@@ -252,12 +253,12 @@ class RedisTaskQueue:
             'stalled': self.redis.hlen(f"{self.processing_queue}:heartbeats")
         }
 
-    def add_task(self, sk, data):
+    def add_task(self, sk, *args):
         """往队列中添加任务"""
         service = RedisTaskKeys.RTQ_SERVICE_LIST.get(sk)
         if not service:
             raise ValueError(f'Not register service - {sk}')
-        return self.submit(service, data)
+        return self.submit(service, *args)
 
     @staticmethod
     def run_consumer():
