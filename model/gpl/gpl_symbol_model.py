@@ -1,5 +1,6 @@
 from tool.db.mysql_base_model import MysqlBaseModel
 from tool.core import Ins, Attr
+from model.gpl.gpl_change_log_model import GPLChangeLogModel
 
 
 @Ins.singleton
@@ -21,7 +22,9 @@ class GPLSymbolModel(MysqlBaseModel):
         - main_business_full - text - 完整经营范围
         - industry_em - varchar(256) - 东财行业
         - industry_zjh - varchar(256) - 证监会行业
-        - concept_list - text - 概念板块列表
+        - concept_list - varchar(1024) - 概念板块列表
+        - gd_top10_list - varchar(1024) - 十大股东列表
+        - gd_top10_free_list - varchar(1024) - 十大流通股东列表
         - reg_date - date - 注册日期
         - list_date - date - 上市日期
         - reg_asset - decimal(16,6) - 注册资本(百万元)
@@ -49,7 +52,7 @@ class GPLSymbolModel(MysqlBaseModel):
         - office_address - varchar(256) - 办公地址
         - province - varchar(64) - 省份
         - city - varchar(64) - 城市
-        - telephone - varchar(128) - 联系电话
+        - telephone - varchar(256) - 联系电话
         - fax - varchar(64) - 传真
         - postcode - varchar(32) - 邮编
         - email - varchar(128) - 邮箱
@@ -90,6 +93,8 @@ class GPLSymbolModel(MysqlBaseModel):
             "industry_em": data.get('industry_em', ''),
             "industry_zjh": data.get('industry_zjh', ''),
             "concept_list": data.get('concept_list', ''),
+            "gd_top10_list": data.get('gd_top10_list', ''),
+            "gd_top10_free_list": data.get('gd_top10_free_list', ''),
             "reg_date": data.get('reg_date', ''),
             "list_date": data.get('list_date', ''),
             "reg_asset": data.get('reg_asset', 0),
@@ -133,9 +138,14 @@ class GPLSymbolModel(MysqlBaseModel):
         }
         return self.insert(insert_data)
 
-    def update_symbol(self, symbol, data):
+    def update_symbol(self, symbol, data, before=None, ext=None):
         """更新股票数据"""
-        return self.update({'symbol': symbol}, data)
+        ext = ext if ext else {}
+        res = self.update({'symbol': symbol}, data | ext)
+        # 自动记录变更日志
+        if before and len(before) == len(data):
+            GPLChangeLogModel().add_change_log(symbol, self.table_name(), data, before)
+        return res
 
     def get_symbol_list(self, symbol_list):
         """获取股票数据列表"""

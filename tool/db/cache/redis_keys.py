@@ -29,6 +29,10 @@ class RedisKeys:
         # sky 接口相关
         "SKY_OVO_RW": {"key": "sky:ovo:rw", "ttl": 'today'},
         "SKY_OVO_DJS": {"key": "sky:ovo:djs", "ttl": 'today'},
+        # gpl 业务相关
+        "GPL_STOCK_CODE_LIST": {"key": "gpl:stock:code_list", "ttl": 86400},
+        "GPL_STOCK_INFO_XQ": {"key": "gpl:stock:xq:%s", "ttl": 21600},
+        "GPL_STOCK_INFO_EM": {"key": "gpl:stock:em:%s", "ttl": 21600},
     }
 
 

@@ -1,5 +1,6 @@
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins, Attr
+from tool.core import Ins
+from model.gpl.gpl_const_kv_model import GPLConstKvModel
 
 
 @Ins.singleton
@@ -37,8 +38,18 @@ class GPLConceptModel(MysqlBaseModel):
 
     def del_concept(self, source_type, code_list):
         """删除固定板块"""
-        c_str = "('" + "','".join(code_list) + "')"
-        return self.delete({'source_type': source_type, 'concept_code': {'opt': 'in', 'val': c_str}})
+        if not code_list:
+            return False
+        c_str = "IN ('" + "','".join(code_list) + "')"
+        return self.delete({'source_type': source_type, 'concept_code': {'opt': 'str', 'val': c_str}})
+
+    def del_concept_yesterday(self, source_type):
+        """删除昨日板块"""
+        b_list = GPLConstKvModel().get_const_em_yesterday()
+        if not b_list:
+            return False
+        bk_list = [v['e_key'] for v in b_list]
+        return self.del_concept(source_type, bk_list)
 
     def get_concept_list(self, symbol_list, source_type):
         """获取股票常量列表"""

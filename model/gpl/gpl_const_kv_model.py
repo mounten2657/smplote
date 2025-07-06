@@ -40,6 +40,10 @@ class GPLConstKvModel(MysqlBaseModel):
         a_list = self.where({'biz_type': biz_type}).get()
         return Attr.kv_list_to_dict(a_list)
 
+    def get_const_em_yesterday(self):
+        """获取股票东财昨日板块列表"""
+        return self.where({'biz_type': 'EM_CONCEPT', 'e_val': {'opt': 'like', 'val': '昨日%'}}).get()
+
     def get_const(self, biz_type, e_key):
         """获取股票常量"""
         return self.where({'biz_type': biz_type, 'e_key': e_key}).first()

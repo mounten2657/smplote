@@ -108,6 +108,7 @@ class VpClient(VpBaseFactory):
             "label_name_list": Attr.get_by_point(user_info, 'labelIdlist', ''),
             "phone_list": Attr.get_by_point(user_info, 'phoneNumListInfo.phoneNumList', []),
             "is_friend": 0 if g_wxid else self.get_user_is_friend(wxid),
+            "cached": 1,
         }
         # 转换处理
         user.update({
@@ -162,6 +163,7 @@ class VpClient(VpBaseFactory):
             "notice": Attr.get_by_point(notice, 'Data.chatRoomName', ''),
             "remark": "",
             "member_list": [],
+            "cached": 1,
         }
         # 只需要 wxid 和 显示名 - 其它信息由 get_user 补全
         room.update({"member_list": [

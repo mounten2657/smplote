@@ -4,8 +4,8 @@ import ast
 import json
 import types
 import importlib
-from datetime import datetime, date
 from collections import OrderedDict
+from tool.core.str import Str
 
 
 class Attr:
@@ -133,6 +133,13 @@ class Attr:
             return d
 
     @staticmethod
+    def merge_dicts_soft(d1, d2):
+        """软合并两个字典"""
+        if not isinstance(d1, dict) or not isinstance(d2, dict):
+            return {}
+        return {k: d2[k] if d2.get(k) else d1.get(k, d2.get(k)) for k, v in (d1 | d2).items()}
+
+    @staticmethod
     def kv_list_to_dict(a_list, default=None):
         """将kv列表转为字典"""
         if not a_list or not isinstance(a_list, list):
@@ -203,7 +210,7 @@ class Attr:
         try:
             # 处理None
             if obj is None:
-                return None
+                return ''
             # 处理字符串
             if isinstance(obj, str):
                 # 尝试解析JSON
@@ -223,14 +230,14 @@ class Attr:
             # 处理字典
             if isinstance(obj, dict):
                 return {key: Attr.convert_to_json_dict(value) for key, value in obj.items()}
-            # 处理时间类型
-            if isinstance(obj, datetime) or isinstance(obj, date):
-                return str(obj)
             # 处理decimal
             if isinstance(obj, decimal.Decimal):
                 return float(obj)
-            # 其他类型（数字、布尔值等）直接返回
-            return obj
+            # 处理数字
+            if isinstance(obj, int):
+                return int(obj)
+            # 其他类型 - 统一按字符串返回
+            return str(obj)
         except Exception:
             # 捕获所有异常，返回原值
             return obj
@@ -333,6 +340,11 @@ class Attr:
             val2 = dict2[key]
 
             if type(val1) != type(val2):
+                # 兼容整数和浮点数相同的值
+                t1 = Str.float(val1)
+                t2 = Str.float(val2)
+                if t1 is not None and t2 is not None and t1 == t2:
+                    continue
                 diff_result[key] = {
                     "type": "type_mismatch",
                     "val": f"{type(val1).__name__}-->{type(val2).__name__}"

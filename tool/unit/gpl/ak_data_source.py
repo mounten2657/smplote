@@ -1,5 +1,5 @@
 import akshare as ak
-from tool.core import Logger, Error, Str
+from tool.core import Logger, Error, Str, Time, Env
 
 logger = Logger()
 
@@ -11,32 +11,42 @@ class AkDataSource:
     api_doc: https://akshare.akfamily.xyz/data/stock/stock.html#id1
     """
 
-    def __init__(self, data_type='json'):
+    DATA_TYPE = 'json'
+
+    def __init__(self, data_type=DATA_TYPE):
         self.data_type = data_type
 
-    def _formatter(self, dt_api):
-        """数据格式化返回"""
-        try:
-            res = dt_api()
-            if isinstance(res, dict) or isinstance(res, list):
+    @staticmethod
+    def _formatter(func):
+        """数据格式化返回装饰器"""
+        def wrapper(*args, **kwargs):
+            function_name = func.__name__
+            all_args = list(args) + [f"{k}={v}" for k, v in kwargs.items()]
+            all_args.pop(0)
+            try:
+                res = func(*args, **kwargs)
+                if isinstance(res, dict) or isinstance(res, list):
+                    return res
+                if 'json' == AkDataSource.DATA_TYPE:
+                    res = res.to_dict('records')
                 return res
-            if 'json' == self.data_type:
-                res = res.to_dict('records')
-            return res
-        except Exception as e:
-            err = Error.handle_exception_info(e)
-            err['ext'] = {"func": str(dt_api), "msg": "请求AK接口失败"}
-            logger.warning(err, 'AK_API_ERR')
-            return []
+            except Exception as e:
+                err = Error.handle_exception_info(e)
+                err['ext'] = {"func": function_name, "args": all_args, "msg": "请求AK接口失败"}
+                logger.warning(err, 'AK_API_ERR')
+                return []
+        return wrapper
 
+    @_formatter
     def stock_sse_summary(self):
         """
         上海证券交易所-股票数据总貌
         :return: list
         [{'项目': '流通股本', '股票': '47461.19', '主板': '45699.24', '科创板': '1761.95'}, {'项目': '总市值', '股票': '543498.67', '主板': '474558.45', '科创板': '68940.22'}, {'项目': '平市盈率', '股票': '14.08', '主板': '13.03', '科创板': '49.41'}, {'项目': '上市公司', '股票': '2288', '主板': '1700', '科创板': '588'}, {'项目': '上市股票', '股票': '2327', '主板': : '1739', '科创板': '588'}, {'项目': '流通市值', '股票': '512152.49', '主板': '457876.08', '科创板': '54276.4'}, {'项目': '报告时间', '股票': '20250624', '主板': '20250624', '科创板: '20250624'}, {'项目': '总股本', '股票': '50047.99', '主板': '47773.08', '科创板': '2274.91'}]
         """
-        return self._formatter(lambda: ak.stock_sse_summary())
+        return ak.stock_sse_summary()
 
+    @_formatter
     def stock_szse_summary(self, date):
         """
         深圳证券交易所-市场总貌-证券类别统计
@@ -44,16 +54,18 @@ class AkDataSource:
         :return: list
         [{'证券类别': '股票', '数量': 2908, '成交金额': 657710206000.65, '总市值': 33334382473576.34, '流通市值': 28473229932057.27}, {'证券类别': '主板A股', '数量': 1487, '成交金额': 330886373247.27, '总市值': 20439356621083.18, '流通市值': 18562801698627.76}, {'证券类别': '主板B股', '数量': 39, '成交金额': 62256476.56, '总市值': 47884754985.1, '流通市值': 47758167359.44}, {'证券类别': '创业板A股', '数量': 1382, '成交金额': 326761576276.82, '总市值': 12847141097508.06, '流通市值': 9862670066070.07}, {'证券类别': '基金', '数量': 802, '成交金 额': 70006219671.82, '总市值': 1208914190544.68, '流通市值': 1175671779953.54}, {'证券类别': 'ETF', '数量': 492, '成交金额': 64440121569.63, '总市值': 1106500396248.3, '流通市值': 1106500396248.3}, {'证券类别': 'LOF', '数量': 287, '成交金额': 5384965921.91, '总市值': 34820081281.88, '流通市值': 34820081281.88}, {'证券类别': '封闭式基金', '数量': 1, '成交金额: 26736110.5, '总市值': 1482829821.4, '流通市值': 1482829821.4}, {'证券类别': '基础设施基金', '数量': 22, '成交金额': 154396069.76, '总市值': 66110883193.08, '流通市值': 328684726601.94}, {'证券类别': '债券', '数量': 15834, '成交金额': 302379308501.18, '总市值': nan, '流通市值': nan}, {'证券类别': '债券现券', '数量': 15135, '成交金额': 55233287738.78, '总市 值': 88968903532318.27, '流通市值': 2987831184356.69}, {'证券类别': '债券回购', '数量': 27, '成交金额': 246293036018.0, '总市值': nan, '流通市值': nan}, {'证券类别': 'ABS', '数量': 672, '成交金额': 852984744.4, '总市值': 456963948198.19, '流通市值': 456963948198.19}, {'证券类别': '期权', '数量': 514, '成交金额': 357365220.73, '总市值': nan, '流通市值': nan}]
         """
-        return self._formatter(lambda: ak.stock_szse_summary(date=date))
+        return ak.stock_szse_summary(date=date)
 
+    @_formatter
     def stock_info_a_code_name(self):
         """
         沪深京 A 股股票代码和股票简称数据
         :return: list
         [{'code': '000001', 'name': '平安银行'}, {'code': '920819', 'name': '颖泰生物'}]
         """
-        return self._formatter(lambda: ak.stock_info_a_code_name())
+        return ak.stock_info_a_code_name()
 
+    @_formatter
     def stock_individual_basic_info_xq(self, symbol):
         """
         雪球财经-个股-公司概况-公司简介
@@ -61,8 +73,11 @@ class AkDataSource:
         :return: dict
         [{'item': 'org_id', 'value': 'T000058472'}, {'item': 'org_name_cn', 'value': '上海来伊份股份有限公司'}, {'item': 'org_short_name_cn', 'value': '来伊份'}, {'item': 'org_name_en', 'value': 'Shanghai Laiyifen Co.,Ltd.'}, {'item': 'org_short_name_en', 'value': 'LYFEN'}, {'item': 'main_operation_business', 'value': '自主品牌的休闲食品连锁经营。'}, {'item': 'operating_scope', 'value': '\u3000\u3000食品流通，餐饮服务，食用农产品（不含生猪产品、牛羊肉品）、花卉、工艺礼品、电子产品、通讯器材、体育用品、文具用品、日用百货、汽摩配件、化妆品、玩 具、金银饰品、珠宝饰品、化工产品（不含危险化学品）、电脑及配件、通信设备及相关产品的批发、零售，销售计算机配件及相关智能卡，电子商务（不得从事增值电信、金融业务），仓储（除危险品）企业投资与资产管理、企业管理咨询，计算机网络系统开发、软件开发设计，商务咨询、从事货物及技术的进出口业务，包装服务，票务代理，从事通信设备领域内的技术服务，自有房屋租赁，供应链管管，道路货物运输，国内货运代理，国际海上、国际陆路、国际航空货运代理，以服务外包方式从事计算机数据处理，附设分支机构。【依法须经批准的项目，经相关部门批准后方可开展经营活动】'}, {' 'item': 'district_encode', 'value': '310117'}, {'item': 'org_cn_introduction', 'value': '上海来伊份股份有限公司的主营业务是自主品牌的休闲食品连锁经营。公司的主要产品是坚果炒货及豆制、肉制品及水产品、糖果蜜饯及果蔬、糕点及膨化食品。2024年，公司荣获多项国家级、省部级荣誉奖项，包括中国上市公司成长百强、中国轻工业百强以及北京市多个百强榜单，获中国缝制机械协会40 0周年功勋企业奖，此外，公司产品也荣获了中国轻工业联合会科技进步二等奖，浙江首版次软件产品，浙江省2024年度机器人典型应用等多项荣誉奖项。'}, {'item': 'legal_representative', 'value': '郁瑞芬'}, {'item': 'general_manager', 'value': '郁瑞芬'}, {'item': 'secretary', 'value': '林云'}, {'item': 'established_date', 'value': 1025539200000}, {'item': 'reg_asset', 'value': 334424165.99999994}, {'item': 'staff_num', 'value': 4590}, {'item': 'telephone', 'value': '86-21-51760952'}, {'item': 'postcode', 'value': '200235'}, {'item': 'fax', 'value': '86-21-51760955'}, {'item': 'email', 'value': 'corporate@laiyifen.com'}, {'item': 'org_website', 'value': 'www.laiyifen.com'}, {'item': 'reg_address_cn', 'value': '上海市松江区九亭 镇久富路300号'}, {'item': 'reg_address_en', 'value': None}, {'item': 'office_address_cn', 'value': '上海市徐汇区古宜路90号来伊份管理总部'}, {'item': 'office_address_en', 'value': None}, {'item': 'currency_encode', 'value': '019001'}, {'item': 'currency', 'value': 'CNY'}, {'item': 'listed_date', 'value': 1476201600000}, {'item': 'provincial_name', 'value': ' 上海市'}, {'item': 'actual_controller', 'value': '施永雷 (42.37%)，郁瑞芬 (17.76%)，施辉 (2.66%)'}, {'item': 'classi_name', 'value': '民营企业'}, {'item': 'pre_name_cn', 'value': None}, {'item': 'chairman', 'value': '施永雷'}, {'item': 'executives_nums', 'value': 16}, {'item': 'actual_issue_vol', 'value': 60000000.0}, {'item': 'issue_price', 'value': 11.67}, {'item': 'actual_rc_net_amt', 'value': 660211000.0}, {'item': 'pe_after_issuing', 'value': 22.99}, {'item': 'online_success_rate_of_issue', 'value': 0.04604996}, {'item': 'affiliate_industry', 'value': {'ind_code': 'BK0034', 'ind_name': '食品加工制造'}}]
         """
-        return self._formatter(lambda: ak.stock_individual_basic_info_xq(symbol))
+        Time.sleep(Str.randint(1, 30) / 10)
+        token = Env.get('GPL_XQ_TOKEN')
+        return ak.stock_individual_basic_info_xq(symbol, token)
 
+    @_formatter
     def stock_profile_cninfo(self, symbol):
         """
         巨潮资讯-个股-公司概况
@@ -71,24 +86,27 @@ class AkDataSource:
         [{'公司名称': '锐奇控股股份有限公司', '英文名称': 'KEN Holding Co., Ltd.', '曾用简称': None, 'A股代码': '300126', 'A股简称': '锐奇股份', 'B股代码': None, 'B股简称': None, 'H股代码': None, 'H股简称': None, '入选指数': '国证Ａ指', '所属市场': '深交所创业板', '所属行业': '通用设备制造业', '法人代表': '吴明厅', '注册资金': 30395.76, '成立日期': '2000-04-29', '上日期': '2010-10-13', '官方网站': 'www.ken-tools.com', '电子邮箱': '300126@china-ken.com', '联系电话': '021-57825832', '传真': '021-37008859', '注册地址': '上海市松江区新桥镇新茸   路5号', '办公地址': '上海市松江区新桥镇新茸路5号', '邮政编码': '201612', '主营业务': '高等级专业电动工具的研发、生产和销售。', '经营范围': '实业投资，电机、模具、电动工具领域内的技开发、技术咨询、技术服务、技术转让、生产、销售和维修，机电产品、五金交电销售，货物及技术的进出口业务，智能装备的技术开发和销售，从事互联网、工业信息及物联网的技术开发和技术服务。。依法须经批准的项目，经相关部门批准后方可开展经营活动）', '机构简介': '发行人系上海锐奇工具有限公司整体变更设立的股份有限公司。根据上海众华沪银会计师事务所沪众会字（2008）第3941号号审计报告》，上海锐奇工具有限公司以截至2008年9月30日的净资产107,329,665.68元折成股份6,000万股，高于股本总额部分净资产5,417,437.73元计入法定盈余公积，41,912,227.95元计入资本公积金   。上海众华沪银会计师事务所出具沪众会字（2008）第3943号验资报告，确认各发起人投入上海锐奇工具股份有限公司（筹）出资已到位。2008年12月9日，公司在上海市工商行政管理局完成工商变更登记 手续，并领取了注册号为310227000636595的企业法人营业执照，注册资本为6,000万元。'}]
         """
         code = Str.remove_stock_prefix(symbol)
-        return self._formatter(lambda: ak.stock_profile_cninfo(code))
+        return ak.stock_profile_cninfo(code)
 
+    @_formatter
     def stock_info_sh_delist(self):
         """
         上海证券交易所暂停/终止上市股票
         :return: list
         [{'公司代码': '900956', '公司简称': '东贝Ｂ股', '上市日期': datetime.date(1999, 7, 15), '暂停上市日期': datetime.date(2020, 11, 23)}]]
         """
-        return self._formatter(lambda: ak.stock_info_sh_delist())
+        return ak.stock_info_sh_delist()
 
+    @_formatter
     def stock_info_sz_delist(self):
         """
         深证证券交易所终止/暂停上市股票
         :return: list
         [{'证券代码': '300799', '证券简称': '左江退', '上市日期': datetime.date(2019, 10, 29), '终止上市日期': datetime.date(2024, 7, 29)}]]
         """
-        return self._formatter(lambda: ak.stock_info_sz_delist())
+        return ak.stock_info_sz_delist()
 
+    @_formatter
     def stock_gdfx_top_10_em(self, symbol, date):
         """
         东方财富网-个股-十大股东
@@ -97,8 +115,9 @@ class AkDataSource:
         :return: list
         [{'名次': 1, '股东名称': '吴明厅', '股份类型': '流通A股,限售流通A股', '持股数': 81000000, '占总股本持股比例': 26.65, '增减': '不变', '变动比率': nan}, {'名次': 2, '股东名称': '上海浦投资有限公司', '股份类型': '流通A股,限售流通A股', '持股数': 43072128, '占总股本持股比例': 14.17, '增减': '不变', '变动比率': nan}, {'名次': 3, '股东名称': '吴晓婷', '股份类型': : '流通A股', '持股数': 12000000, '占总股本持股比例': 3.95, '增减': '不变', '变动比率': nan}, {'名次': 4, '股东名称': '应媛琳', '股份类型': '流通A股', '持股数': 11900000, '占总股本持比例': 3.92, '增减': '不变', '变动比率': nan}, {'名次': 5, '股东名称': '应业火', '股份类型': '流通A股', '持股数': 9500000, '占总股本持股比例': 3.13, '增减': '不变', '变动比率': n nan}, {'名次': 6, '股东名称': '吴晓依', '股份类型': '流通A股', '持股数': 2800000, '占总股本持股比例': 0.92, '增减': '不变', '变动比率': nan}, {'名次': 7, '股东名称': '朱军', '股份类': '流通A股', '持股数': 2150000, '占总股本持股比例': 0.71, '增减': '-1550000', '变动比率': -41.89189189}, {'名次': 8, '股东名称': 'BARCLAYS BANK PLC', '股份类型': '流通A股', '持   股数': 1402013, '占总股本持股比例': 0.46, '增减': '新进', '变动比率': nan}, {'名次': 9, '股东名称': '肖裕福', '股份类型': '流通A股', '持股数': 1328100, '占总股本持股比例': 0.44, ' 增减': '新进', '变动比率': nan}, {'名次': 10, '股东名称': '高盛国际-自有资金', '股份类型': '流通A股', '持股数': 1285500, '占总股本持股比例': 0.42, '增减': '新进', '变动比率': nan}]
         """
-        return self._formatter(lambda: ak.stock_gdfx_top_10_em(symbol, date))
+        return ak.stock_gdfx_top_10_em(symbol, date)
 
+    @_formatter
     def stock_gdfx_free_top_10_em(self, symbol, date):
         """
         东方财富网-个股-十大流通股东
@@ -107,5 +126,5 @@ class AkDataSource:
         :return: list
         [{'名次': 1, '股东名称': '吴明厅', '股东性质': '个人', '股份类型': 'A股', '持股数': 20250000, '占总流通股本持股比例': 9.612978905792, '增减': '不变', '变动比率': nan}, {'名次': 2, '股东名称': '吴晓婷', '股东性质': '个人', '股份类型': 'A股', '持股数': 12000000, '占总流通股本持股比例': 5.696580092321, '增减': '不变', '变动比率': nan}, {'名次': 3, '股东名称': '应媛琳', '股东性质': '个人', '股份类型': 'A股', '持股数': 11900000, '占总流通股本持股比例': 5.649108591552, '增减': '不变', '变动比率': nan}, {'名次': 4, '股东名称': '上海瑞浦投资 有限公司', '股东性质': '投资公司', '股份类型': 'A股', '持股数': 10768032, '占总流通股本持股比例': 5.111746393723, '增减': '不变', '变动比率': nan}, {'名次': 5, '股东名称': '应业火', '股东性质': '个人', '股份类型': 'A股', '持股数': 9500000, '占总流通股本持股比例': 4.509792573088, '增减': '不变', '变动比率': nan}, {'名次': 6, '股东名称': '吴晓依', '股东性质': '个人', '股份类型': 'A股', '持股数': 2800000, '占总流通股本持股比例': 1.329202021542, '增减': '不变', '变动比率': nan}, {'名次': 7, '股东名称': '朱军', '股东性质': '个人', '股份类 型': 'A股', '持股数': 2150000, '占总流通股本持股比例': 1.020637266541, '增减': '-1550000', '变动比率': -41.89189189}, {'名次': 8, '股东名称': 'BARCLAYS BANK PLC', '股东性质': 'QFII', '股份类型': 'A股', '持股数': 1402013, '占总流通股本持股比例': 0.665556612081, '增减': '新进', '变动比率': nan}, {'名次': 9, '股东名称': '肖裕福', '股东性质': '个人', '股份类型': 'A股', '持股数': 1328100, '占总流通股本持股比例': 0.630469001718, '增减': '新进', '变动比率': nan}, {'名次': 10, '股东名称': '高盛国际-自有资金', '股东性质': 'QFII', '股份类型': 'A股', '持股数': 1285500, '占总流通股本持股比例': 0.61024614239, '增减': '新进', '变动比率': nan}]
         """
-        return self._formatter(lambda: ak.stock_gdfx_free_top_10_em(symbol, date))
+        return ak.stock_gdfx_free_top_10_em(symbol, date)
 

@@ -92,6 +92,8 @@ class Ins:
                         {"key": "Code", "val": 200},
                     ]
                     for rule in rules:
+                        if 1 == Attr.get(data, 'cached'):
+                            break
                         if Attr.has_keys(data, rule['key']):
                             if Attr.get(data, rule['key']) != rule['val']:
                                 save_cache = False

@@ -21,6 +21,6 @@ class RedisTaskKeys:
         "VP_USR": "service.wechat.callback.vp_callback_service@VpCallbackService.update_user",
         # gpl
         "GPL_SYM": "service.gpl.gpl_update_service@GPLUpdateService.update_symbol",
-        "GPL_SAF": "service.gpl.gpl_update_service@GPLUpdateService.update_symbol_after",
+        "GPL_SAF": "service.gpl.gpl_update_service@GPLUpdateService.update_symbol_ext",
     }
 

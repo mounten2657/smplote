@@ -1,5 +1,5 @@
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins
+from tool.core import Ins, Time, Str
 
 
 @Ins.singleton
@@ -20,20 +20,20 @@ class GPLChangeLogModel(MysqlBaseModel):
 
     _table = 'gpl_change_log'
 
-    def add_change_log(self, data, before, after):
-        """股票概念入库"""
-        data = data if data else {}
-        cl_tab = data.get('cl_tab', '')
-        if not data or not cl_tab or len(before) != len(after):
+    def add_change_log(self, symbol, tab, after, before):
+        """股票变更日志入库"""
+        if not symbol or not tab or len(after) != len(before):
             return 0
+        cl_time = Time.date()
+        cl_md5 = Str.md5(str(after))
         insert_list = []
         for k, v in before.items():
             insert_data = {
-                "symbol": data.get('symbol', ''),
-                "cl_tab": data.get('cl_tab', ''),
+                "symbol": symbol,
+                "cl_tab": tab,
                 "cl_key": k,
-                "cl_time": data.get('cl_time', ''),
-                "cl_md5": data.get('cl_md5', ''),
+                "cl_time": cl_time,
+                "cl_md5": cl_md5,
                 "cl_bef": v,
                 "cl_aft": after[k],
             }

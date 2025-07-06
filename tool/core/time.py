@@ -46,8 +46,8 @@ class Time:
         try:
             dt = datetime.strptime(date_str, date_format)
             return int(dt.timestamp())
-        except ValueError as e:
-            raise ValueError(f"日期格式错误，应为 '{date_format}'。原始错误: {e}")
+        except Exception as e:
+            raise ValueError(f"日期格式无效[{date_str}]，应为 '{date_format}'。原始错误: {e}")
 
     @staticmethod
     def dft(timestamp, date_format="%Y-%m-%d %H:%M:%S"):
@@ -62,8 +62,8 @@ class Time:
         try:
             dt = datetime.fromtimestamp(timestamp)
             return dt.strftime(date_format)
-        except (TypeError, OverflowError) as e:
-            raise ValueError(f"时间戳无效。原始错误: {e}")
+        except Exception as e:
+            raise ValueError(f"时间戳无效[{timestamp}]。原始错误: {e}")
 
     @staticmethod
     def month_last_day(date):

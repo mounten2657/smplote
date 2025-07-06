@@ -112,6 +112,8 @@ class RedisClient:
         ttl = key_info["ttl"]
         if 'today' == ttl:
             ttl = (86400 - datetime.datetime.now().timestamp() % 86400)
+        # ttl 必然有值，随机加上一个时间，避免所有缓存在同一时间失效
+        ttl = int(ttl) + Str.randint(1, 300)  # 误差为 5 分钟
         return formatted_key, ttl
 
     def get(self, key_name, args=None):

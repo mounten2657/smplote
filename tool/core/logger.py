@@ -284,6 +284,5 @@ class Logger:
         self.write(data, msg, log_name, 'error')
 
     def exception(self, data=None, msg="NULL", log_name="app"):
-        self.write(data, msg, log_name, 'critical')
-
-
+        # self.write(data, msg, log_name, 'critical')
+        self.write(data, msg, log_name, 'error')

@@ -161,12 +161,20 @@ class Str:
         return md5.hexdigest()
 
     @staticmethod
-    def int(str_val):
-        # 将字符串转换成整数，不成功就是0
+    def int(str_val, default=None):
+        # 将字符串转换成整数，不成功就是 None
         try:
-            return int(str_val) if (str_val and str(str_val).strip()) else 0
-        except (ValueError, TypeError):
-            return 0
+            return int(str_val)
+        except Exception:
+            return default
+
+    @staticmethod
+    def float(str_val, default=None):
+        # 将字符串转换成浮点数，不成功就是 None
+        try:
+            return float(str_val)
+        except Exception:
+            return default
 
     @staticmethod
     def randint(start=1, end=100):
@@ -465,8 +473,8 @@ class Str:
         """
         根据股票代码自动添加交易所前缀（支持多市场）
         市场判断规则：
-        A股：6/0/3/8/4开头 + 长度=6
-        B股：900/200开头（沪B/深B）或SHB/SZB前缀
+        A股：6: SH | 0, 3: SZ | 8, 4: BJ  长度=6
+        B股：900/200开头（沪B/深B）或 SHB/SZB 前缀
        港股：5位数字或.HK结尾
        美股：1-5位字母或.US/.NYSE/.NASDAQ结尾
        中概股：特殊代码（如BABA）或.US结尾

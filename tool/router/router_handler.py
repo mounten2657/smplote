@@ -1,8 +1,6 @@
 import os
 import logging
 import threading
-import webbrowser
-from flask import Response
 from flask import Flask, request, send_from_directory
 from tool.router.parse_handler import ParseHandler
 from tool.core import Logger, Attr, Api, Dir, Config, Error, Http, Env
@@ -20,6 +18,8 @@ class RouterHandler:
         'bot/task/sky_rw',
         'bot/task/vp_msg',
         'callback/gitee_callback/smplote',
+        'gpl/symbol/quick_update',
+        'gpl/symbol/quick_update_ext',
     ]
 
     # 路由忽略列表，适合回调和文件预览等
@@ -106,15 +106,12 @@ class RouterHandler:
         # 请求完成后的动作
         @self.app.after_request
         def after_request(response):
-            # response.direct_passthrough = False
             status_code = response.status_code
             response_result = None
             request_url = request.url
             try:
                 response_result = Attr.parse_json_ignore(response.get_data(as_text=True))
             except RuntimeError as e:
-                # err = Error.handle_exception_info(e)
-                # logger.info(data={"response": {"status_code": status_code, "response_result": err}}, msg="EXP")
                 pass
             if not any(route in request_url for route in self.IGNORE_LOG_LIST):
                 logger.info(data={"response": {"status_code": status_code, "response_result": response_result}}, msg="END")

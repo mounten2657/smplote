@@ -125,7 +125,7 @@ class EmDataSource:
         """
         获取股票日线行情
 
-        :param: str stock_code: 股票代码，格式如"002336"
+        :param str stock_code: 股票代码，格式如"002336"
         :param str sd: 开始日期 - Ymd （如： 20250301）
         :param str ed: 结束日期 - Ymd（如： 20250302）
         :param str adjust: key of {"qfq": "前复权", "hfq": "后复权", "": "不复权"}

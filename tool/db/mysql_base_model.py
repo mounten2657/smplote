@@ -461,8 +461,11 @@ class MysqlBaseModel:
                 if isinstance(condition, dict):
                     operator = condition['opt'].upper()
                     value = condition['val']
-                    where_parts.append(f"{field} {operator} %s")
-                    params.append(value)
+                    if 'STR' == operator:
+                        where_parts.append(f"{field} {value}")
+                    else:
+                        where_parts.append(f"{field} {operator} %s")
+                        params.append(value)
                 else:
                     where_parts.append(f"{field} = %s")
                     params.append(condition)
