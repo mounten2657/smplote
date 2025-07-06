@@ -12,7 +12,7 @@ class Symbol(BaseApp):
         """快速更新股票基础信息"""
         code_str = self.params.get('code_str', '')
         is_force = self.params.get('is_force', 0)
-        res = self.client.quick_update_symbol(code_str, is_force)
+        res = self.client.quick_update_symbol(code_str, int(is_force))
         return self.success(res)
 
     def quick_update_ext(self):

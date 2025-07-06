@@ -31,9 +31,10 @@ class GPLUpdateService:
             return False
         chunk_list = Attr.chunk_list(code_list)
         # 先删除昨日相关概念板块
-        cdb = GPLConceptModel()
-        d_count = cdb.del_concept_yesterday('EM')
-        logger.warning(f"删除昨日板块 - {d_count}", 'UP_SYM_YST')
+        if not code_str:
+            cdb = GPLConceptModel()
+            d_count = cdb.del_concept_yesterday('EM')
+            logger.warning(f"删除昨日板块 - {d_count}", 'UP_SYM_YST')
         for c_list in chunk_list:
             i = int(sum(int(num) for num in c_list)) % 4 + 1
             RedisTaskQueue(f'rtq_gpl_sym{i}_queue').add_task('GPL_SYM', ','.join(c_list), is_force)
