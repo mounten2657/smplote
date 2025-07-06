@@ -227,11 +227,11 @@ class Sys:
         return Sys.delayed_task(3, lambda: Sys.run_command('sudo pkill -9 -f gunicorn'))
 
     @staticmethod
-    def delay_reload_gu():
+    def delay_reload_gu(is_force=0):
         """重载gu """
-        def _exec():
-            Sys.run_command('sudo /opt/shell/init/init_flask.sh >>/tmp/init_flask.log 2>&1')
-        return Sys.delayed_task(3, _exec)
+        is_force = ' 1' if is_force else ' '
+        command = f'sudo /opt/shell/init/init_flask.sh >>/tmp/init_flask.log 2>&1{is_force}'
+        return Sys.delayed_task(3, lambda: Sys.run_command(command))
 
     @staticmethod
     def delay_kill_vp():
