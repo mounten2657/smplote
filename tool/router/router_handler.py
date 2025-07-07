@@ -17,7 +17,7 @@ class RouterHandler:
         'bot/index/index',
         'bot/task/sky_rw',
         'bot/task/vp_msg',
-        'bot/task/refresh_room',
+        'bot/task/vp_room',
         'callback/gitee_callback/smplote',
         'gpl/symbol/quick_update',
         'gpl/symbol/quick_update_ext',

@@ -27,7 +27,7 @@ class Task(BaseAppVp):
         res = VpCallbackService.callback_handler_retry(self.app_key, {"ids": "-1"})
         return self.success(res)
 
-    def refresh_room(self):
+    def vp_room(self):
         """刷新群聊的信息 - 十五分钟一次"""
         if Time.is_night():
             return self.success(True)
