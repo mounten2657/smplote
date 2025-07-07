@@ -29,7 +29,6 @@ class WechatQueueModel(MysqlBaseModel):
             "callback_type": callback_type,
             "app_key": app_key,
             "params": params,
-            "headers": {},
             "h_event": Time.dft(params.get('message', {}).get('create_time', 0)),
             "h_value": params.get('message', {}).get('new_msg_id', 0),
             "process_params": process_params if process_params else {},
