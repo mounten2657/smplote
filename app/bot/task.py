@@ -33,3 +33,8 @@ class Task(BaseAppVp):
             return self.success(True)
         res = VpCallbackService.refresh_room_info(self.app_key)
         return self.success(res)
+
+    def vp_log(self):
+        """清理历史日志 - 每天上午的06点06分"""
+        res = VpCallbackService.clear_api_log()
+        return self.success(res)

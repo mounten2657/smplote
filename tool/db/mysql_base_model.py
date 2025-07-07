@@ -497,6 +497,16 @@ class MysqlBaseModel:
                 .first())
         return info['count'] if info else 0
 
+    def clear_history(self, save_count=100000):
+        """清除历史数据"""
+        ret = self.query_sql(f'SELECT max(id) AS mid FROM {self._table}')
+        if not ret:
+            return False
+        mid = int(ret[0]['mid'])
+        if not mid or mid <= save_count:
+            return 0
+        return self.delete({'id': {'opt': '<=', 'val': mid - save_count}})
+
 class QueryState(threading.local):
     """线程/协局局部存储的查询状态"""
 

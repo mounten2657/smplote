@@ -43,4 +43,3 @@ class WechatApiLogModel(MysqlBaseModel):
     def update_log(self, pid, data):
         """更新日志数据"""
         return self.update({'id': pid}, data)
-

@@ -7,6 +7,7 @@ from model.wechat.wechat_room_model import WechatRoomModel
 from model.wechat.wechat_user_label_model import WechatUserLabelModel
 from model.wechat.wechat_user_model import WechatUserModel
 from model.wechat.wechat_msg_model import WechatMsgModel
+from model.wechat.wechat_api_log_model import WechatApiLogModel
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.core import Logger, Time, Error, Attr, Config, Str, Sys
@@ -67,6 +68,11 @@ class VpCallbackService:
             r_info = rdb.get_room_info(g_wxid)
             res['g_wxid'] = rdb.check_room_info(room, r_info)
         return res
+
+    @staticmethod
+    def clear_api_log():
+        """清理api日志"""
+        return WechatApiLogModel().clear_history()
 
     def callback_handler(self, params):
         """推送事件预处理"""

@@ -18,6 +18,7 @@ class RouterHandler:
         'bot/task/sky_rw',
         'bot/task/vp_msg',
         'bot/task/vp_room',
+        'bot/task/vp_log',
         'callback/gitee_callback/smplote',
         'gpl/symbol/quick_update',
         'gpl/symbol/quick_update_ext',
