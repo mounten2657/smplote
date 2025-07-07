@@ -66,7 +66,7 @@ class VpCallbackService:
         for g_wxid in g_list:
             room = client.get_room(g_wxid, 1)
             r_info = rdb.get_room_info(g_wxid)
-            res['g_wxid'] = rdb.check_room_info(room, r_info)
+            res[g_wxid] = rdb.check_room_info(room, r_info)
         return res
 
     @staticmethod
