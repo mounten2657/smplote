@@ -145,6 +145,7 @@ class VpClient(VpBaseFactory):
         if refresh:
             # 刷新模式下清空所有缓存
             self.refresh_room(g_wxid)
+            Time.sleep(2)
         room_info = self.get_room_grp_info(g_wxid)
         notice = self.get_room_grp_ntc(g_wxid)
         members = self.get_room_grp_usl(g_wxid)
