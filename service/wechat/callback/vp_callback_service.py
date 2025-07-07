@@ -1,7 +1,7 @@
 from service.wechat.callback.vp_command_service import VpCommandService
 from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
-from model.callback.callback_queue_model import CallbackQueueModel
+from model.wechat.wechat_queue_model import WechatQueueModel
 from model.wechat.wechat_file_model import WechatFileModel
 from model.wechat.wechat_room_model import WechatRoomModel
 from model.wechat.wechat_user_label_model import WechatUserLabelModel
@@ -38,7 +38,7 @@ class VpCallbackService:
         # vp_callback -> vp_callback_service -> vp_callback_handler -> vp_callback_service.callback_handler
         if params.get('ids'):  # 通过ID批量重试， 多个英文逗号隔开
             res = {}
-            db = CallbackQueueModel()
+            db = WechatQueueModel()
             id_list = str(params.get('ids')).split(',')
             queue_list = db.get_list_by_id(id_list)
             for queue in queue_list:
@@ -77,7 +77,7 @@ class VpCallbackService:
         app_key = params.get('app_key')
         msg_id = params.get('message', {}).get('new_msg_id', 0)
         p_msg_id = params.get('message', {}).get('msg_id', 0)
-        db = CallbackQueueModel()
+        db = WechatQueueModel()
         info = db.get_by_msg_id(msg_id)
         if info:
             # msg_id 唯一 - 已入库且处理成功就跳过
@@ -88,7 +88,7 @@ class VpCallbackService:
             logger.warning(f"消息重试 - {info['id']} - [{p_msg_id}-{msg_id}]", 'VP_CALL_RTY')
         else:
             # 数据入库
-            res['insert_db'] = pid = db.add_queue('wechatpad', params)
+            res['insert_db'] = pid = db.add_queue(app_key, params, 'wechatpad')
             logger.debug(res, 'VP_CALL_IDB')
         # 更新处理数据
         update_data = {"process_params": {"params": "[PAR]", "app_key": app_key}}
@@ -100,7 +100,7 @@ class VpCallbackService:
     def _callback_handler(self, pid, params):
         """微信回调真正处理逻辑"""
         res = {"pid": pid}
-        db = CallbackQueueModel()
+        db = WechatQueueModel()
         db.set_processed(pid)
         # 消息数据格式化
         res['rev_handler'], data = VpCallbackHandler.rev_handler(params)
@@ -250,7 +250,7 @@ class VpCallbackService:
                 return False
             # 只有一个消费者，所以不用加锁
             client = VpClient(app_key)
-            qdb = CallbackQueueModel()
+            qdb = WechatQueueModel()
             res['upd_cnt_1'] = qdb.set_retry_count(pid, 1)
             user_list = [{"wxid": s_wxid}, {"wxid": t_wxid}]
             room = r_info = {}
@@ -305,7 +305,7 @@ class VpCallbackService:
             data['fid'] = fid
             if 'revoke' == msg_type:
                 r_msg_id = data['content_link']['p_new_msg_id']
-                r_msg = CallbackQueueModel().get_by_msg_id(r_msg_id)
+                r_msg = WechatQueueModel().get_by_msg_id(r_msg_id)
                 if r_msg:
                     data['content'] += f"<{r_msg['process_params']['content']}>"
             if m_info:
@@ -381,7 +381,7 @@ class VpCallbackService:
     def _combine_handler_retry(id_list, r_type):
         """组合消息重试 - 多用于调试"""
         res = {}
-        db = CallbackQueueModel()
+        db = WechatQueueModel()
         queue_list = db.get_list_by_id(id_list)
         for queue in queue_list:
             pid = queue['id']

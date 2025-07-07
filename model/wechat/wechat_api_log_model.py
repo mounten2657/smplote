@@ -7,6 +7,7 @@ class WechatApiLogModel(MysqlBaseModel):
     """
     微信接口日志表
         - id - bigint - 主键ID
+        - app_key - varchar(4) - 应用账户：a1|a2
         - uri - varchar(64) - AI类型
         - biz_code - varchar(64) - 业务码
         - h_event - varchar(64) - 自定义字段，多为事件
@@ -23,10 +24,11 @@ class WechatApiLogModel(MysqlBaseModel):
 
     _table = 'wechat_api_log'
 
-    def add_log(self, method, uri, body, biz_code=''):
+    def add_log(self, app_key, method, uri, body, biz_code=''):
         """日志数据入库"""
         body = body if body else {}
         insert_data = {
+            "app_key": app_key,
             "uri": uri,
             "biz_code": biz_code,
             "h_event": method,

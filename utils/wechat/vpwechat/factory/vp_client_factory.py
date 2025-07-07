@@ -30,7 +30,7 @@ class VpClientFactory:
         logger.debug(f'VP API 请求参数:  {biz_code} - {method}[{uri}] - {body}', 'VP_API_CALL_STA')
         # 请求数据入库
         db = WechatApiLogModel()
-        pid = db.add_log(method, uri, body, biz_code)
+        pid = db.add_log(self.app_key, method, uri, body, biz_code)
         # 执行接口请求
         method = 'JSON' if 'POST' == method else method
         res = Http.send_request(method, url, body)
@@ -386,7 +386,7 @@ class VpClientFactory:
             logger.debug(f'VP GRPC 请求参数:  {biz_code} - {method}[{uri}] - {body}', 'VP_GRPC_CALL_STA')
             # 请求数据入库
             db = WechatApiLogModel()
-            pid = db.add_log(method, uri, body, biz_code)
+            pid = db.add_log(self.app_key, method, uri, body, biz_code)
             # 使用 vpp 进行 cdn 下载
             if "PNG" == msg_type:  # 图片优先下载高清 - 1高清 | 2标准 | 3缩略
                 body['fty'] = 1
