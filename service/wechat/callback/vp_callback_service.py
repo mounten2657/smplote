@@ -53,6 +53,21 @@ class VpCallbackService:
             params.update({'is_retry': 1})
             return VpCallbackHandler(app_key).on_message(params)
 
+    @staticmethod
+    def refresh_room_info(app_key):
+        """刷新群聊信息"""
+        res = {}
+        client = VpClient(app_key)
+        rdb = WechatRoomModel()
+        config = Config.vp_config()
+        app_config = config['app_list'][app_key]
+        g_list = str(app_config['g_wxid']).split(',')
+        for g_wxid in g_list:
+            room = client.get_room(g_wxid, 1)
+            r_info = rdb.get_room_info(g_wxid)
+            res['g_wxid'] = rdb.check_room_info(room, r_info)
+        return res
+
     def callback_handler(self, params):
         """推送事件预处理"""
         res = {}
@@ -250,8 +265,6 @@ class VpCallbackService:
                 if not r_info:
                     res['ins_room'] = rdb.add_room(room, app_key)
                     r_info = rdb.get_room_info(g_wxid)
-                if r_info and (Time.now() - Time.tfd(str(r_info['update_at'])) > 60):
-                    res['chk_room'] = rdb.check_room_info(room, r_info)
                 user_list = room['member_list']
             # 标签更新
             ldb = WechatUserLabelModel()

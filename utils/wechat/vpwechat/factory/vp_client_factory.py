@@ -248,7 +248,8 @@ class VpClientFactory:
             xml = ''
         if not xml:
             return False
-        extra.update({"content": f"[卡片消息] [{res['title']}.card]", "c_type": f"app_card"})
+        des = str(res['des']).split('\r\n')[0]
+        extra.update({"content": f"[卡片消息] [{res['title']}]({des}).card", "c_type": f"app_card"})
         return self._send_app_message(xml, to_wxid, extra)
 
     def get_room_info(self, g_wxid):

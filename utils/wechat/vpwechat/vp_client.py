@@ -137,16 +137,14 @@ class VpClient(VpBaseFactory):
         """刷群聊缓存"""
         key_list = ['VP_ROOM_INFO', 'VP_ROOM_GRP_INF', 'VP_ROOM_GRP_USL', 'VP_ROOM_GRP_NTC']
         list(map(lambda key: RedisClient().delete(key, [g_wxid]), key_list))
-        return self.get_room(g_wxid)
+        return True
 
     @Ins.cached('VP_ROOM_INFO')
-    def get_room(self, g_wxid, refresh=False):
+    def get_room(self, g_wxid, refresh=0):
         """获取完整的群聊信息"""
         if refresh:
             # 刷新模式下清空所有缓存
-            client = RedisClient()
-            key_list = ['VP_ROOM_INFO', 'VP_ROOM_GRP_INF', 'VP_ROOM_GRP_USL', 'VP_ROOM_GRP_NTC']
-            list(map(lambda key: client.delete(key, g_wxid), key_list))
+            self.refresh_room(g_wxid)
         room_info = self.get_room_grp_info(g_wxid)
         notice = self.get_room_grp_ntc(g_wxid)
         members = self.get_room_grp_usl(g_wxid)

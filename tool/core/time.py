@@ -34,6 +34,12 @@ class Time:
         time.sleep(f)
 
     @staticmethod
+    def is_night(start=0, end=7):
+        """判断当前时间是否为晚上"""
+        h = int(datetime.now().strftime('%H'))
+        return start <= h <= end
+
+    @staticmethod
     def tfd(date_str, date_format="%Y-%m-%d %H:%M:%S"):
         """
         将日期字符串转换为时间戳（秒级） - timestamp_from_date
