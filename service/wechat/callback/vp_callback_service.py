@@ -55,16 +55,18 @@ class VpCallbackService:
             return VpCallbackHandler(app_key).on_message(params)
 
     @staticmethod
-    def refresh_room_info(app_key):
+    def refresh_room_info(app_key, g_wxid_str):
         """刷新群聊信息"""
         res = {}
         client = VpClient(app_key)
         rdb = WechatRoomModel()
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
-        g_list = str(app_config['g_wxid']).split(',')
+        g_wxid_str = g_wxid_str if g_wxid_str else app_config['g_wxid']
+        g_list = str(g_wxid_str).split(',')
         for g_wxid in g_list:
-            room = client.get_room(g_wxid, 1)
+            client.refresh_room(g_wxid)
+            room = client.get_room(g_wxid)
             r_info = rdb.get_room_info(g_wxid)
             res[g_wxid] = rdb.check_room_info(room, r_info)
         return res

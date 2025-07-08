@@ -140,12 +140,8 @@ class VpClient(VpBaseFactory):
         return True
 
     @Ins.cached('VP_ROOM_INFO')
-    def get_room(self, g_wxid, refresh=0):
+    def get_room(self, g_wxid):
         """获取完整的群聊信息"""
-        if refresh:
-            # 刷新模式下清空所有缓存
-            self.refresh_room(g_wxid)
-            Time.sleep(2)
         room_info = self.get_room_grp_info(g_wxid)
         notice = self.get_room_grp_ntc(g_wxid)
         members = self.get_room_grp_usl(g_wxid)

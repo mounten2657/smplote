@@ -31,7 +31,8 @@ class Task(BaseAppVp):
         """刷新群聊的信息 - 十五分钟一次"""
         if Time.is_night():
             return self.success(True)
-        res = VpCallbackService.refresh_room_info(self.app_key)
+        g_wxid_str = self.params.get('g_wxid_str', '')
+        res = VpCallbackService.refresh_room_info(self.app_key, g_wxid_str)
         return self.success(res)
 
     def vp_log(self):
