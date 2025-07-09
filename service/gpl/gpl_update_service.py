@@ -185,7 +185,7 @@ class GPLUpdateService:
         tdb = GPLSymbolTextModel()
         code = info['code']
         # 概念板块
-        ci_info = self.em.get_concept_info(code)
+        ci_info = self.formatter.em.get_concept_info(code)
         if ci_info:
             concept_list = []
             for c in ci_info:
@@ -203,7 +203,7 @@ class GPLUpdateService:
                 ext = {'update_list': info['update_list'] | {'xq': Time.date()}}
                 res['up_stock_em'] = sdb.update_symbol(symbol, {"concept_list": concept_list}, before, ext)
         # 核心题材
-        ct_list = self.em.get_concept_text(code)
+        ct_list = self.formatter.em.get_concept_text(code)
         if ct_list:
             biz_type = 'EM_TC'
             t_list = t_em
