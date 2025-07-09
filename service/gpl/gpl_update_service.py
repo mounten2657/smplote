@@ -84,7 +84,7 @@ class GPLUpdateService:
                 if info and not is_force:
                     logger.warning(f"已存在股票数据跳过<{symbol}>", 'UP_SYM_SKP')
                     continue
-                stock = self.formatter.get_stock_info(code, is_force)
+                stock = self.formatter.get_stock_info(code)
                 if not stock:
                     res['un_ins_list'].append(code)
                     logger.warning(f"未能更新的股票数据<{symbol}>", 'UP_SYM_WAR')
