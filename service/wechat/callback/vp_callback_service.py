@@ -229,6 +229,8 @@ class VpCallbackService:
         """微信消息数据入库入口"""
         # 入库顺序： 群聊表 - 用户表 - 消息表
         pid = data['pid']
+        qdb = WechatQueueModel()
+        mdb = WechatMsgModel()
         try:
             res = {}
             app_key = data['app_key']
@@ -248,7 +250,6 @@ class VpCallbackService:
                 logger.warning(f"消息忽略 - 跳过 - [{msg_id}]", 'VP_INS_ING')
                 return False
             # 先判断消息有没有入库 - 已入库就不继续执行了
-            mdb = WechatMsgModel()
             m_info = mdb.get_msg_info(msg_id)
             is_retry = data.get('is_retry')
             if m_info and not is_retry:
@@ -258,7 +259,6 @@ class VpCallbackService:
                 return False
             # 只有一个消费者，所以不用加锁
             client = VpClient(app_key)
-            qdb = WechatQueueModel()
             res['upd_cnt_1'] = qdb.set_retry_count(pid, 1)
             user_list = [{"wxid": s_wxid}, {"wxid": t_wxid}]
             room = r_info = {}
@@ -326,6 +326,7 @@ class VpCallbackService:
         except Exception as e:
             err = Error.handle_exception_info(e)
             logger.error(f"消息入库失败[{pid}] - {err}", "VP_INS_ERR")
+            qdb.set_succeed(pid, 0)
             Sys.delayed_task(5, lambda: VpCallbackService.insert_handler_retry([pid]))
             return False
 

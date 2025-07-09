@@ -36,13 +36,17 @@ class WechatQueueModel(MysqlBaseModel):
         }
         return self.insert(insert_data)
 
-    def set_processed(self, pid, is_processed=1):
-        """更新为已受理"""
-        return self.update({'id': pid}, {'is_processed': is_processed})
+    def set_succeed(self, pid, is_succeed=1):
+        """更新已处理成功"""
+        return self.update({'id': pid}, {'is_succeed': is_succeed})
 
     def set_retry_count(self, pid, retry_count=1):
         """更新重试次数 - 也可以引申为业务的标志位"""
         return self.update({'id': pid}, {'retry_count': retry_count})
+
+    def set_processed(self, pid, is_processed=1):
+        """更新为已受理"""
+        return self.update({'id': pid}, {'is_processed': is_processed})
 
     def update_process(self, pid, data):
         """更新处理数据"""
