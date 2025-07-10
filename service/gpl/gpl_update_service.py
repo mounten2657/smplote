@@ -5,6 +5,7 @@ from model.gpl.gpl_symbol_model import GPLSymbolModel
 from model.gpl.gpl_const_kv_model import GPLConstKvModel
 from model.gpl.gpl_concept_model import GPLConceptModel
 from model.gpl.gpl_symbol_text_model import GPLSymbolTextModel
+from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.core import Ins, Logger, Str, Time, Attr, Error
 
@@ -84,6 +85,10 @@ class GPLUpdateService:
                 if info and not is_force:
                     logger.warning(f"已存在股票数据跳过<{symbol}>", 'UP_SYM_SKP')
                     continue
+                # 删除缓存
+                if is_force:
+                    key_list = ['GPL_STOCK_INFO_XQ', 'GPL_STOCK_INFO_EM']
+                    list(map(lambda key: RedisClient().delete(key, [code]), key_list))
                 stock = self.formatter.get_stock_info(code)
                 if not stock:
                     res['un_ins_list'].append(code)
