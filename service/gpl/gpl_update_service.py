@@ -96,6 +96,9 @@ class GPLUpdateService:
                 else:
                     # 更新
                     change_log = Attr.data_diff(Attr.select_keys(info, stock.keys()), stock)
+                    # 去除值为0或空的键，防止没有数据而误更新
+                    k_list = [k for k, v in change_log.items() if stock[k]]
+                    change_log = Attr.select_keys(change_log, k_list)
                     if change_log:
                         before = Attr.select_keys(info, change_log.keys())
                         after = Attr.select_keys(stock, change_log.keys())
