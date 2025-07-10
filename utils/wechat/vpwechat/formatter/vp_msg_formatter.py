@@ -1,5 +1,4 @@
 from xml.etree import ElementTree
-from service.wechat.callback.vp_command_service import VpCommandService
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.vp_client import VpClient
 from tool.core import Logger, Attr, Str, Time
@@ -123,11 +122,14 @@ class VpMsgFormatter(VpBaseFactory):
         elif 'quote' == content_type:  # 引用
             u_content = content_link['u_content']
             # 判断是否多重引用
-            if any(u_content.startswith(prefix) for prefix in ('&lt;?xml', '<?xml', '&lt;msg', '<msg')):
+            if any(prefix in u_content[:40] for prefix in ('&lt;?xml', '<?xml', '&lt;msg', '<msg')):
                 u_content = Str.html_unescape(u_content)
-                u_content_str = Str.extract_xml_attr(u_content, 'title')
-                if not u_content_str:  # 复杂引用
-                    c_type, c_link = self.get_content_data(u_content)
+                c_type, c_link = self.get_content_data(u_content)
+                if Attr.get(c_link, 'title'):  # 多重引用
+                    u_content_str = f"[{str(c_type).upper()}][{c_link['title']}]"
+                    if c_link['des']:
+                        u_content_str += f"({c_link['des']})"
+                else:  # 复杂引用
                     p_svr_id = content_link.get('p_new_msg_id')
                     u_content_str = f"[{str(c_type).upper()}] {p_svr_id if p_svr_id else p_msg_id}.{c_type}"
                 content_link['u_content'] = u_content_str
@@ -432,8 +434,9 @@ class VpMsgFormatter(VpBaseFactory):
             }
             nickname = Str.extract_xml_attr(content_text, 'nickname')
             desc = Str.extract_xml_attr(content_text, 'desc')
+            url = Str.extract_xml_attr(content_text, 'url', 2).replace('&amp;', '&')
             if nickname and desc:
-                content_link['title'], content_link['des'] = nickname, desc
+                content_link['title'], content_link['des'], content_link['url'] = nickname, desc, url
             if not content_link['url']:
                 content_link['url'] = Str.extract_xml_attr(content_text, 'tpurl').replace('&amp;', '&')
         else:  # 未识别 - 不放行
