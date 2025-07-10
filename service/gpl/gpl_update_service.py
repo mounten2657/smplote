@@ -86,7 +86,7 @@ class GPLUpdateService:
                     logger.warning(f"已存在股票数据跳过<{symbol}>", 'UP_SYM_SKP')
                     continue
                 # 删除缓存
-                if is_force:
+                if is_force and 6 > int(Time.date('%H')):
                     key_list = ['GPL_STOCK_INFO_XQ', 'GPL_STOCK_INFO_EM']
                     list(map(lambda key: RedisClient().delete(key, [code]), key_list))
                 stock = self.formatter.get_stock_info(code)
