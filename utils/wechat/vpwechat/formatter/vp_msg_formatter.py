@@ -127,7 +127,7 @@ class VpMsgFormatter(VpBaseFactory):
                 c_type, c_link = self.get_content_data(u_content)
                 if Attr.get(c_link, 'title'):  # 多重引用
                     u_content_str = f"[{str(c_type).upper()}][{c_link['title']}]"
-                    if c_link['des']:
+                    if Attr.get(c_link, 'des'):
                         u_content_str += f"({c_link['des']})"
                 else:  # 复杂引用
                     p_svr_id = content_link.get('p_new_msg_id')
