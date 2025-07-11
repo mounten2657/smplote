@@ -19,9 +19,10 @@ class RouterHandler:
         'bot/task/vp_msg',
         'bot/task/vp_room',
         'bot/task/vp_log',
+        'bot/task/gpl_info',
+        'bot/task/gpl_ext',
+        'bot/task/gpl_daily',
         'callback/gitee_callback/smplote',
-        'gpl/symbol/quick_update',
-        'gpl/symbol/quick_update_ext',
     ]
 
     # 路由忽略列表，适合回调和文件预览等

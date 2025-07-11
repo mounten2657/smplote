@@ -144,8 +144,8 @@ class EmDataSource:
             "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",  # '日期', '开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌幅', '涨跌额', '换手率'
             "klt": period_dict[period],  # K线类型：101=日线，102=周线，103=月线，15=15分钟，5=5分钟
             "fqt": adjust_dict[adjust],  # 复权类型：0=不复权，1=前复权，2=后复权
-            "beg": sd if sd else "19700101",
-            "end": ed if ed else "99991231",
+            "beg": (sd if sd else "19700101").replace('-', ''),  # 兼容 Y-m-d
+            "end": (ed if ed else "99991231").replace('-', ''),  # 兼容 Y-m-d
             "isSecurity": "0",
             "lmt": "10000",
         }
@@ -193,11 +193,11 @@ class EmDataSource:
                 return data
             except requests.RequestException as e:
                 err = Error.handle_exception_info(e)
-                logger.error(f"请求失败 ({i + 1}/{self.retry_times}): {url}, 错误 - {err}", 'EM_API_ERR')
+                logger.warning(f"请求失败 ({i + 1}/{self.retry_times}): {url}, 错误 - {err}", 'EM_API_ERR')
                 if i == self.retry_times - 1:
                     return None
             except json.JSONDecodeError:
-                logger.error(f"JSON解析失败 - {url} - {params}", 'EM_API_ERR')
+                logger.warning(f"JSON解析失败 - {url} - {params}", 'EM_API_ERR')
                 return None
 
     def _format_stock_code(self, stock_code):

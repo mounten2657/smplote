@@ -1,3 +1,4 @@
+from model.gpl.gpl_symbol_model import GPLSymbolModel
 from tool.unit.gpl.ak_data_source import AkDataSource
 from tool.unit.gpl.em_data_source import EmDataSource
 from tool.core import Ins, Logger, Str, Time, Attr, Error
@@ -11,6 +12,12 @@ class GplFormatterService:
     def __init__(self):
         self.ak = AkDataSource()
         self.em = EmDataSource()
+
+    def get_stock(self, code):
+        """从数据库中获取股票信息"""
+        code = Str.remove_stock_prefix(code)
+        symbol = Str.add_stock_prefix(code)
+        return GPLSymbolModel().get_symbol(symbol)
 
     def get_stock_info(self, code, is_merge=0):
         """

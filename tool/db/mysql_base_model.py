@@ -203,7 +203,7 @@ class MysqlBaseModel:
         return self
 
     def _build_query(self) -> tuple:
-        """构建查询SQL（线程安全）"""
+        """构建查询SQL"""
         with self._query_lock:
             if not self._table:
                 raise ValueError("No table specified")
@@ -220,6 +220,9 @@ class MysqlBaseModel:
                 if operator == 'IN':
                     placeholders = ', '.join(['%s'] * len(value))
                     where_parts.append(f"{field} IN ({placeholders})")
+                    params.extend(value)
+                elif operator == 'BETWEEN':
+                    where_parts.append(f"{field} BETWEEN %s AND %s")
                     params.extend(value)
                 else:
                     where_parts.append(f"{field} {operator} %s")

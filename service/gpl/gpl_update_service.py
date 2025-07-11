@@ -1,10 +1,9 @@
-import concurrent
-from concurrent.futures import ThreadPoolExecutor
 from service.gpl.gpl_formatter_service import GplFormatterService
 from model.gpl.gpl_symbol_model import GPLSymbolModel
 from model.gpl.gpl_const_kv_model import GPLConstKvModel
 from model.gpl.gpl_concept_model import GPLConceptModel
 from model.gpl.gpl_symbol_text_model import GPLSymbolTextModel
+from model.gpl.gpl_daily_model import GPLDailyModel
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.core import Ins, Logger, Str, Time, Attr, Error
@@ -19,11 +18,12 @@ class GPLUpdateService:
     def __init__(self):
         self.formatter = GplFormatterService()
 
-    def quick_update_symbol(self, code_str='', is_force=0):
+    def quick_update_symbol(self, code_str='', is_force=0, sk='GPL_SYM'):
         """
         多进程快速更新股票基础数据
         :param str code_str: 股票代码，不带市场前缀，多个用英文逗号隔开
         :param is_force: 是否强制更新
+        :param sk: 更新类型
         :return:
         """
         code_list = code_str.split(',') if code_str else self.formatter.get_stock_code_all()
@@ -31,30 +31,14 @@ class GPLUpdateService:
         if not code_list:
             return False
         chunk_list = Attr.chunk_list(code_list)
-        # 先删除昨日相关概念板块
-        if not code_str:
+        if 'GPL_SYM' == sk and not code_str:
+            # 删除昨日相关概念板块
             cdb = GPLConceptModel()
             d_count = cdb.del_concept_yesterday('EM')
             logger.warning(f"删除昨日板块 - {d_count}", 'UP_SYM_YST')
+        # 快速转入批量队列中执行
         for c_list in chunk_list:
-            i = int(sum(int(num) for num in c_list)) % 4 + 1
-            RedisTaskQueue(f'rtq_gpl_sym{i}_queue').add_task('GPL_SYM', ','.join(c_list), is_force)
-        return True
-
-    def quick_update_symbol_ext(self, code_str=''):
-        """
-        多进程快速更新股票额外数据
-        :param str code_str: 股票代码，不带市场前缀，多个用英文逗号隔开
-        :return:
-        """
-        code_list = code_str.split(',') if code_str else self.formatter.get_stock_code_all()
-        logger.warning(f"总股票数据 - {len(code_list)}", 'UP_SYM_TOL')
-        if not code_list:
-            return False
-        chunk_list = Attr.chunk_list(code_list)
-        for c_list in chunk_list:
-            i = int(sum(int(num) for num in c_list)) % 4 + 1
-            RedisTaskQueue(f'rtq_gpl_saf{i}_queue').add_task('GPL_SAF', ','.join(c_list))
+            RedisTaskQueue.add_task_batch(sk, ','.join(c_list), is_force)
         return True
 
     def update_symbol(self, code_str, is_force=0):
@@ -117,9 +101,8 @@ class GPLUpdateService:
                 continue
         return res
 
-    def update_symbol_ext(self, code_str):
+    def update_symbol_ext(self, code_str, is_force=0):
         """更新股票额外数据 - 多线程"""
-        res = {}
         code_list = code_str.split(',')
         if not code_list:
             return False
@@ -136,8 +119,8 @@ class GPLUpdateService:
         c_list_em = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'EM'), 'symbol')
         t_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_TC'), 'symbol')
 
-        def _up_saf_exec(code, ret):
-            """更新方法入口"""
+        @Ins.multiple_executor(5)
+        def _up_saf_exec(code):
             symbol = Str.add_stock_prefix(code)
             info = Attr.select_item_by_where(s_list, {"symbol": symbol})
             ind = all_code_list.index(code) + 1
@@ -149,34 +132,80 @@ class GPLUpdateService:
             cl_xq = Attr.get(c_list_xq, symbol, [])
             cl_em = Attr.get(c_list_em, symbol, [])
             t_em = Attr.get(t_list_em, symbol, [])
+            logger.debug(f"更新股票额外数据<{symbol}>{percent} - STA", 'UP_SAF_INF')
             # 雪球概念更新
-            logger.debug(f"异步更新股票数据<{symbol}>{percent} - STA", 'UP_SAF_INF')
-            ret = self.update_by_xq(symbol, info, ret, k_list_xq, cl_xq)
+            ret = self._update_by_xq(symbol, info, k_list_xq, cl_xq, is_force)
+            logger.debug(f"更新股票额外结果<{symbol}>{percent} - XQ - {ret}", 'UP_SAF_INF')
             # 东财概念更新
-            logger.debug(f"异步更新股票结果<{symbol}>{percent} - XQ - {ret}", 'UP_SAF_INF')
-            ret = self.update_by_em(symbol, info, ret, k_list_em, cl_em, t_em)
-            logger.debug(f"异步更新股票结果<{symbol}>{percent} - EM - {ret}", 'UP_SAF_INF')
+            ret = ret | self._update_by_em(symbol, info, k_list_em, cl_em, t_em)
+            logger.debug(f"更新股票额外结果<{symbol}>{percent} - EM - {ret}", 'UP_SAF_INF')
             return ret
 
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            future_to_code = {executor.submit(_up_saf_exec, code, res): code for code in code_list}
+        return _up_saf_exec(code_list)
+
+    def update_symbol_daily(self, code_str, is_force=0):
+        """更新股票日线数据"""
+        code_list = code_str.split(',')
+        if not code_list:
+            return False
+        all_code_list = self.formatter.get_stock_code_all()
+        symbol_list = [Str.add_stock_prefix(c) for c in code_list]
+        st = Time.dft(Time.now() - 7 * 86400, '%Y-%m-%d')
+        if is_force:
+            st = '2000-01-01'  # 初始化
+        et = Time.date('%Y-%m-%d')
+        ddb = GPLDailyModel()
+        d_list = ddb.get_daily_list(symbol_list, [st, et]) if not is_force else []
+
+        @Ins.multiple_executor(1)
+        def _up_day_exec(code):
+            Time.sleep(Str.randint(1, 10) / 10)
             res = {}
-            for future in concurrent.futures.as_completed(future_to_code):
-                Time.sleep(Str.randint(1, 10) / 10)
-                code = future_to_code[future]
-                try:
-                    res[code] = future.result()
-                except Exception as e:
-                    err = Error.handle_exception_info(e)
-                    res[code] = err
+            symbol = Str.add_stock_prefix(code)
+            ind = all_code_list.index(code) + 1
+            percent = (f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}% "
+                       f"| {round(100 * (code_list.index(code) + 1) / len(code_list), 2)}%)")
+            logger.debug(f"更新股票日线数据<{symbol}>{percent} - STA", 'UP_DAY_INF')
+            insert_list = {}
+            fq_list = {"": "0", "qfq": "1", "hfq": "2"}
+            for k, v in fq_list.items():
+                day_list = self.formatter.em.get_daily_quote(code, st, et, k)
+                if not day_list:
+                    logger.debug(f"暂无股票日线数据<{symbol}>{percent}", 'UP_DAY_WAR')
+                    continue
+                for day in day_list:
+                    td = day['date']
+                    info = Attr.select_item_by_where(d_list, {'symbol': symbol, 'trade_date': td})
+                    if not info:
+                        insert_list[td] = insert_list[td] if Attr.has_keys(insert_list, td) else {}
+                        insert_list[td].update({
+                            "symbol": symbol,
+                            "trade_date": td,
+                            f"f{v}_open": day['open'],
+                            f"f{v}_close": day['close'],
+                            f"f{v}_high": day['high'],
+                            f"f{v}_low": day['low'],
+                            f"f{v}_volume": day['volume'],
+                            f"f{v}_amount": day['amount'],
+                            f"f{v}_amplitude": day['amplitude'],
+                            f"f{v}_pct_change": day['pct_change'],
+                            f"f{v}_price_change": day['price_change'],
+                            f"f{v}_turnover_rate": day['turnover_rate'],
+                        })
+            if insert_list:
+                insert_list = insert_list.values()
+                res[symbol] = ddb.add_daily(insert_list)
+                logger.debug(f"新增股票日线数据<{symbol}>{percent} - END - {res[symbol]}", 'UP_DAY_INF')
+            return res
 
-        return res
+        return _up_day_exec(code_list)
 
-    def update_by_xq(self, symbol, info, res, k_list_xq, c_list_xq):
+    def _update_by_xq(self, symbol, info, k_list_xq, c_list_xq, is_force):
         """从雪球中拉取数据进行更新"""
+        res = {}
         # 改为只更新一次 - 毕竟不常用
-        if k_list_xq and c_list_xq:
-            res['up_concept_xq'] = 'skip'
+        if k_list_xq and c_list_xq and not is_force:
+            res['ucx'] = False
             return res
         code = info['code']
         stock = self.formatter.get_stock_info(code, 1)
@@ -184,11 +213,12 @@ class GPLUpdateService:
             concept_code = Attr.get(stock, 'concept_code_xq', '')
             concept_name = Attr.get(stock, 'concept_name_xq', '')
             if concept_code and concept_name:
-                res['up_concept_xq'] = self.update_concept(symbol, concept_code, concept_name, 'XQ', '', k_list_xq, c_list_xq)
+                res['ucx'] = self._update_concept(symbol, concept_code, concept_name, 'XQ', '', k_list_xq, c_list_xq)
         return res
 
-    def update_by_em(self, symbol, info, res, k_list_em, c_list_em, t_em):
+    def _update_by_em(self, symbol, info, k_list_em, c_list_em, t_em):
         """从东财中拉取数据进行更新"""
+        res = {}
         sdb = GPLSymbolModel()
         tdb = GPLSymbolTextModel()
         code = info['code']
@@ -201,15 +231,13 @@ class GPLUpdateService:
                 concept_name = Attr.get(c, 'BOARD_NAME', '')
                 des = Attr.get(c, 'BOARD_TYPE', '')
                 if concept_code and concept_name:
-                    res['up_concept_em'] = self.update_concept(symbol, concept_code, concept_name, 'EM', des, k_list_em, c_list_em)
+                    res['uce'] = self._update_concept(symbol, concept_code, concept_name, 'EM', des, k_list_em, c_list_em)
                     if '昨日' not in concept_name:
                         concept_list.append(concept_name)
             concept_list = ','.join(concept_list)
             if concept_list and info['concept_list'] != concept_list:
-                before = Attr.select_keys(info, ['concept_list'])
-                before = before if info['concept_list'] else {}
-                ext = {'update_list': info['update_list'] | {'xq': Time.date()}}
-                res['up_stock_em'] = sdb.update_symbol(symbol, {"concept_list": concept_list}, before, ext)
+                ext = {'update_list': info['update_list'] | {'em': Time.date()}} | {"concept_list": concept_list}
+                res['use'] = sdb.update_symbol(symbol, {}, {}, ext)
         # 核心题材
         ct_list = self.formatter.em.get_concept_text(code)
         if ct_list:
@@ -229,7 +257,7 @@ class GPLUpdateService:
                     ek = Str.first_py_char(title)
                     d_info = Attr.select_item_by_where(t_list, {'e_key': ek}, {})
                     if not d_info and not tdb.get_text(symbol, biz_type, ek):
-                        res['ins_text_em'] = tdb.add_text({
+                        res['ite'] = tdb.add_text({
                             "symbol": symbol,
                             "biz_type": biz_type,
                             "e_key": ek,
@@ -238,7 +266,7 @@ class GPLUpdateService:
                         })
         return res
 
-    def update_concept(self, symbol, code, name, type, des, k_list, c_list):
+    def _update_concept(self, symbol, code, name, type, des, k_list, c_list):
         """更新股票概念板块"""
         kdb = GPLConstKvModel()
         cdb = GPLConceptModel()

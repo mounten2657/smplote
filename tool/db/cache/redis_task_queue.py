@@ -261,6 +261,15 @@ class RedisTaskQueue:
         return self.submit(service, *args)
 
     @staticmethod
+    def add_task_batch(sk, *args):
+        """往队列中添加批任务"""
+        service = RedisTaskKeys.RTQ_BATCH_LIST.get(sk)
+        if not service:
+            raise ValueError(f'Not register service - {sk}')
+        i = Str.randint(1, 4)
+        return RedisTaskQueue(f'rtq_batch{i}_queue').submit(service, *args)
+
+    @staticmethod
     def run_consumer():
         """异步延迟启动消费"""
         def run(queue_name):

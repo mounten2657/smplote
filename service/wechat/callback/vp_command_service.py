@@ -39,7 +39,7 @@ class VpCommandService:
 
     def vp_manual(self, content):
         """入口"""
-        c_str = """✨工号[9527]已接入：
+        c_str = """✨欢迎使用
         
     📢 可用命令列表：
     
