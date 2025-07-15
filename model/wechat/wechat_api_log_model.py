@@ -8,7 +8,7 @@ class WechatApiLogModel(MysqlBaseModel):
     微信接口日志表
         - id - bigint - 主键ID
         - app_key - varchar(4) - 应用账户：a1|a2
-        - uri - varchar(64) - AI类型
+        - uri - varchar(64) - 请求路由
         - biz_code - varchar(64) - 业务码
         - h_event - varchar(64) - 自定义字段，多为事件
         - h_value - varchar(64) - 自定义字段，多为某值

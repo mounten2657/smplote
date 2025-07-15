@@ -31,8 +31,9 @@ class RedisKeys:
         "SKY_OVO_DJS": {"key": "sky:ovo:djs", "ttl": 'today'},
         # gpl 业务相关
         "GPL_STOCK_CODE_LIST": {"key": "gpl:stock:code_list", "ttl": 86400},
-        "GPL_STOCK_INFO_XQ": {"key": "gpl:stock:xq:%s", "ttl": 79200},
-        "GPL_STOCK_INFO_EM": {"key": "gpl:stock:em:%s", "ttl": 79200},
+        "GPL_STOCK_TD_LIST": {"key": "gpl:stock:td_list", "ttl": 7200},
+        "GPL_STOCK_INFO_XQ": {"key": "gpl:stock:xq:%s", "ttl": 'today'},
+        "GPL_STOCK_INFO_EM": {"key": "gpl:stock:em:%s", "ttl": 'today'},
     }
 
 

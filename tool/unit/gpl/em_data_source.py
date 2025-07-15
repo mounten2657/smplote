@@ -1,9 +1,10 @@
-import requests
 import json
 import time
 import random
-from typing import Dict, List, Optional
-from tool.core import Logger, Attr, Str, Error
+import requests
+from typing import Dict, List
+from tool.core import Logger, Attr, Str, Error, Time
+from model.gpl.gpl_api_log_model import GplApiLogModel
 
 logger = Logger()
 
@@ -18,7 +19,7 @@ class EmDataSource:
     _DATA_URL = "https://datacenter.eastmoney.com"
     _PUB_URL = "https://push2his.eastmoney.com"
 
-    def __init__(self, timeout=10, retry_times=1):
+    def __init__(self, timeout=30, retry_times=1):
         """
         初始化数据来源
 
@@ -36,6 +37,7 @@ class EmDataSource:
             'X-Requested-With': 'XMLHttpRequest'
         }
         self.session.headers.update(self.headers)
+        self.ldb = GplApiLogModel()
 
     def get_basic_info(self, stock_code: str) -> Dict:
         """
@@ -52,8 +54,10 @@ class EmDataSource:
             "columns": "ALL",
             "filter": f'(SECUCODE="{stock_code}.{prefix}")',
         }
-        data = self._get(url, params)
-        return Attr.get_by_point(data, 'result.data.0', {})
+        start_time = Time.now(0)
+        data, pid = self._get(url, params, 'EM_BASIC', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
+        res = Attr.get_by_point(data, 'result.data.0', {})
+        return self._ret(res, pid, start_time)
 
     def get_issue_info(self, stock_code: str) -> Dict:
         """
@@ -70,8 +74,10 @@ class EmDataSource:
             "columns": "ALL",
             "filter": f'(SECUCODE="{stock_code}.{prefix}")',
         }
-        data = self._get(url, params)
-        return Attr.get_by_point(data, 'result.data.0', {})
+        start_time = Time.now(0)
+        data, pid = self._get(url, params, 'EM_ISSUE', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
+        res = Attr.get_by_point(data, 'result.data.0', {})
+        return self._ret(res, pid, start_time)
 
     def get_concept_info(self, stock_code: str) -> Dict:
         """
@@ -94,8 +100,10 @@ class EmDataSource:
             "p": "1",
             "v": "013032671915799998",
         }
-        data = self._get(url, params)
-        return Attr.get_by_point(data, 'result.data', {})
+        start_time = Time.now(0)
+        data, pid = self._get(url, params, 'EM_CONCEPT', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
+        res = Attr.get_by_point(data, 'result.data', {})
+        return self._ret(res, pid, start_time)
 
     def get_concept_text(self, stock_code: str) -> Dict:
         """
@@ -118,8 +126,10 @@ class EmDataSource:
             "p": "1",
             "v": "013032671915799998",
         }
-        data = self._get(url, params)
-        return Attr.get_by_point(data, 'result.data', {})
+        start_time = Time.now(0)
+        data, pid = self._get(url, params, 'EM_CONCEPT_TEXT', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
+        res = Attr.get_by_point(data, 'result.data', {})
+        return self._ret(res, pid, start_time)
 
     def get_daily_quote(self, stock_code: str, sd: str = "20000101", ed: str = "20990101", adjust: str = "", period: str = "daily") -> List[Dict]:
         """
@@ -149,7 +159,8 @@ class EmDataSource:
             "isSecurity": "0",
             "lmt": "10000",
         }
-        data = self._get(url, params)
+        start_time = Time.now(0)
+        data, pid = self._get(url, params, f'EM_DAILY_{adjust_dict[adjust]}', {'he': f'{prefix}{stock_code}', 'hv': f'{sd}~{ed}'})
         kline_list = Attr.get_by_point(data, 'data.klines', [])
         if not kline_list:
             return []
@@ -157,6 +168,8 @@ class EmDataSource:
         daily_data = []
         for kline in kline_list:
             parts = kline.split(',')
+            if not float(parts[1]) and not float(parts[2]):
+                continue
             daily_data.append({
                 "date": parts[0],
                 "open": float(parts[1]),
@@ -170,39 +183,52 @@ class EmDataSource:
                 "price_change": float(parts[9]) if len(parts) > 9 else 0,
                 "turnover_rate": float(parts[10]) if len(parts) > 10 else 0,
             })
-        return daily_data
+        return self._ret(daily_data, pid, start_time)
 
-    def _get(self, url: str, params: Dict = None) -> Optional[Dict]:
+    def _get(self, url: str, params: Dict = None, biz_code='', ext=None):
         """
         发送GET请求并处理响应
 
         :param: url: 请求URL
         :param: params: 请求参数
+        :param: biz_code: 业务代码
+        :param: ext: 额外参数
         :return: 解析后的JSON数据，失败返回None
         """
         for i in range(self.retry_times):
             try:
                 # 添加随机延迟，避免频繁请求
-                time.sleep(random.uniform(0.5, 2.0))
+                time.sleep(random.uniform(0.1, 0.9))
+                # 如果已经有了日志数据就不用请求接口了
+                pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
+                if isinstance(pid, dict):
+                    return pid['response_result'], 0
                 response = self.session.get(url, params=params, timeout=self.timeout)
                 # 检查请求是否成功
                 response.raise_for_status()
                 # 解析JSON数据
                 # print(response.text)
                 data = response.json()
-                return data
+                self.ldb.update_gpl_api_log(pid, {'response_result': data})
+                return data, pid
             except requests.RequestException as e:
                 err = Error.handle_exception_info(e)
                 logger.warning(f"请求失败 ({i + 1}/{self.retry_times}): {url}, 错误 - {err}", 'EM_API_ERR')
                 if i == self.retry_times - 1:
-                    return None
+                    return None, 0
             except json.JSONDecodeError:
                 logger.warning(f"JSON解析失败 - {url} - {params}", 'EM_API_ERR')
-                return None
+                return None, 0
+
+    def _ret(self, res, pid, start_time):
+        """格式化返回"""
+        run_time = round(Time.now(0) - start_time, 3) * 1000
+        res and self.ldb.update_gpl_api_log(pid, {'process_params': res, 'is_succeed': 1, 'response_time': run_time})
+        return res
 
     def _format_stock_code(self, stock_code):
         """格式化股票代码"""
         stock_code = Str.remove_stock_prefix(stock_code)
         prefix = Str.get_stock_prefix(stock_code)
-        prefix_int = 0 if 'SZ' == prefix else 1
+        prefix_int = 1 if 'SH' == prefix else 0
         return stock_code, prefix, prefix_int

@@ -52,6 +52,8 @@ class GPLDailyModel(MysqlBaseModel):
         if not data_list:
             return 0
         for data in data_list:
+            if not data.get('f0_open', 0) and not data.get('f0_close', 0):
+                continue
             insert_list.append({
                 "symbol": data.get('symbol', ''),
                 "trade_date": data.get('trade_date', ''),
@@ -86,6 +88,8 @@ class GPLDailyModel(MysqlBaseModel):
                 "f2_price_change": data.get('f2_price_change', 0),
                 "f2_turnover_rate": data.get('f2_turnover_rate', 0),
             })
+        if not insert_list:
+            return 0
         return self.insert(insert_list)
 
     def update_daily(self, pid, data):

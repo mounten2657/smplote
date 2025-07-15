@@ -4,6 +4,7 @@ from model.gpl.gpl_const_kv_model import GPLConstKvModel
 from model.gpl.gpl_concept_model import GPLConceptModel
 from model.gpl.gpl_symbol_text_model import GPLSymbolTextModel
 from model.gpl.gpl_daily_model import GPLDailyModel
+from model.gpl.gpl_api_log_model import GplApiLogModel
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.core import Ins, Logger, Str, Time, Attr, Error
@@ -144,58 +145,96 @@ class GPLUpdateService:
         return _up_saf_exec(code_list)
 
     def update_symbol_daily(self, code_str, is_force=0):
-        """更新股票日线数据"""
+        """
+        更新股票日线数据
+        :param code_str: 股票代码列表，一般是50个
+        :param is_force:  99: 仅拉取股票历史数据 | 98: 对历史数据入库 | 0,10: 更新今日数据 | 17: 更新最近一周
+        :return:
+        """
         code_list = code_str.split(',')
         if not code_list:
             return False
         all_code_list = self.formatter.get_stock_code_all()
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
-        st = Time.dft(Time.now() - 7 * 86400, '%Y-%m-%d')
-        if is_force:
-            st = '2000-01-01'  # 初始化
-        et = Time.date('%Y-%m-%d')
-        ddb = GPLDailyModel()
-        d_list = ddb.get_daily_list(symbol_list, [st, et]) if not is_force else []
 
-        @Ins.multiple_executor(1)
+        n = 0 if is_force == 0 else is_force - 10
+        st = Time.dft(Time.now() - n * 86400, '%Y-%m-%d')
+        et = Time.date('%Y-%m-%d')
+        if is_force > 90:
+            st = '2000-01-01'  # 初始化
+            et = '2025-07-13'  # 初始化
+        tds = f'{st}~{et}'
+
+        # 先获取所有的交易日期，非交易日直接跳过
+        all_trade_day = self.formatter.get_trade_day_all()
+        active_trade_day = [d for d in all_trade_day if st <= d <= et]
+        if not active_trade_day:
+            return False
+
+        ddb = GPLDailyModel()
+        ldb = GplApiLogModel()
+        d_list = ddb.get_daily_list(symbol_list, [st, et])
+        l_list = {
+            'f0': ldb.get_gpl_api_log_list('EM_DAILY_0', symbol_list, [tds]),
+            'f1': ldb.get_gpl_api_log_list('EM_DAILY_1', symbol_list, [tds]),
+            'f2': ldb.get_gpl_api_log_list('EM_DAILY_2', symbol_list, [tds])
+        }
+
+        @Ins.multiple_executor(5)
         def _up_day_exec(code):
             Time.sleep(Str.randint(1, 10) / 10)
-            res = {}
+            res = []
             symbol = Str.add_stock_prefix(code)
             ind = all_code_list.index(code) + 1
             percent = (f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}% "
                        f"| {round(100 * (code_list.index(code) + 1) / len(code_list), 2)}%)")
-            logger.debug(f"更新股票日线数据<{symbol}>{percent} - STA", 'UP_DAY_INF')
+            logger.debug(f"入库股票日线数据<{symbol}><{tds}>{percent} - STA", 'UP_DAY_INF')
             insert_list = {}
             fq_list = {"": "0", "qfq": "1", "hfq": "2"}
             for k, v in fq_list.items():
-                day_list = self.formatter.em.get_daily_quote(code, st, et, k)
+                # 先判断是否已入库
+                log_info = Attr.select_item_by_where(l_list[f'f{v}'], {'h_event': symbol, 'h_value': tds})
+                if is_force == 99 and log_info:
+                    logger.debug(f"日线数据已入库<{symbol}><{tds}>{percent}", 'UP_DAY_SKP')
+                    continue
+                day_list = log_info['process_params'] if (log_info and is_force != 99) else \
+                    self.formatter.em.get_daily_quote(code, st, et, k)
+                res.append(len(day_list))
+                logger.debug(f"接口入库日线数据<{symbol}><{tds}>{percent} - {k}"
+                             f" - [{len(day_list)}]", 'UP_DAY_SKP')
                 if not day_list:
-                    logger.debug(f"暂无股票日线数据<{symbol}>{percent}", 'UP_DAY_WAR')
+                    logger.warning(f"接口暂无日线数据<{symbol}><{tds}>{percent}", 'UP_DAY_WAR')
+                    continue
+                if 99 == is_force:
                     continue
                 for day in day_list:
                     td = day['date']
                     info = Attr.select_item_by_where(d_list, {'symbol': symbol, 'trade_date': td})
-                    if not info:
-                        insert_list[td] = insert_list[td] if Attr.has_keys(insert_list, td) else {}
-                        insert_list[td].update({
-                            "symbol": symbol,
-                            "trade_date": td,
-                            f"f{v}_open": day['open'],
-                            f"f{v}_close": day['close'],
-                            f"f{v}_high": day['high'],
-                            f"f{v}_low": day['low'],
-                            f"f{v}_volume": day['volume'],
-                            f"f{v}_amount": day['amount'],
-                            f"f{v}_amplitude": day['amplitude'],
-                            f"f{v}_pct_change": day['pct_change'],
-                            f"f{v}_price_change": day['price_change'],
-                            f"f{v}_turnover_rate": day['turnover_rate'],
-                        })
+                    if info:
+                        logger.debug(f"已存在日线数据<{symbol}><{td}>{percent}", 'UP_DAY_SKP')
+                        continue
+                    insert_list[td] = insert_list[td] if Attr.has_keys(insert_list, td) else {}
+                    insert_list[td].update({
+                        "symbol": symbol,
+                        "trade_date": td,
+                        f"f{v}_open": day['open'],
+                        f"f{v}_close": day['close'],
+                        f"f{v}_high": day['high'],
+                        f"f{v}_low": day['low'],
+                        f"f{v}_volume": day['volume'],
+                        f"f{v}_amount": day['amount'],
+                        f"f{v}_amplitude": day['amplitude'],
+                        f"f{v}_pct_change": day['pct_change'],
+                        f"f{v}_price_change": day['price_change'],
+                        f"f{v}_turnover_rate": day['turnover_rate'],
+                    })
             if insert_list:
+                ik = insert_list.keys()
                 insert_list = insert_list.values()
-                res[symbol] = ddb.add_daily(insert_list)
-                logger.debug(f"新增股票日线数据<{symbol}>{percent} - END - {res[symbol]}", 'UP_DAY_INF')
+                iid = ddb.add_daily(insert_list)
+                res.append(iid)
+                logger.debug(f"新增股票日线数据<{symbol}><{next(iter(ik))}~{next(reversed(ik))}>{percent}"
+                             f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
         return _up_day_exec(code_list)

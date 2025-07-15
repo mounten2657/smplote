@@ -44,6 +44,15 @@ class GplFormatterService:
         code_list = self.ak.stock_info_a_code_name()
         return [str(item['code']) for item in code_list]
 
+    @Ins.cached('GPL_STOCK_TD_LIST')
+    def get_trade_day_all(self):
+        """
+        获取所有有效的交易日期
+        :return: 股票有效交易日期
+        """
+        p_list = self.em.get_daily_quote('000001', '2000-01-01', Time.date('%Y-%m-%d'))
+        return [p['date'] for p in p_list]
+
     @Ins.cached('GPL_STOCK_INFO_EM')
     def get_stock_em(self, code):
         """

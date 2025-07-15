@@ -85,6 +85,7 @@ class RedisTaskQueue:
     
                 redis.call('HSET', processing_q..':workers', worker_id, task)
                 redis.call('HSET', processing_q..':heartbeats', task_data.id, ARGV[2])
+                redis.call('EXPIRE', processing_q..'', expire_sec)
                 redis.call('EXPIRE', processing_q..':heartbeats', expire_sec)
                 redis.call('EXPIRE', processing_q..':workers', expire_sec)
                 return task
@@ -210,7 +211,7 @@ class RedisTaskQueue:
                     # Claim task atomically
                     task_data = self._claim_script(
                         keys=[self.queue_name, self.processing_queue],
-                        args=[worker_id, datetime.now().isoformat(), 3600]
+                        args=[worker_id, datetime.now().isoformat(), 86400]
                     )
                     if not task_data:
                         break
