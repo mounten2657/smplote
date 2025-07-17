@@ -195,10 +195,12 @@ class EmDataSource:
         """
         for i in range(self.retry_times):
             try:
+                pid = 0
                 # 如果已经有了日志数据就不用请求接口了
-                pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
-                if isinstance(pid, dict):
-                    return pid['response_result'], 0
+                if 'EM_DAILY' in biz_code:
+                    pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
+                    if isinstance(pid, dict):
+                        return pid['response_result'], 0
                 response = self.session.get(url, params=params, timeout=self.timeout)
                 # 检查请求是否成功
                 response.raise_for_status()
