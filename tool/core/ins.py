@@ -1,16 +1,16 @@
 import time
 import hashlib
 import threading
-import random
 import concurrent.futures
 from functools import wraps
 from typing import TypeVar, Type, Any
 from tool.core.attr import Attr
 from tool.core.error import Error
+from tool.core.logger import Logger
 from tool.db.cache.redis_client import RedisClient
 
 T = TypeVar('T')
-
+logger = Logger()
 
 class Ins:
 
@@ -120,12 +120,12 @@ class Ins:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                     future_to_task = {executor.submit(func, task, *args[1:], **kwargs): task for task in task_list}
                     for future in concurrent.futures.as_completed(future_to_task):
-                        time.sleep(random.randint(1, 10) / 10)
                         task = future_to_task[future]
                         try:
                             res[task] = future.result()
                         except Exception as e:
                             err = Error.handle_exception_info(e)
+                            logger.error(err, 'MULT_EXEC_ERR', 'system')
                             res[task] = err
                 return res
             return wrapper

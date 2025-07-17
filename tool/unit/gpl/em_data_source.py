@@ -1,6 +1,4 @@
 import json
-import time
-import random
 import requests
 from typing import Dict, List
 from tool.core import Logger, Attr, Str, Error, Time
@@ -197,8 +195,6 @@ class EmDataSource:
         """
         for i in range(self.retry_times):
             try:
-                # 添加随机延迟，避免频繁请求
-                time.sleep(random.uniform(0.1, 0.9))
                 # 如果已经有了日志数据就不用请求接口了
                 pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
                 if isinstance(pid, dict):
@@ -207,7 +203,6 @@ class EmDataSource:
                 # 检查请求是否成功
                 response.raise_for_status()
                 # 解析JSON数据
-                # print(response.text)
                 data = response.json()
                 self.ldb.update_gpl_api_log(pid, {'response_result': data})
                 return data, pid

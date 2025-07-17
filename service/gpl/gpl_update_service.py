@@ -160,17 +160,12 @@ class GPLUpdateService:
         n = 0 if is_force == 0 else is_force - 10
         st = Time.dft(Time.now() - n * 86400, '%Y-%m-%d')
         et = Time.date('%Y-%m-%d')
-        if is_force > 90:
-            st = '2000-01-01'  # 初始化
-            et = '2025-07-13'  # 初始化
+        if is_force > 90:  # 初始化
+            st = '2000-01-01'
+            et = '2025-07-13'
         tds = f'{st}~{et}'
 
-        # 先获取所有的交易日期，非交易日直接跳过
-        all_trade_day = self.formatter.get_trade_day_all()
-        active_trade_day = [d for d in all_trade_day if st <= d <= et]
-        if not active_trade_day:
-            return False
-
+        # 批量查询数据
         ddb = GPLDailyModel()
         ldb = GplApiLogModel()
         d_list = ddb.get_daily_list(symbol_list, [st, et])
@@ -179,6 +174,12 @@ class GPLUpdateService:
             'f1': ldb.get_gpl_api_log_list('EM_DAILY_1', symbol_list, [tds]),
             'f2': ldb.get_gpl_api_log_list('EM_DAILY_2', symbol_list, [tds])
         }
+
+        # 手动建立索引
+        d_list = {f"{d['symbol']}_{d['trade_date']}": d for d in d_list}
+        l_list['f0'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f0']}
+        l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
+        l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
         @Ins.multiple_executor(5)
         def _up_day_exec(code):
@@ -193,7 +194,7 @@ class GPLUpdateService:
             fq_list = {"": "0", "qfq": "1", "hfq": "2"}
             for k, v in fq_list.items():
                 # 先判断是否已入库
-                log_info = Attr.select_item_by_where(l_list[f'f{v}'], {'h_event': symbol, 'h_value': tds})
+                log_info = Attr.get(l_list[f'f{v}'], f"{symbol}_{tds}")
                 if is_force == 99 and log_info:
                     logger.debug(f"日线数据已入库<{symbol}><{tds}>{percent}", 'UP_DAY_SKP')
                     continue
@@ -207,11 +208,12 @@ class GPLUpdateService:
                     continue
                 if 99 == is_force:
                     continue
-                for day in day_list:
+                for i, day in enumerate(day_list):
                     td = day['date']
-                    info = Attr.select_item_by_where(d_list, {'symbol': symbol, 'trade_date': td})
+                    info = Attr.get(d_list, f"{symbol}_{td}")
                     if info:
-                        logger.debug(f"已存在日线数据<{symbol}><{td}>{percent}", 'UP_DAY_SKP')
+                        if not i % 25 or is_force < 90:
+                            logger.debug(f"已存在日线数据<{symbol}><{td}>{percent}", 'UP_DAY_SKP')
                         continue
                     insert_list[td] = insert_list[td] if Attr.has_keys(insert_list, td) else {}
                     insert_list[td].update({

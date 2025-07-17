@@ -34,7 +34,7 @@ class File:
             return ''
 
     @staticmethod
-    def read_file(file_path: str, encoding: str = 'utf-8') -> Optional[Union[dict, list, str]]:
+    def read_file(file_path: str, encoding: str = 'utf-8'):
         """
         读取文件内容，自动处理JSON格式和普通文本
         :param file_path: 文件路径
