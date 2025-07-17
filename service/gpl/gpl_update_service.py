@@ -57,11 +57,12 @@ class GPLUpdateService:
         all_code_list = self.formatter.get_stock_code_all()
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
         s_list = sdb.get_symbol_list(symbol_list)
+        s_list = {f"{d['symbol']}": d for d in s_list}
         for code in code_list:
             Time.sleep(Str.randint(1, 10) / 10)
             symbol = Str.add_stock_prefix(code)
             try:
-                info = Attr.select_item_by_where(s_list, {"symbol": symbol})
+                info = Attr.get(s_list, symbol)
                 org_name = info.get('org_name') if info else 'None'
                 ind = all_code_list.index(code) + 1
                 percent = (f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}% "
@@ -119,11 +120,12 @@ class GPLUpdateService:
         c_list_xq = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'XQ'), 'symbol')
         c_list_em = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'EM'), 'symbol')
         t_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_TC'), 'symbol')
+        s_list = {f"{d['symbol']}": d for d in s_list}
 
         @Ins.multiple_executor(5)
         def _up_saf_exec(code):
             symbol = Str.add_stock_prefix(code)
-            info = Attr.select_item_by_where(s_list, {"symbol": symbol})
+            info = Attr.get(s_list, symbol)
             ind = all_code_list.index(code) + 1
             percent = (f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}% "
                        f"| {round(100 * (code_list.index(code) + 1) / len(code_list), 2)}%)")
@@ -284,6 +286,7 @@ class GPLUpdateService:
         if ct_list:
             biz_type = 'EM_TC'
             t_list = t_em
+            t_list = {f"{d['e_key']}": d for d in t_list}
             ct_info = Attr.group_item_by_key(ct_list, 'KEY_CLASSIF')
             for k, v in ct_info.items():
                 c = v[0]
@@ -296,7 +299,7 @@ class GPLUpdateService:
                     c_text += text if title == kw else f"**{kw}**\r\n{text}\r\n"
                 if title and c_text:
                     ek = Str.first_py_char(title)
-                    d_info = Attr.select_item_by_where(t_list, {'e_key': ek}, {})
+                    d_info = Attr.get(t_list, ek, {})
                     if not d_info and not tdb.get_text(symbol, biz_type, ek):
                         res['ite'] = tdb.add_text({
                             "symbol": symbol,
@@ -313,6 +316,7 @@ class GPLUpdateService:
         cdb = GPLConceptModel()
         biz_type = type + '_CONCEPT'
         k_info = Attr.get(k_list, code)
+        c_list = {f"{d['concept_code']}": d for d in c_list}
         if not k_info and not kdb.get_const(biz_type, code):
             kdb.add_const({
                 "biz_type": biz_type,
@@ -320,7 +324,7 @@ class GPLUpdateService:
                 "e_des": des,
                 "e_val": name,
             })
-        c_info = Attr.select_item_by_where(c_list, {'concept_code': code})
+        c_info = Attr.get(c_list, code)
         if not c_info and not cdb.get_concept(symbol, type, code):
             cdb.add_concept({
                 "symbol": symbol,
