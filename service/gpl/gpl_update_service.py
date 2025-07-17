@@ -49,7 +49,6 @@ class GPLUpdateService:
         :param int is_force: 是否强制更新
         :return: 更新结果
         """
-        res = {'un_ins_list': []}
         sdb = GPLSymbolModel()
         code_list = code_str.split(',')
         if not code_list:
@@ -58,8 +57,11 @@ class GPLUpdateService:
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
         s_list = sdb.get_symbol_list(symbol_list)
         s_list = {f"{d['symbol']}": d for d in s_list}
-        for code in code_list:
-            Time.sleep(Str.randint(1, 10) / 10)
+
+        @Ins.multiple_executor(5)
+        def _up_sym_exec(code):
+            res = {'ul': []}
+            Time.sleep(Str.randint(1, 10) / 100)
             symbol = Str.add_stock_prefix(code)
             try:
                 info = Attr.get(s_list, symbol)
@@ -70,20 +72,20 @@ class GPLUpdateService:
                 logger.debug(f"更新股票数据<{symbol}>{percent} - {org_name}", 'UP_SYM_INF')
                 if info and not is_force:
                     logger.warning(f"已存在股票数据跳过<{symbol}>", 'UP_SYM_SKP')
-                    continue
+                    return False
                 # 删除缓存
                 if is_force and 6 > int(Time.date('%H')):
                     key_list = ['GPL_STOCK_INFO_XQ', 'GPL_STOCK_INFO_EM']
                     list(map(lambda key: RedisClient().delete(key, [code]), key_list))
                 stock = self.formatter.get_stock_info(code)
                 if not stock:
-                    res['un_ins_list'].append(code)
+                    res['ul'].append(code)
                     logger.warning(f"未能更新的股票数据<{symbol}>", 'UP_SYM_WAR')
-                    continue
+                    return False
                 if not info:
                     # 新增
                     ext = {'update_list': {'cf': Time.date()}}
-                    res['ins_sym'] = sdb.add_symbol(stock | ext)
+                    res['is'] = sdb.add_symbol(stock | ext)
                 else:
                     # 更新
                     change_log = Attr.data_diff(Attr.select_keys(info, stock.keys()), stock)
@@ -95,13 +97,14 @@ class GPLUpdateService:
                         after = Attr.select_keys(stock, change_log.keys())
                         ext = {'update_list': info['update_list'] | {'uf': Time.date()}}
                         logger.warning(f"股票数据发生变化<{symbol}> - {change_log}", 'UP_SYM_WAR')
-                        res['up_sym'] = sdb.update_symbol(symbol, after, before, ext)
+                        res['us'] = sdb.update_symbol(symbol, after, before, ext)
             except Exception as e:
-                res['un_ins_list'].append(code)
+                res['ul'].append(code)
                 err = Error.handle_exception_info(e)
                 logger.error(f"更新股票数据出错<{symbol}> - {err}", 'UP_SYM_ERR')
-                continue
-        return res
+            return res
+
+        return _up_sym_exec(code_list)
 
     def update_symbol_ext(self, code_str, is_force=0):
         """更新股票额外数据 - 多线程"""
@@ -185,7 +188,7 @@ class GPLUpdateService:
 
         @Ins.multiple_executor(5)
         def _up_day_exec(code):
-            Time.sleep(Str.randint(1, 10) / 10)
+            Time.sleep(Str.randint(1, 10) / 100)
             res = []
             symbol = Str.add_stock_prefix(code)
             ind = all_code_list.index(code) + 1

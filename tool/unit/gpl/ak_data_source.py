@@ -1,5 +1,5 @@
 import akshare as ak
-from tool.core import Logger, Error, Str, Time, Env
+from tool.core import Logger, Error, Str, Env
 
 logger = Logger()
 
@@ -73,7 +73,6 @@ class AkDataSource:
         :return: dict
         [{'item': 'org_id', 'value': 'T000058472'}, {'item': 'org_name_cn', 'value': '上海来伊份股份有限公司'}, {'item': 'org_short_name_cn', 'value': '来伊份'}, {'item': 'org_name_en', 'value': 'Shanghai Laiyifen Co.,Ltd.'}, {'item': 'org_short_name_en', 'value': 'LYFEN'}, {'item': 'main_operation_business', 'value': '自主品牌的休闲食品连锁经营。'}, {'item': 'operating_scope', 'value': '\u3000\u3000食品流通，餐饮服务，食用农产品（不含生猪产品、牛羊肉品）、花卉、工艺礼品、电子产品、通讯器材、体育用品、文具用品、日用百货、汽摩配件、化妆品、玩 具、金银饰品、珠宝饰品、化工产品（不含危险化学品）、电脑及配件、通信设备及相关产品的批发、零售，销售计算机配件及相关智能卡，电子商务（不得从事增值电信、金融业务），仓储（除危险品）企业投资与资产管理、企业管理咨询，计算机网络系统开发、软件开发设计，商务咨询、从事货物及技术的进出口业务，包装服务，票务代理，从事通信设备领域内的技术服务，自有房屋租赁，供应链管管，道路货物运输，国内货运代理，国际海上、国际陆路、国际航空货运代理，以服务外包方式从事计算机数据处理，附设分支机构。【依法须经批准的项目，经相关部门批准后方可开展经营活动】'}, {' 'item': 'district_encode', 'value': '310117'}, {'item': 'org_cn_introduction', 'value': '上海来伊份股份有限公司的主营业务是自主品牌的休闲食品连锁经营。公司的主要产品是坚果炒货及豆制、肉制品及水产品、糖果蜜饯及果蔬、糕点及膨化食品。2024年，公司荣获多项国家级、省部级荣誉奖项，包括中国上市公司成长百强、中国轻工业百强以及北京市多个百强榜单，获中国缝制机械协会40 0周年功勋企业奖，此外，公司产品也荣获了中国轻工业联合会科技进步二等奖，浙江首版次软件产品，浙江省2024年度机器人典型应用等多项荣誉奖项。'}, {'item': 'legal_representative', 'value': '郁瑞芬'}, {'item': 'general_manager', 'value': '郁瑞芬'}, {'item': 'secretary', 'value': '林云'}, {'item': 'established_date', 'value': 1025539200000}, {'item': 'reg_asset', 'value': 334424165.99999994}, {'item': 'staff_num', 'value': 4590}, {'item': 'telephone', 'value': '86-21-51760952'}, {'item': 'postcode', 'value': '200235'}, {'item': 'fax', 'value': '86-21-51760955'}, {'item': 'email', 'value': 'corporate@laiyifen.com'}, {'item': 'org_website', 'value': 'www.laiyifen.com'}, {'item': 'reg_address_cn', 'value': '上海市松江区九亭 镇久富路300号'}, {'item': 'reg_address_en', 'value': None}, {'item': 'office_address_cn', 'value': '上海市徐汇区古宜路90号来伊份管理总部'}, {'item': 'office_address_en', 'value': None}, {'item': 'currency_encode', 'value': '019001'}, {'item': 'currency', 'value': 'CNY'}, {'item': 'listed_date', 'value': 1476201600000}, {'item': 'provincial_name', 'value': ' 上海市'}, {'item': 'actual_controller', 'value': '施永雷 (42.37%)，郁瑞芬 (17.76%)，施辉 (2.66%)'}, {'item': 'classi_name', 'value': '民营企业'}, {'item': 'pre_name_cn', 'value': None}, {'item': 'chairman', 'value': '施永雷'}, {'item': 'executives_nums', 'value': 16}, {'item': 'actual_issue_vol', 'value': 60000000.0}, {'item': 'issue_price', 'value': 11.67}, {'item': 'actual_rc_net_amt', 'value': 660211000.0}, {'item': 'pe_after_issuing', 'value': 22.99}, {'item': 'online_success_rate_of_issue', 'value': 0.04604996}, {'item': 'affiliate_industry', 'value': {'ind_code': 'BK0034', 'ind_name': '食品加工制造'}}]
         """
-        Time.sleep(Str.randint(1, 30) / 10)
         token = Env.get('GPL_XQ_TOKEN')
         return ak.stock_individual_basic_info_xq(symbol, token)
 
