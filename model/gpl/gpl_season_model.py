@@ -19,31 +19,42 @@ class GPLSeasonModel(MysqlBaseModel):
 
     _table = 'gpl_season'
 
-    def add_season(self, data):
+    def add_season(self, symbol, date, biz_type, data):
         """股票季度信息入库"""
-        data = data if data else {}
-        e_key = data.get('e_key', '')
-        if not data or not e_key:
+        if not data or not isinstance(data, dict):
             return 0
         insert_data = {
-            "symbol": data.get('symbol', ''),
-            "season_date": data.get('season_date', ''),
-            "biz_type": data.get('biz_type', ''),
-            "e_key": data.get('e_key', ''),
-            "e_des": data.get('e_des', ''),
-            "e_val": data.get('e_val', ''),
-        }
+                "symbol": symbol,
+                "season_date": date,
+                "biz_type": biz_type,
+                "e_key": Attr.get(data, 'key', ''),
+                "e_des": Attr.get(data, 'des', ''),
+                "e_val": Attr.get(data, 'val', ''),
+            }
         return self.insert(insert_data)
 
     def update_season(self, pid, data):
         """更新股票季度信息"""
         return self.update({'id': pid}, data)
 
-    def get_season_list(self, symbol, season_date, biz_type):
+    def get_season_list(self, symbol_list, season_date_list, biz_type):
         """获取股票季度信息列表"""
-        a_list = self.where({'symbol': symbol, 'season_date': season_date, 'biz_type': biz_type}).get()
-        return Attr.kv_list_to_dict(a_list)
+        a_list = (self.where_in('symbol', symbol_list).where_in('season_date', season_date_list)
+                  .where({'biz_type': biz_type}).get())
+        # return Attr.kv_list_to_dict(a_list)
+        if not a_list:
+            return {}
+        ret = {}
+        for d in a_list:
+            key = f"{d['symbol']}_{d['season_date']}"
+            val = {d['e_key']: d['e_val']}
+            if not ret.get(key):
+                ret[key] = d | val
+            else:
+                ret[key] = ret[key] | val
+        return ret
 
-    def get_season(self, symbol, season_date, biz_type, e_key):
+    def get_season(self, symbol, season_date, biz_type, e_key=None):
         """获取股票季度信息"""
+        e_key = e_key if e_key else str(biz_type).lower()
         return self.where({'symbol': symbol, 'season_date': season_date, 'biz_type': biz_type, 'e_key': e_key}).first()

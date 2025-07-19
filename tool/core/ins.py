@@ -121,6 +121,7 @@ class Ins:
                     future_to_task = {executor.submit(func, task, *args[1:], **kwargs): task for task in task_list}
                     for future in concurrent.futures.as_completed(future_to_task):
                         task = future_to_task[future]
+                        task = task if task else '_N_'
                         try:
                             res[task] = future.result()
                         except Exception as e:

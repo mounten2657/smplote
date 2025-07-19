@@ -171,6 +171,26 @@ class Attr:
         return result
 
     @staticmethod
+    def translate_list_keys(data, chinese_keys, english_keys):
+        """
+        将列表中的中文键名替换为英文键名
+
+        参数:
+        - data: 原始列表
+        - chinese_keys: 中文键名列表
+        - english_keys: 对应的英文键名列表
+
+        返回:
+        - 替换后的字典列表
+        """
+        if not data or not isinstance(data, list):
+            return []
+        # 创建键名映射字典
+        key_mapping = dict(zip(chinese_keys, english_keys))
+        # 转换数据
+        return [{key_mapping.get(k, k): v for k, v in item.items()} for item in data]
+
+    @staticmethod
     def get_value_by_key_like(d: dict, search_key: str, default='') -> any:
         """
         遍历字典，查找键名包含指定字符串（忽略大小写）的项，并返回对应的值。

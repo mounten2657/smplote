@@ -72,21 +72,23 @@ class Time:
             raise ValueError(f"时间戳无效[{timestamp}]。原始错误: {e}")
 
     @staticmethod
-    def month_last_day(date):
+    def month_last_day(date, date_format='%Y-%m-%d'):
         """
         获取指定月的最后一天
-        :param date:  日期 - Ym （如： 202503）
-        :return: Ymd
+        :param date:  日期 - Y-m （如： 2025-03）
+        :param date_format:  日期格式 - Y-m-d
+        :return: Y-m-d
         """
-        n_date = Time.dft(Time.tfd(f'{date}28', '%Y%m%d') + 5 * 86400, '%Y%m01')
-        return Time.dft(Time.tfd(n_date, '%Y%m%d') - 1, '%Y%m%d')
+        n_date = Time.dft(Time.tfd(f'{date}-28', '%Y-%m-%d') + 5 * 86400, '%Y%m01')
+        return Time.dft(Time.tfd(n_date, '%Y%m%d') - 1, date_format)
 
     @staticmethod
-    def recent_season_day(n=0):
+    def recent_season_day(n=0, date_format='%Y-%m-%d'):
         """
         获取季度的最后一天
         :param n: 向前推几个季度
-        :return: Ymd
+        :param date_format:  日期格式 - Y-m-d
+        :return: Y-m-d
         """
         date = Time.date()
         y = int(Time.dft(Time.tfd(date), '%Y'))
@@ -103,8 +105,8 @@ class Time:
             else:
                 m = '12'
                 y -= 1
-        n_date = f"{y}{m}"
-        return Time.month_last_day(n_date)
+        n_date = f"{y}-{m}"
+        return Time.month_last_day(n_date, date_format)
 
     @staticmethod
     def start_end_time_list(

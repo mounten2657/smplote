@@ -5,6 +5,7 @@ from model.gpl.gpl_concept_model import GPLConceptModel
 from model.gpl.gpl_symbol_text_model import GPLSymbolTextModel
 from model.gpl.gpl_daily_model import GPLDailyModel
 from model.gpl.gpl_api_log_model import GplApiLogModel
+from model.gpl.gpl_season_model import GPLSeasonModel
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.core import Ins, Logger, Str, Time, Attr, Error
@@ -116,6 +117,7 @@ class GPLUpdateService:
         kdb = GPLConstKvModel()
         cdb = GPLConceptModel()
         tdb = GPLSymbolTextModel()
+        jdb = GPLSeasonModel()
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
         s_list = sdb.get_symbol_list(symbol_list)
         k_list_xq = kdb.get_const_list('XQ_CONCEPT')
@@ -125,8 +127,17 @@ class GPLUpdateService:
         t_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_TC'), 'symbol')
         s_list = {f"{d['symbol']}": d for d in s_list}
 
+        day_list = []
+        n = 102 if is_force > 90 else 3
+        for nn in range(1, n + 1):
+            day_list.append(Time.recent_season_day(nn))
+        day_list.reverse()
+        j_list = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10')
+        j_list_free = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10_FREE')
+
         @Ins.multiple_executor(5)
         def _up_saf_exec(code):
+            ret = {}
             symbol = Str.add_stock_prefix(code)
             info = Attr.get(s_list, symbol)
             ind = all_code_list.index(code) + 1
@@ -139,9 +150,16 @@ class GPLUpdateService:
             cl_em = Attr.get(c_list_em, symbol, [])
             t_em = Attr.get(t_list_em, symbol, [])
             logger.debug(f"更新股票额外数据<{symbol}>{percent} - STA", 'UP_SAF_INF')
+            # 季度相关数据
+            d = int(Time.date('%d'))
+            if d in [1, 10, 20]:
+                # 东财十大股东更新
+                ret = self._up_gd_em(symbol, info, day_list, j_list, j_list_free)
+                logger.debug(f"更新股票额外结果<{symbol}>{percent} - GD - {ret}", 'UP_SAF_INF')
             # 雪球概念更新
-            ret = self._update_by_xq(symbol, info, k_list_xq, cl_xq, is_force)
-            logger.debug(f"更新股票额外结果<{symbol}>{percent} - XQ - {ret}", 'UP_SAF_INF')
+            if Time.date('%Y-%m-%d') <= '2025-07-13':
+                ret = ret | self._update_by_xq(symbol, info, k_list_xq, cl_xq)
+                logger.debug(f"更新股票额外结果<{symbol}>{percent} - XQ - {ret}", 'UP_SAF_INF')
             # 东财概念更新
             ret = ret | self._update_by_em(symbol, info, k_list_em, cl_em, t_em)
             logger.debug(f"更新股票额外结果<{symbol}>{percent} - EM - {ret}", 'UP_SAF_INF')
@@ -194,7 +212,7 @@ class GPLUpdateService:
             ind = all_code_list.index(code) + 1
             percent = (f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}% "
                        f"| {round(100 * (code_list.index(code) + 1) / len(code_list), 2)}%)")
-            logger.debug(f"入库股票日线数据<{symbol}><{tds}>{percent} - STA", 'UP_DAY_INF')
+            logger.debug(f"更新日线数据<{symbol}><{tds}>{percent} - STA", 'UP_DAY_INF')
             insert_list = {}
             fq_list = {"": "0", "qfq": "1", "hfq": "2"}
             for k, v in fq_list.items():
@@ -206,10 +224,10 @@ class GPLUpdateService:
                 day_list = log_info['process_params'] if (log_info and is_force != 99) else \
                     self.formatter.em.get_daily_quote(code, st, et, k)
                 res.append(len(day_list))
-                logger.debug(f"接口入库日线数据<{symbol}><{tds}>{percent} - {k}"
+                logger.debug(f"接口请求日线数据<{symbol}><{tds}>{percent} - {k}"
                              f" - [{len(day_list)}]", 'UP_DAY_SKP')
                 if not day_list:
-                    logger.warning(f"接口暂无日线数据<{symbol}><{tds}>{percent}", 'UP_DAY_WAR')
+                    logger.warning(f"暂无日线数据<{symbol}><{tds}>{percent}", 'UP_DAY_WAR')
                     continue
                 if 99 == is_force:
                     continue
@@ -246,11 +264,11 @@ class GPLUpdateService:
 
         return _up_day_exec(code_list)
 
-    def _update_by_xq(self, symbol, info, k_list_xq, c_list_xq, is_force):
+    def _update_by_xq(self, symbol, info, k_list_xq, c_list_xq):
         """从雪球中拉取数据进行更新"""
         res = {}
         # 改为只更新一次 - 毕竟不常用
-        if k_list_xq and c_list_xq and not is_force:
+        if k_list_xq and c_list_xq:
             res['ucx'] = False
             return res
         code = info['code']
@@ -336,3 +354,37 @@ class GPLUpdateService:
                 "concept_name": name,
             })
         return True
+
+    def _up_gd_em(self, symbol, info, day_list, j_list, j_list_free):
+        """更新股票十大股东"""
+        ret = {}
+        sdb = GPLSymbolModel()
+        jdb = GPLSeasonModel()
+        gd_index = [
+            {'biz_code': 'EM_GD_TOP10', 'd_list': j_list, 'des': '十大股东', 'key': 'gd_top10_list'},
+            {'biz_code': 'EM_GD_TOP10_FREE', 'd_list': j_list_free, 'des': '十大流通股东', 'key': 'gd_top10_free_list'}
+        ]
+        for day in day_list:
+            for d in gd_index:
+                key = d['key']
+                des = d['des']
+                biz_code = d['biz_code']
+                gd = Attr.get(d['d_list'], f"{symbol}_{day}")
+                if not gd:
+                    date = day.replace('-', '')
+                    if biz_code == 'EM_GD_TOP10':
+                        g_info = self.formatter.ak.stock_gdfx_top_10_em(symbol, date)
+                    else:
+                        g_info = self.formatter.ak.stock_gdfx_free_top_10_em(symbol, date)
+                    if not g_info:
+                        logger.warning(f"暂无十大股东数据<{symbol}><{day}> - {biz_code} - {des}", 'UP_DG_WAR')
+                        continue
+                    biz_data = {'key': key, 'des': des, 'val': g_info}
+                    ret['igd'] = jdb.add_season(symbol, day, biz_code, biz_data)
+                    gd_list = ','.join([f"{b['gd_name']}:{b['rate']}%" for b in g_info])
+                    if gd_list and info[key] != gd_list:
+                        after = {key: gd_list}
+                        before = {key: info[key]} if info[key] else {}
+                        ext = {'update_list': info['update_list'] | {'gd': Time.date()}}
+                        ret['ugd'] = sdb.update_symbol(symbol, after, before, ext)
+        return ret
