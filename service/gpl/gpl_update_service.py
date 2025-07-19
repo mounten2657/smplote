@@ -132,8 +132,8 @@ class GPLUpdateService:
         for nn in range(1, n + 1):
             day_list.append(Time.recent_season_day(nn))
         day_list.reverse()
-        j_list = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10')
-        j_list_free = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10_FREE')
+        gd_list = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10')
+        gd_list_free = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10_FREE')
 
         @Ins.multiple_executor(5)
         def _up_saf_exec(code):
@@ -154,7 +154,7 @@ class GPLUpdateService:
             d = int(Time.date('%d'))
             if d in [1, 10, 20]:
                 # 东财十大股东更新
-                ret = self._up_gd_em(symbol, info, day_list, j_list, j_list_free)
+                ret = self._up_gd_em(symbol, info, day_list, gd_list, gd_list_free)
                 logger.debug(f"更新股票额外结果<{symbol}>{percent} - GD - {ret}", 'UP_SAF_INF')
             # 雪球概念更新
             if Time.date('%Y-%m-%d') <= '2025-07-13':
@@ -355,14 +355,14 @@ class GPLUpdateService:
             })
         return True
 
-    def _up_gd_em(self, symbol, info, day_list, j_list, j_list_free):
+    def _up_gd_em(self, symbol, info, day_list, gd_list, gd_list_free):
         """更新股票十大股东"""
         ret = {}
         sdb = GPLSymbolModel()
         jdb = GPLSeasonModel()
         gd_index = [
-            {'biz_code': 'EM_GD_TOP10', 'd_list': j_list, 'des': '十大股东', 'key': 'gd_top10_list'},
-            {'biz_code': 'EM_GD_TOP10_FREE', 'd_list': j_list_free, 'des': '十大流通股东', 'key': 'gd_top10_free_list'}
+            {'biz_code': 'EM_GD_TOP10', 'd_list': gd_list, 'des': '十大股东', 'key': 'gd_top10_list'},
+            {'biz_code': 'EM_GD_TOP10_FREE', 'd_list': gd_list_free, 'des': '十大流通股东', 'key': 'gd_top10_free_list'}
         ]
         for day in day_list:
             for d in gd_index:
