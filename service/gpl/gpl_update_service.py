@@ -55,6 +55,7 @@ class GPLUpdateService:
         if not code_list:
             return False
         all_code_list = self.formatter.get_stock_code_all()
+        code_list = [Str.remove_stock_prefix(c) for c in code_list]
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
         s_list = sdb.get_symbol_list(symbol_list)
         s_list = {f"{d['symbol']}": d for d in s_list}
@@ -118,6 +119,7 @@ class GPLUpdateService:
         cdb = GPLConceptModel()
         tdb = GPLSymbolTextModel()
         jdb = GPLSeasonModel()
+        code_list = [Str.remove_stock_prefix(c) for c in code_list]
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
         s_list = sdb.get_symbol_list(symbol_list)
         k_list_xq = kdb.get_const_list('XQ_CONCEPT')
@@ -178,6 +180,7 @@ class GPLUpdateService:
         if not code_list:
             return False
         all_code_list = self.formatter.get_stock_code_all()
+        code_list = [Str.remove_stock_prefix(c) for c in code_list]
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
 
         n = 0 if is_force == 0 else is_force - 10
@@ -360,12 +363,20 @@ class GPLUpdateService:
         ret = {}
         sdb = GPLSymbolModel()
         jdb = GPLSeasonModel()
+        s_gd_list = Attr.group_item_by_key(gd_list.values(), 'symbol').get(symbol, [])
+        s_gd_list_free = Attr.group_item_by_key(gd_list_free.values(), 'symbol').get(symbol, [])
+        s_gd_day = min(v["season_date"] for v in s_gd_list) if s_gd_list else ''
+        s_gd_day_free = min(v["season_date"] for v in s_gd_list_free) if s_gd_list_free else ''
         gd_index = [
-            {'biz_code': 'EM_GD_TOP10', 'd_list': gd_list, 'des': '十大股东', 'key': 'gd_top10_list'},
-            {'biz_code': 'EM_GD_TOP10_FREE', 'd_list': gd_list_free, 'des': '十大流通股东', 'key': 'gd_top10_free_list'}
+            {'biz_code': 'EM_GD_TOP10', 'd_list': gd_list, 'des': '十大股东', 'key': 'gd_top10_list', 'min_day': s_gd_day},
+            {'biz_code': 'EM_GD_TOP10_FREE', 'd_list': gd_list_free, 'des': '十大流通股东', 'key': 'gd_top10_free_list', 'min_day': s_gd_day_free}
         ]
         for day in day_list:
             for d in gd_index:
+                if day < d['min_day']:
+                    logger.debug(f"跳过十大股东数据<{symbol}><{day} / {d['min_day']}>", 'UP_DG_SKP')
+                    continue
+                Time.sleep(Str.randint(1, 5) / 10)
                 key = d['key']
                 des = d['des']
                 biz_code = d['biz_code']
