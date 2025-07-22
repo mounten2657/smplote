@@ -134,8 +134,15 @@ class GPLUpdateService:
         for nn in range(1, n + 1):
             day_list.append(Time.recent_season_day(nn))
         day_list.reverse()
-        gd_list = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10')
-        gd_list_free = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10_FREE')
+        day = int(Time.date('%d'))
+        today = Time.date('%Y-%m-%d')
+        check_day = [1, 10, 20]
+        if day in check_day:
+            if is_force == 0 or is_force == 91:
+                gd_list = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10')
+                gd_list_free = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10_FREE')
+            if is_force == 0 or is_force == 92:
+                gdn_list = jdb.get_season_list(symbol_list, [today], 'EM_GD_NUＭ')
 
         @Ins.multiple_executor(5)
         def _up_saf_exec(code):
@@ -153,18 +160,23 @@ class GPLUpdateService:
             t_em = Attr.get(t_list_em, symbol, [])
             logger.debug(f"更新股票额外数据<{symbol}>{percent} - STA", 'UP_SAF_INF')
             # 季度相关数据
-            d = int(Time.date('%d'))
-            if d in [1, 10, 20]:
+            if day in check_day:
                 # 东财十大股东更新
-                ret = self._up_gd_em(symbol, info, day_list, gd_list, gd_list_free)
-                logger.debug(f"更新股票额外结果<{symbol}>{percent} - GD - {ret}", 'UP_SAF_INF')
+                if is_force == 0 or is_force == 91:
+                    ret = ret | self._up_gd_em(symbol, info, day_list, gd_list, gd_list_free)
+                    logger.debug(f"更新十大股东结果<{symbol}>{percent} - GD - {ret}", 'UP_SAF_INF')
+                # 东财股东人数更新
+                if is_force == 0 or is_force == 92:
+                    gdn_info = Attr.get(gdn_list, f"{symbol}_{today}")
+                    ret = ret | self._up_gdn_em(symbol, gdn_info, today, n)
+                    logger.debug(f"更新股东人数结果<{symbol}>{percent} - GN - {ret}", 'UP_SAF_INF')
             # 雪球概念更新
             if Time.date('%Y-%m-%d') <= '2025-07-13':
                 ret = ret | self._update_by_xq(symbol, info, k_list_xq, cl_xq)
-                logger.debug(f"更新股票额外结果<{symbol}>{percent} - XQ - {ret}", 'UP_SAF_INF')
+                logger.debug(f"更新股票雪概结果<{symbol}>{percent} - XQ - {ret}", 'UP_SAF_INF')
             # 东财概念更新
             ret = ret | self._update_by_em(symbol, info, k_list_em, cl_em, t_em)
-            logger.debug(f"更新股票额外结果<{symbol}>{percent} - EM - {ret}", 'UP_SAF_INF')
+            logger.debug(f"更新股票东概结果<{symbol}>{percent} - EM - {ret}", 'UP_SAF_INF')
             return ret
 
         return _up_saf_exec(code_list)
@@ -285,6 +297,7 @@ class GPLUpdateService:
 
     def _update_by_em(self, symbol, info, k_list_em, c_list_em, t_em):
         """从东财中拉取数据进行更新"""
+        return {}
         res = {}
         sdb = GPLSymbolModel()
         tdb = GPLSymbolTextModel()
@@ -399,3 +412,19 @@ class GPLUpdateService:
                         ext = {'update_list': info['update_list'] | {'gd': Time.date()}}
                         ret['ugd'] = sdb.update_symbol(symbol, after, before, ext)
         return ret
+
+    def _up_gdn_em(self, symbol, gdn_info, td, n):
+        """更新股票股东人数"""
+        ret = {}
+        jdb = GPLSeasonModel()
+        Time.sleep(Str.randint(1, 3) / 10)
+        biz_code = 'EM_GD_NUＭ'
+        print(gdn_info)
+        if not gdn_info:
+            g_info = self.formatter.em.get_gd_num(symbol, td, n)
+            if not g_info:
+                logger.warning(f"暂无股东人数数据<{symbol}><{td}> - {n}", 'UP_DGN_WAR')
+            biz_data = {'key': biz_code.lower(), 'des': '股东人数合计', 'val': g_info}
+            ret['ign'] = jdb.add_season(symbol, td, biz_code, biz_data)
+        return ret
+

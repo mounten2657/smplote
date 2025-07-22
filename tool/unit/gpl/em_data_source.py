@@ -293,11 +293,12 @@ class EmDataSource:
         } for d in res]
         return self._ret(ret, pid, start_time)
 
-    def get_gd_num(self, stock_code: str, limit: int = 10) -> List:
+    def get_gd_num(self, stock_code: str, td: str, limit: int = 10) -> List:
         """
         获取股票股东人数信息
 
         :param str stock_code: 股票代码，如： 002107
+        :param str td: 更新日期 - Y-m-d（如： 2025-03-31）
         :param int limit: 返回条数
         :return: 股票股东人数信息
         [{"date": "2025-06-30 ", "total_num": 34990, "total_rate": 1.4909, "avg_free": 16279, "avg_free_rate": -1.468991140326, "des": "较分散", "price": 5.72, "avg_money": 93118.2405830237, "t10_gd_rate": 54.84266824, "t10_gd_free_rate": 54.24930627}, {"date": "2025-03-31 ", "total_num": 34476, "total_rate": -1.7246, "avg_free": 16522, "avg_free_rate": 1.754843949414, "des": "较分散", "price": 4.43, "avg_money": 73192.9968528832, "t10_gd_rate": 55.36990497, "t10_gd_free_rate": 54.78357102}]
@@ -314,27 +315,28 @@ class EmDataSource:
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_NUＭ', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
+        data, pid = self._get(url, params, 'EM_GD_NUＭ', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{limit}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['END_DATE'][:10],
-            'total_num': d['HOLDER_TOTAL_NUM'],  # 总股东人数（户）
-            'total_change_rate': d['TOTAL_NUM_RATIO'],  # 总股东人数较上期变化
-            'avg_free': d['AVG_FREE_SHARES'],  # 人均流通股数
-            'avg_free_change_rate': d['AVG_FREESHARES_RATIO'],  # 人均流通股数较上期变化
-            'des': d['HOLD_FOCUS'],  # 筹码集中度： 较集中 | 较松散
-            'price': d['PRICE'],  # 股价（元）
-            'avg_money': d['AVG_HOLD_AMT'],  # 人均持股金额
-            't10_gd_rate': d['HOLD_RATIO_TOTAL'],  # 十大股东持股占比
-            't10_gd_free_rate': d['FREEHOLD_RATIO_TOTAL'],  # 十大流通股东持股占比
+            'total_num': Attr.get(d, 'HOLDER_TOTAL_NUM', 0),  # 总股东人数（户）
+            'total_change_rate': Attr.get(d, 'TOTAL_NUM_RATIO', 0.0),  # 总股东人数较上期变化
+            'avg_free': Attr.get(d, 'AVG_FREE_SHARES', 0.0),  # 人均流通股数
+            'avg_free_change_rate': Attr.get(d, 'AVG_FREESHARES_RATIO', 0.0),  # 人均流通股数较上期变化
+            'des': Attr.get(d, 'HOLD_FOCUS', ''),  # 筹码集中度： 较集中 | 较松散
+            'price': Attr.get(d, 'PRICE', 0.0),  # 股价（元）
+            'avg_money': Attr.get(d, 'AVG_HOLD_AMT', 0.0),  # 人均持股金额
+            't10_gd_rate': Attr.get(d, 'HOLD_RATIO_TOTAL', 0.0),  # 十大股东持股占比
+            't10_gd_free_rate': Attr.get(d, 'FREEHOLD_RATIO_TOTAL', 0.0),  # 十大流通股东持股占比
         } for d in res]
         return self._ret(ret, pid, start_time)
 
-    def get_gd_org_total(self, stock_code: str, limit: int = 10) -> List:
+    def get_gd_org_total(self, stock_code: str, td: str, limit: int = 10) -> List:
         """
         获取股票股东机构持仓总计
 
         :param str stock_code: 股票代码，如： 002107
+        :param str td: 更新日期 - Y-m-d（如： 2025-03-31）
         :param int limit: 返回条数
         :return: 股票股东机构持仓总计
         """
@@ -350,18 +352,18 @@ class EmDataSource:
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_ORG_T', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
+        data, pid = self._get(url, params, 'EM_GD_ORG_T', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{limit}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['REPORT_DATE'][:10],
-            'total_org': d['TOTAL_ORG_NUM'],  # 总机构数
-            'total_hand': d['TOTAL_SHARES'],  # 总持股数
-            'total_free_hand': d['TOTAL_FREE_SHARES'],  # 总流通持股数（计算总市值时用这个）
-            'total_money': d['TOTAL_MARKET_CAP'],  # 总市值
-            'total_free_rate': d['TOTAL_SHARES_RATIO'],  # 占流通股比
-            'total_all_rate': d['ALL_SHARES_RATIO'],  # 占总股比
-            'free_change_rate': d['CHANGE_RATIO'],  # 流通股市值变化率
-            'free_change_vol': d['FREE_SHARES_CHANGE'] if d['FREE_SHARES_CHANGE'] else 0.0,  # 占流通股比的变化量
+            'total_org': Attr.get(d, 'TOTAL_ORG_NUM', 0),  # 总机构数
+            'total_hand': Attr.get(d, 'TOTAL_SHARES', 0),  # 总持股数
+            'total_free_hand': Attr.get(d, 'TOTAL_FREE_SHARES', 0),  # 总流通持股数（计算总市值时用这个）
+            'total_money': Attr.get(d, 'TOTAL_MARKET_CAP', 0.0),  # 总市值
+            'total_free_rate': Attr.get(d, 'TOTAL_SHARES_RATIO', 0.0),  # 占流通股比
+            'total_all_rate': Attr.get(d, 'ALL_SHARES_RATIO', 0.0),  # 占总股比
+            'free_change_rate': Attr.get(d, 'CHANGE_RATIO', 0.0),  # 流通股市值变化率
+            'free_change_vol': Attr.get(d, 'FREE_SHARES_CHANGE', 0.0),  # 占流通股比的变化量
         } for d in res]
         return self._ret(ret, pid, start_time)
 
@@ -384,20 +386,20 @@ class EmDataSource:
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_ORG_D', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
+        data, pid = self._get(url, params, 'EM_GD_ORG_D', {'he': f'{prefix}{stock_code}', 'hv': sd})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['REPORT_DATE'][:10],
-            'total_org': d['TOTAL_ORG_NUM'],  # 总机构数
-            'des': d['ORG_NAME_TYPE'],  # 机构名称
-            'org_type': d['ORG_TYPE'],  # 机构类型： 00:合计 | 01:基金 | 02:QFII | 03:社保 | 04:券商 | 05:保险 | 06:信托 | 07:其它
-            'total_hand': d['TOTAL_FREE_SHARES'],  # 持仓手数
-            'total_money': d['TOTAL_MARKET_CAP'],  # 持仓总市值
-            'total_free_hand_change': d['TOTAL_FREE_SHARES_CHANGE'],  # 持仓手数变化率
-            'total_all_rate': d['TOTAL_SHARES_RATIO'],  # 占总流通股比
-            'total_free_rate': d['ALL_SHARES_RATIO'],  # 占总股比
-            'free_change_rate': d['CHANGE_RATIO'],  # 流通股市值变化率
-            'free_change_vol': d['FREE_SHARES_CHANGE'] if d['FREE_SHARES_CHANGE'] else 0.0,  # 占流通股比的变化量
+            'total_org': Attr.get(d, 'TOTAL_ORG_NUM', 0),  # 总机构数
+            'des': Attr.get(d, 'ORG_NAME_TYPE', ''),  # 机构名称
+            'org_type': Attr.get(d, 'ORG_TYPE', ''),  # 机构类型： 00:合计 | 01:基金 | 02:QFII | 03:社保 | 04:券商 | 05:保险 | 06:信托 | 07:其它
+            'total_hand': Attr.get(d, 'TOTAL_FREE_SHARES', 0),  # 持仓手数
+            'total_money': Attr.get(d, 'TOTAL_MARKET_CAP', 0.0),  # 持仓总市值
+            'total_free_hand_change': Attr.get(d, 'TOTAL_FREE_SHARES_CHANGE', 0.0),  # 持仓手数变化率
+            'total_all_rate': Attr.get(d, 'TOTAL_SHARES_RATIO', 0.0),  # 占总流通股比
+            'total_free_rate': Attr.get(d, 'ALL_SHARES_RATIO', 0.0),  # 占总股比
+            'free_change_rate': Attr.get(d, 'CHANGE_RATIO', 0.0),  # 流通股市值变化率
+            'free_change_vol': Attr.get(d, 'FREE_SHARES_CHANGE', 0.0),  # 占流通股比的变化量
         } for d in res]
         return self._ret(ret, pid, start_time)
 
@@ -422,21 +424,21 @@ class EmDataSource:
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_ORG_D', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
+        data, pid = self._get(url, params, 'EM_GD_ORG_L', {'he': f'{prefix}{stock_code}', 'hv': sd})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['REPORT_DATE'][:10],
-            'des': d['HOLDER_NAME'],  # 机构名称
-            'org_type': d['ORG_TYPE'],  # 机构类型： 00:合计 | 01:基金 | 02:QFII | 03:社保 | 04:券商 | 05:保险 | 06:信托 | 07:其它
-            'stock_code': d['FUND_CODE'],  # 持股机构股票代码
-            'derive_code': d['FUND_DERIVECODE'],  # 持股机构股票代码
-            'sec_code': d['SECUCODE'],  # 持股机构股票代码
-            'free_hand': d['FREE_SHARES'],  # 流通股持仓手数
-            'free_money': d['FREE_MARKET_CAP'],  # 流通股持仓总市值
-            'total_hand': d['TOTAL_SHARES'],  # 总持仓手数
-            'total_money': d['HOLD_VALUE'],  # 总持仓总市值
-            'total_all_rate': d['FREESHARES_RATIO'],  # 占总流通股比
-            'total_free_rate': d['TOTALSHARES_RATIO'],  # 占总股比
-            'total_jz_rate': d['NETVALUE_RATIO'],  # 占总净值比
+            'des': Attr.get(d, 'HOLDER_NAME', ''),  # 机构名称
+            'org_type': Attr.get(d, 'ORG_TYPE', ''),  # 机构类型： 00:合计 | 01:基金 | 02:QFII | 03:社保 | 04:券商 | 05:保险 | 06:信托 | 07:其它
+            'stock_code': Attr.get(d, 'FUND_CODE', ''),  # 持股机构股票代码
+            'derive_code': Attr.get(d, 'FUND_DERIVECODE', ''),  # 持股机构股票代码
+            'sec_code': Attr.get(d, 'SECUCODE', ''),  # 持股机构股票代码
+            'free_hand': Attr.get(d, 'FREE_SHARES', 0),  # 流通股持仓手数
+            'free_money': Attr.get(d, 'FREE_MARKET_CAP', 0.0),  # 流通股持仓总市值
+            'total_hand': Attr.get(d, 'TOTAL_SHARES', 0),  # 总持仓手数
+            'total_money': Attr.get(d, 'HOLD_VALUE', 0.0),  # 总持仓总市值
+            'total_all_rate': Attr.get(d, 'FREESHARES_RATIO', 0.0),  # 占总流通股比
+            'total_free_rate': Attr.get(d, 'TOTALSHARES_RATIO', 0.0),  # 占总股比
+            'total_jz_rate': Attr.get(d, 'NETVALUE_RATIO', 0.0),  # 占总净值比
         } for d in res]
         return self._ret(ret, pid, start_time)
