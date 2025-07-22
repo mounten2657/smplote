@@ -297,7 +297,6 @@ class GPLUpdateService:
 
     def _update_by_em(self, symbol, info, k_list_em, c_list_em, t_em):
         """从东财中拉取数据进行更新"""
-        return {}
         res = {}
         sdb = GPLSymbolModel()
         tdb = GPLSymbolTextModel()
