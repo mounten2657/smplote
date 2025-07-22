@@ -384,9 +384,9 @@ class GPLUpdateService:
                 if not gd:
                     date = day.replace('-', '')
                     if biz_code == 'EM_GD_TOP10':
-                        g_info = self.formatter.ak.stock_gdfx_top_10_em(symbol, date)
+                        g_info = self.formatter.em.get_gd_top10(symbol, date)
                     else:
-                        g_info = self.formatter.ak.stock_gdfx_free_top_10_em(symbol, date)
+                        g_info = self.formatter.em.get_gd_top10_free(symbol, date)
                     if not g_info:
                         logger.warning(f"暂无十大股东数据<{symbol}><{day}> - {biz_code} - {des}", 'UP_DG_WAR')
                         continue

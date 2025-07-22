@@ -105,6 +105,14 @@ class Attr:
                 return data
 
     @staticmethod
+    def dump(var):
+        """打印变量"""
+        if isinstance(var, dict) or isinstance(var, list):
+            print(json.dumps(var, ensure_ascii=False))
+        else:
+            print(var)
+
+    @staticmethod
     def get_action_by_path(path, ins=0, *args, **kwargs):
         """
         通过路径自动加载类文件

@@ -19,17 +19,17 @@ class GPLSeasonModel(MysqlBaseModel):
 
     _table = 'gpl_season'
 
-    def add_season(self, symbol, date, biz_type, data):
+    def add_season(self, symbol, date, biz_type, biz_data):
         """股票季度信息入库"""
-        if not data or not isinstance(data, dict):
+        if not biz_data or not isinstance(biz_data, dict):
             return 0
         insert_data = {
                 "symbol": symbol,
                 "season_date": date,
                 "biz_type": biz_type,
-                "e_key": Attr.get(data, 'key', ''),
-                "e_des": Attr.get(data, 'des', ''),
-                "e_val": Attr.get(data, 'val', ''),
+                "e_key": Attr.get(biz_data, 'key', ''),
+                "e_des": Attr.get(biz_data, 'des', ''),
+                "e_val": Attr.get(biz_data, 'val', ''),
             }
         return self.insert(insert_data)
 
