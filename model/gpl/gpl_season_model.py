@@ -39,8 +39,10 @@ class GPLSeasonModel(MysqlBaseModel):
 
     def get_season_list(self, symbol_list, season_date_list, biz_type):
         """获取股票季度信息列表"""
-        a_list = (self.where_in('symbol', symbol_list).where_in('season_date', season_date_list)
-                  .where({'biz_type': biz_type}).get())
+        db = self.where_in('symbol', symbol_list)
+        if season_date_list:
+            db = db.where_in('season_date', season_date_list)
+        a_list = db.where({'biz_type': biz_type}).get()
         # return Attr.kv_list_to_dict(a_list)
         if not a_list:
             return {}
@@ -54,7 +56,16 @@ class GPLSeasonModel(MysqlBaseModel):
                 ret[key] = ret[key] | val
         return ret
 
+    def get_season_recent(self, symbol, biz_type, e_key=None):
+        """获取股票最新季度信息"""
+        where = {'symbol': symbol, 'biz_type': biz_type}
+        if e_key:
+            where['e_key'] = e_key
+        return self.where(where).order('season_date', 'desc').first()
+
     def get_season(self, symbol, season_date, biz_type, e_key=None):
         """获取股票季度信息"""
-        e_key = e_key if e_key else str(biz_type).lower()
-        return self.where({'symbol': symbol, 'season_date': season_date, 'biz_type': biz_type, 'e_key': e_key}).first()
+        where = {'symbol': symbol, 'season_date': season_date, 'biz_type': biz_type}
+        if e_key:
+            where['e_key'] = e_key
+        return self.where(where).first()

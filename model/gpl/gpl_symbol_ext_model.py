@@ -1,5 +1,6 @@
 from tool.db.mysql_base_model import MysqlBaseModel
 from tool.core import Ins, Attr
+from model.gpl.gpl_change_log_model import GPLChangeLogModel
 
 
 @Ins.singleton
@@ -20,9 +21,8 @@ class GPLSymbolExtModel(MysqlBaseModel):
 
     def add_ext(self, data):
         """股票额外信息入库"""
-        data = data if data else {}
-        e_key = data.get('e_key', '')
-        if not data or not e_key:
+        e_key = Attr.get(data, 'e_key', '')
+        if not e_key:
             return 0
         insert_data = {
             "symbol": data.get('symbol', ''),
@@ -33,9 +33,14 @@ class GPLSymbolExtModel(MysqlBaseModel):
         }
         return self.insert(insert_data)
 
-    def update_ext(self, pid, data):
+    def update_ext(self, pid, symbol, key, data, before=None):
         """更新股票额外信息"""
-        return self.update({'id': pid}, data)
+        u_data = {'e_val': data[key]}
+        res = self.update({'id': pid}, u_data)
+        # 自动记录变更日志
+        if before and len(before) == len(data):
+            GPLChangeLogModel().add_change_log(symbol, self.table_name(), data, before)
+        return res
 
     def get_ext_list(self, symbol, biz_type):
         """获取股票额外信息列表"""

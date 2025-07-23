@@ -315,7 +315,7 @@ class EmDataSource:
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_NUＭ', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{limit}"})
+        data, pid = self._get(url, params, 'EM_GD_NUM', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{limit}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['END_DATE'][:10],
@@ -403,20 +403,22 @@ class EmDataSource:
         } for d in res]
         return self._ret(ret, pid, start_time)
 
-    def get_gd_org_list(self, stock_code: str, sd: str) -> List:
+    def get_gd_org_list(self, stock_code: str, sd: str, is_all: int = 1) -> List:
         """
         获取股票股东机构持仓列表
 
         :param str stock_code: 股票代码，如： 002107
         :param str sd: 季度尾日 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :param int is_all: 是否返回全部
         :return: 股票股东机构持仓列表
         """
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
+        is_all = '' if is_all else '(ORG_TYPE="01")'
         params = {
             "reportName": "RPT_MAIN_ORGHOLDDETAIL",
             "columns": "ALL",
-            "filter": f'(SECUCODE="{stock_code}.{prefix}")(REPORT_DATE=\'{sd}\')',  # (ORG_TYPE="01")
+            "filter": f'(SECUCODE="{stock_code}.{prefix}"){is_all}(REPORT_DATE=\'{sd}\')',
             "quoteColumns": '',
             "pageNumber": 1,
             "sortTypes": -1,

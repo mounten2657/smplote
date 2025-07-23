@@ -3,6 +3,7 @@ from model.gpl.gpl_symbol_model import GPLSymbolModel
 from model.gpl.gpl_const_kv_model import GPLConstKvModel
 from model.gpl.gpl_concept_model import GPLConceptModel
 from model.gpl.gpl_symbol_text_model import GPLSymbolTextModel
+from model.gpl.gpl_symbol_ext_model import GPLSymbolExtModel
 from model.gpl.gpl_daily_model import GPLDailyModel
 from model.gpl.gpl_api_log_model import GplApiLogModel
 from model.gpl.gpl_season_model import GPLSeasonModel
@@ -16,6 +17,10 @@ logger = Logger()
 @Ins.singleton
 class GPLUpdateService:
     """股票更新类"""
+
+    # 初始化的开始结束日期
+    _INIT_ST = '2000-01-01'
+    _INIT_ET = '2025-07-13'
 
     def __init__(self):
         self.formatter = GplFormatterService()
@@ -122,12 +127,13 @@ class GPLUpdateService:
         code_list = [Str.remove_stock_prefix(c) for c in code_list]
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
         s_list = sdb.get_symbol_list(symbol_list)
-        k_list_xq = kdb.get_const_list('XQ_CONCEPT')
         k_list_em = kdb.get_const_list('EM_CONCEPT')
-        c_list_xq = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'XQ'), 'symbol')
         c_list_em = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'EM'), 'symbol')
         t_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_TC'), 'symbol')
         s_list = {f"{d['symbol']}": d for d in s_list}
+        if Time.date('%Y-%m-%d') <= self._INIT_ET:
+            k_list_xq = kdb.get_const_list('XQ_CONCEPT')
+            c_list_xq = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'XQ'), 'symbol')
 
         day_list = []
         n = 102 if is_force > 90 else 3
@@ -137,12 +143,21 @@ class GPLUpdateService:
         day = int(Time.date('%d'))
         today = Time.date('%Y-%m-%d')
         check_day = [1, 10, 20]
+        if is_force > 90:  # 初始化
+            today = self._INIT_ET
+            check_day = [1, 10, 20, 23, 24, 25, 26, 27, 28, 29, 30]
         if day in check_day:
-            if is_force == 0 or is_force == 91:
+            if 0 == is_force or 91 == is_force:
                 gd_list = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10')
                 gd_list_free = jdb.get_season_list(symbol_list, day_list, 'EM_GD_TOP10_FREE')
-            if is_force == 0 or is_force == 92:
-                gdn_list = jdb.get_season_list(symbol_list, [today], 'EM_GD_NUＭ')
+            if 0 == is_force or 92 == is_force:
+                gdn_list = jdb.get_season_list(symbol_list, [], 'EM_GD_NUM')
+            if 0 == is_force or 93 == is_force:
+                gdt_list = jdb.get_season_list(symbol_list, [], 'EM_GD_ORG_T')
+            if 0 == is_force or 94 == is_force:
+                gdd_list = jdb.get_season_list(symbol_list, [], 'EM_GD_ORG_D')
+            if 0 == is_force or 95 == is_force:
+                gdl_list = jdb.get_season_list(symbol_list, [], 'EM_GD_ORG_L')
 
         @Ins.multiple_executor(5)
         def _up_saf_exec(code):
@@ -155,28 +170,43 @@ class GPLUpdateService:
             if not info:
                 logger.warning(f"未查询到股票数据<{symbol}>{percent}", 'UP_SAF_WAR')
                 return False
-            cl_xq = Attr.get(c_list_xq, symbol, [])
             cl_em = Attr.get(c_list_em, symbol, [])
             t_em = Attr.get(t_list_em, symbol, [])
             logger.debug(f"更新股票额外数据<{symbol}>{percent} - STA", 'UP_SAF_INF')
             # 季度相关数据
             if day in check_day:
                 # 东财十大股东更新
-                if is_force == 0 or is_force == 91:
-                    ret = ret | self._up_gd_em(symbol, info, day_list, gd_list, gd_list_free)
+                if 0 == is_force or 91 == is_force:
+                    ret = ret | self._up_gd_em(symbol, day_list, gd_list, gd_list_free)
                     logger.debug(f"更新十大股东结果<{symbol}>{percent} - GD - {ret}", 'UP_SAF_INF')
-                # 东财股东人数更新
-                if is_force == 0 or is_force == 92:
-                    gdn_info = Attr.get(gdn_list, f"{symbol}_{today}")
-                    ret = ret | self._up_gdn_em(symbol, gdn_info, today, n)
-                    logger.debug(f"更新股东人数结果<{symbol}>{percent} - GN - {ret}", 'UP_SAF_INF')
+                # 东财股东人数合计更新
+                if 0 == is_force or 92 == is_force:
+                    ret = ret | self._up_gdn_em(symbol, gdn_list, today, n)
+                    logger.debug(f"更新股东人数合计结果<{symbol}>{percent} - GN - {ret}", 'UP_SAF_INF')
+                # 东财股东机构合计更新
+                if 0 == is_force or 93 == is_force:
+                    ret = ret | self._up_gdt_em(symbol, gdt_list, today, n)
+                    logger.debug(f"更新股东机构合计结果<{symbol}>{percent} - GT - {ret}", 'UP_SAF_INF')
+                # 东财股东机构明细更新
+                if 0 == is_force or 94 == is_force:
+                    ret = ret | self._up_gdd_em(symbol, gdd_list, day_list)
+                    logger.debug(f"更新股东机构明细结果<{symbol}>{percent} - GA - {ret}", 'UP_SAF_INF')
+                # 东财股东机构列表更新
+                if 0 == is_force or 95 == is_force:
+                    ret = ret | self._up_gdl_em(symbol, gdl_list, day_list)
+                    logger.debug(f"更新股东机构列表结果<{symbol}>{percent} - GL - {ret}", 'UP_SAF_INF')
             # 雪球概念更新
-            if Time.date('%Y-%m-%d') <= '2025-07-13':
+            if Time.date('%Y-%m-%d') <= self._INIT_ET:
+                cl_xq = Attr.get(c_list_xq, symbol, [])
                 ret = ret | self._update_by_xq(symbol, info, k_list_xq, cl_xq)
                 logger.debug(f"更新股票雪概结果<{symbol}>{percent} - XQ - {ret}", 'UP_SAF_INF')
             # 东财概念更新
-            ret = ret | self._update_by_em(symbol, info, k_list_em, cl_em, t_em)
+            # ret = ret | self._update_by_em(symbol, info, k_list_em, cl_em, t_em)
             logger.debug(f"更新股票东概结果<{symbol}>{percent} - EM - {ret}", 'UP_SAF_INF')
+            # 变更日志更新
+            if not is_force:
+                ret = ret | self._update_change_log(symbol, info)
+                logger.debug(f"更新股票变更结果<{symbol}>{percent} - CL - {ret}", 'UP_SAF_INF')
             return ret
 
         return _up_saf_exec(code_list)
@@ -199,8 +229,8 @@ class GPLUpdateService:
         st = Time.dft(Time.now() - n * 86400, '%Y-%m-%d')
         et = Time.date('%Y-%m-%d')
         if is_force > 90:  # 初始化
-            st = '2000-01-01'
-            et = '2025-07-13'
+            st = self._INIT_ST
+            et = self._INIT_ET
         tds = f'{st}~{et}'
 
         # 批量查询数据
@@ -219,7 +249,7 @@ class GPLUpdateService:
         l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
         l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
-        @Ins.multiple_executor(3)
+        @Ins.multiple_executor(5)
         def _up_day_exec(code):
             Time.sleep(Str.randint(1, 10) / 100)
             res = []
@@ -370,10 +400,52 @@ class GPLUpdateService:
             })
         return True
 
-    def _up_gd_em(self, symbol, info, day_list, gd_list, gd_list_free):
-        """更新股票十大股东"""
+    def _update_change_log(self, symbol, info):
+        """更新股票变更日志"""
         ret = {}
         sdb = GPLSymbolModel()
+        jdb = GPLSeasonModel()
+        edb = GPLSymbolExtModel()
+        s_biz_list = ['EM_GD_TOP10', 'EM_GD_TOP10_FREE']
+        e_biz_list = ['EM_GD_NUＭ', 'EM_GD_ORG_T', 'EM_GD_ORG_D', 'EM_GD_ORG_L']
+        for biz_code in s_biz_list:
+            key = 'gd_top10_list' if 'EM_GD_TOP10' == biz_code else 'gd_top10_free_list'
+            g_info = jdb.get_season_recent(symbol, biz_code, key)
+            if not g_info:
+                logger.debug(f"暂无股票季度数据<{symbol}><{biz_code} / {key}>", 'UP_EGD_SKP')
+                continue
+            gd_list = ','.join([f"{b['gd_name']}:{b['rate']}%" for b in g_info['e_val']])
+            if gd_list and info[key] != gd_list:
+                after = {key: gd_list}
+                before = {key: info[key]} if info[key] else {}
+                ext = {'update_list': info['update_list'] | {'gd': Time.date()}}
+                ret['ugd'] = sdb.update_symbol(symbol, after, before, ext)
+        for biz_code in e_biz_list:
+            key = biz_code.lower()
+            g_info = jdb.get_season_recent(symbol, biz_code, key)
+            if not g_info:
+                logger.debug(f"暂无股票季度数据<{symbol}><{biz_code} / {key}>", 'UP_EGE_SKP')
+                continue
+            e_info = edb.get_ext(symbol, biz_code, key)
+            if not e_info:
+                insert = {
+                    "symbol": symbol,
+                    "biz_type": biz_code,
+                    "e_key": g_info.get('e_key', ''),
+                    "e_des": g_info.get('e_des', ''),
+                    "e_val": g_info.get('e_val', ''),
+                }
+                ret['ige'] = edb.add_ext(insert)
+            else:
+                if g_info['e_val'] != e_info['e_val']:
+                    after = {key: g_info['e_val']}
+                    before = {key: e_info['e_val']}
+                    ret['uge'] = edb.update_ext(e_info['id'], symbol, key, after, before)
+        return ret
+
+    def _up_gd_em(self, symbol, day_list, gd_list, gd_list_free):
+        """更新股票十大股东"""
+        ret = {}
         jdb = GPLSeasonModel()
         s_gd_list = Attr.group_item_by_key(gd_list.values(), 'symbol').get(symbol, [])
         s_gd_list_free = Attr.group_item_by_key(gd_list_free.values(), 'symbol').get(symbol, [])
@@ -386,7 +458,7 @@ class GPLUpdateService:
         for day in day_list:
             for d in gd_index:
                 if day < d['min_day']:
-                    logger.debug(f"跳过十大股东数据<{symbol}><{day} / {d['min_day']}>", 'UP_DG_SKP')
+                    logger.debug(f"跳过十大股东数据<{symbol}><{day} / {d['min_day']}>", 'UP_GD_SKP')
                     continue
                 Time.sleep(Str.randint(1, 5) / 10)
                 key = d['key']
@@ -400,30 +472,78 @@ class GPLUpdateService:
                     else:
                         g_info = self.formatter.em.get_gd_top10_free(symbol, date)
                     if not g_info:
-                        logger.warning(f"暂无十大股东数据<{symbol}><{day}> - {biz_code} - {des}", 'UP_DG_WAR')
+                        logger.warning(f"暂无十大股东数据<{symbol}><{day}> - {biz_code} - {des}", 'UP_GD_WAR')
                         continue
                     biz_data = {'key': key, 'des': des, 'val': g_info}
                     ret['igd'] = jdb.add_season(symbol, day, biz_code, biz_data)
-                    gd_list = ','.join([f"{b['gd_name']}:{b['rate']}%" for b in g_info])
-                    if gd_list and info[key] != gd_list:
-                        after = {key: gd_list}
-                        before = {key: info[key]} if info[key] else {}
-                        ext = {'update_list': info['update_list'] | {'gd': Time.date()}}
-                        ret['ugd'] = sdb.update_symbol(symbol, after, before, ext)
         return ret
 
-    def _up_gdn_em(self, symbol, gdn_info, td, n):
+    def _up_gdn_em(self, symbol, gdn_list, td, n):
         """更新股票股东人数"""
         ret = {}
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
-        biz_code = 'EM_GD_NUＭ'
-        print(gdn_info)
-        if not gdn_info:
-            g_info = self.formatter.em.get_gd_num(symbol, td, n)
-            if not g_info:
-                logger.warning(f"暂无股东人数数据<{symbol}><{td}> - {n}", 'UP_DGN_WAR')
-            biz_data = {'key': biz_code.lower(), 'des': '股东人数合计', 'val': g_info}
-            ret['ign'] = jdb.add_season(symbol, td, biz_code, biz_data)
+        biz_code = 'EM_GD_NUM'
+        g_info = self.formatter.em.get_gd_num(symbol, td, n)
+        if not g_info:
+            logger.warning(f"暂无股东人数合计数据<{symbol}><{td}> - {n}", 'UP_GDN_WAR')
+            return ret
+        for d in g_info:
+            gdn_info = Attr.get(gdn_list, f"{symbol}_{d['date']}")
+            if not gdn_info:
+                biz_data = {'key': biz_code.lower(), 'des': '股东人数合计', 'val': d}
+                ret['ign'] = jdb.add_season(symbol, d['date'], biz_code, biz_data)
         return ret
 
+    def _up_gdt_em(self, symbol, gdt_list, td, n):
+        """更新股票股东机构合计"""
+        ret = {}
+        jdb = GPLSeasonModel()
+        Time.sleep(Str.randint(1, 3) / 10)
+        biz_code = 'EM_GD_ORG_T'
+        g_info = self.formatter.em.get_gd_org_total(symbol, td, n)
+        if not g_info:
+            logger.warning(f"暂无股东机构合计数据<{symbol}><{td}> - {n}", 'UP_GDT_WAR')
+            return ret
+        for d in g_info:
+            gdt_info = Attr.get(gdt_list, f"{symbol}_{d['date']}")
+            if not gdt_info:
+                biz_data = {'key': biz_code.lower(), 'des': '股东机构合计', 'val': d}
+                ret['igt'] = jdb.add_season(symbol, d['date'], biz_code, biz_data)
+        return ret
+
+    def _up_gdd_em(self, symbol, gdd_list, day_list):
+        """更新股票股东机构明细"""
+        ret = {}
+        jdb = GPLSeasonModel()
+        Time.sleep(Str.randint(1, 3) / 10)
+        biz_code = 'EM_GD_ORG_D'
+        for sd in day_list:
+            g_info = self.formatter.em.get_gd_org_detail(symbol, sd)
+            if not g_info:
+                logger.warning(f"暂无股东机构明细数据<{symbol}><{sd}>", 'UP_GDD_WAR')
+                continue
+            for d in g_info:
+                gdd_info = Attr.get(gdd_list, f"{symbol}_{d['date']}")
+                if not gdd_info:
+                    biz_data = {'key': biz_code.lower(), 'des': '股东机构明细', 'val': d}
+                    ret['iga'] = jdb.add_season(symbol, d['date'], biz_code, biz_data)
+        return ret
+
+    def _up_gdl_em(self, symbol, gdd_list, day_list):
+        """更新股票股东机构l列表"""
+        ret = {}
+        jdb = GPLSeasonModel()
+        Time.sleep(Str.randint(1, 3) / 10)
+        biz_code = 'EM_GD_ORG_L'
+        for sd in day_list:
+            g_info = self.formatter.em.get_gd_org_list(symbol, sd)
+            if not g_info:
+                logger.warning(f"暂无股东机构列表数据<{symbol}><{sd}>", 'UP_GDL_WAR')
+                continue
+            for d in g_info:
+                gdl_info = Attr.get(gdd_list, f"{symbol}_{d['date']}")
+                if not gdl_info:
+                    biz_data = {'key': biz_code.lower(), 'des': '股东机构列表', 'val': d}
+                    ret['igl'] = jdb.add_season(symbol, d['date'], biz_code, biz_data)
+        return ret
