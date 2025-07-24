@@ -14,7 +14,16 @@ message WeChatTextRequest {
   optional string user_list = 3;
 }
 
+message NatHttpRequest {
+  string method = 1;
+  string url = 2;
+  optional string params = 3;
+  optional string headers = 4;
+  optional int32 timeout = 5;
+}
+
 service OpenNatServer {
   rpc SendWeChatText (WeChatTextRequest) returns (CommonResponse);
+  rpc NatHttpSend (NatHttpRequest) returns (CommonResponse);
 }
 

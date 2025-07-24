@@ -12,3 +12,7 @@ class OpenNatService:
         """发送文本消息 - 对外方法"""
         return OpenNatClient().send_wechat_text(content, app_key, user_list)
 
+    @staticmethod
+    def send_http_request(method, url, params=None, headers=None, timeout=None):
+        """发起http请求并返回结果"""
+        return OpenNatClient().nat_http_send(method, url, params, headers, timeout)

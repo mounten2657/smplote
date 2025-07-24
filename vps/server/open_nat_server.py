@@ -4,6 +4,7 @@ from concurrent import futures
 from vps.proto.generated.open_nat_pb2 import *
 from vps.proto.generated.open_nat_pb2_grpc import *
 from vps.api.wechat.qy.qy_msg_api import QYMsgApi
+from vps.api.nat.http.http_req_api import HttpReqApi
 
 
 class OpenNatServer(OpenNatServerServicer):
@@ -26,11 +27,22 @@ class OpenNatServer(OpenNatServerServicer):
             )
         except Exception as e:
             context.set_code(grpc.StatusCode.INTERNAL)
-            return CommonResponse(
-                code=9999,
-                msg=str(e),
-                data='Null',
+            return CommonResponse(code=9999, msg=str(e), data='Null')
+
+    def NatHttpSend(self, request, context):
+        try:
+            result = HttpReqApi().send_req(
+                method=request.method,
+                url=request.url,
+                params=request.params or None,
+                headers=request.headers or None,
+                timeout=request.timeout or None
             )
+            result = result if result else {}
+            return CommonResponse(code=0, msg='success', data=json.dumps(result))
+        except Exception as e:
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return CommonResponse(code=9998, msg=str(e), data='Null')
 
     @staticmethod
     def run():

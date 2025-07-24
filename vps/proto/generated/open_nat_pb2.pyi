@@ -53,3 +53,37 @@ class WeChatTextRequest(google.protobuf.message.Message):
     def WhichOneof(self, oneof_group: typing.Literal["_user_list", b"_user_list"]) -> typing.Literal["user_list"] | None: ...
 
 global___WeChatTextRequest = WeChatTextRequest
+
+@typing.final
+class NatHttpRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    METHOD_FIELD_NUMBER: builtins.int
+    URL_FIELD_NUMBER: builtins.int
+    PARAMS_FIELD_NUMBER: builtins.int
+    HEADERS_FIELD_NUMBER: builtins.int
+    TIMEOUT_FIELD_NUMBER: builtins.int
+    method: builtins.str
+    url: builtins.str
+    params: builtins.str
+    headers: builtins.str
+    timeout: builtins.int
+    def __init__(
+        self,
+        *,
+        method: builtins.str = ...,
+        url: builtins.str = ...,
+        params: builtins.str | None = ...,
+        headers: builtins.str | None = ...,
+        timeout: builtins.int | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing.Literal["_headers", b"_headers", "_params", b"_params", "_timeout", b"_timeout", "headers", b"headers", "params", b"params", "timeout", b"timeout"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["_headers", b"_headers", "_params", b"_params", "_timeout", b"_timeout", "headers", b"headers", "method", b"method", "params", b"params", "timeout", b"timeout", "url", b"url"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing.Literal["_headers", b"_headers"]) -> typing.Literal["headers"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing.Literal["_params", b"_params"]) -> typing.Literal["params"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing.Literal["_timeout", b"_timeout"]) -> typing.Literal["timeout"] | None: ...
+
+global___NatHttpRequest = NatHttpRequest

@@ -39,6 +39,11 @@ class OpenNatServerStub(object):
                 request_serializer=open__nat__pb2.WeChatTextRequest.SerializeToString,
                 response_deserializer=open__nat__pb2.CommonResponse.FromString,
                 _registered_method=True)
+        self.NatHttpSend = channel.unary_unary(
+                '/open_nat.OpenNatServer/NatHttpSend',
+                request_serializer=open__nat__pb2.NatHttpRequest.SerializeToString,
+                response_deserializer=open__nat__pb2.CommonResponse.FromString,
+                _registered_method=True)
 
 
 class OpenNatServerServicer(object):
@@ -50,12 +55,23 @@ class OpenNatServerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def NatHttpSend(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_OpenNatServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendWeChatText': grpc.unary_unary_rpc_method_handler(
                     servicer.SendWeChatText,
                     request_deserializer=open__nat__pb2.WeChatTextRequest.FromString,
+                    response_serializer=open__nat__pb2.CommonResponse.SerializeToString,
+            ),
+            'NatHttpSend': grpc.unary_unary_rpc_method_handler(
+                    servicer.NatHttpSend,
+                    request_deserializer=open__nat__pb2.NatHttpRequest.FromString,
                     response_serializer=open__nat__pb2.CommonResponse.SerializeToString,
             ),
     }
@@ -85,6 +101,33 @@ class OpenNatServer(object):
             target,
             '/open_nat.OpenNatServer/SendWeChatText',
             open__nat__pb2.WeChatTextRequest.SerializeToString,
+            open__nat__pb2.CommonResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def NatHttpSend(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/open_nat.OpenNatServer/NatHttpSend',
+            open__nat__pb2.NatHttpRequest.SerializeToString,
             open__nat__pb2.CommonResponse.FromString,
             options,
             channel_credentials,

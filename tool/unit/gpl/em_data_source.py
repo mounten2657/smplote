@@ -3,6 +3,7 @@ import requests
 from typing import Dict, List
 from tool.core import Logger, Attr, Str, Error, Time
 from model.gpl.gpl_api_log_model import GplApiLogModel
+from service.vps.open_nat_service import OpenNatService
 
 logger = Logger()
 
@@ -59,11 +60,18 @@ class EmDataSource:
                             return pid['response_result'], 0
                         else:
                             pid = pid['id']
-                response = self.session.get(url, params=params, timeout=self.timeout)
-                # 检查请求是否成功
-                response.raise_for_status()
-                # 解析JSON数据
-                data = response.json()
+                # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
+                rand = Str.randint(1, 10000) % 2
+                if 1 == rand:
+                    # 使用 nat 请求
+                    data = OpenNatService.send_http_request('GET', url, params, self.headers, self.timeout)
+                else:
+                    # 使用本地请求
+                    response = self.session.get(url, params=params, timeout=self.timeout)
+                    # 检查请求是否成功
+                    response.raise_for_status()
+                    # 解析JSON数据
+                    data = response.json()
                 self.ldb.update_gpl_api_log(pid, {'response_result': data})
                 return data, pid
             except requests.RequestException as e:

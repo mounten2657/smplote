@@ -5,6 +5,7 @@ from vps.config import Config
 
 
 class QYMsgApi:
+
     def __init__(self, master_key: str):
         self.crypto = ConfigCrypto(master_key)
         self.config = self._load_config()
