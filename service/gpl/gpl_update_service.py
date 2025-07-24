@@ -160,8 +160,9 @@ class GPLUpdateService:
             if 0 == is_force or 95 == is_force:
                 gdl_list = jdb.get_season_list(symbol_list, [], 'EM_GD_ORG_L')
 
-        @Ins.multiple_executor(5)
+        @Ins.multiple_executor(10)
         def _up_saf_exec(code):
+            Time.sleep(Str.randint(1, 10) / 100)
             ret = {}
             symbol = Str.add_stock_prefix(code)
             info = Attr.get(s_list, symbol)

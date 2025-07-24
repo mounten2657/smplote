@@ -52,6 +52,8 @@ class EmDataSource:
         for i in range(self.retry_times):
             try:
                 pid = 0
+                rand = Str.randint(1, 10000) % 2
+                params['nat_int'] = rand
                 # 如果已经有了日志数据就不用请求接口了
                 if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_FN', 'EM_DV']):
                     pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
@@ -61,7 +63,7 @@ class EmDataSource:
                         else:
                             pid = pid['id']
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
-                rand = Str.randint(1, 10000) % 2
+                rand = pid % 2 if pid else rand
                 if 1 == rand:
                     # 使用 nat 请求
                     data = OpenNatService.send_http_request('GET', url, params, self.headers, self.timeout)
