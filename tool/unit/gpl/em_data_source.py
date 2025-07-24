@@ -63,7 +63,7 @@ class EmDataSource:
                         else:
                             pid = pid['id']
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
-                rand = pid % 2 if pid else rand
+                rand = (pid % 2) if pid else rand
                 if 1 == rand:
                     # 使用 nat 请求
                     data = OpenNatService.send_http_request('GET', url, params, self.headers, self.timeout)
