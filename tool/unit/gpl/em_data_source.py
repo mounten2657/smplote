@@ -52,7 +52,7 @@ class EmDataSource:
             try:
                 pid = 0
                 # 如果已经有了日志数据就不用请求接口了
-                if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_FC', 'EM_DIV']):
+                if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_FN', 'EM_DV']):
                     pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
                     if isinstance(pid, dict):
                         if pid['response_result']:
@@ -367,26 +367,28 @@ class EmDataSource:
         } for d in res]
         return self._ret(ret, pid, start_time)
 
-    def get_gd_org_detail(self, stock_code: str, sd: str) -> List:
+    def get_gd_org_detail(self, stock_code: str, sd: str, is_all: int = 1) -> List:
         """
         获取股票股东机构持仓详细
 
         :param str stock_code: 股票代码，如： 002107
         :param str sd: 季度尾日 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :param int is_all: 是否返回全部
         :return: 股票股东机构持仓详细
         """
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
+        is_all_str = '' if is_all else f"(REPORT_DATE='{sd}')"
         params = {
             "reportName": "RPT_F10_MAIN_ORGHOLDDETAILS",
             "columns": "ALL",
-            "filter": f'(SECUCODE="{stock_code}.{prefix}")(REPORT_DATE=\'{sd}\')',
+            "filter": f'(SECUCODE="{stock_code}.{prefix}"){is_all_str}',
             "pageNumber": 1,
             "sortColumns": 'ORG_TYPE',
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_ORG_D', {'he': f'{prefix}{stock_code}', 'hv': sd})
+        data, pid = self._get(url, params, 'EM_GD_ORG_D', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['REPORT_DATE'][:10],
@@ -401,6 +403,7 @@ class EmDataSource:
             'free_change_rate': Attr.get(d, 'CHANGE_RATIO', 0.0),  # 流通股市值变化率
             'free_change_vol': Attr.get(d, 'FREE_SHARES_CHANGE', 0.0),  # 占流通股比的变化量
         } for d in res]
+        ret = Attr.group_item_by_key(reversed(ret), 'date')
         return self._ret(ret, pid, start_time)
 
     def get_gd_org_list(self, stock_code: str, sd: str, is_all: int = 1) -> List:
@@ -414,11 +417,12 @@ class EmDataSource:
         """
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
-        is_all = '' if is_all else '(ORG_TYPE="01")'
+        # 附加条件，网页展示的数据 -  '(ORG_TYPE="01")'
+        is_all_str = '' if is_all else f"(REPORT_DATE='{sd}')"
         params = {
             "reportName": "RPT_MAIN_ORGHOLDDETAIL",
             "columns": "ALL",
-            "filter": f'(SECUCODE="{stock_code}.{prefix}"){is_all}(REPORT_DATE=\'{sd}\')',
+            "filter": f'(SECUCODE="{stock_code}.{prefix}"){is_all_str}',
             "quoteColumns": '',
             "pageNumber": 1,
             "sortTypes": -1,
@@ -426,7 +430,7 @@ class EmDataSource:
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_ORG_L', {'he': f'{prefix}{stock_code}', 'hv': sd})
+        data, pid = self._get(url, params, 'EM_GD_ORG_L', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['REPORT_DATE'][:10],
@@ -443,4 +447,5 @@ class EmDataSource:
             'total_free_rate': Attr.get(d, 'TOTALSHARES_RATIO', 0.0),  # 占总股比
             'total_jz_rate': Attr.get(d, 'NETVALUE_RATIO', 0.0),  # 占总净值比
         } for d in res]
+        ret = Attr.group_item_by_key(reversed(ret), 'date')
         return self._ret(ret, pid, start_time)

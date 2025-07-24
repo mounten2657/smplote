@@ -31,8 +31,11 @@ class VppServeService:
         """
         fty = 5001
         key = biz_code.upper()
-        file_dir = file_dir if file_dir else f"{Time.date('%Y%m')}/"
-        fp = f"/website/{biz_code.lower().replace('vp_', '')}/{file_dir}{file_name}"
+        if file_dir.startswith('/'):
+            fp = f"/website{file_dir}{file_name}"
+        else:
+            file_dir = file_dir if file_dir else f"{Time.date('%Y%m')}/"
+            fp = f"/website/{biz_code.lower().replace('vp_', '')}/{file_dir}{file_name}"
         fk = File.enc_dir(fp)
         res = VppServeClient().vp_download_file(fty, key, url, fp, fk, 0)
         data = res.get('data', {})
