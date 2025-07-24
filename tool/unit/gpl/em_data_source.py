@@ -64,6 +64,7 @@ class EmDataSource:
                             pid = pid['id']
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
                 rand = (pid % 2) if pid else rand
+                params['nat_int'] = rand
                 if 1 == rand:
                     # 使用 nat 请求
                     data = OpenNatService.send_http_request('GET', url, params, self.headers, self.timeout)
@@ -74,7 +75,7 @@ class EmDataSource:
                     response.raise_for_status()
                     # 解析JSON数据
                     data = response.json()
-                self.ldb.update_gpl_api_log(pid, {'response_result': data})
+                self.ldb.update_gpl_api_log(pid, {'response_result': data, 'request_params': params})
                 return data, pid
             except requests.RequestException as e:
                 err = Error.handle_exception_info(e)
