@@ -471,11 +471,10 @@ class GPLUpdateService:
                 biz_code = d['biz_code']
                 gd = Attr.get(d['d_list'], f"{symbol}_{day}")
                 if not gd:
-                    date = day.replace('-', '')
                     if biz_code == 'EM_GD_TOP10':
-                        g_info = self.formatter.em.get_gd_top10(symbol, date)
+                        g_info = self.formatter.em.get_gd_top10(symbol, day)
                     else:
-                        g_info = self.formatter.em.get_gd_top10_free(symbol, date)
+                        g_info = self.formatter.em.get_gd_top10_free(symbol, day)
                     if not g_info:
                         logger.warning(f"暂无十大股东数据<{symbol}><{day}> - {biz_code} - {des}", 'UP_GD_WAR')
                         continue

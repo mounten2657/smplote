@@ -261,7 +261,7 @@ class EmDataSource:
             "date": f"{sd}",
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_10', {'he': f'{prefix}{stock_code}', 'hv': sd})
+        data, pid = self._get(url, params, 'EM_GD_TOP10', {'he': f'{prefix}{stock_code}', 'hv': sd})
         res = Attr.get_by_point(data, 'sdgd', [])
         ret = [{
             'rank': d['HOLDER_RANK'],  # 排名
@@ -290,7 +290,7 @@ class EmDataSource:
             "date": f"{sd}",
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_10_FREE', {'he': f'{prefix}{stock_code}', 'hv': sd})
+        data, pid = self._get(url, params, 'EM_GD_TOP10_FREE', {'he': f'{prefix}{stock_code}', 'hv': sd})
         res = Attr.get_by_point(data, 'sdltgd', [])
         ret = [{
             'rank': d['HOLDER_RANK'],  # 排名
