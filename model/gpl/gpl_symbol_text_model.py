@@ -1,5 +1,5 @@
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins, Attr
+from tool.core import Ins
 
 
 @Ins.singleton
@@ -8,7 +8,7 @@ class GPLSymbolTextModel(MysqlBaseModel):
     股票文本信息表
         - id - bigint(20) - 自增主键
         - symbol - varchar(16) - 股票代码(带市场前缀)
-        - biz_type - varchar(16) - 业务类型
+        - biz_code - varchar(16) - 业务代码
         - e_key - varchar(32) - kv键
         - e_des - varchar(128) - kv描述
         - e_val - longtext - kv值
@@ -26,7 +26,7 @@ class GPLSymbolTextModel(MysqlBaseModel):
             return 0
         insert_data = {
             "symbol": data.get('symbol', ''),
-            "biz_type": data.get('biz_type', ''),
+            "biz_code": data.get('biz_code', ''),
             "e_key": data.get('e_key', ''),
             "e_des": data.get('e_des', ''),
             "e_val": data.get('e_val', ''),
@@ -37,10 +37,10 @@ class GPLSymbolTextModel(MysqlBaseModel):
         """更新股票文本信息"""
         return self.update({'id': pid}, data)
 
-    def get_text_list(self, symbol_list, biz_type):
+    def get_text_list(self, symbol_list, biz_code):
         """获取股票文本信息列表"""
-        return self.where_in('symbol', symbol_list).where({'biz_type': biz_type}).get()
+        return self.where_in('symbol', symbol_list).where({'biz_code': biz_code}).get()
 
-    def get_text(self, symbol, biz_type, e_key):
+    def get_text(self, symbol, biz_code, e_key):
         """获取股票文本信息"""
-        return self.where({'symbol': symbol, 'biz_type': biz_type, 'e_key': e_key}).first()
+        return self.where({'symbol': symbol, 'biz_code': biz_code, 'e_key': e_key}).first()

@@ -9,7 +9,7 @@ class GPLSymbolExtModel(MysqlBaseModel):
     股票额外信息表
         - id - bigint(20) - 自增主键
         - symbol - varchar(16) - 股票代码(带市场前缀)
-        - biz_type - varchar(16) - 业务类型
+        - biz_code - varchar(16) - 业务代码
         - e_key - varchar(32) - kv键
         - e_des - varchar(128) - kv描述
         - e_val - text - kv值
@@ -26,7 +26,7 @@ class GPLSymbolExtModel(MysqlBaseModel):
             return 0
         insert_data = {
             "symbol": data.get('symbol', ''),
-            "biz_type": data.get('biz_type', ''),
+            "biz_code": data.get('biz_code', ''),
             "e_key": data.get('e_key', ''),
             "e_des": data.get('e_des', ''),
             "e_val": data.get('e_val', ''),
@@ -42,11 +42,11 @@ class GPLSymbolExtModel(MysqlBaseModel):
             GPLChangeLogModel().add_change_log(symbol, self.table_name(), data, before)
         return res
 
-    def get_ext_list(self, symbol, biz_type):
+    def get_ext_list(self, symbol, biz_code):
         """获取股票额外信息列表"""
-        a_list = self.where({'symbol': symbol, 'biz_type': biz_type}).get()
+        a_list = self.where({'symbol': symbol, 'biz_code': biz_code}).get()
         return Attr.kv_list_to_dict(a_list)
 
-    def get_ext(self, symbol, biz_type, e_key):
+    def get_ext(self, symbol, biz_code, e_key):
         """获取股票额外信息"""
-        return self.where({'symbol': symbol, 'biz_type': biz_type, 'e_key': e_key}).first()
+        return self.where({'symbol': symbol, 'biz_code': biz_code, 'e_key': e_key}).first()

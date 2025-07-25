@@ -355,7 +355,7 @@ class GPLUpdateService:
         # 核心题材
         ct_list = self.formatter.em.get_concept_text(code)
         if ct_list:
-            biz_type = 'EM_TC'
+            biz_code = 'EM_TC'
             t_list = t_em
             t_list = {f"{d['e_key']}": d for d in t_list}
             ct_info = Attr.group_item_by_key(ct_list, 'KEY_CLASSIF')
@@ -371,10 +371,10 @@ class GPLUpdateService:
                 if title and c_text:
                     ek = Str.first_py_char(title)
                     d_info = Attr.get(t_list, ek, {})
-                    if not d_info and not tdb.get_text(symbol, biz_type, ek):
+                    if not d_info and not tdb.get_text(symbol, biz_code, ek):
                         res['ite'] = tdb.add_text({
                             "symbol": symbol,
-                            "biz_type": biz_type,
+                            "biz_code": biz_code,
                             "e_key": ek,
                             "e_des": title,
                             "e_val": c_text.strip(),
@@ -385,12 +385,12 @@ class GPLUpdateService:
         """更新股票概念板块"""
         kdb = GPLConstKvModel()
         cdb = GPLConceptModel()
-        biz_type = type + '_CONCEPT'
+        biz_code = type + '_CONCEPT'
         k_info = Attr.get(k_list, code)
         c_list = {f"{d['concept_code']}": d for d in c_list}
-        if not k_info and not kdb.get_const(biz_type, code):
+        if not k_info and not kdb.get_const(biz_code, code):
             kdb.add_const({
-                "biz_type": biz_type,
+                "biz_code": biz_code,
                 "e_key": code,
                 "e_des": des,
                 "e_val": name,
@@ -435,7 +435,7 @@ class GPLUpdateService:
             if not e_info:
                 insert = {
                     "symbol": symbol,
-                    "biz_type": biz_code,
+                    "biz_code": biz_code,
                     "e_key": g_info.get('e_key', ''),
                     "e_des": g_info.get('e_des', ''),
                     "e_val": g_info.get('e_val', ''),

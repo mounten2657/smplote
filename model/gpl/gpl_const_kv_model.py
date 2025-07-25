@@ -7,7 +7,7 @@ class GPLConstKvModel(MysqlBaseModel):
     """
     股票常量键值表
         - id - bigint(20) - 自增主键
-        - biz_type - varchar(16) - kv业务类型
+        - biz_code - varchar(16) - 业务代码
         - e_key - varchar(32) - kv键
         - e_des - varchar(128) - kv描述
         - e_val - text - kv值
@@ -20,11 +20,11 @@ class GPLConstKvModel(MysqlBaseModel):
     def add_const(self, data):
         """股票常量入库"""
         data = data if data else {}
-        biz_type = data.get('biz_type', '')
-        if not data or not biz_type:
+        biz_code = data.get('biz_code', '')
+        if not data or not biz_code:
             return 0
         insert_data = {
-            "biz_type": data.get('biz_type', ''),
+            "biz_code": data.get('biz_code', ''),
             "e_key": data.get('e_key', ''),
             "e_des": data.get('e_des', ''),
             "e_val": data.get('e_val', ''),
@@ -35,15 +35,15 @@ class GPLConstKvModel(MysqlBaseModel):
         """更新股票常量"""
         return self.update({'id': pid}, data)
 
-    def get_const_list(self, biz_type):
+    def get_const_list(self, biz_code):
         """获取股票常量列表"""
-        a_list = self.where({'biz_type': biz_type}).get()
+        a_list = self.where({'biz_code': biz_code}).get()
         return Attr.kv_list_to_dict(a_list)
 
     def get_const_em_yesterday(self):
         """获取股票东财昨日板块列表"""
-        return self.where({'biz_type': 'EM_CONCEPT', 'e_val': {'opt': 'like', 'val': '昨日%'}}).get()
+        return self.where({'biz_code': 'EM_CONCEPT', 'e_val': {'opt': 'like', 'val': '昨日%'}}).get()
 
-    def get_const(self, biz_type, e_key):
+    def get_const(self, biz_code, e_key):
         """获取股票常量"""
-        return self.where({'biz_type': biz_type, 'e_key': e_key}).first()
+        return self.where({'biz_code': biz_code, 'e_key': e_key}).first()
