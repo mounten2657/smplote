@@ -304,29 +304,29 @@ class EmDataSource:
         } for d in res]
         return self._ret(ret, pid, start_time)
 
-    def get_gd_num(self, stock_code: str, td: str, limit: int = 10) -> List:
+    def get_gd_num(self, stock_code: str, td: str, is_all: int = 0) -> List:
         """
         获取股票股东人数信息
 
         :param str stock_code: 股票代码，如： 002107
         :param str td: 更新日期 - Y-m-d（如： 2025-03-31）
-        :param int limit: 返回条数
+        :param int is_all: 是否返回全部
         :return: 股票股东人数信息
         [{"date": "2025-06-30 ", "total_num": 34990, "total_rate": 1.4909, "avg_free": 16279, "avg_free_rate": -1.468991140326, "des": "较分散", "price": 5.72, "avg_money": 93118.2405830237, "t10_gd_rate": 54.84266824, "t10_gd_free_rate": 54.24930627}, {"date": "2025-03-31 ", "total_num": 34476, "total_rate": -1.7246, "avg_free": 16522, "avg_free_rate": 1.754843949414, "des": "较分散", "price": 4.43, "avg_money": 73192.9968528832, "t10_gd_rate": 55.36990497, "t10_gd_free_rate": 54.78357102}]
         """
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
+        is_all_str = '' if is_all else f"(END_DATE='{td}')"
         params = {
             "reportName": "RPT_F10_EH_HOLDERNUM",
             "columns": "ALL",
-            "filter": f'(SECUCODE="{stock_code}.{prefix}")',
+            "filter": f'(SECUCODE="{stock_code}.{prefix}"){is_all_str}',
             "pageNumber": 1,
-            "pageSize": limit,
             "sortColumns": 'END_DATE',
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_NUM', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{limit}"})
+        data, pid = self._get(url, params, 'EM_GX_NUM', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['END_DATE'][:10],
@@ -342,28 +342,28 @@ class EmDataSource:
         } for d in res]
         return self._ret(ret, pid, start_time)
 
-    def get_gd_org_total(self, stock_code: str, td: str, limit: int = 10) -> List:
+    def get_gd_org_total(self, stock_code: str, td: str, is_all: int = 0) -> List:
         """
         获取股票股东机构持仓总计
 
         :param str stock_code: 股票代码，如： 002107
         :param str td: 更新日期 - Y-m-d（如： 2025-03-31）
-        :param int limit: 返回条数
+        :param int is_all: 是否返回全部
         :return: 股票股东机构持仓总计
         """
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
+        is_all_str = '' if is_all else f"(REPORT_DATE='{td}')"
         params = {
             "reportName": "RPT_F10_MAIN_ORGHOLDDETAILS",
             "columns": "ALL",
-            "filter": f'(SECUCODE="{stock_code}.{prefix}")(ORG_TYPE="00")',
+            "filter": f'(SECUCODE="{stock_code}.{prefix}")(ORG_TYPE="00"){is_all_str}',
             "pageNumber": 1,
-            "pageSize": limit,
             "sortColumns": 'REPORT_DATE',
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_ORG_T', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{limit}"})
+        data, pid = self._get(url, params, 'EM_GX_ORG_T', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['REPORT_DATE'][:10],
@@ -378,7 +378,7 @@ class EmDataSource:
         } for d in res]
         return self._ret(ret, pid, start_time)
 
-    def get_gd_org_detail(self, stock_code: str, sd: str, is_all: int = 1) -> List:
+    def get_gd_org_detail(self, stock_code: str, sd: str, is_all: int = 0) -> List:
         """
         获取股票股东机构持仓详细
 
@@ -417,7 +417,7 @@ class EmDataSource:
         ret = Attr.group_item_by_key(reversed(ret), 'date')
         return self._ret(ret, pid, start_time)
 
-    def get_gd_org_list(self, stock_code: str, sd: str, is_all: int = 1) -> List:
+    def get_gd_org_list(self, stock_code: str, sd: str, is_all: int = 0) -> List:
         """
         获取股票股东机构持仓列表
 
