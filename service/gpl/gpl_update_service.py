@@ -65,7 +65,7 @@ class GPLUpdateService:
         s_list = sdb.get_symbol_list(symbol_list)
         s_list = {f"{d['symbol']}": d for d in s_list}
 
-        @Ins.multiple_executor(10)
+        @Ins.multiple_executor(20)
         def _up_sym_exec(code):
             res = {'ul': []}
             Time.sleep(Str.randint(1, 10) / 100)
@@ -159,7 +159,7 @@ class GPLUpdateService:
             if 0 == is_force or 95 == is_force:
                 gdl_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_ORG_L')
 
-        @Ins.multiple_executor(10)
+        @Ins.multiple_executor(20)
         def _up_saf_exec(code):
             Time.sleep(Str.randint(1, 10) / 100)
             ret = {}
@@ -250,7 +250,7 @@ class GPLUpdateService:
         l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
         l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
-        @Ins.multiple_executor(10)
+        @Ins.multiple_executor(20)
         def _up_day_exec(code):
             Time.sleep(Str.randint(1, 10) / 100)
             res = []
