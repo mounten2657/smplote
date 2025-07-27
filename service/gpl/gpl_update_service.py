@@ -212,7 +212,7 @@ class GPLUpdateService:
         """
         更新股票日线数据
         :param code_str: 股票代码列表，一般是50个
-        :param is_force:  99: 仅拉取股票历史数据 | 98: 对历史数据入库 | 0,10: 更新今日数据 | 17: 更新最近一周
+        :param is_force:  99: 仅拉取股票历史数据 | 98: 对历史数据入库 | 0, 15: 更新最近五天 | 10: 今日 | 17: 最近一周
         :return:
         """
         code_list = code_str.split(',')

@@ -12,12 +12,13 @@ class GplFormatterService:
     def __init__(self):
         self.ak = AkDataSource()
         self.em = EmDataSource()
+        self.sdb = GPLSymbolModel()
 
     def get_stock(self, code):
         """从数据库中获取股票信息"""
         code = Str.remove_stock_prefix(code)
         symbol = Str.add_stock_prefix(code)
-        return GPLSymbolModel().get_symbol(symbol)
+        return self.sdb.get_symbol(symbol)
 
     def get_stock_info(self, code, is_merge=0):
         """
@@ -38,11 +39,13 @@ class GplFormatterService:
     @Ins.cached('GPL_STOCK_CODE_LIST')
     def get_stock_code_all(self):
         """
-        获取所有股票代码列表 - 不含市场标识 - 约 5418 只
+        获取所有股票代码列表 - 不含市场标识 - 约 5423 只
         :return: 股票代码列表
         """
         code_list = self.ak.stock_info_a_code_name()
-        return sorted([str(item['code']) for item in code_list])
+        code_list = [str(item['code']) for item in code_list]
+        db_list = self.sdb.get_code_list_all()
+        return sorted(list(dict.fromkeys(code_list + db_list)))
 
     @Ins.cached('GPL_STOCK_TD_LIST')
     def get_trade_day_all(self):

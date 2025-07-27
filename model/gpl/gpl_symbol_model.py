@@ -45,8 +45,6 @@ class GPLSymbolModel(MysqlBaseModel):
         - legal_representative - varchar(64) - 法定代表人
         - secretary - varchar(64) - 董事会秘书
         - staff_num - int(11) - 员工总数
-        - gd_top10 - text - 十大股东列表
-        - gd_top10_free - text - 十大流通股东列表
         - website - varchar(128) - 公司网站
         - reg_address - varchar(256) - 注册地址
         - office_address - varchar(256) - 办公地址
@@ -115,8 +113,6 @@ class GPLSymbolModel(MysqlBaseModel):
             "legal_representative": data.get('legal_representative', ''),
             "secretary": data.get('secretary', ''),
             "staff_num": data.get('staff_num', 0),
-            "gd_top10": data.get('gd_top10', ''),
-            "gd_top10_free": data.get('gd_top10_free', ''),
             "website": data.get('website', ''),
             "reg_address": data.get('reg_address', ''),
             "office_address": data.get('office_address', ''),
@@ -146,6 +142,11 @@ class GPLSymbolModel(MysqlBaseModel):
         if before and len(before) == len(data):
             GPLChangeLogModel().add_change_log(symbol, self.table_name(), data, before)
         return res
+
+    def get_code_list_all(self):
+        """获取所有股票代码"""
+        code_list = self.select(['code']).where({"id": {"opt": ">", "val": 0}}).get()
+        return [c['code'] for c in code_list]
 
     def get_symbol_list(self, symbol_list):
         """获取股票数据列表"""
