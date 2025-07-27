@@ -51,6 +51,7 @@ class EmDataSource:
         """
         for i in range(self.retry_times):
             try:
+                info = {}
                 pid = 0
                 rand = Str.randint(1, 10000) % 2
                 params['nat_int'] = rand
@@ -61,6 +62,7 @@ class EmDataSource:
                         if pid['response_result']:
                             return pid['response_result'], 0
                         else:
+                            info = pid
                             pid = pid['id']
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
                 rand = (pid % 2) if pid else rand
@@ -75,7 +77,9 @@ class EmDataSource:
                     response.raise_for_status()
                     # 解析JSON数据
                     data = response.json()
-                self.ldb.update_gpl_api_log(pid, {'response_result': data, 'request_params': params})
+                if not info:
+                    self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})
+
                 return data, pid
             except requests.RequestException as e:
                 err = Error.handle_exception_info(e)
@@ -326,7 +330,7 @@ class EmDataSource:
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GX_NUM', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{is_all}"})
+        data, pid = self._get(url, params, 'EM_GD_NUM', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['END_DATE'][:10],
@@ -363,7 +367,7 @@ class EmDataSource:
             "source": 'HSF10',
         }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GX_ORG_T', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{is_all}"})
+        data, pid = self._get(url, params, 'EM_GD_ORG_T', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
             'date': d['REPORT_DATE'][:10],

@@ -488,9 +488,11 @@ class GPLUpdateService:
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
         biz_code = 'EM_GD_NUM'
+        s_d_list = Attr.group_item_by_key(gdn_list.values(), 'symbol').get(symbol, [])
+        s_m_day = min(v["season_date"] for v in s_d_list) if s_d_list else ''
         for td in day_list:
             gdn_info = Attr.get(gdn_list, f"{symbol}_{td}")
-            if gdn_info:
+            if gdn_info or td < s_m_day:
                 logger.warning(f"跳过股东人数合计数据<{symbol}><{td}>", 'UP_GDN_SKP')
                 continue
             g_info = self.formatter.em.get_gd_num(symbol, td)
@@ -510,9 +512,11 @@ class GPLUpdateService:
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
         biz_code = 'EM_GD_ORG_T'
+        s_d_list = Attr.group_item_by_key(gdt_list.values(), 'symbol').get(symbol, [])
+        s_m_day = min(v["season_date"] for v in s_d_list) if s_d_list else ''
         for td in day_list:
             gdt_info = Attr.get(gdt_list, f"{symbol}_{td}")
-            if gdt_info:
+            if gdt_info or td < s_m_day:
                 logger.warning(f"跳过股东机构合计数据<{symbol}><{td}>", 'UP_GDT_SKP')
                 continue
             g_info = self.formatter.em.get_gd_org_total(symbol, td)
@@ -532,9 +536,11 @@ class GPLUpdateService:
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
         biz_code = 'EM_GD_ORG_D'
+        s_d_list = Attr.group_item_by_key(gdd_list.values(), 'symbol').get(symbol, [])
+        s_m_day = min(v["season_date"] for v in s_d_list) if s_d_list else ''
         for sd in day_list:
             gdd_info = Attr.get(gdd_list, f"{symbol}_{sd}")
-            if gdd_info:
+            if gdd_info or sd < s_m_day:
                 logger.warning(f"跳过股东机构明细数据<{symbol}><{sd}>", 'UP_GDD_SKP')
                 continue
             g_info = self.formatter.em.get_gd_org_detail(symbol, sd)
@@ -554,9 +560,11 @@ class GPLUpdateService:
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
         biz_code = 'EM_GD_ORG_L'
+        s_d_list = Attr.group_item_by_key(gdd_list.values(), 'symbol').get(symbol, [])
+        s_m_day = min(v["season_date"] for v in s_d_list) if s_d_list else ''
         for sd in day_list:
             gdl_info = Attr.get(gdd_list, f"{symbol}_{sd}")
-            if gdl_info:
+            if gdl_info or sd < s_m_day:
                 logger.warning(f"跳过股东机构列表数据<{symbol}><{sd}>", 'UP_GDL_WAR')
                 continue
             g_info = self.formatter.em.get_gd_org_list(symbol, sd)
