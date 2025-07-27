@@ -473,7 +473,7 @@ class Str:
         """
         根据股票代码自动添加交易所前缀（支持多市场）
         市场判断规则：
-        A股：6: SH | 0, 3: SZ | 8, 4: BJ  长度=6
+        A股：6: SH | 0, 3: SZ | 4, 8, 9: BJ  长度=6
         B股：900/200开头（沪B/深B）或 SHB/SZB 前缀
        港股：5位数字或.HK结尾
        美股：1-5位字母或.US/.NYSE/.NASDAQ结尾
@@ -507,7 +507,7 @@ class Str:
                 code_str = f"SH{code_str}"
             elif code_str[0] in ('0', '3'):
                 code_str = f"SZ{code_str}"
-            elif code_str[0] in ('8', '4'):
+            elif code_str[0] in ('4', '8', '9'):
                 code_str = f"BJ{code_str}"
             return code_str
 

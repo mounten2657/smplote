@@ -65,7 +65,7 @@ class GPLUpdateService:
         s_list = sdb.get_symbol_list(symbol_list)
         s_list = {f"{d['symbol']}": d for d in s_list}
 
-        @Ins.multiple_executor(20)
+        @Ins.multiple_executor(10)
         def _up_sym_exec(code):
             res = {'ul': []}
             Time.sleep(Str.randint(1, 10) / 100)
@@ -73,9 +73,7 @@ class GPLUpdateService:
             try:
                 info = Attr.get(s_list, symbol)
                 org_name = info.get('org_name') if info else 'None'
-                ind = all_code_list.index(code) + 1
-                percent = (f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}% "
-                           f"| {round(100 * (code_list.index(code) + 1) / len(code_list), 2)}%)")
+                percent = self._get_percent(code, code_list, all_code_list)
                 logger.debug(f"更新股票数据<{symbol}>{percent} - {org_name}", 'UP_SYM_INF')
                 if info and not is_force:
                     logger.warning(f"已存在股票数据跳过<{symbol}>", 'UP_SYM_SKP')
@@ -92,7 +90,7 @@ class GPLUpdateService:
                 if not info:
                     # 新增
                     ext = {'update_list': {'cf': Time.date()}}
-                    res['is'] = sdb.add_symbol(stock | ext)
+                    res['ins'] = sdb.add_symbol(stock | ext)
                 else:
                     # 更新
                     change_log = Attr.data_diff(Attr.select_keys(info, stock.keys()), stock)
@@ -104,7 +102,7 @@ class GPLUpdateService:
                         after = Attr.select_keys(stock, change_log.keys())
                         ext = {'update_list': info['update_list'] | {'uf': Time.date()}}
                         logger.warning(f"股票数据发生变化<{symbol}> - {change_log}", 'UP_SYM_WAR')
-                        res['us'] = sdb.update_symbol(symbol, after, before, ext)
+                        res['ups'] = sdb.update_symbol(symbol, after, before, ext)
             except Exception as e:
                 res['ul'].append(code)
                 err = Error.handle_exception_info(e)
@@ -165,9 +163,7 @@ class GPLUpdateService:
             ret = {}
             symbol = Str.add_stock_prefix(code)
             info = Attr.get(s_list, symbol)
-            ind = all_code_list.index(code) + 1
-            percent = (f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}% "
-                       f"| {round(100 * (code_list.index(code) + 1) / len(code_list), 2)}%)")
+            percent = self._get_percent(code, code_list, all_code_list)
             if not info:
                 logger.warning(f"未查询到股票数据<{symbol}>{percent}", 'UP_SAF_WAR')
                 return False
@@ -255,10 +251,7 @@ class GPLUpdateService:
             Time.sleep(Str.randint(1, 10) / 100)
             res = []
             symbol = Str.add_stock_prefix(code)
-            ind = all_code_list.index(code) + 1
-            percent = (f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}% "
-                       f"| {round(100 * (code_list.index(code) + 1) / len(code_list), 2)}%)")
-            logger.debug(f"更新日线数据<{symbol}><{tds}>{percent} - STA", 'UP_DAY_INF')
+            percent = self._get_percent(code, code_list, all_code_list)
             insert_list = {}
             fq_list = {"": "0", "qfq": "1", "hfq": "2"}
             for k, v in fq_list.items():
@@ -309,6 +302,12 @@ class GPLUpdateService:
             return res
 
         return _up_day_exec(code_list)
+
+    def _get_percent(self, code, code_list, all_code_list):
+        """获取进度条"""
+        ind = Attr.list_index(all_code_list, code) + 1
+        return (f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}% "
+                   f"| {round(100 * (code_list.index(code) + 1) / len(code_list), 2)}%)")
 
     def _update_by_xq(self, symbol, info, k_list_xq, c_list_xq):
         """从雪球中拉取数据进行更新"""

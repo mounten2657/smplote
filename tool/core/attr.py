@@ -148,6 +148,14 @@ class Attr:
         return {k: d2[k] if d2.get(k) else d1.get(k, d2.get(k)) for k, v in (d1 | d2).items()}
 
     @staticmethod
+    def list_index(list_data, item):
+        """获取元素在列表中的位置"""
+        try:
+            return list_data.index(item)
+        except Exception as e:
+            return 0
+
+    @staticmethod
     def kv_list_to_dict(a_list, default=None):
         """将kv列表转为字典"""
         if not a_list or not isinstance(a_list, list):
