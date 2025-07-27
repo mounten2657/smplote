@@ -141,6 +141,7 @@ class MysqlBaseModel:
         """连接管理装饰器"""
         @wraps(func)
         def wrapper(self, *args, **kwargs):
+            Time.sleep(0.01)
             conn = self._get_connection()
             try:
                 return func(self, conn, *args, **kwargs)
