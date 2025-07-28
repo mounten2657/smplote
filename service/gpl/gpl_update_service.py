@@ -22,6 +22,9 @@ class GPLUpdateService:
     _INIT_ST = '2000-01-01'
     _INIT_ET = '2025-07-13'
 
+    # 无法正常获取股东信息的股票列表
+    _S_GD_LIST = ["SH688755","SH603382","SZ301590","SH603014","SZ301636","SZ301662","SZ301678","SH688729","SZ301630","SH603262"]
+
     def __init__(self):
         self.formatter = GplFormatterService()
 
@@ -174,7 +177,9 @@ class GPLUpdateService:
             if day in check_day:
                 # 东财十大股东更新
                 if 0 == is_force or 91 == is_force:
-                    ret = ret | self._up_gd_em(symbol, gd_list, gd_list_free, day_list)
+                    is_special = int(symbol in self._S_GD_LIST)
+                    sd_list = [Time.date('%Y-%m-%d') if not is_force else self._INIT_ET] if is_special else day_list
+                    ret = ret | self._up_gd_em(symbol, gd_list, gd_list_free, sd_list, n, is_special)
                     logger.debug(f"更新十大股东结果<{symbol}>{percent} - GD - {ret}", 'UP_SAF_INF')
                 # 东财股东人数合计更新
                 if 0 == is_force or 92 == is_force:
@@ -447,7 +452,7 @@ class GPLUpdateService:
                     ret['uge'] = edb.update_ext(e_info['id'], symbol, key, after, before)
         return ret
 
-    def _up_gd_em(self, symbol, gd_list, gd_list_free, day_list):
+    def _up_gd_em(self, symbol, gd_list, gd_list_free, day_list, n, is_special):
         """更新股票十大股东"""
         ret = {}
         jdb = GPLSeasonModel()
@@ -471,7 +476,7 @@ class GPLUpdateService:
                 gd = Attr.get(d['d_list'], f"{symbol}_{day}")
                 if not gd:
                     if biz_code == 'EM_GD_TOP10':
-                        g_info = self.formatter.em.get_gd_top10(symbol, day)
+                        g_info = self.formatter.em.get_gd_top10(symbol, day, n, is_special)
                     else:
                         g_info = self.formatter.em.get_gd_top10_free(symbol, day)
                     if not g_info:

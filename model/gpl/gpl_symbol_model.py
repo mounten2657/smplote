@@ -23,8 +23,8 @@ class GPLSymbolModel(MysqlBaseModel):
         - industry_em - varchar(256) - 东财行业
         - industry_zjh - varchar(256) - 证监会行业
         - concept_list - varchar(1024) - 概念板块列表
-        - gd_top10_list - varchar(1024) - 十大股东列表
-        - gd_top10_free_list - varchar(1024) - 十大流通股东列表
+        - gd_top10_list - varchar(3072) - 十大股东列表
+        - gd_top10_free_list - varchar(3072) - 十大流通股东列表
         - reg_date - date - 注册日期
         - list_date - date - 上市日期
         - reg_asset - decimal(16,6) - 注册资本(百万元)

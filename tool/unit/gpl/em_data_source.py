@@ -249,24 +249,41 @@ class EmDataSource:
             })
         return self._ret(daily_data, pid, start_time)
 
-    def get_gd_top10(self, stock_code: str, sd: str) -> List:
+    def get_gd_top10(self, stock_code: str, sd: str, limit: int = 1, is_special: int = 0) -> List:
         """
         获取股票十大股东列表
 
         :param str stock_code: 股票代码，如： 002107
         :param str sd: 季度尾日 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :param int limit: 返回条数
+        :param int is_special: 是否为特殊股票 - 针对那些无法正常获取股东信息的股票，约10只
         :return: 股票十大股东列表
         [{"rank": 1, "gd_name": "潘华荣", "gf_type": "流通A股,限售流通A股", "gf_num": 129245978, "rate": 19.0, "c_type": "不变", "c_val": 0.0}, {"rank": 2, "gd_name": "孙永杰", "gf_type": "流通A股,限售流通A股", "gf_num": 79920000, "rate": 11.75, "c_type": "不变", "c_val": 0.0}, {"rank": 3, "gd_name": "徐英盖", "gf_type": "流通A股", "gf_num": 14227488, "rate": 2.09, "c_type": "不变", "c_val": 0.0}, {"rank": 4, "gd_name": "香港中央结算有限公司", "gf_type": "流通A股", "gf_num": 9878502, "rate": 1.45, "c_type": "3459873", "c_val": 53.903614}, {"rank": 5, "gd_name": "金福芽", "gf_type": "流通A股", "gf_num": 5434782, "rate": 0.8, "c_type": "不变", "c_val": 0.0}, {"rank": 6, "gd_name": "陈年村", "gf_type": "流通A股", "gf_num": 3263580, "rate": 0.48, "c_type": "不变", "c_val": 0.0}, {"rank": 7, "gd_name": "郑素婵", "gf_type": "流通A股", "gf_num": 2330000, "rate": 0.34, "c_type": "-2595000", "c_val": -52.69035533}, {"rank": 8, "gd_name": "张苏叶", "gf_type": "流通A股", "gf_num": 2223600, "rate": 0.33, "c_type": "新进", "c_val": 0.0}, {"rank": 9, "gd_name": "黄光辉", "gf_type": "流通A股", "gf_num": 2000000, "rate": 0.29, "c_type": "新进", "c_val": 0.0}, {"rank": 10, "gd_name": "叶选朋", "gf_type": "流通A股", "gf_num": 1776580, "rate": 0.26, "c_type": "新进", "c_val": 0.0}]
         """
-        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
-        url = self._EWEB_URL + "/PC_HSF10/ShareholderResearch/PageSDGD"
-        params = {
-            "code": f"{prefix}{stock_code}",
-            "date": f"{sd}",
-        }
         start_time = Time.now(0)
-        data, pid = self._get(url, params, 'EM_GD_TOP10', {'he': f'{prefix}{stock_code}', 'hv': sd})
-        res = Attr.get_by_point(data, 'sdgd', [])
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        if not is_special:
+            url = self._EWEB_URL + "/PC_HSF10/ShareholderResearch/PageSDGD"
+            params = {
+                "code": f"{prefix}{stock_code}",
+                "date": f"{sd}",
+            }
+            data, pid = self._get(url, params, 'EM_GD_TOP10', {'he': f'{prefix}{stock_code}', 'hv': sd})
+            res = Attr.get_by_point(data, 'sdgd', [])
+        else:
+            url = self._DATA_URL + "/securities/api/data/v1/get"
+            params = {
+                "reportName": "RPT_F10_EH_HOLDERS",
+                "columns": "ALL",
+                "filter": f'(SECUCODE="{stock_code}.{prefix}")',  # 还有个 END_DATE , 但是日期没有规律，就不传了
+                "pageNumber": 1,
+                "pageSize": limit,
+                "sortTypes": 1,
+                "sortColumns": "HOLDER_RANK",
+                "source": "HSF10",
+            }
+            data, pid = self._get(url, params, 'EM_GD_TOP10', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{limit}"})
+            res = Attr.get_by_point(data, 'result.data', [])
         ret = [{
             'rank': d['HOLDER_RANK'],  # 排名
             'gd_name': d['HOLDER_NAME'],  # 股东名
