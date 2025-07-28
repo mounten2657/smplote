@@ -183,7 +183,7 @@ class GPLUpdateService:
                     logger.debug(f"更新十大股东结果<{symbol}>{percent} - GD - {ret}", 'UP_SAF_INF')
                 # 东财股东人数合计更新
                 if 0 == is_force or 92 == is_force:
-                    ret = ret | self._up_gdn_em(symbol, gdn_list, sd_list, is_special)
+                    ret = ret | self._up_gdn_em(symbol, gdn_list, sd_list, n, is_special)
                     logger.debug(f"更新股东人数合计结果<{symbol}>{percent} - GN - {ret}", 'UP_SAF_INF')
                 # 东财股东机构合计更新
                 if 0 == is_force or 93 == is_force:
@@ -486,7 +486,7 @@ class GPLUpdateService:
                     ret['igd'] = jdb.add_season(symbol, day, biz_code, biz_data)
         return ret
 
-    def _up_gdn_em(self, symbol, gdn_list, day_list, is_special):
+    def _up_gdn_em(self, symbol, gdn_list, day_list, n, is_special):
         """更新股票股东人数"""
         ret = {}
         jdb = GPLSeasonModel()
@@ -499,7 +499,7 @@ class GPLUpdateService:
             if gdn_info or td < s_m_day:
                 logger.warning(f"跳过股东人数合计数据<{symbol}><{td}>", 'UP_GDN_SKP')
                 continue
-            g_info = self.formatter.em.get_gd_num(symbol, td, is_special)
+            g_info = self.formatter.em.get_gd_num(symbol, td, n, is_special)
             if not g_info:
                 logger.warning(f"暂无股东人数合计数据<{symbol}><{td}>", 'UP_GDN_WAR')
                 continue

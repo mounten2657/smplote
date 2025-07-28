@@ -325,12 +325,13 @@ class EmDataSource:
         } for d in res]
         return self._ret(ret, pid, start_time)
 
-    def get_gd_num(self, stock_code: str, td: str, is_all: int = 0) -> List:
+    def get_gd_num(self, stock_code: str, td: str, limit: int = 1, is_all: int = 0) -> List:
         """
         获取股票股东人数信息
 
         :param str stock_code: 股票代码，如： 002107
         :param str td: 更新日期 - Y-m-d（如： 2025-03-31）
+        :param int limit: 返回条数
         :param int is_all: 是否返回全部
         :return: 股票股东人数信息
         [{"date": "2025-06-30 ", "total_num": 34990, "total_rate": 1.4909, "avg_free": 16279, "avg_free_rate": -1.468991140326, "des": "较分散", "price": 5.72, "avg_money": 93118.2405830237, "t10_gd_rate": 54.84266824, "t10_gd_free_rate": 54.24930627}, {"date": "2025-03-31 ", "total_num": 34476, "total_rate": -1.7246, "avg_free": 16522, "avg_free_rate": 1.754843949414, "des": "较分散", "price": 4.43, "avg_money": 73192.9968528832, "t10_gd_rate": 55.36990497, "t10_gd_free_rate": 54.78357102}]
@@ -343,6 +344,7 @@ class EmDataSource:
             "columns": "ALL",
             "filter": f'(SECUCODE="{stock_code}.{prefix}"){is_all_str}',
             "pageNumber": 1,
+            "pageSize": limit,
             "sortColumns": 'END_DATE',
             "source": 'HSF10',
         }
