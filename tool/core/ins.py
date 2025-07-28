@@ -108,7 +108,7 @@ class Ins:
         return decorator
 
     @staticmethod
-    def multiple_executor(max_workers=5):
+    def multiple_executor(max_workers=5, retries=2):
         """并行执行装饰器"""
         def decorator(func):
             @wraps(func)
@@ -121,13 +121,20 @@ class Ins:
                     future_to_task = {executor.submit(func, task, *args[1:], **kwargs): task for task in task_list}
                     for future in concurrent.futures.as_completed(future_to_task):
                         task = future_to_task[future]
-                        task = task if task else '_N_'
-                        try:
-                            res[task] = future.result()
-                        except Exception as e:
-                            err = Error.handle_exception_info(e)
-                            logger.error(err, 'MULT_EXEC_ERR', 'system')
-                            res[task] = err
+                        for attempt in range(retries):
+                            try:
+                                res[task] = future.result()
+                                break
+                            except Exception as e:
+                                if attempt < retries - 1:
+                                    time.sleep(1)
+                                    future = executor.submit(func, task, *args[1:], **kwargs)
+                                    logger.error(f"任务出错重试中[{attempt}/{retries}] - {args[1:]}", 'MULT_EXEC_ERR', 'system')
+                                else:
+                                    err = Error.handle_exception_info(e)
+                                    err['ext'] = args[1:]
+                                    logger.error(err, 'MULT_EXEC_ERR', 'system')
+                                    res[task] = err
                 return res
             return wrapper
         return decorator
