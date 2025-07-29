@@ -1,5 +1,5 @@
 from tool.db.mysql_base_model import MysqlBaseModel
-from tool.core import Ins, Attr
+from tool.core import Ins, Attr, Time
 from model.gpl.gpl_change_log_model import GPLChangeLogModel
 
 
@@ -13,6 +13,8 @@ class GPLSymbolExtModel(MysqlBaseModel):
         - e_key - varchar(32) - kv键
         - e_des - varchar(128) - kv描述
         - e_val - text - kv值
+        - sid - bigint - 附表主键ID
+        - std - date - 附表日期
         - create_at - datetime - 记录创建时间
         - update_at - datetime - 记录更新时间
     """
@@ -30,6 +32,8 @@ class GPLSymbolExtModel(MysqlBaseModel):
             "e_key": data.get('e_key', ''),
             "e_des": data.get('e_des', ''),
             "e_val": data.get('e_val', ''),
+            "sid": data.get('sid', 0),
+            "std": data.get('std', Time.date('%Y-%m-%d')),
         }
         return self.insert(insert_data)
 

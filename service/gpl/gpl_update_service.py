@@ -446,6 +446,8 @@ class GPLUpdateService:
                     "e_key": g_info.get('e_key', ''),
                     "e_des": g_info.get('e_des', ''),
                     "e_val": g_info.get('e_val', ''),
+                    "sid": g_info.get('id', 0),
+                    "std": g_info.get('season_date', Time.date('%Y-%m-%d')),
                 }
                 ret['ige'] = edb.add_ext(insert)
             else:
