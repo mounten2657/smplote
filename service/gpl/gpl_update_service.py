@@ -23,7 +23,10 @@ class GPLUpdateService:
     _INIT_ET = '2025-07-13'
 
     # 无法正常获取股东信息的股票列表
-    _S_GD_LIST = ["SH688755","SH603382","SZ301590","SH603014","SZ301636","SZ301662","SZ301678","SH688729","SZ301630","SH603262"]
+    _S_GD_LIST = [
+        "SH688755","SH603382","SZ301590","SH603014","SZ301636","SZ301662","SZ301678","SH688729","SZ301630","SH603262",
+        "BJ920027", "BJ920037", "BJ920068", "BJ920108", "SH600930","SZ001400", "SZ301609"
+    ]
 
     def __init__(self):
         self.formatter = GplFormatterService()
@@ -482,8 +485,14 @@ class GPLUpdateService:
                     if not g_info:
                         logger.warning(f"暂无十大股东数据<{symbol}><{day}> - {biz_code} - {des}", 'UP_GD_WAR')
                         continue
-                    biz_data = {'key': key, 'des': des, 'val': g_info}
-                    ret['igd'] = jdb.add_season(symbol, day, biz_code, biz_data)
+                    g_list = Attr.group_item_by_key(g_info, 'date')
+                    for d2, g2 in g_list.items():
+                        gd = Attr.get(d['d_list'], f"{symbol}_{d2}")
+                        if not gd:
+                            g2 = [Attr.remove_keys(g3, ['date']) for g3 in g2]
+                            g2 = [{**g3, "rank": Attr.get(g3, 'rank', i + 1)} for i, g3 in enumerate(g2)]
+                            biz_data = {'key': key, 'des': des, 'val': g2}
+                            ret['igd'] = jdb.add_season(symbol, d2, biz_code, biz_data)
         return ret
 
     def _up_gdn_em(self, symbol, gdn_list, day_list, n, is_special):

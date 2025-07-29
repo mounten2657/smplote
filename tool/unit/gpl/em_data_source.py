@@ -285,6 +285,7 @@ class EmDataSource:
             data, pid = self._get(url, params, 'EM_GD_TOP10', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{limit}"})
             res = Attr.get_by_point(data, 'result.data', [])
         ret = [{
+            'date': d['END_DATE'][:10],
             'rank': d['HOLDER_RANK'],  # 排名
             'gd_name': d['HOLDER_NAME'],  # 股东名
             'gf_type': d['SHARES_TYPE'],  # 股份类型： A股
