@@ -1,4 +1,5 @@
 import time
+import random
 import hashlib
 import threading
 import concurrent.futures
@@ -129,9 +130,9 @@ class Ins:
                                 err = Error.handle_exception_info(e)
                                 err['ext'] = args[1:]
                                 if attempt < retries - 1:
-                                    time.sleep(1)
+                                    time.sleep(random.uniform(1, 5))
                                     future = executor.submit(func, task, *args[1:], **kwargs)
-                                    logger.error(f"任务出错重试中[{attempt + 1}/{retries}] - {err}", 'MULT_EXEC_ERR', 'system')
+                                    # logger.error(f"任务出错重试中[{attempt + 1}/{retries}] - {err}", 'MULT_EXEC_ERR', 'system')
                                 else:
                                     logger.error(err, 'MULT_EXEC_ERR', 'system')
                                     res[task] = err

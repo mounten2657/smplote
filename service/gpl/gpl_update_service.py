@@ -263,7 +263,7 @@ class GPLUpdateService:
         l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
         l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
-        @Ins.multiple_executor(40)
+        @Ins.multiple_executor(20)
         def _up_day_exec(code):
             Time.sleep(Str.randint(1, 10) / 100)
             res = []
