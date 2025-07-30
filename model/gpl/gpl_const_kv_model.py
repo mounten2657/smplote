@@ -10,7 +10,7 @@ class GPLConstKvModel(MysqlBaseModel):
         - biz_code - varchar(16) - 业务代码
         - e_key - varchar(32) - kv键
         - e_des - varchar(128) - kv描述
-        - e_val - text - kv值
+        - e_val - longtext - kv值
         - create_at - datetime - 记录创建时间
         - update_at - datetime - 记录更新时间
     """

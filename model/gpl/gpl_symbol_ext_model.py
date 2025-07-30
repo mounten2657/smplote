@@ -12,7 +12,7 @@ class GPLSymbolExtModel(MysqlBaseModel):
         - biz_code - varchar(16) - 业务代码
         - e_key - varchar(32) - kv键
         - e_des - varchar(128) - kv描述
-        - e_val - text - kv值
+        - e_val - longtext - kv值
         - sid - bigint - 附表主键ID
         - std - date - 附表日期
         - create_at - datetime - 记录创建时间
