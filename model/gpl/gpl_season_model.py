@@ -37,11 +37,13 @@ class GPLSeasonModel(MysqlBaseModel):
         """更新股票季度信息"""
         return self.update({'id': pid}, data)
 
-    def get_season_list(self, symbol_list, season_date_list, biz_code):
+    def get_season_list(self, symbol_list, season_date_list, biz_code, limit = 0):
         """获取股票季度信息列表"""
         db = self.where_in('symbol', symbol_list)
         if season_date_list:
             db = db.where_in('season_date', season_date_list)
+        if limit:
+            db = db.order('id', 'desc').limit(0, limit)
         a_list = db.where({'biz_code': biz_code}).get()
         # return Attr.kv_list_to_dict(a_list)
         if not a_list:

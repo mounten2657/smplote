@@ -111,6 +111,7 @@ class EmDataSource:
         :return: 股票基本信息字典
         {"version":"2ee4572e98feb08dc54574d9f99c9236","result":{"pages":1,"data":[{"SECUCODE":"000584.SZ","SECURITY_CODE":"000584","SECURITY_NAME_ABBR":"工智退","ORG_CODE":"10005525","ORG_NAME":"江苏哈工智能机器人股份有限公司","ORG_NAME_EN":"Jiangsu Hagong Intelligent Robot Co.,Ltd","FORMERNAME":"蜀都A→舒卡股份→G舒卡→舒卡股份→友利控股→哈工智能→ST工智→*ST工智","STR_CODEA":"000584","STR_NAMEA":"工智退","STR_CODEB":null,"STR_NAMEB":null,"STR_CODEH":null,"STR_NAMEH":null,"SECURITY_TYPE":"深交所风险警示板A股","EM2016":"机械设备-机器人-工业机器人","TRADE_MARKET":"深圳证券交易所","INDUSTRYCSRC1":"制造业-通用设备制造业","PRESIDENT":"沈进长","LEGAL_PERSON":"沈进长","SECRETARY":"沈进长(代)","CHAIRMAN":"沈进长","SECPRESENT":"张玮","INDEDIRECTORS":"王亮,杜奕良,杨敏丽","ORG_TEL":"010-60181838","ORG_EMAIL":"000584@hgzn.com","ORG_FAX":"021-51782929","ORG_WEB":"www.hgzn.com","ADDRESS":"北京西城区裕民东路5号瑞得大厦12楼","REG_ADDRESS":"江苏省江阴市临港街道双良路15号","PROVINCE":"江苏","ADDRESS_POSTCODE":"100029","REG_CAPITAL":76093.7577,"REG_NUM":"913202002019651838","EMP_NUM":1018,"TATOLNUMBER":11,"LAW_FIRM":"北京国枫(深圳)律师事务所","ACCOUNTFIRM_NAME":"尤尼泰振青会计师事务所(特殊普通合伙)","ORG_PROFILE":"    江苏哈工智能机器人股份有限公司(简称:哈工智能),是一家聚焦于高端智能装备制造和人工智能机器人的高科技上市公司(股票代码:000584.SZ)。公司业务涵盖高端智能装备制造、机器人本体、工业机器人一站式服务平台等三大板块。未来,哈工智能将从AI工业辅助设计、智能制造、AI智能检验/检测三大领域帮助中国制造业企业实现工业智能化,助推《中国制造2025》战略的实施及工业4.0的实现。","BUSINESS_SCOPE":"机器人系统、智能生产线及人工智能的研发、技术咨询、技术服务;工业机器人、工业自动控制系统装置研发、技术咨询、技术服务、技术转让、制造、销售与维修;信息系统集成服务;软件的开发、技术咨询、技术服务、技术转让、销售及维护;利用自有资金对宾馆、旅游、餐饮、娱乐行业进行投资;自有房屋租赁;国内贸易(不含国家限制及禁止类项目);自营和代理各类商品及技术的进出口业务(国家限定企业经营或禁止进出口的商品除外)。(依法须经批准的项目,经相关部门批准后方可开展经营活动)","TRADE_MARKETT":"深交所风险警示板","TRADE_MARKET_CODE":"069001002005","SECURITY_TYPEE":"A股","SECURITY_TYPE_CODE":"058001001","EXPAND_NAME_ABBRN":null,"EXPAND_NAME_PINYIN":null,"EXPAND_NAME_ABBR":null,"LISTING_DATE":"1995-11-28 00:00:00","FOUND_DATE":"1991-10-10 00:00:00","MAIN_BUSINESS":"智能制造业务","HOST_BROKER":null,"TRANSFER_WAY":null,"ACTUAL_HOLDER":"艾迪,乔徽","MARKETING_START_DATE":null,"MARKET_MAKER":null,"TRADE_MARKET_TYPE":null,"CURRENCY":"人民币"}],"count":1},"success":true,"message":"ok","code":0}
         """
+        start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
         params = {
@@ -118,7 +119,6 @@ class EmDataSource:
             "columns": "ALL",
             "filter": f'(SECUCODE="{stock_code}.{prefix}")',
         }
-        start_time = Time.now(0)
         data, pid = self._get(url, params, 'EM_INF_BASIC', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
         res = Attr.get_by_point(data, 'result.data.0', {})
         return self._ret(res, pid, start_time)
@@ -131,6 +131,7 @@ class EmDataSource:
         :return: 股票发行信息字典
         {"version":"4e6065b3a302cef50799118f556eef46","result":{"pages":1,"data":[{"SECUCODE":"000584.SZ","SECURITY_CODE":"000584","FOUND_DATE":"1991-10-10 00:00:00","LISTING_DATE":"1995-11-28 00:00:00","AFTER_ISSUE_PE":null,"ONLINE_ISSUE_DATE":"1986-07-01 00:00:00","ISSUE_WAY":"其他发行方式","PAR_VALUE":1,"TOTAL_ISSUE_NUM":35000000,"ISSUE_PRICE":3.5,"DEC_SUMISSUEFEE":null,"TOTAL_FUNDS":122500000,"NET_RAISE_FUNDS":null,"OPEN_PRICE":6.8,"CLOSE_PRICE":7.31,"TURNOVERRATE":36.9577,"HIGH_PRICE":7.38,"OFFLINE_VAP_RATIO":null,"ONLINE_ISSUE_LWR":null,"SECURITY_TYPE":"A股","OVERALLOTMENT":null,"TYPE":"2","TRADE_MARKET_CODE":"069001002005","STR_ZHUCHENGXIAO":"成都蜀都大厦股份有限公司(自主发行)","STR_BAOJIAN":"大鹏证券有限责任公司,上海申银证券有限公司,北京标准股份制咨询公司"}],"count":1},"success":true,"message":"ok","code":0}
         """
+        start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
         params = {
@@ -138,7 +139,6 @@ class EmDataSource:
             "columns": "ALL",
             "filter": f'(SECUCODE="{stock_code}.{prefix}")',
         }
-        start_time = Time.now(0)
         data, pid = self._get(url, params, 'EM_INF_ISSUE', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
         res = Attr.get_by_point(data, 'result.data.0', {})
         return self._ret(res, pid, start_time)
@@ -151,6 +151,7 @@ class EmDataSource:
         :return: list
         [{"SECUCODE":"603316.SH","SECURITY_CODE":"603316","SECURITY_NAME_ABBR":"诚邦股份","BOARD_CODE":"425","BOARD_NAME":"工程建设","SELECTED_BOARD_REASON":"None","IS_PRECISE":"0","BOARD_RANK":1,"BOARD_YIELD":"None","NEW_BOARD_CODE":"BK0425","DERIVE_BOARD_CODE":"BI0425","BOARD_TYPE":"行业","BOARD_LEVEL":"None"}]
         """
+        start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/get"
         params = {
@@ -164,7 +165,6 @@ class EmDataSource:
             "p": "1",
             "v": "013032671915799998",
         }
-        start_time = Time.now(0)
         data, pid = self._get(url, params, 'EM_CONCEPT', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
         res = Attr.get_by_point(data, 'result.data', {})
         return self._ret(res, pid, start_time)
@@ -177,6 +177,7 @@ class EmDataSource:
         :return: list
         [{"SECUCODE":"603316.SH","SECURITY_CODE":"603316","SECURITY_NAME_ABBR":"诚邦股份","KEYWORD":"经营范围","MAINPOINT":2,"MAINPOINT_CONTENT":"环境治理工程、土壤修复工程、水污染治理工程、大气污染治理工程、地质灾害治理工程、固体废物治理工程的设计、施工、运营管理,园林绿化工程、市政工程、园林古建筑工程、房屋建筑工程、土石方工程、水利水电工程、公路工程、建筑智能化工程、照明工程的施工、养护及运营管理,城乡规划设计,旅游信息咨询,旅游项目开发,景区管理服务,旅游服务(不含旅行社),文化创意策划,花木种植、销售,园林机械、建筑材料、初级食用农产品的销售;实业投资。(以公司登记机关核定的经营范围为准)","KEY_CLASSIF":"经营范围","KEY_CLASSIF_CODE":"002","IS_POINT":"0","MAINPOINT_NUM":"要点二","MAINPOINT_RANK":2,"IS_HISTORY":"0","SECURITY_CODE4":"603316"}]
         """
+        start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/get"
         params = {
@@ -190,7 +191,6 @@ class EmDataSource:
             "p": "1",
             "v": "013032671915799998",
         }
-        start_time = Time.now(0)
         data, pid = self._get(url, params, 'EM_CONCEPT_TEXT', {'he': f'{prefix}{stock_code}', 'hv': Time.date('%Y-%m-%d')})
         res = Attr.get_by_point(data, 'result.data', {})
         return self._ret(res, pid, start_time)
@@ -207,6 +207,7 @@ class EmDataSource:
         :return: 日线行情数据列表，每个元素为一个交易日数据字典
         [{'date': '2025-06-27', 'open': 7.13, 'close': 7.19, 'high': 7.19, 'low': 7.06, 'volume': 41573, 'amount': 29676241.0, 'amplitude': 1.83, 'pct_change': 1.13, 'price_change': 0.08, 'turnover_rate': 1.97}]
         """
+        start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._PUSH_URL + "/api/qt/stock/kline/get"
         period_dict = {"daily": "101", "weekly": "102", "monthly": "103"}
@@ -223,7 +224,6 @@ class EmDataSource:
             "isSecurity": "0",
             "lmt": "10000",
         }
-        start_time = Time.now(0)
         data, pid = self._get(url, params, f'EM_DAILY_{adjust_dict[adjust]}', {'he': f'{prefix}{stock_code}', 'hv': f'{sd}~{ed}'})
         kline_list = Attr.get_by_point(data, 'data.klines', [])
         if not kline_list:
@@ -337,6 +337,7 @@ class EmDataSource:
         :return: 股票股东人数信息
         [{"date": "2025-06-30 ", "total_num": 34990, "total_rate": 1.4909, "avg_free": 16279, "avg_free_rate": -1.468991140326, "des": "较分散", "price": 5.72, "avg_money": 93118.2405830237, "t10_gd_rate": 54.84266824, "t10_gd_free_rate": 54.24930627}, {"date": "2025-03-31 ", "total_num": 34476, "total_rate": -1.7246, "avg_free": 16522, "avg_free_rate": 1.754843949414, "des": "较分散", "price": 4.43, "avg_money": 73192.9968528832, "t10_gd_rate": 55.36990497, "t10_gd_free_rate": 54.78357102}]
         """
+        start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
         is_all_str = '' if is_all else f"(END_DATE='{td}')"
@@ -349,7 +350,6 @@ class EmDataSource:
             "sortColumns": 'END_DATE',
             "source": 'HSF10',
         }
-        start_time = Time.now(0)
         data, pid = self._get(url, params, 'EM_GD_NUM', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
@@ -375,6 +375,7 @@ class EmDataSource:
         :param int is_all: 是否返回全部
         :return: 股票股东机构持仓总计
         """
+        start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
         is_all_str = '' if is_all else f"(REPORT_DATE='{td}')"
@@ -386,7 +387,6 @@ class EmDataSource:
             "sortColumns": 'REPORT_DATE',
             "source": 'HSF10',
         }
-        start_time = Time.now(0)
         data, pid = self._get(url, params, 'EM_GD_ORG_T', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
@@ -411,6 +411,7 @@ class EmDataSource:
         :param int is_all: 是否返回全部
         :return: 股票股东机构持仓详细
         """
+        start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
         is_all_str = '' if is_all else f"(REPORT_DATE='{sd}')"
@@ -422,7 +423,6 @@ class EmDataSource:
             "sortColumns": 'ORG_TYPE',
             "source": 'HSF10',
         }
-        start_time = Time.now(0)
         data, pid = self._get(url, params, 'EM_GD_ORG_D', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
@@ -450,6 +450,7 @@ class EmDataSource:
         :param int is_all: 是否返回全部
         :return: 股票股东机构持仓列表
         """
+        start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
         # 附加条件，网页展示的数据 -  '(ORG_TYPE="01")'
@@ -464,7 +465,6 @@ class EmDataSource:
             "sortColumns": 'TOTAL_SHARES',
             "source": 'HSF10',
         }
-        start_time = Time.now(0)
         data, pid = self._get(url, params, 'EM_GD_ORG_L', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
         ret = [{
@@ -484,3 +484,60 @@ class EmDataSource:
         } for d in res]
         ret = Attr.group_item_by_key(reversed(ret), 'date')
         return self._ret(ret, pid, start_time)
+
+    def get_dv_ov(self, stock_code: str, sd: str) -> List:
+        """
+        获取股票分红概览
+
+        :param str stock_code: 股票代码，如： 002107
+        :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :return: 股票分红概览
+        {"dv_num": 13, "dv_money": 145240366.64, "raise_num": 1, "raise_money": 715700000, "dv_fn_rate": 20.293470258499998, "dv_pay_rate": 0, "dv_rate": 0}
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._DATA_URL + "/securities/api/data/v1/get"
+        params = {
+            "reportName": "RPT_F10_DIVIDENDNEW_PROFILE",
+            "columns": "ALL",
+            "filter": f'(SECUCODE="{stock_code}.{prefix}")',
+        }
+        data, pid = self._get(url, params, 'EM_DV_OV', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}"})
+        res = Attr.get_by_point(data, 'result.data', {})
+        ret = [{
+            'dv_num': Attr.get(d, 'DIVIDEND_NUM', 0),  # 分红次数
+            'dv_money': Attr.get(d, 'TOTAL_DIVIDEND', 0.0),  # 分红金额
+            'raise_num': Attr.get(d, 'TOTAL_NUM', 0),  # 融资次数
+            'raise_money': Attr.get(d, 'TOTAL_RAISE_FUND', 0.0),  # 融资金额
+            'dv_fn_rate': Attr.get(d, 'DIVIDEND_FINANCE_RATIO', 0.0) * 100,  # 派现融资比
+            'dv_pay_rate': Attr.get(d, 'DIVIDEND_PAY_RATIO', 0.0) * 100,  # 股利支付率
+            'dv_rate': Attr.get(d, 'DIVIDEND_RATIO', 0.0) * 100,  # 股息率
+        } for d in res]
+        return self._ret(ret[0], pid, start_time)
+
+    def get_dv_ov_text(self, stock_code: str, sd: str) -> List:
+        """
+        获取股票分红概览描述
+
+        :param str stock_code: 股票代码，如： 002107
+        :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :return: 股票分红概览描述
+        {"dv_lv": "中", "dv_text": "1、2025一季报基本每股收益0元\n2、2025一季报每股未分配利润0.8358元\n3、2024年报每股股利无\n4、2024中报未分红\n5、近5年派现4次", "per_netcash_operate": -0.084702756733, "per_unassign_profit": 0.835833448547}
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._DATA_URL + "/securities/api/data/v1/get"
+        params = {
+            "reportName": "RPT_F10_DIVIDENDNEW_LITY",
+            "columns": "ALL",
+            "filter": f'(SECUCODE="{stock_code}.{prefix}")',
+        }
+        data, pid = self._get(url, params, 'EM_DV_OV_TEXT', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}"})
+        res = Attr.get_by_point(data, 'result.data', {})
+        ret = [{
+            'dv_lv': Attr.get(d, 'DIVIDEND_LEVEL', ''),  # 潜在派现概率: 小 | 中 | 大
+            'dv_text': Attr.get(d, 'PUBLISH_INFO', ''),  # 派现原因描述
+            'per_netcash_operate': Attr.get(d, 'PER_NETCASH_OPERATE', 0.0),  # 每笔净利润
+            'per_unassign_profit': Attr.get(d, 'PER_UNASSIGN_PROFIT', 0.0),  # 未分配利润
+        } for d in res]
+        return self._ret(ret[0], pid, start_time)
