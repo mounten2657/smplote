@@ -542,3 +542,41 @@ class EmDataSource:
             'per_unassign_profit': Attr.get(d, 'PER_UNASSIGN_PROFIT', 0.0),  # 未分配利润
         } for d in res]
         return self._ret(ret[0] if ret else {}, pid, start_time)
+
+    def get_dv_hist(self, stock_code: str, sd: str, limit: int = 3) -> List:
+        """
+        获取股票分红历史列表
+
+        :param str stock_code: 股票代码，如： 002107
+        :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :param int limit: 返回条数
+        :return: 股票分红历史列表
+        [{"date": "2025-04-18", "dv_rpn": "2024年报", "dv_obj": "", "dv_prg": "股东大会预案", "dv_plan": "不分配不转增", "record_date": "", "ex_date": "", "pay_date": "", "dv_money": 0}, {"date": "2024-08-24", "dv_rpn": "2024半年报", "dv_obj": "", "dv_prg": "董事会预案", "dv_plan": "不分配不转增", "record_date": "", "ex_date": "", "pay_date": "", "dv_money": 0}, {"date": "2024-07-03", "dv_rpn": "2023年报", "dv_obj": "全体股东", "dv_prg": "实施方案", "dv_plan": "10派0.1元", "record_date": "2024-07-10", "ex_date": "2024-07-11", "pay_date": "2024-07-11", "dv_money": 2989576}]
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._DATA_URL + "/securities/api/data/v1/get"
+        params = {
+            "reportName": "RPT_F10_DIVIDEND_MAIN",
+            "columns": "ALL",
+            "filter": f'(SECUCODE="{stock_code}.{prefix}")',
+            "pageNumber": 1,
+            "pageSize": limit,
+            "sortColumns": "NOTICE_DATE",
+        }
+        data, pid = self._get(url, params, 'EM_DV_HIST', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{limit}"})
+        res = Attr.get_by_point(data, 'result.data', {})
+        ret = [{
+            'date': d['NOTICE_DATE'][:10],  # 公告日期
+            'dv_rpn': Attr.get(d, 'REPORT_DATE', ''),  # 报告期
+            'dv_obj': Attr.get(d, 'ASSIGN_OBJECT', ''),  # 分配对象： 全体股东 | ''
+            'dv_prg': Attr.get(d, 'ASSIGN_PROGRESS', ''),  # 方案进度:： 实施方案 | 董事会预案 | 股东大会预案
+            'dv_plan': Attr.get(d, 'IMPL_PLAN_PROFILE', ''),  # 分红方案
+            'record_date': d['EQUITY_RECORD_DATE'][:10] if d['EQUITY_RECORD_DATE'] else '',  # 股权登记日
+            'ex_date': d['EX_DIVIDEND_DATE'][:10] if d['EX_DIVIDEND_DATE'] else '',  # 除权除息日
+            'pay_date': d['PAY_CASH_DATE'][:10] if d['PAY_CASH_DATE'] else '',  # 派息日
+            'dv_money': Attr.get(d, 'TOTAL_DIVIDEND', 0.0),  # 分红金额
+        } for d in res]
+        return self._ret(ret if ret else {}, pid, start_time)
+
+

@@ -153,6 +153,8 @@ class GPLUpdateService:
             td = self._INIT_ET
         if day in check_day:
             tdl = [] if is_all else day_list
+            cdl = [Time.date('%Y-%m') + f"-{chd:02d}" for chd in check_day]
+            md = Time.dft(Time.tfd(td, '%Y-%m-%d') - 30 * 86400, '%Y-%m-%d')
             if 0 == is_force or 91 == is_force:
                 gd_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_TOP10')
                 gd_list_free = jdb.get_season_list(symbol_list, tdl, 'EM_GD_TOP10_FREE')
@@ -165,8 +167,10 @@ class GPLUpdateService:
             if 0 == is_force or 95 == is_force:
                 gdl_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_ORG_L')
             if 0 == is_force or 96 == is_force:
-                dvo_list = jdb.get_season_list(symbol_list, [], 'EM_DV_OV', 150)
-                dvt_list = jdb.get_season_list(symbol_list, [], 'EM_DV_OV_TEXT', 150)
+                dvo_list = jdb.get_season_list(symbol_list, cdl, 'EM_DV_OV')
+                dvt_list = jdb.get_season_list(symbol_list, cdl, 'EM_DV_OV_TEXT')
+            if 0 == is_force or 97 == is_force:
+                dvh_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST', md)
 
         @Ins.multiple_executor(10)
         def _up_saf_exec(code):
@@ -209,6 +213,10 @@ class GPLUpdateService:
                 if 0 == is_force or 96 == is_force:
                     ret = ret | self._up_dvo_em(symbol, dvo_list, dvt_list, td)
                     logger.debug(f"更新分红概览结果<{symbol}>{percent} - DO - {ret}", 'UP_SAF_INF')
+                # 东财分红历史更新
+                if 0 == is_force or 97 == is_force:
+                    ret = ret | self._up_dvh_em(symbol, dvh_list, td, n)
+                    logger.debug(f"更新分红历史结果<{symbol}>{percent} - DH - {ret}", 'UP_SAF_INF')
             # 雪球概念更新
             if Time.date('%Y-%m-%d') <= self._INIT_ET:
                 cl_xq = Attr.get(c_list_xq, symbol, [])
@@ -620,4 +628,20 @@ class GPLUpdateService:
                 if d_info:
                     biz_data = {'key': d['key'], 'des': d['des'], 'val': d_info}
                     ret['ido'] = jdb.add_season(symbol, td, biz_code, biz_data)
+        return ret
+
+    def _up_dvh_em(self, symbol, dvh_list, td, n):
+        """更新股票分红历史"""
+        ret = {}
+        jdb = GPLSeasonModel()
+        Time.sleep(Str.randint(1, 3) / 10)
+        biz_code = 'EM_DV_HIST'
+        d_info = self.formatter.em.get_dv_hist(symbol, td, n)
+        if d_info:
+            for d in d_info:
+                day = d['date']
+                dv_info = Attr.get(dvh_list, f"{symbol}_{day}")
+                if not dv_info:
+                    biz_data = {'key': biz_code.lower(), 'des': '分红历史', 'val': d_info}
+                    ret['idh'] = jdb.add_season(symbol, td, biz_code, biz_data)
         return ret
