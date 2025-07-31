@@ -642,7 +642,7 @@ class GPLUpdateService:
             return ret
         for day, d in d_info.items():
             dv_info = Attr.get(dvh_list, f"{symbol}_{day}")
-            if dv_info:
+            if dv_info or day < self._INIT_ST:
                 logger.warning(f"跳过分红历史数据<{symbol}><{day}>", 'UP_DVH_WAR')
                 continue
             biz_data = {'key': biz_code.lower(), 'des': '分红历史', 'val': d}
