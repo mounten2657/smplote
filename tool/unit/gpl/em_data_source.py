@@ -577,6 +577,7 @@ class EmDataSource:
             'pay_date': d['PAY_CASH_DATE'][:10] if d['PAY_CASH_DATE'] else '',  # 派息日
             'dv_money': Attr.get(d, 'TOTAL_DIVIDEND', 0.0),  # 分红金额
         } for d in res]
+        ret = Attr.group_item_by_key(reversed(ret), 'date')
         return self._ret(ret if ret else {}, pid, start_time)
 
 

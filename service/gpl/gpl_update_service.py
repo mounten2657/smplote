@@ -172,7 +172,7 @@ class GPLUpdateService:
             if 0 == is_force or 97 == is_force:
                 dvh_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST', md)
 
-        @Ins.multiple_executor(10)
+        @Ins.multiple_executor(5)
         def _up_saf_exec(code):
             Time.sleep(Str.randint(1, 10) / 100)
             ret = {}
@@ -640,8 +640,7 @@ class GPLUpdateService:
         if not d_info:
             logger.warning(f"暂无分红历史数据<{symbol}><{td}> - {n}", 'UP_DVH_WAR')
             return ret
-        for d in d_info:
-            day = d['date']
+        for day, d in d_info.items():
             dv_info = Attr.get(dvh_list, f"{symbol}_{day}")
             if dv_info:
                 logger.warning(f"跳过分红历史数据<{symbol}><{day}>", 'UP_DVH_WAR')
