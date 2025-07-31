@@ -165,8 +165,8 @@ class GPLUpdateService:
             if 0 == is_force or 95 == is_force:
                 gdl_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_ORG_L')
             if 0 == is_force or 96 == is_force:
-                dvo_list = jdb.get_season_list(symbol_list, [], 'EM_DV_OV', 3)
-                dvt_list = jdb.get_season_list(symbol_list, [], 'EM_DV_OV_TEXT', 3)
+                dvo_list = jdb.get_season_list(symbol_list, [], 'EM_DV_OV', 150)
+                dvt_list = jdb.get_season_list(symbol_list, [], 'EM_DV_OV_TEXT', 150)
 
         @Ins.multiple_executor(10)
         def _up_saf_exec(code):

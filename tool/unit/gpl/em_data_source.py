@@ -514,7 +514,7 @@ class EmDataSource:
             'dv_pay_rate': Attr.get(d, 'DIVIDEND_PAY_RATIO', 0.0) * 100,  # 股利支付率
             'dv_rate': Attr.get(d, 'DIVIDEND_RATIO', 0.0) * 100,  # 股息率
         } for d in res]
-        return self._ret(ret[0], pid, start_time)
+        return self._ret(ret[0] if ret else {}, pid, start_time)
 
     def get_dv_ov_text(self, stock_code: str, sd: str) -> List:
         """
@@ -541,4 +541,4 @@ class EmDataSource:
             'per_netcash_operate': Attr.get(d, 'PER_NETCASH_OPERATE', 0.0),  # 每笔净利润
             'per_unassign_profit': Attr.get(d, 'PER_UNASSIGN_PROFIT', 0.0),  # 未分配利润
         } for d in res]
-        return self._ret(ret[0], pid, start_time)
+        return self._ret(ret[0] if ret else {}, pid, start_time)
