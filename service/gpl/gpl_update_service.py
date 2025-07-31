@@ -172,7 +172,7 @@ class GPLUpdateService:
             if 0 == is_force or 97 == is_force:
                 dvh_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST', md)
 
-        @Ins.multiple_executor(5)
+        @Ins.multiple_executor(10)
         def _up_saf_exec(code):
             Time.sleep(Str.randint(1, 10) / 100)
             ret = {}
