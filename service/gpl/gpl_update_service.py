@@ -154,7 +154,7 @@ class GPLUpdateService:
         if day in check_day:
             tdl = [] if is_all else day_list
             cdl = [Time.date('%Y-%m') + f"-{chd:02d}" for chd in check_day]
-            md = Time.dft(Time.tfd(td, '%Y-%m-%d') - 30 * 86400, '%Y-%m-%d')
+            md = Time.dft(Time.tfd(self._INIT_ST if is_all else td, '%Y-%m-%d') - 30 * 86400, '%Y-%m-%d')
             if 0 == is_force or 91 == is_force:
                 gd_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_TOP10')
                 gd_list_free = jdb.get_season_list(symbol_list, tdl, 'EM_GD_TOP10_FREE')
@@ -637,11 +637,15 @@ class GPLUpdateService:
         Time.sleep(Str.randint(1, 3) / 10)
         biz_code = 'EM_DV_HIST'
         d_info = self.formatter.em.get_dv_hist(symbol, td, n)
-        if d_info:
-            for d in d_info:
-                day = d['date']
-                dv_info = Attr.get(dvh_list, f"{symbol}_{day}")
-                if not dv_info:
-                    biz_data = {'key': biz_code.lower(), 'des': '分红历史', 'val': d_info}
-                    ret['idh'] = jdb.add_season(symbol, td, biz_code, biz_data)
+        if not d_info:
+            logger.warning(f"暂无分红历史数据<{symbol}><{td}> - {n}", 'UP_DVH_WAR')
+            return ret
+        for d in d_info:
+            day = d['date']
+            dv_info = Attr.get(dvh_list, f"{symbol}_{day}")
+            if dv_info:
+                logger.warning(f"跳过分红历史数据<{symbol}><{day}>", 'UP_DVH_WAR')
+                continue
+            biz_data = {'key': biz_code.lower(), 'des': '分红历史', 'val': d}
+            ret['idh'] = jdb.add_season(symbol, day, biz_code, biz_data)
         return ret
