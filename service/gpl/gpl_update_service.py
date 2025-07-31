@@ -149,7 +149,7 @@ class GPLUpdateService:
         td = Time.date('%Y-%m-%d')
         check_day = [1, 10, 20]
         if is_force > 90:  # 初始化
-            check_day = [1, 10, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+            check_day = range(1, 32)
             td = self._INIT_ET
         if day in check_day:
             tdl = [] if is_all else day_list
