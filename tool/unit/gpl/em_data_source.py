@@ -538,8 +538,8 @@ class EmDataSource:
         ret = [{
             'dv_lv': Attr.get(d, 'DIVIDEND_LEVEL', ''),  # 潜在派现概率: 小 | 中 | 大
             'dv_text': Attr.get(d, 'PUBLISH_INFO', ''),  # 派现原因描述
-            'per_netcash_operate': Attr.get(d, 'PER_NETCASH_OPERATE', 0.0),  # 每笔净利润
-            'per_unassign_profit': Attr.get(d, 'PER_UNASSIGN_PROFIT', 0.0),  # 未分配利润
+            'per_netcash_operate': Attr.get(d, 'PER_NETCASH_OPERATE', 0.0),  # 每笔归母净利润
+            'per_unassign_profit': Attr.get(d, 'PER_UNASSIGN_PROFIT', 0.0),  # 每笔未分配利润
         } for d in res]
         return self._ret(ret[0] if ret else {}, pid, start_time)
 
@@ -578,6 +578,71 @@ class EmDataSource:
             'dv_money': Attr.get(d, 'TOTAL_DIVIDEND', 0.0),  # 分红金额
         } for d in res]
         ret = Attr.group_item_by_key(reversed(ret), 'date')
+        return self._ret(ret if ret else {}, pid, start_time)
+
+    def get_dv_hist_rate(self, stock_code: str, sd: str, ed: str) -> List:
+        """
+        获取股票分红历史股息率列表
+
+        :param str stock_code: 股票代码，如： 002107
+        :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2021-03-31）
+        :param str ed: 结束日期 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :return: 股票分红历史股息率列表
+        {"2015-07-31": {"date": "2015-07-31", "dv_rate": 0.1224289912, "dv_7d_hyy": -0.94192173093, "dv_7d_ttb": 2.108, "is_ex_date": 0}}
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._DATA_URL + "/securities/api/data/v1/get"
+        params = {
+            "reportName": "RPT_F10_DIVIDEND_CURVE",
+            "columns": "ALL",
+            "filter": f'(SECUCODE="{stock_code}.{prefix}")(TRADE_DATE>=\'{sd}\')',
+            "pageNumber": 1,
+            "sortColumns": "TRADE_DATE",
+        }
+        data, pid = self._get(url, params, 'EM_DV_HIST_R', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{ed}"})
+        res = Attr.get_by_point(data, 'result.data', {})
+        ret = [{
+            'date': d['TRADE_DATE'][:10],  # 日期
+            'dv_rate': Attr.get(d, 'DIVIDEND_RATIO_HYY', 0.0),  # 股息率
+            'dv_7d_hyy': Attr.get(d, 'DIVIDEND_7DAYS', 0.0),  # 七日年化收益率 - HYY
+            'dv_7d_ttb': Attr.get(d, 'YIELD_7DAYS', 0.0),  # 七日年化收益率 - 天天宝
+            'is_ex_date': int(Attr.get(d, 'IS_EX_DIVIDEND_DATE', '0')),  # 是否除权日
+        } for d in res]
+        ret = Attr.group_item_by_key(ret, 'date')
+        ret = {k: ret[k][0] for k in sorted(ret.keys())}
+        return self._ret(ret if ret else {}, pid, start_time)
+
+    def get_dv_hist_pay_rate(self, stock_code: str, sd: str, ed: str) -> List:
+        """
+        获取股票分红历史股利支付率列表
+
+        :param str stock_code: 股票代码，如： 002107
+        :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2021-03-31）
+        :param str ed: 结束日期 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :return: 股票分红历史股利支付率列表
+        {"2007-12-31": {"date": "2007-12-31", "dv_imp": 0.0, "dv_pft": 19951320.29, "dv_pay_rate": 0}}
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._DATA_URL + "/securities/api/data/v1/get"
+        params = {
+            "reportName": "RPT_F10_DIVIDEND_HISTOGRAM",
+            "columns": "ALL",
+            "filter": f'(SECUCODE="{stock_code}.{prefix}")(REPORT_DATE>=\'{sd}\')',
+            "pageNumber": 1,
+            "sortColumns": "REPORT_DATE",
+        }
+        data, pid = self._get(url, params, 'EM_DV_HIST_P', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{ed}"})
+        res = Attr.get_by_point(data, 'result.data', {})
+        ret = [{
+            'date': d['REPORT_DATE'][:10],  # 日期
+            'dv_imp': Attr.get(d, 'DIVIDEND_IMPLE', 0.0),  # 归母净利润
+            'dv_pft': Attr.get(d, 'PARENTNETPROFIT', 0.0),  # 派现总额
+            'dv_pay_rate': Attr.get(d, 'DIVIDEND_PAY_IMPLE', 0.0),  # 股利支付率
+        } for d in res]
+        ret = Attr.group_item_by_key(ret, 'date')
+        ret = {k: ret[k][0] for k in sorted(ret.keys())}
         return self._ret(ret if ret else {}, pid, start_time)
 
 

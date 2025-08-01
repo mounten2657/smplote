@@ -9,12 +9,12 @@ class SkyDataService:
     _ZXZ_API = 'https://api.zxz.ee'
     _OVO_API = 'https://ovoav.com'
     _OVO_API_FILE_LIST = {
-        "rw": "/api/sky/rwtp/rwt",
+        "rw": "/api/sky/rwby/rw",  # "/api/sky/rwtp/rwt",
         "hs": "/api/sky/hstp/hs",
         "rl": "/api/sky/rltp/rl",
         "mf": "/api/sky/mftp/mf",
-        "jl": "/api/sky/jlwz/jl",
-        "dl": "/api/sky/dlzwz/dl",
+        "jl": "/api/sky/rwby/jl",     # "/api/sky/jlwz/jl",
+        "dl": "/api/sky/rwby/dl",  # "/api/sky/dlzwz/dl",
         "xz": "/api/skygm/gfxz",
         "db": "/api/sky/hbtp/hb",
         "bz": "/api/dmtp/dm/dm",

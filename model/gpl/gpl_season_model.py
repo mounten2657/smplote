@@ -24,14 +24,37 @@ class GPLSeasonModel(MysqlBaseModel):
         if not biz_data or not isinstance(biz_data, dict):
             return 0
         insert_data = {
+            "symbol": symbol,
+            "season_date": date,
+            "biz_code": biz_code,
+            "e_key": Attr.get(biz_data, 'key', ''),
+            "e_des": Attr.get(biz_data, 'des', ''),
+            "e_val": Attr.get(biz_data, 'val', ''),
+        }
+        return self.insert(insert_data)
+
+    def add_season_list(self, symbol, biz_code, des, data_list):
+        """股票季度信息批量入库"""
+        if not biz_code or not isinstance(data_list, dict):
+            return 0
+        res = 0
+        insert_list = []
+        for date, d in data_list.items():
+            insert_data = {
                 "symbol": symbol,
                 "season_date": date,
                 "biz_code": biz_code,
-                "e_key": Attr.get(biz_data, 'key', ''),
-                "e_des": Attr.get(biz_data, 'des', ''),
-                "e_val": Attr.get(biz_data, 'val', ''),
+                "e_key": biz_code.lower(),
+                "e_des": des,
+                "e_val": d,
             }
-        return self.insert(insert_data)
+            insert_list.append(insert_data)
+            if len(insert_list) >= 50:
+                res = self.insert(insert_list)
+                insert_list = []
+        if insert_list:
+            res = self.insert(insert_list)
+        return res
 
     def update_season(self, pid, data):
         """更新股票季度信息"""

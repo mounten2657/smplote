@@ -419,6 +419,7 @@ class MysqlBaseModel:
                 if not insert_data:
                     return 0
 
+                insert_data = [Attr.convert_to_json_string(d) for d in insert_data]
                 # 所有字典的键必须相同
                 first_keys = set(insert_data[0].keys())
                 if not all(set(item.keys()) == first_keys for item in insert_data):

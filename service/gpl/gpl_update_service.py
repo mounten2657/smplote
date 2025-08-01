@@ -20,7 +20,7 @@ class GPLUpdateService:
 
     # 初始化的开始结束日期
     _INIT_ST = '2000-01-01'
-    _INIT_ET = '2025-07-13'
+    _INIT_ET = '2025-07-31'
 
     # 无法正常获取股东信息的股票列表
     _S_GD_LIST = [
@@ -171,6 +171,10 @@ class GPLUpdateService:
                 dvt_list = jdb.get_season_list(symbol_list, cdl, 'EM_DV_OV_TEXT')
             if 0 == is_force or 97 == is_force:
                 dvh_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST', md)
+            if 0 == is_force or 98 == is_force:
+                dvr_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST_R', md)
+            if 0 == is_force or 99 == is_force:
+                dvp_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST_P', md)
 
         @Ins.multiple_executor(10)
         def _up_saf_exec(code):
@@ -217,6 +221,14 @@ class GPLUpdateService:
                 if 0 == is_force or 97 == is_force:
                     ret = ret | self._up_dvh_em(symbol, dvh_list, td, n)
                     logger.debug(f"更新分红历史结果<{symbol}>{percent} - DH - {ret}", 'UP_SAF_INF')
+                # 东财分红股息率更新
+                if 0 == is_force or 98 == is_force:
+                    ret = ret | self._up_dvr_em(symbol, dvr_list, self._INIT_ST, self._INIT_ET)
+                    logger.debug(f"更新分红股息率结果<{symbol}>{percent} - DH - {ret}", 'UP_SAF_INF')
+                # 东财分红股利支付率更新
+                if 0 == is_force or 99 == is_force:
+                    ret = ret | self._up_dvp_em(symbol, dvp_list, self._INIT_ST, self._INIT_ET)
+                    logger.debug(f"更新分红股利支付率结果<{symbol}>{percent} - DH - {ret}", 'UP_SAF_INF')
             # 雪球概念更新
             if Time.date('%Y-%m-%d') <= self._INIT_ET:
                 cl_xq = Attr.get(c_list_xq, symbol, [])
@@ -635,6 +647,7 @@ class GPLUpdateService:
         ret = {}
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
+        des = '分红历史'
         biz_code = 'EM_DV_HIST'
         d_info = self.formatter.em.get_dv_hist(symbol, td, n)
         if not d_info:
@@ -644,7 +657,51 @@ class GPLUpdateService:
             dv_info = Attr.get(dvh_list, f"{symbol}_{day}")
             if dv_info or day < self._INIT_ST:
                 logger.warning(f"跳过分红历史数据<{symbol}><{day}>", 'UP_DVH_WAR')
+                del d_info[day]
                 continue
-            biz_data = {'key': biz_code.lower(), 'des': '分红历史', 'val': d}
-            ret['idh'] = jdb.add_season(symbol, day, biz_code, biz_data)
+        logger.warning(f"批量插入分红历史数据<{symbol}><{td}> - {len(d_info)}", 'UP_DVH_WAR')
+        ret['idh'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
+
+    def _up_dvr_em(self, symbol, dvr_list, td, ed):
+        """更新股票分红股息率"""
+        ret = {}
+        jdb = GPLSeasonModel()
+        Time.sleep(Str.randint(1, 3) / 10)
+        des = '分红股息率'
+        biz_code = 'EM_DV_HIST_R'
+        d_info = self.formatter.em.get_dv_hist_rate(symbol, td, ed)
+        if not d_info:
+            logger.warning(f"暂无分红股息率数据<{symbol}><{td}> - {ed}", 'UP_DVR_WAR')
+            return ret
+        for day, d in d_info.items():
+            dv_info = Attr.get(dvr_list, f"{symbol}_{day}")
+            if dv_info or day < self._INIT_ST:
+                logger.warning(f"跳过分红股息率数据<{symbol}><{day}>", 'UP_DVR_WAR')
+                del d_info[day]
+                continue
+        logger.warning(f"批量插入分红股息率数据<{symbol}><{td}> - {len(d_info)}", 'UP_DVP_WAR')
+        ret['idr'] = jdb.add_season_list(symbol, biz_code, des, d_info)
+        return ret
+
+    def _up_dvp_em(self, symbol, dvp_list, td, ed):
+        """更新股票分红股利支付率"""
+        ret = {}
+        jdb = GPLSeasonModel()
+        Time.sleep(Str.randint(1, 3) / 10)
+        des = '分红股利支付率'
+        biz_code = 'EM_DV_HIST_P'
+        d_info = self.formatter.em.get_dv_hist_rate(symbol, td, ed)
+        if not d_info:
+            logger.warning(f"暂无分红股利支付率数据<{symbol}><{td}> - {ed}", 'UP_DVP_WAR')
+            return ret
+        for day, d in d_info.items():
+            dv_info = Attr.get(dvp_list, f"{symbol}_{day}")
+            if dv_info or day < self._INIT_ST:
+                logger.warning(f"跳过分红股利支付率数据<{symbol}><{day}>", 'UP_DVP_WAR')
+                del d_info[day]
+                continue
+        logger.warning(f"批量插入分红股利支付率数据<{symbol}><{td}> - {len(d_info)}", 'UP_DVP_WAR')
+        ret['idp'] = jdb.add_season_list(symbol, biz_code, des, d_info)
+        return ret
+

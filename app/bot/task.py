@@ -15,15 +15,17 @@ class Task(BaseAppVp):
 
     def sky_rw(self):
         """sky任务 - 每天上午的06点36分"""
+        res = {}
         app_key = self.app_key
-        g_wxid = self.g_wxid
         s_wxid = self.wxid
-        client = VpCommandService(app_key, g_wxid, s_wxid)
-        tasks = {
-            "vp_sky_rw": lambda: client.vp_sky_rw(),
-            "vp_sky_hs": lambda: client.vp_sky_hs(),
-        }
-        res = {name: Sys.delayed_task(1, task) for name, task in tasks.items()}
+        g_list = self.g_wxid_list.split(',')
+        for g_wxid in g_list:
+            client = VpCommandService(app_key, g_wxid, s_wxid)
+            tasks = {
+                "vp_sky_rw": lambda: client.vp_sky_rw(),
+                "vp_sky_hs": lambda: client.vp_sky_hs(),
+            }
+            res[g_wxid] = {name: Sys.delayed_task(1, task) for name, task in tasks.items()}
         return self.success(res)
 
     def vp_msg(self):
