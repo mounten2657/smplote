@@ -691,7 +691,7 @@ class GPLUpdateService:
         Time.sleep(Str.randint(1, 3) / 10)
         des = '分红股利支付率'
         biz_code = 'EM_DV_HIST_P'
-        d_info = self.formatter.em.get_dv_hist_rate(symbol, td, ed)
+        d_info = self.formatter.em.get_dv_hist_pay_rate(symbol, td, ed)
         if not d_info:
             logger.warning(f"暂无分红股利支付率数据<{symbol}><{td}> - {ed}", 'UP_DVP_WAR')
             return ret
