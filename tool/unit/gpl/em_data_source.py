@@ -56,7 +56,7 @@ class EmDataSource:
                 rand = Str.randint(1, 10000) % 2
                 params['nat_int'] = rand
                 # 如果已经有了日志数据就不用请求接口了
-                if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_FN', 'EM_DV']):
+                if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_FN', 'EM_DV', 'EM_ZY']):
                     pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
                     if isinstance(pid, dict):
                         if pid['response_result']:
@@ -645,4 +645,70 @@ class EmDataSource:
         ret = {k: ret[k][0] for k in sorted(ret.keys())}
         return self._ret(ret if ret else {}, pid, start_time)
 
+    def get_zy_ba_text(self, stock_code: str) -> List:
+        """
+        获取股票经营评述长文本
+
+        :param str stock_code: 股票代码，如： 002107
+        :return: 股票经营评述长文本
+        {"date": "2007-12-31", "ba_text": "xxx"}
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._DATA_URL + "/securities/api/data/v1/get"
+        params = {
+            "reportName": "RPT_F10_OP_BUSINESSANALYSIS",
+            "columns": "ALL",
+            "filter": f'(SECUCODE="{stock_code}.{prefix}")',
+            "pageNumber": 1,
+            "pageSize": 1,
+        }
+        data, pid = self._get(url, params, 'EM_TB', {'he': f'{prefix}{stock_code}', 'hv': f"{Time.date('%Y-%m-%d')}"})
+        res = Attr.get_by_point(data, 'result.data', {})
+        ret = [{
+            'date': d['REPORT_DATE'][:10],  # 日期
+            'ba_text': Attr.get(d, 'BUSINESS_REVIEW', ''),  # 长文本
+        } for d in res]
+        return self._ret(ret[0] if ret else {}, pid, start_time)
+
+    def get_zy_item(self, stock_code: str, sd: str, ed: str) -> List:
+        """
+        获取股票主营构成列表
+
+        :param str stock_code: 股票代码，如： 002107
+        :param str sd: 开始日期 - Y-m-d（如： 2025-03-31）
+        :param str ed: 结束日期 - Y-m-d（如： 2025-03-31）
+        :return: 股票主营构成列表
+        {"2024-12-31": [{"date": "2024-12-31", "zy_name": "电动工具行业", "zy_type": "1", "zy_income": 432748326.37, "zy_i_rate": 98.9861, "zy_cost": 377624303.29, "zy_c_rate": 99.995, "zy_profit": 55124023.08, "zy_p_rate": 92.5867, "zy_m_rate": 12.7381}]}
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._DATA_URL + "/securities/api/data/v1/get"
+        is_all_str = f"(REPORT_DATE>='{sd}')(REPORT_DATE<='{ed}')"
+        params = {
+            "reportName": "RPT_F10_FN_MAINOP",
+            "columns": "ALL",
+            "filter": f'(SECUCODE="{stock_code}.{prefix}"){is_all_str}',
+            "pageNumber": 1,
+            "pageSize": 100,
+            "sortTypes": '1,1',
+            "sortColumns": 'MAINOP_TYPE,RANK',
+        }
+        data, pid = self._get(url, params, 'EM_ZY_IT', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{ed}"})
+        res = Attr.get_by_point(data, 'result.data', {})
+        ret = [{
+            'date': d['REPORT_DATE'][:10],
+            'zy_name': Attr.get(d, 'ITEM_NAME', ''),  # 主营业务名称名称
+            'zy_type': Attr.get(d, 'MAINOP_TYPE', ''),  # 主营业务分类： 1:按行业分类 | 2:按产品分类 | 3:按地区分类
+            'zy_income': Attr.get(d, 'MAIN_BUSINESS_INCOME', 0),  # 主营收入
+            'zy_i_rate': Attr.get(d, 'MBI_RATIO', 0.0) * 100,  # 主营收入占比
+            'zy_cost': Attr.get(d, 'MAIN_BUSINESS_COST', 0.0),  # 主营成本
+            'zy_c_rate': Attr.get(d, 'MBC_RATIO', 0.0) * 100,  # 主营成本占比
+            'zy_profit': Attr.get(d, 'MAIN_BUSINESS_RPOFIT', 0.0),  # 主营利润
+            'zy_p_rate': Attr.get(d, 'MBR_RATIO', 0.0) * 100,  # 主营利润占比
+            'zy_m_rate': Attr.get(d, 'GROSS_RPOFIT_RATIO', 0.0) * 100,  # 毛利率
+        } for d in res]
+        ret = Attr.group_item_by_key(ret, 'date')
+        ret = {k: ret[k] for k in sorted(ret.keys())}
+        return self._ret(ret, pid, start_time)
 

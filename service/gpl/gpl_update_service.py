@@ -131,13 +131,14 @@ class GPLUpdateService:
         code_list = [Str.remove_stock_prefix(c) for c in code_list]
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
         s_list = sdb.get_symbol_list(symbol_list)
-        k_list_em = kdb.get_const_list('EM_CONCEPT')
-        c_list_em = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'EM'), 'symbol')
-        t_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_TC'), 'symbol')
         s_list = {f"{d['symbol']}": d for d in s_list}
-        if Time.date('%Y-%m-%d') <= self._INIT_ET:
-            k_list_xq = kdb.get_const_list('XQ_CONCEPT')
-            c_list_xq = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'XQ'), 'symbol')
+        if not is_force:
+            k_list_em = kdb.get_const_list('EM_CONCEPT')
+            c_list_em = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'EM'), 'symbol')
+            t_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_TC'), 'symbol')
+            if Time.date('%Y-%m-%d') <= self._INIT_ET:
+                k_list_xq = kdb.get_const_list('XQ_CONCEPT')
+                c_list_xq = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'XQ'), 'symbol')
 
         day_list = []
         n = 102 if is_force > 90 else 3
@@ -175,6 +176,10 @@ class GPLUpdateService:
                 dvr_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST_R', md)
             if 0 == is_force or 99 == is_force:
                 dvp_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST_P', md)
+            if 100 == is_force:
+                b_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_TB'), 'symbol')
+            if 0 == is_force or 101 == is_force:
+                zyi_list = jdb.get_season_list(symbol_list, [], 'EM_ZY_IT', md)
 
         @Ins.multiple_executor(10)
         def _up_saf_exec(code):
@@ -186,8 +191,6 @@ class GPLUpdateService:
             if not info:
                 logger.warning(f"未查询到股票数据<{symbol}>{percent}", 'UP_SAF_WAR')
                 return False
-            cl_em = Attr.get(c_list_em, symbol, [])
-            t_em = Attr.get(t_list_em, symbol, [])
             logger.debug(f"更新股票额外数据<{symbol}>{percent} - STA", 'UP_SAF_INF')
             # 季度相关数据
             if day in check_day:
@@ -229,16 +232,35 @@ class GPLUpdateService:
                 if 0 == is_force or 99 == is_force:
                     ret = ret | self._up_dvp_em(symbol, dvp_list, self._INIT_ST, self._INIT_ET)
                     logger.debug(f"更新分红股利支付率结果<{symbol}>{percent} - DH - {ret}", 'UP_SAF_INF')
-            # 雪球概念更新
-            if Time.date('%Y-%m-%d') <= self._INIT_ET:
-                cl_xq = Attr.get(c_list_xq, symbol, [])
-                ret = ret | self._update_by_xq(symbol, info, k_list_xq, cl_xq)
-                logger.debug(f"更新股票雪概结果<{symbol}>{percent} - XQ - {ret}", 'UP_SAF_INF')
-            # 东财概念更新
-            ret = ret | self._update_by_em(symbol, info, k_list_em, cl_em, t_em)
-            logger.debug(f"更新股票东概结果<{symbol}>{percent} - EM - {ret}", 'UP_SAF_INF')
-            # 变更日志更新
+                # 东财经营评述长文本更新
+                if 100 == is_force:
+                    b_em = Attr.get(b_list_em, symbol, [])
+                    ret = ret | self._up_tb_em(symbol, b_em)
+                    logger.debug(f"更新经营评述长文本结果<{symbol}>{percent} - ETB - {ret}", 'UP_SAF_INF')
+                # 东财主营构成列表更新
+                if 0 == is_force or 101 == is_force:
+                    year = int(Time.date('%Y'))
+                    td_list = [[f'{year - 1}-01-01', f'{year}-12-31']]
+                    if is_all:
+                        td_list = [
+                            ['2000-01-01', '2010-01-01'],
+                            ['2010-01-01', '2020-01-01'],
+                            ['2020-01-01', '2030-01-01'],
+                        ]
+                    ret = ret | self._up_zyi_em(symbol, zyi_list, td_list)
+                    logger.debug(f"更新主营构成列表结果<{symbol}>{percent} - ZYI - {ret}", 'UP_SAF_INF')
             if not is_force:
+                cl_em = Attr.get(c_list_em, symbol, [])
+                t_em = Attr.get(t_list_em, symbol, [])
+                # 雪球概念更新
+                if Time.date('%Y-%m-%d') <= self._INIT_ET:
+                    cl_xq = Attr.get(c_list_xq, symbol, [])
+                    ret = ret | self._update_by_xq(symbol, info, k_list_xq, cl_xq)
+                    logger.debug(f"更新股票雪概结果<{symbol}>{percent} - XQ - {ret}", 'UP_SAF_INF')
+                # 东财概念更新
+                ret = ret | self._update_by_em(symbol, info, k_list_em, cl_em, t_em)
+                logger.debug(f"更新股票东概结果<{symbol}>{percent} - EM - {ret}", 'UP_SAF_INF')
+                # 变更日志更新
                 ret = ret | self._update_change_log(symbol, info)
                 logger.debug(f"更新股票变更结果<{symbol}>{percent} - CL - {ret}", 'UP_SAF_INF')
             return ret
@@ -705,3 +727,45 @@ class GPLUpdateService:
         ret['idp'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 
+    def _up_tb_em(self, symbol, b_em):
+        """更新经营评述长文本"""
+        ret = {}
+        tdb = GPLSymbolTextModel()
+        if b_em:
+            logger.warning(f"跳过经营评述长文本数据<{symbol}>", 'UP_ETB_WAR')
+            return ret
+        b_info = self.formatter.em.get_zy_ba_text(symbol)
+        if not b_info:
+            logger.warning(f"暂无经营评述长文本数据<{symbol}>", 'UP_ETB_WAR')
+            return ret
+        ret['itb'] = tdb.add_text({
+            "symbol": symbol,
+            "biz_code": 'EM_TB',
+            "e_key": 'jyps',
+            "e_des": '经营评述',
+            "e_val": b_info['ba_text'],
+        })
+        return ret
+
+    def _up_zyi_em(self, symbol, zyi_list, td_list):
+        """更新股票主营构成列表"""
+        ret = {}
+        jdb = GPLSeasonModel()
+        Time.sleep(Str.randint(1, 3) / 10)
+        des = '主营构成列表'
+        biz_code = 'EM_ZY_IT'
+        for t_list in td_list:
+            sd, ed = t_list
+            d_info = self.formatter.em.get_zy_item(symbol, sd, ed)
+            if not d_info:
+                logger.warning(f"暂无主营构成列表数据<{symbol}><{sd}{ed}>", 'UP_ZYI_WAR')
+                return ret
+            for day in list(d_info.keys()):
+                zy_info = Attr.get(zyi_list, f"{symbol}_{day}")
+                if zy_info or day < self._INIT_ST:
+                    logger.warning(f"跳过主营构成列表数据<{symbol}><{day}>", 'UP_ZYI_WAR')
+                    del d_info[day]
+                    continue
+            logger.warning(f"批量插入主营构成列表数据<{symbol}><{sd}/{ed}> - {len(d_info)}", 'UP_ZYI_WAR')
+            ret['izy'] = jdb.add_season_list(symbol, biz_code, des, d_info)
+        return ret
