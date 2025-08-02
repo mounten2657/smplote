@@ -674,7 +674,7 @@ class GPLUpdateService:
         if not d_info:
             logger.warning(f"暂无分红股息率数据<{symbol}><{td}> - {ed}", 'UP_DVR_WAR')
             return ret
-        for day, d in d_info.items():
+        for day in list(d_info.keys()):
             dv_info = Attr.get(dvr_list, f"{symbol}_{day}")
             if dv_info or day < self._INIT_ST:
                 logger.warning(f"跳过分红股息率数据<{symbol}><{day}>", 'UP_DVR_WAR')
@@ -695,7 +695,7 @@ class GPLUpdateService:
         if not d_info:
             logger.warning(f"暂无分红股利支付率数据<{symbol}><{td}> - {ed}", 'UP_DVP_WAR')
             return ret
-        for day, d in d_info.items():
+        for day in list(d_info.keys()):
             dv_info = Attr.get(dvp_list, f"{symbol}_{day}")
             if dv_info or day < self._INIT_ST:
                 logger.warning(f"跳过分红股利支付率数据<{symbol}><{day}>", 'UP_DVP_WAR')
