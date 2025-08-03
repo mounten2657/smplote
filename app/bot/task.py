@@ -21,11 +21,10 @@ class Task(BaseAppVp):
         g_list = self.g_wxid_list.split(',')
         for g_wxid in g_list:
             client = VpCommandService(app_key, g_wxid, s_wxid)
-            tasks = {
-                "vp_sky_rw": lambda: client.vp_sky_rw(),
-                "vp_sky_hs": lambda: client.vp_sky_hs(),
+            res[g_wxid] = {
+                "vp_sky_rw": client.vp_sky_rw(),
+                "vp_sky_hs": client.vp_sky_hs(),
             }
-            res[g_wxid] = {name: Sys.delayed_task(1, task) for name, task in tasks.items()}
         return self.success(res)
 
     def vp_msg(self):
