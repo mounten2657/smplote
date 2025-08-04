@@ -2,7 +2,9 @@ import random
 from service.wechat.callback.vp_command_service import VpCommandService
 from tool.db.mysql_base_model import MysqlBaseModel
 from tool.db.cache.redis_client import RedisClient
-from tool.core import Ins, Attr, Time, Config
+from tool.core import Ins, Attr, Time, Config, Logger
+
+logger = Logger()
 
 
 @Ins.singleton
@@ -111,7 +113,8 @@ class WechatRoomModel(MysqlBaseModel):
                 title = f"【欢迎新成员】"
                 des = f"微信昵称：{d['display_name']}\r\n"
                 des += f"入群日期：{Time.date()}"
-                commander.vp_card_msg(title, des)
+                # commander.vp_card_msg(title, des)
+                logger.error(f"{title} - {des}", 'ROOM_NEW_MEM')
             self._del_room_cache(g_wxid)
         if changes.get('update'):  # 修改昵称提醒
             update_list = changes.get('update')
