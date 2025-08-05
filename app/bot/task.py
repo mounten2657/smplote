@@ -21,9 +21,11 @@ class Task(BaseAppVp):
         g_list = self.g_wxid_list.split(',')
         for g_wxid in g_list:
             client = VpCommandService(app_key, g_wxid, s_wxid)
+            vp_sky_rw = client.vp_sky_rw()
+            vp_sky_hs = client.vp_sky_hs()
             res[g_wxid] = {
-                "vp_sky_rw": client.vp_sky_rw(),
-                "vp_sky_hs": client.vp_sky_hs(),
+                "vp_sky_rw": vp_sky_rw,
+                "vp_sky_hs": vp_sky_hs,
             }
         return self.success(res)
 
