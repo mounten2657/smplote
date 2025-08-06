@@ -2,7 +2,7 @@ from service.wechat.callback.vp_command_service import VpCommandService
 from service.wechat.callback.vp_callback_service import VpCallbackService
 from service.gpl.gpl_update_service import GPLUpdateService
 from tool.router.base_app_vp import BaseAppVp
-from tool.core import Sys, Time
+from tool.core import Time
 
 
 class Task(BaseAppVp):
@@ -20,12 +20,11 @@ class Task(BaseAppVp):
         s_wxid = self.wxid
         g_list = self.g_wxid_list.split(',')
         for g_wxid in g_list:
+            Time.sleep(3)
             client = VpCommandService(app_key, g_wxid, s_wxid)
-            vp_sky_rw = client.vp_sky_rw()
-            vp_sky_hs = client.vp_sky_hs()
             res[g_wxid] = {
-                "vp_sky_rw": vp_sky_rw,
-                "vp_sky_hs": vp_sky_hs,
+                "vp_sky_rw": client.vp_sky_rw(),
+                "vp_sky_hs": client.vp_sky_hs(),
             }
         return self.success(res)
 
