@@ -1,6 +1,5 @@
-import random
 import time
-
+import random
 from service.ai.command.ai_command_service import AiCommandService
 from service.sky.sky_data_service import SkyDataService
 from service.ai.report.ai_report_gen_service import AIReportGenService
@@ -164,7 +163,7 @@ class VpCommandService:
         fp = file.get('save_path')
         if not fp:
             # 重试一次
-            time.sleep(2)
+            time.sleep(5)
             file = self.service.get_sky_file('hs')
             fp = file.get('save_path')
         if fp:
