@@ -74,6 +74,10 @@ class WechatRoomModel(MysqlBaseModel):
             change_log.append(change)
             if len(change_log) > 60:
                 change_log.pop(0)
+            m_len = len(Attr.get(update_data, 'member_list', []))
+            if not m_len:
+                logger.error(f"获取群成员失败 - {pid} - {update_data}", 'ROOM_EMP_MEM')
+                return 0
             update_data['change_log'] = change_log
             self.update({"id": pid}, update_data)
             self.check_member_change(change, g_wxid, app_key)

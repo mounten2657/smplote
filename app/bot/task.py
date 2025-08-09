@@ -25,7 +25,6 @@ class Task(BaseAppVp):
                 "vp_sky_rw": client.vp_sky_rw(),
                 "vp_sky_hs": client.vp_sky_hs(),
             }
-            Time.sleep(180)
         return self.success(res)
 
     def vp_msg(self):
