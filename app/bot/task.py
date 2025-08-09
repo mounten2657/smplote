@@ -19,12 +19,12 @@ class Task(BaseAppVp):
         app_key = self.app_key
         s_wxid = self.wxid
         g_list = self.g_wxid_list.split(',')
-        for g_wxid in g_list:
-            client = VpCommandService(app_key, g_wxid, s_wxid)
-            res[g_wxid] = {
-                "vp_sky_rw": client.vp_sky_rw(),
-                "vp_sky_hs": client.vp_sky_hs(),
-            }
+        g_wxid = g_list[0]
+        client = VpCommandService(app_key, g_wxid, s_wxid)
+        res[g_wxid] = {
+            "vp_sky_rw": client.vp_sky_rw(),
+            "vp_sky_hs": client.vp_sky_hs(),
+        }
         return self.success(res)
 
     def vp_msg(self):
