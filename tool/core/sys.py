@@ -136,7 +136,7 @@ class Sys:
             source_line = inspect.getsource(func).strip()
             func_name = f"{source_line}|{bytecode_str}"
             func_name = func_name.replace('\r', '').replace('\n', '').strip()
-        return func_name
+        return func_name + f'|{str(func)}'
 
     @staticmethod
     def delayed_task(delay_seconds: float, func: Callable, *args, **kwargs) -> str:
