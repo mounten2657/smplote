@@ -85,7 +85,8 @@ class EmDataSource:
             except Exception as e:
                 err = Error.handle_exception_info(e)
                 logger.warning(f"请求失败 ({i + 1}/{self.retry_times}): {url} - {params} - 错误 - {err}", 'EM_API_ERR')
-                self.ldb.update_gpl_api_log(pid, {'response_result': err if err else {}, 'request_params': params})
+                err = Attr.parse_json_ignore(err if err else {})
+                self.ldb.update_gpl_api_log(pid, {'response_result': err, 'request_params': params})
                 if i == self.retry_times - 1:
                     return None, 0
 
