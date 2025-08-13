@@ -25,6 +25,18 @@ class Time:
         return datetime.now().strftime(date_format)
 
     @staticmethod
+    def week(tp=None):
+        """
+        获取给定时间的星期几
+        :param tp:  10位数字的时间戳
+        :return: 1~7
+        """
+        if tp and isinstance(tp, int):
+            tp = datetime.fromtimestamp(tp)
+        tp = tp if tp else datetime.now()
+        return tp.isoweekday()
+
+    @staticmethod
     def sleep(f):
         """
         休眠一定时间

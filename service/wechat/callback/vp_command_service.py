@@ -7,7 +7,7 @@ from tool.unit.song.music_search_client import MusicSearchClient
 from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
-from tool.core import Config, Attr, Sys, Dir, Transfer
+from tool.core import Config, Attr, Sys, Dir, Transfer, Time
 
 
 class VpCommandService:
@@ -156,9 +156,11 @@ class VpCommandService:
         response = '获取sky任务失败'
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
-    def vp_sky_hs(self, content=''):
+    def vp_sky_hs(self, content='', is_week=0):
         """sky红石"""
         content = '#红石' if '202' == content else content
+        if is_week and Time.week() < 5:
+            return False
         file = self.service.get_sky_file('hs')
         fp = file.get('save_path')
         if not fp:
