@@ -50,9 +50,9 @@ class EmDataSource:
         :return: 解析后的JSON数据，失败返回None
         """
         for i in range(self.retry_times):
+            info = {}
+            pid = 0
             try:
-                info = {}
-                pid = 0
                 rand = Str.randint(1, 10000) % 2
                 params['nat_int'] = rand
                 # 如果已经有了日志数据就不用请求接口了
@@ -82,14 +82,12 @@ class EmDataSource:
                     self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})
 
                 return data, pid
-            except requests.RequestException as e:
+            except Exception as e:
                 err = Error.handle_exception_info(e)
-                logger.warning(f"请求失败 ({i + 1}/{self.retry_times}): {url}, 错误 - {err}", 'EM_API_ERR')
+                logger.warning(f"请求失败 ({i + 1}/{self.retry_times}): {url} - {params} - 错误 - {err}", 'EM_API_ERR')
+                self.ldb.update_gpl_api_log(pid, {'response_result': err if err else {}, 'request_params': params})
                 if i == self.retry_times - 1:
                     return None, 0
-            except json.JSONDecodeError:
-                logger.warning(f"JSON解析失败 - {url} - {params}", 'EM_API_ERR')
-                return None, 0
 
     def _ret(self, res, pid, start_time):
         """格式化返回"""
