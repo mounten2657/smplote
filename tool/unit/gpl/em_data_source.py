@@ -66,7 +66,7 @@ class EmDataSource:
                             pid = pid['id']
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
                 rand = (pid % 2) if pid else rand
-                # rand = 0  # 机器坏了，先用本地的
+                rand = 0  # 机器坏了，先用本地的
                 params['nat_int'] = rand
                 if 1 == rand:
                     # 使用 nat 请求
