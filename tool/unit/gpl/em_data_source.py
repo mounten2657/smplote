@@ -1,7 +1,6 @@
-import json
 import requests
 from typing import Dict, List
-from tool.core import Logger, Attr, Str, Error, Time
+from tool.core import Logger, Attr, Str, Error, Time, Http
 from model.gpl.gpl_api_log_model import GplApiLogModel
 from service.vps.open_nat_service import OpenNatService
 
@@ -68,17 +67,19 @@ class EmDataSource:
                 rand = (pid % 2) if pid else rand
                 # rand = 0  # 机器坏了，先用本地的
                 params['nat_int'] = rand
+                self.headers['Referer'] = Http.get_request_base_url(url)
                 if 1 == rand:
                     # 使用 nat 请求
                     data = OpenNatService.send_http_request('GET', url, params, self.headers, self.timeout)
                 else:
                     # 使用本地请求
-                    response = self.session.get(url, params=params, timeout=self.timeout)
-                    # 检查请求是否成功
-                    response.raise_for_status()
-                    # 解析JSON数据
-                    data = response.json()
-                if not info:
+                    # response = self.session.get(url, params=params, timeout=self.timeout)
+                    # # 检查请求是否成功
+                    # response.raise_for_status()
+                    # # 解析JSON数据
+                    # data = response.json()
+                    data = Http.send_request('GET', url, params, self.headers)
+                if pid and not info.get('response_result'):
                     self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})
 
                 return data, pid

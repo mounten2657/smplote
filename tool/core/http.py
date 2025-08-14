@@ -2,7 +2,7 @@ import re
 import json
 import requests
 from flask import request
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from typing import Union, Dict, Optional
 from tool.core.attr import Attr
 
@@ -113,8 +113,14 @@ class Http:
             return 'COMMAND'
 
     @staticmethod
+    def get_request_base_url(url):
+        """获取请求的域名地址 - 含 http"""
+        parsed = urlparse(url)
+        return f"{parsed.scheme}://{parsed.netloc}"
+
+    @staticmethod
     def get_request_route(strip=False):
-        """获取所有请求头 - 字典形式"""
+        """获取除去域名和参数部分的请求路由地址"""
         if strip:
             return request.path.lstrip('/')
         return request.path

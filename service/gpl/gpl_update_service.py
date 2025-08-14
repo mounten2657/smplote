@@ -317,29 +317,22 @@ class GPLUpdateService:
                 # 先判断是否已入库
                 log_info = Attr.get(l_list[f'f{v}'], f"{symbol}_{tds}")
                 if is_force == 99 and log_info:
-                    logger.debug(f"日线数据已入库<{symbol}><{tds}>{percent}", 'UP_DAY_SKP')
+                    logger.debug(f"日线数据已入库[{v}]<{symbol}><{tds}>{percent}", 'UP_DAY_SKP')
                     continue
                 day_list = log_info['process_params'] if (log_info and is_force != 99) else \
                     self.formatter.em.get_daily_quote(code, st, et, k)
                 res.append(len(day_list))
-                logger.debug(f"接口请求日线数据<{symbol}><{tds}>{percent} - {k}"
+                logger.debug(f"接口请求日线数据[{v}]<{symbol}><{tds}>{percent} - {k}"
                              f" - [{len(day_list)}]", 'UP_DAY_SKP')
                 if not day_list:
-                    logger.warning(f"暂无日线数据<{symbol}><{tds}>{percent}", 'UP_DAY_WAR')
+                    logger.warning(f"暂无日线数据[{v}]<{symbol}><{tds}>{percent}", 'UP_DAY_WAR')
                     continue
                 if 99 == is_force:
                     continue
                 for i, day in enumerate(day_list):
                     td = day['date']
                     info = Attr.get(d_list, f"{symbol}_{td}")
-                    if info:
-                        if not i % 25 or is_force < 90:
-                            logger.debug(f"已存在日线数据<{symbol}><{td}>{percent}", 'UP_DAY_SKP')
-                        continue
-                    insert_list[td] = insert_list[td] if Attr.has_keys(insert_list, td) else {}
-                    insert_list[td].update({
-                        "symbol": symbol,
-                        "trade_date": td,
+                    day_data = {
                         f"f{v}_open": day['open'],
                         f"f{v}_close": day['close'],
                         f"f{v}_high": day['high'],
@@ -350,7 +343,22 @@ class GPLUpdateService:
                         f"f{v}_pct_change": day['pct_change'],
                         f"f{v}_price_change": day['price_change'],
                         f"f{v}_turnover_rate": day['turnover_rate'],
-                    })
+                    }
+                    if info:
+                        if float(info[f"f{v}_open"]) <= 0:
+                            if float(day['open']) <= 0:
+                                logger.debug(f"接口日线数据为空[{v}]<{symbol}><{td}>{percent} - {day_data}", 'UP_DAY_SKP')
+                            # 更新接口日线数据 - 之前的请求中可能没有正确得到数据
+                            ddb.update(info['id'], day_data)
+                        else:
+                            if not i % 25 or is_force < 90:
+                                logger.debug(f"已存在日线数据[{v}]<{symbol}><{td}>{percent}", 'UP_DAY_SKP')
+                        continue
+                    insert_list[td] = insert_list[td] if Attr.has_keys(insert_list, td) else {}
+                    insert_list[td].update({
+                        "symbol": symbol,
+                        "trade_date": td,
+                    } | day_data)
             if insert_list:
                 ik = insert_list.keys()
                 insert_list = insert_list.values()
