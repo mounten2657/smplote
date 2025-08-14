@@ -63,7 +63,7 @@ class EmDataSource:
                             pid = pid['id']
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
                 rand = (pid % 2) if pid else rand
-                rand = 1  # 机器坏了，先指定固定的
+                # rand = 1  # 机器坏了，先指定固定的
                 params['nat_int'] = rand
                 self.headers['Referer'] = Http.get_request_base_url(url)
                 if 1 == rand:
