@@ -27,15 +27,13 @@ class EmDataSource:
         """
         self.timeout = timeout
         self.retry_times = retry_times
-        # self.session = requests.Session()
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.35 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.35',
             'Accept': 'application/json, text/plain, */*',
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-            # 'Referer': 'https://www.eastmoney.com/',
+            'Referer': 'https://www.eastmoney.com/',
             'X-Requested-With': 'XMLHttpRequest'
         }
-        # self.session.headers.update(self.headers)
         self.ldb = GplApiLogModel()
 
     def _get(self, url: str, params: Dict = None, biz_code='', ext=None):
@@ -65,19 +63,14 @@ class EmDataSource:
                             pid = pid['id']
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
                 rand = (pid % 2) if pid else rand
-                # rand = 0  # 机器坏了，先用本地的
+                rand = 1  # 机器坏了，先指定固定的
                 params['nat_int'] = rand
-                # self.headers['Referer'] = Http.get_request_base_url(url)
+                self.headers['Referer'] = Http.get_request_base_url(url)
                 if 1 == rand:
                     # 使用 nat 请求
                     data = OpenNatService.send_http_request('GET', url, params, self.headers, self.timeout)
                 else:
                     # 使用本地请求
-                    # response = self.session.get(url, params=params, timeout=self.timeout)
-                    # # 检查请求是否成功
-                    # response.raise_for_status()
-                    # # 解析JSON数据
-                    # data = response.json()
                     data = Http.send_request('GET', url, params, self.headers)
                 if pid and not info.get('response_result'):
                     self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})
