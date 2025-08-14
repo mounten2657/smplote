@@ -59,7 +59,7 @@ class EmDataSource:
                 if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_FN', 'EM_DV', 'EM_ZY']):
                     pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
                     if isinstance(pid, dict):
-                        if pid['response_result']:
+                        if pid['response_result'] and isinstance(pid['response_result'], dict):
                             return pid['response_result'], 0
                         else:
                             info = pid
@@ -85,7 +85,6 @@ class EmDataSource:
             except Exception as e:
                 err = Error.handle_exception_info(e)
                 logger.warning(f"请求失败 ({i + 1}/{self.retry_times}): {url} - {params} - 错误 - {err}", 'EM_API_ERR')
-                # self.ldb.update_gpl_api_log(pid, {'response_result': str(err), 'request_params': params})
                 if i == self.retry_times - 1:
                     return None, 0
 
