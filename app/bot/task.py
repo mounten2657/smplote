@@ -35,7 +35,7 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def vp_room(self):
-        """刷新群聊的信息 - 十五分钟一次"""
+        """刷新群聊的信息 - 125分钟一次"""
         if Time.is_night():
             return self.success(True)
         g_wxid_str = self.params.get('g_wxid_str', '')
