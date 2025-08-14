@@ -350,7 +350,7 @@ class GPLUpdateService:
                             if float(day['open']) <= 0:
                                 logger.debug(f"接口日线数据为空[{v}]<{symbol}><{td}>{percent} - {day_data}", 'UP_DAY_SKP')
                             # 更新接口日线数据 - 之前的请求中可能没有正确得到数据
-                            ddb.update(info['id'], day_data)
+                            ddb.update_daily(info['id'], day_data)
                         else:
                             if not i % 25 or is_force < 90:
                                 logger.debug(f"已存在日线数据[{v}]<{symbol}><{td}>{percent}", 'UP_DAY_SKP')
