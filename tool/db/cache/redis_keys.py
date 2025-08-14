@@ -25,7 +25,7 @@ class RedisKeys:
         "VP_ROOM_GRP_INF": {"key": "wechatpad:room:grp_info:%s", "ttl": 86400},
         "VP_ROOM_GRP_USL": {"key": "wechatpad:room:grp_users:%s", "ttl": 86400},
         "VP_ROOM_GRP_NTC": {"key": "wechatpad:room:grp_notice:%s", "ttl": 86400},
-        "VP_ROOM_USR_LOCK": {"key": "wechatpad:room:usr_lock:%s", "ttl": 7200},
+        "VP_ROOM_USR_LOCK": {"key": "wechatpad:room:usr_lock:%s", "ttl": 86400},
         # sky 接口相关
         "SKY_OVO_RW": {"key": "sky:ovo:rw", "ttl": 'today'},
         "SKY_OVO_DJS": {"key": "sky:ovo:djs", "ttl": 'today'},
