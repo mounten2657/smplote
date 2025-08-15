@@ -703,3 +703,82 @@ class EmDataSource:
         ret = {k: ret[k] for k in sorted(ret.keys())}
         return self._ret(ret, pid, start_time)
 
+    def get_fn_item(self, stock_code: str, sd: str, is_all=0) -> List:
+        """
+        获取股票财务主要指标
+
+        :param str stock_code: 股票代码，如： 002107
+        :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :param int is_all: 是否返回全部
+        :return: 股票财务主要指标
+        {"2024-12-31": [{"date": "2024-12-31", "notice_date": "2025-04-18", "p_eps_jb": -0.06, "p_eps_jb_tz": -700, "p_eps_kc_jb": -0.14, "p_eps_xs": -0.06, "p_eps": 0.0, "p_gjj": 1.557273888003, "p_wfp": 0.834053867151, "p_xjl": -0.11674343869, "g_ys": 437180991.31, "g_ys_tz": -12.7698634397, "g_ys_hz": 4.199284146864, "g_mlr": 59537731.35, "g_gs_jlr": -19264406.98, "g_gs_jlr_tz": -575.1947648102, "g_gs_jlr_hz": -9.202684435737, "g_kf_jlr": -40881517.23, "g_kf_jlr_tz": -846.5214359214, "g_kf_jlr_hz": -18.248316865292, "m_jzc_syl": -1.8, "m_jzc_syl_kf": -3.82, "m_zzc_syl": -1.4686473548, "m_zzc_syl_tz": -584.1361558687, "m_mll": 13.618554450777, "m_jll": -4.4066134445, "q_ys_ys": 0.0, "q_xs_ys": 0.151679403629, "q_jy_ys": -0.081167882743, "q_tax": 0.0, "r_ld": 3.8722411308, "r_sd": 3.202276652421, "r_xj_ll": -0.16759009139, "r_zc_fz": 17.1472528868, "r_qy": 1.206960583496, "r_cq": 0.206960583496, "y_zz_ts": 1080.16457109263, "y_ch_ts": 144.719955940419, "y_ys_ts": 64.367103163103, "y_zz_bl": 0.333282547525, "y_ch_bl": 2.487562946386, "y_ys_bl": 5.59291908924}]}
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._DATA_URL + "/securities/api/data/get"
+        limit = 200 if is_all else 2
+        params = {
+            "type": "RPT_F10_FINANCE_MAINFINADATA",
+            "sty": "APP_F10_MAINFINADATA",
+            "filter": f'(SECUCODE="{stock_code}.{prefix}")',
+            "p": 1,
+            "ps": limit,
+            "sr": '-1',
+            "st": 'REPORT_DATE',
+        }
+        data, pid = self._get(url, params, 'EM_FN_IT', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{is_all}"})
+        res = Attr.get_by_point(data, 'result.data', {})
+        ret = [{
+            'date': d['REPORT_DATE'][:10],
+            'notice_date': d['NOTICE_DATE'][:10],  # 公示日期
+            # 每股指标
+            'p_eps_jb': Attr.get(d, 'EPSJB', 0.0),  # 基本每股收益(元)
+            'p_eps_jb_tz': Attr.get(d, 'EPSJBTZ', 0.0),  # 每股收益同比增长(%)
+            'p_eps_kc_jb': Attr.get(d, 'EPSKCJB', 0.0),  # 扣非每股收益(元)
+            'p_eps_xs': Attr.get(d, 'EPSXS', 0.0),  # 稀释每股收益(元)
+            'p_eps': Attr.get(d, 'EPS', 0.0),  # 每股净资产(元)
+            'p_gjj': Attr.get(d, 'MGZBGJ', 0.0),  # 每股公积金(元)
+            'p_wfp': Attr.get(d, 'MGWFPLR', 0.0),  # 每股未分配利润(元)
+            'p_xjl': Attr.get(d, 'MGJYXJJE', 0.0),  # 每股经营现金流(元)
+            # 成长指标
+            'g_ys': Attr.get(d, 'TOTALOPERATEREVE', 0.0),  # 营业总收入(元)
+            'g_ys_tz': Attr.get(d, 'TOTALOPERATEREVETZ', 0.0),  # 营业总收入同比增长(%)
+            'g_ys_hz': Attr.get(d, 'YYZSRGDHBZC', 0.0),  # 营业总收入滚动环比增长(%)
+            'g_mlr': Attr.get(d, 'MLR', 0.0),  # 毛利润(元)
+            'g_gs_jlr': Attr.get(d, 'PARENTNETPROFIT', 0.0),  # 归属净利润(元)
+            'g_gs_jlr_tz': Attr.get(d, 'PARENTNETPROFITTZ', 0.0),  # 归属净利润同比增长(%)
+            'g_gs_jlr_hz': Attr.get(d, 'NETPROFITRPHBZC', 0.0),  # 归属净利润滚动环比增长(%)
+            'g_kf_jlr': Attr.get(d, 'KCFJCXSYJLR', 0.0),  # 扣非净利润(元)
+            'g_kf_jlr_tz': Attr.get(d, 'KCFJCXSYJLRTZ', 0.0),  # 扣非净利润同比增长(%)
+            'g_kf_jlr_hz': Attr.get(d, 'KFJLRGDHBZC', 0.0),  # 扣非净利润滚动环比增长(%)
+            # 盈利指标
+            'm_jzc_syl': Attr.get(d, 'ROEJQ', 0.0),  # 净资产收益率(加权)(%)
+            'm_jzc_syl_kf': Attr.get(d, 'ROEKCJQ', 0.0),  # 净资产收益率(扣非/加权)(%)
+            'm_zzc_syl': Attr.get(d, 'ZZCJLL', 0.0),  # 总资产收益率(加权)(%)
+            'm_zzc_syl_tz': Attr.get(d, 'ZZCJLLTZ', 0.0),  # 总资产收益率(加权)同比增长(%)
+            'm_mll': Attr.get(d, 'XSMLL', 0.0),  # 毛利率(%)
+            'm_jll': Attr.get(d, 'XSJLL', 0.0),  # 净利率(%)
+            # 收益质量指标
+            'q_ys_ys': Attr.get(d, 'YSZKYYSR', 0.0),  # 预收账款/营业收入
+            'q_xs_ys': Attr.get(d, 'XSJXLYYSR', 0.0),  # 销售净现金流/营业收入
+            'q_jy_ys': Attr.get(d, 'JYXJLYYSR', 0.0),  # 经营净现金流/营业收入
+            'q_tax': Attr.get(d, 'TAXRATE', 0.0),  # 实际税率(%)
+            # 财务风险指标
+            'r_ld': Attr.get(d, 'LD', 0.0),  # 流动比率(%)
+            'r_sd': Attr.get(d, 'SD', 0.0),  # 速动比率(%)
+            'r_xj_ll': Attr.get(d, 'XJLLB', 0.0),  # 现金流量比率(%)
+            'r_zc_fz': Attr.get(d, 'ZCFZL', 0.0),  # 资产负债率(%)
+            'r_qy': Attr.get(d, 'QYCS', 0.0),  # 权益系数
+            'r_cq': Attr.get(d, 'CQBL', 0.0),  # 产权比率(%)
+            # 营运能力指标
+            'y_zz_ts': Attr.get(d, 'ZZCZZTS', 0.0),  # 总资产周转天数(天)
+            'y_zz_bl': Attr.get(d, 'TOAZZL', 0.0),  # 总资产周转率(次)
+            'y_ch_ts': Attr.get(d, 'CHZZTS', 0.0),  # 存货周转天数(天)
+            'y_ch_bl': Attr.get(d, 'CHZZL', 0.0),  # 存货周转率(次)
+            'y_ys_ts': Attr.get(d, 'YSZKZZTS', 0.0),  # 应收账款周转天数(天)
+            'y_ys_bl': Attr.get(d, 'YSZKZZL', 0.0),  # 应收账款周转率(次)
+        } for d in res]
+        ret = Attr.group_item_by_key(ret, 'date')
+        ret = {k: ret[k] for k in sorted(ret.keys())}
+        return self._ret(ret, pid, start_time)
+
