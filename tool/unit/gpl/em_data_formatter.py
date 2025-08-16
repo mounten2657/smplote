@@ -2,6 +2,7 @@ from tool.core import Attr
 
 
 class EmDataFormatter:
+    """东财数据格式化"""
 
     def formate_fn_dupont(self, data):
         """
