@@ -346,8 +346,8 @@ class GPLUpdateService:
                         f"f{v}_turnover_rate": day['turnover_rate'],
                     }
                     if info:
-                        if float(info[f"f{v}_open"]) <= 0:
-                            if float(day['open']) <= 0:
+                        if float(info[f"f{v}_close"]) <= 0:
+                            if float(day['close']) <= 0:
                                 logger.debug(f"接口日线数据为空[{v}]<{symbol}><{td}>{percent} - {day_data}", 'UP_DAY_SKP')
                             # 更新接口日线数据 - 之前的请求中可能没有正确得到数据
                             ddb.update_daily(info['id'], day_data)
