@@ -274,6 +274,9 @@ class GPLUpdateService:
         :param is_force:  99: 仅拉取股票历史数据 | 98: 对历史数据入库 | 0, 15: 更新最近五天 | 10: 今日 | 17: 最近一周
         :return:
         """
+        # 周末不更新
+        if not is_force and 6 <= Time.week():
+            return False
         code_list = code_str.split(',')
         if not code_list:
             return False
