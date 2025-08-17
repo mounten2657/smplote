@@ -574,6 +574,7 @@ class EmDataSource:
     def get_dv_hist_rate(self, stock_code: str, sd: str, ed: str) -> List:
         """
         获取股票分红历史股息率列表
+          - 1000w数据，考虑迁移或精简或丢弃
 
         :param str stock_code: 股票代码，如： 002107
         :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2021-03-31）
