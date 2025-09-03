@@ -231,6 +231,8 @@ class VpCallbackService:
         pid = data['pid']
         qdb = WechatQueueModel()
         mdb = WechatMsgModel()
+        rdc =  RedisClient()
+        cache_key = 'VP_MSG_INS_LOCK'
         try:
             res = {}
             app_key = data['app_key']
@@ -248,6 +250,10 @@ class VpCallbackService:
             # 拦截非允许群
             if str(app_config['g_wxid_exc']) and str(app_config['g_wxid_exc']) in str(data):
                 logger.warning(f"消息忽略 - 跳过 - [{msg_id}]", 'VP_INS_ING')
+                return False
+            # 还是得加锁，因为有重试机制，会导致消息重复推送
+            Time.sleep(Str.randint(1, 10) / 10)
+            if not rdc.set_nx(cache_key, 1, [msg_id]):
                 return False
             # 先判断消息有没有入库 - 已入库就不继续执行了
             m_info = mdb.get_msg_info(msg_id)
@@ -316,12 +322,13 @@ class VpCallbackService:
                 r_msg = WechatQueueModel().get_by_msg_id(r_msg_id)
                 if r_msg:
                     data['content'] += f"<{r_msg['process_params']['content']}>"
-            if m_info:
-                res['upd_msg'] = mdb.add_msg(data, app_key, m_info['id'])
-            else:
-                res['ins_msg'] = mdb.add_msg(data, app_key)
+            mid = m_info['id'] if m_info and m_info['id'] else 0
+            up_key = 'upd_msg' if mid else 'ins_msg'
+            res[up_key] = mdb.add_msg(data, app_key, mid)
             # 入库成功 - 更新队列表的 retry_count
             res['upd_cnt_2'] = qdb.set_retry_count(pid, 2)
+            # 删除入库状态锁
+            rdc.delete(cache_key, [msg_id])
             return res
         except Exception as e:
             err = Error.handle_exception_info(e)
