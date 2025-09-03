@@ -55,7 +55,7 @@ class GiteeWebhookMd:
 
     📦 仓库: [{repo}]({payload['repository']['html_url']})  
     🌿 分支: {branch}
-    🦸‍♂️ 成员: {pusher}
+    🦸‍♂️ 账户: {pusher}
 
     📝 **提交记录** ({len(commits)}个):  
     {compare_url}
