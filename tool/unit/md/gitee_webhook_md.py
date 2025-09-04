@@ -64,8 +64,8 @@ class GiteeWebhookMd:
             for commit in commits[:3]:  # 最多显示3个提交
                 for file in commit['modified']:
                     md_message += f"     - {file}\r\n"
-                md_message += f"     - [{commit['id'][:7]}]({commit['url']})"
-                md_message += f"     - {commit['message']}"
+                md_message += f"     - [{commit['id'][:7]}]({commit['url']})\r\n"
+                md_message += f"     - {commit['message']}\r\n"
                 md_message += f"    ⏱️️ {str(commit['timestamp']).replace('T', ' ')[:19]}\r\n"
                 md_message += f"    👨‍💻️ {commit['author']['name']}\r\n"
 
