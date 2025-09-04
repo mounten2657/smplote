@@ -30,7 +30,8 @@ class Config:
 
     @staticmethod
     def is_prod():
-        return int(os.environ.get('IS_PROD', 0))
+        return 'prod' == Env.get('APP_ENV')
+        # return int(os.environ.get('IS_PROD', 0))
 
     @staticmethod
     def prod_root_dir():
