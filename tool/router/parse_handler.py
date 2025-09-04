@@ -8,6 +8,7 @@ from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
+from log_clean import clean_old_logs
 
 logger = Logger()
 
@@ -31,6 +32,7 @@ class ParseHandler:
         app_config = Config.app_config()
         # 延迟启动
         res['delay_task'] = Sys.delayed_task(1, hot_load)
+        res['clean_log'] = clean_old_logs(30 if Config.is_prod() else 7)
         return res
 
     @staticmethod
