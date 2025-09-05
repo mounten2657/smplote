@@ -24,6 +24,7 @@ class EmDataSource:
     _PUSH_URL = "https://push2his.eastmoney.com"
     _EWEB_URL = "https://emweb.securities.eastmoney.com"
     _NOTICE_URL = "https://np-anotice-stock.eastmoney.com"
+    _NEWS_URL = "https://emdcnewsapp.eastmoney.com"
 
     def __init__(self, timeout=30, retry_times=1):
         """
@@ -43,7 +44,7 @@ class EmDataSource:
         }
         self.ldb = GplApiLogModel()
 
-    def _get(self, url: str, params: Dict = None, biz_code='', ext=None):
+    def _get(self, url: str, params: Dict = None, biz_code='', ext=None, method='GET'):
         """
         发送GET请求并处理响应
 
@@ -51,6 +52,7 @@ class EmDataSource:
         :param: params: 请求参数
         :param: biz_code: 业务代码
         :param: ext: 额外参数
+        :param: method: 请求方式: GET | POST
         :return: 解析后的JSON数据，失败返回None
         """
         for i in range(self.retry_times):
@@ -60,7 +62,7 @@ class EmDataSource:
                 rand = Str.randint(1, 10000) % 2
                 params['nat_int'] = rand
                 # 如果已经有了日志数据就不用请求接口了
-                if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_FN', 'EM_DV', 'EM_ZY']):
+                if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
                     pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
                     if isinstance(pid, dict):
                         if pid['response_result'] and isinstance(pid['response_result'], dict):
@@ -75,10 +77,10 @@ class EmDataSource:
                 self.headers['Referer'] = Http.get_request_base_url(url)
                 if 1 == rand:
                     # 使用 nat 请求
-                    data = OpenNatService.send_http_request('GET', url, params, self.headers, self.timeout)
+                    data = OpenNatService.send_http_request(method, url, params, self.headers, self.timeout)
                 else:
                     # 使用本地请求
-                    data = Http.send_request('GET', url, params, self.headers)
+                    data = Http.send_request(method, url, params, self.headers)
                 if pid and not info.get('response_result'):
                     self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})
 
@@ -820,16 +822,16 @@ class EmDataSource:
         ret = {k: ret[k][0] for k in sorted(ret.keys())}
         return self._ret(ret, pid, start_time)
 
-    def get_fn_notice_file(self, stock_code: str, sd: str, pi=1, ps=50) -> Dict:
+    def get_fn_notice_file(self, stock_code: str, sd: str, pn=1, ps=50) -> Dict:
         """
         获取股票财务公告文件
 
         :param str stock_code: 股票代码，如： 002107
          :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2025-03-31）
-        :param int pi: 页码
+        :param int pn: 页码
         :param int ps: 条数
         :return: 股票财务公告文件
-        {"202508": [{"month": "202508", "date": "2025-08-28", "art_code": "AN202508281736010965", "title": "锐奇股份:关于获得政府补助的公告", "type": "获得补贴（资助）", "post_time": "2025-08-28 16:23:12:249", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508281736010965_1.pdf"}, {"month": "202508", "date": "2025-08-27", "art_code": "AN202508261734846386", "title": "锐奇股份:关于计提资产减值准备的公告", "type": "其他", "post_time": "2025-08-26 18:13:09:558", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508261734846386_1.pdf"}, {"month": "202508", "date": "2025-08-27", "art_code": "AN202508261734846388", "title": "锐奇股份: 董事会提名委员会实施细则", "type": "议事规则/实施细则", "post_time": "2025-08-26 18:13:09:521", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508261734846388_1.pdf"}]}
+        {"total": 1141, "202508": [{"month": "202508", "date": "2025-08-28", "art_code": "AN202508281736010965", "title": "锐奇股份:关于获得政府补助的公告", "type": "获得补贴（资助）", "post_time": "2025-08-28 16:23:12:249", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508281736010965_1.pdf"}, {"month": "202508", "date": "2025-08-27", "art_code": "AN202508261734846386", "title": "锐奇股份:关于计提资产减值准备的公告", "type": "其他", "post_time": "2025-08-26 18:13:09:558", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508261734846386_1.pdf"}, {"month": "202508", "date": "2025-08-27", "art_code": "AN202508261734846388", "title": "锐奇股份: 董事会提名委员会实施细则", "type": "议事规则/实施细则", "post_time": "2025-08-26 18:13:09:521", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508261734846388_1.pdf"}]}
         """
         start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
@@ -837,7 +839,7 @@ class EmDataSource:
         params = {
             "cb": "",
             "sr": -1,
-            "page_index": pi,
+            "page_index": pn,
             "page_size": ps,
             "ann_type": 'A',
             "client_source": 'web',
@@ -845,17 +847,58 @@ class EmDataSource:
             "f_node": 0,
             "s_node": 0,
         }
-        data, pid = self._get(url, params, 'EM_FN_NF', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{pi},{ps}"})
+        data, pid = self._get(url, params, 'EM_FN_NF', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{pn},{ps}"})
         res = Attr.get_by_point(data, 'data.list', [])
+        total = Attr.get_by_point(data, 'data.total_hits', 0)
         ret = [{
             'month': d['notice_date'][:8].replace('-', ''),
             'date': d['notice_date'][:10],
             'art_code': Attr.get(d, 'art_code', ''),  # 文件代码
             'title': Attr.get(d, 'title', ''),  # 文件标题
             'type': Attr.get(Attr.get_by_point(d, 'columns.0', {}), 'column_name', ''),  # 文件分类
-            'post_time': d['display_time'],  # 发布时间
+            'post_time': d['display_time'],  # 发布时间: str - Y-m-d H:i:s
             'url': f'https://pdf.dfcfw.com/pdf/H2_{Attr.get(d, 'art_code', '')}_1.pdf',  # 文件链接
         } for d in res]
         ret = Attr.group_item_by_key(ret, 'month')
-        # ret = {k: ret[k] for k in sorted(ret.keys())}
+        ret['total'] = total
         return self._ret(ret, pid, start_time)
+
+    def get_news_summary(self, stock_code: str, sd: str, pn=1, ps=50) -> Dict:
+        """
+        获取股票资讯摘要
+          - [!] 报错 400 Client Error: Bad Request for url: xxx - 暂时保留，等后面有需要再研究
+          - https://emweb.securities.eastmoney.com/pc_hsf10/pages/index.html?type=web&code=SZ300126&color=b#/zxgg
+
+        :param str stock_code: 股票代码，如： 002107
+         :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :param int pn: 页码
+        :param int ps: 条数
+        :return: 股票资讯摘要
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._NEWS_URL + "/infoService"
+        params = {
+            "args": {
+                "fields": 'code,infoCode,title,showDateTime,summary,uniqueUrl,url',
+                "market": prefix_int,
+                "pageNumber": pn,
+                "pageSize": ps,
+                "securityCode": f'{stock_code}',
+            },
+            "method": 'securityNews',
+        }
+        data, pid = self._get(url, params, 'EM_NXWS_SMY', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{pn},{ps}"}, 'POST')
+        print(data)
+        res = Attr.get_by_point(data, 'data.items', [])
+        ret = [{
+            'date': Time.dft(int(d['showDateTime']/1000), '%Y-%m-%d'),
+            'code': Attr.get(d, 'code', ''),  # 新闻代码
+            'title': Attr.get(d, 'title', ''),  # 新闻标题
+            'summary': Attr.get(d, 'summary', ''),  # 新闻摘要
+            'post_time': d['showDateTime'],  # 发布时间: int - 毫秒时间戳
+            'url': f"https://finance.eastmoney.com/a/{Attr.get(d, 'code', '')}.html",  # 新闻链接
+            # 'url': d['uniqueUrl'],  # 新闻链接
+        } for d in res]
+        return self._ret(ret, pid, start_time)
+
