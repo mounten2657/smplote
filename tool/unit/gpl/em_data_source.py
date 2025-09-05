@@ -888,7 +888,7 @@ class EmDataSource:
             },
             "method": 'securityNews',
         }
-        data, pid = self._get(url, params, 'EM_NXWS_SMY', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{pn},{ps}"}, 'POST')
+        data, pid = self._get(url, params, 'EM_NEWS_SUM', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{pn},{ps}"}, 'POST')
         print(data)
         res = Attr.get_by_point(data, 'data.items', [])
         ret = [{
