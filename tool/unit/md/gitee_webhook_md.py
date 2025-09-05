@@ -1,7 +1,7 @@
 import hmac
 import hashlib
 from flask import request
-from tool.core.env import Env
+from tool.core import Env, Attr
 
 
 class GiteeWebhookMd:
@@ -50,24 +50,23 @@ class GiteeWebhookMd:
             if hook_name != 'push_hooks':
                 return 200, {"message": "Ignored non-push event"}
 
+            author = Attr.get_by_point(commits, '0.author.name', pusher)
             # 生成 Markdown 消息
             md_message = f"""🚀 **Gitee {str(app_name).capitalize()} 代码推送通知**  
 
     📦 仓库: [{repo}]({payload['repository']['html_url']})  
     🌿 分支: {branch}
-    🦸‍♂️ 账户: {pusher}
+    🦸‍♂️ 成员: {author}
 
     📝 **提交记录** ({len(commits)}个):  
-    {compare_url}
 """
-            # 添加每个提交的详细信息
+            # 添加每个提交的详细信息 👨‍💻️
             for commit in commits[:3]:  # 最多显示3个提交
                 for file in commit['modified']:
                     md_message += f"     - {file}\r\n"
                 md_message += f"     - [{commit['id'][:7]}]({commit['url']})\r\n"
-                md_message += f"     - {commit['message']}"
-                md_message += f"    ⏱️️ {str(commit['timestamp']).replace('T', ' ')[:19]}\r\n"
-                md_message += f"    👨‍💻️ {commit['author']['name']}\r\n"
+                md_message += f"    ℹ️ {commit['message']}"  # 自带换行符号
+                md_message += f"    ⏱️️ {str(commit['timestamp']).replace('T', ' ')[:19]}\r\n\r\n"
 
             if len(commits) > 3:
                 md_message += f"\r\n    ...等 {len(commits) - 3}个提交\r\n"
