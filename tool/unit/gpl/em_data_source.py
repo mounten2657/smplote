@@ -11,12 +11,19 @@ class EmDataSource:
     """
     东方财富数据源
 
-    api_doc: https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_F10_BASIC_ORGINFO&columns=ALL&filter=(stock_code="002336.SZ")
+    web_page:
+      - https://emweb.securities.eastmoney.com/pc_hsf10/pages/index.html?type=web&code=SZ300126&color=b#/cwfx
+      - https://quote.eastmoney.com/bj/430510.html
+   api_doc:
+      - https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_F10_BASIC_ORGINFO&columns=ALL&filter=(SECUCODE=%22920819.BJ%22)
+      - https://push2his.eastmoney.com/api/qt/stock/kline/get?fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=101&fqt=1&beg=20250809&end=20250814&secid=1.688662
+      - https://np-anotice-stock.eastmoney.com/api/security/ann?cb=&sr=-1&page_size=50&page_index=1&ann_type=A&client_source=web&stock_list=300126&f_node=0&s_node=0
     """
 
     _DATA_URL = "https://datacenter.eastmoney.com"
     _PUSH_URL = "https://push2his.eastmoney.com"
     _EWEB_URL = "https://emweb.securities.eastmoney.com"
+    _NOTICE_URL = "https://np-anotice-stock.eastmoney.com"
 
     def __init__(self, timeout=30, retry_times=1):
         """
@@ -574,7 +581,7 @@ class EmDataSource:
     def get_dv_hist_rate(self, stock_code: str, sd: str, ed: str) -> List:
         """
         获取股票分红历史股息率列表
-          - 1000w数据，考虑迁移或精简或丢弃
+          - [!] 1000w数据，考虑迁移或精简或丢弃
 
         :param str stock_code: 股票代码，如： 002107
         :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2021-03-31）
@@ -813,4 +820,42 @@ class EmDataSource:
         ret = {k: ret[k][0] for k in sorted(ret.keys())}
         return self._ret(ret, pid, start_time)
 
+    def get_fn_notice_file(self, stock_code: str, sd: str, pi=1, ps=50) -> Dict:
+        """
+        获取股票财务公告文件
 
+        :param str stock_code: 股票代码，如： 002107
+         :param str sd: 更新日期 - Ymd 或 Y-m-d（如： 2025-03-31）
+        :param int pi: 页码
+        :param int ps: 条数
+        :return: 股票财务公告文件
+        {"202508": [{"month": "202508", "date": "2025-08-28", "art_code": "AN202508281736010965", "title": "锐奇股份:关于获得政府补助的公告", "type": "获得补贴（资助）", "post_time": "2025-08-28 16:23:12:249", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508281736010965_1.pdf"}, {"month": "202508", "date": "2025-08-27", "art_code": "AN202508261734846386", "title": "锐奇股份:关于计提资产减值准备的公告", "type": "其他", "post_time": "2025-08-26 18:13:09:558", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508261734846386_1.pdf"}, {"month": "202508", "date": "2025-08-27", "art_code": "AN202508261734846388", "title": "锐奇股份: 董事会提名委员会实施细则", "type": "议事规则/实施细则", "post_time": "2025-08-26 18:13:09:521", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508261734846388_1.pdf"}]}
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._NOTICE_URL + "/api/security/ann"
+        params = {
+            "cb": "",
+            "sr": -1,
+            "page_index": pi,
+            "page_size": ps,
+            "ann_type": 'A',
+            "client_source": 'web',
+            "stock_list": f'{stock_code}',
+            "f_node": 0,
+            "s_node": 0,
+        }
+        data, pid = self._get(url, params, 'EM_FN_NF', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{pi},{ps}"})
+        res = Attr.get_by_point(data, 'data.list', [])
+        ret = [{
+            'month': d['notice_date'][:8].replace('-', ''),
+            'date': d['notice_date'][:10],
+            'art_code': Attr.get(d, 'art_code', ''),  # 文件代码
+            'title': Attr.get(d, 'title', ''),  # 文件标题
+            'type': Attr.get(Attr.get_by_point(d, 'columns.0', {}), 'column_name', ''),  # 文件分类
+            'post_time': d['display_time'],  # 发布时间
+            'url': f'https://pdf.dfcfw.com/pdf/H2_{Attr.get(d, 'art_code', '')}_1.pdf',  # 文件链接
+        } for d in res]
+        ret = Attr.group_item_by_key(ret, 'month')
+        # ret = {k: ret[k] for k in sorted(ret.keys())}
+        return self._ret(ret, pid, start_time)
