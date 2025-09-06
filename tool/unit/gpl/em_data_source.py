@@ -204,22 +204,22 @@ class EmDataSource:
         :param str sd: 开始日期 - Ymd 或 Y-m-d（如： 2025-03-01）
         :param str ed: 结束日期 - Ymd 或 Y-m-d（如： 2025-03-02）
         :param str adjust: key of {"qfq": "前复权", "hfq": "后复权", "": "不复权"}
-        :param str period: key of {"qfq": "1", "hfq": "2", "": "0"}
+        :param str period: key of {"daily": "101", "weekly": "102", "monthly": "103"}
         :return: 日线行情数据列表，每个元素为一个交易日数据字典
         [{'date': '2025-06-27', 'open': 7.13, 'close': 7.19, 'high': 7.19, 'low': 7.06, 'volume': 41573, 'amount': 29676241.0, 'amplitude': 1.83, 'pct_change': 1.13, 'price_change': 0.08, 'turnover_rate': 1.97}]
         """
         start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._PUSH_URL + "/api/qt/stock/kline/get"
-        period_dict = {"daily": "101", "weekly": "102", "monthly": "103"}
         adjust_dict = {"qfq": "1", "hfq": "2", "": "0"}
+        period_dict = {"daily": "101", "weekly": "102", "monthly": "103"}
         params = {
             "secid": f"{prefix_int}.{stock_code}",
             "ut": "fa5fd1943c7b386f172d6893dbfba10b",
             "fields1": "f1,f2,f3,f4,f5,f6",  # '股票代码', '市场代码(0: 深,1: 沪)', '股票名称'
             "fields2": "f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61",  # '日期', '开盘', '收盘', '最高', '最低', '成交量', '成交额', '振幅', '涨跌幅', '涨跌额', '换手率'
-            "klt": period_dict[period],  # K线类型：101=日线，102=周线，103=月线，15=15分钟，5=5分钟
             "fqt": adjust_dict[adjust],  # 复权类型：0=不复权，1=前复权，2=后复权
+            "klt": period_dict[period],  # K线类型：101=日线，102=周线，103=月线，15=15分钟，5=5分钟
             "beg": (sd if sd else "19700101").replace('-', ''),  # 兼容 Y-m-d
             "end": (ed if ed else "99991231").replace('-', ''),  # 兼容 Y-m-d
             "isSecurity": "0",
