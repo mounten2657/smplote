@@ -68,7 +68,8 @@ class GiteeWebhookMd:
                 md_message += f"    ℹ️ {commit['message']}"  # 自带换行符号
                 md_message += f"    ⏱️️ {str(commit['timestamp']).replace('T', ' ')[:19]}\r\n"
                 if i < len(commits[:3]) - 1:
-                    md_message += f"     ============\r\n"
+                    # md_message += f"     ============\r\n"
+                    md_message += f"\r\n"
 
             if len(commits) > 3:
                 md_message += f"\r\n    ...等 {len(commits) - 3}个提交\r\n"
