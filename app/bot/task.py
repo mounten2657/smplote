@@ -2,7 +2,7 @@ from service.wechat.callback.vp_command_service import VpCommandService
 from service.wechat.callback.vp_callback_service import VpCallbackService
 from service.gpl.gpl_update_service import GPLUpdateService
 from tool.router.base_app_vp import BaseAppVp
-from tool.core import Time, Sys
+from tool.core import Time, Sys, Http
 
 
 class Task(BaseAppVp):
@@ -47,8 +47,13 @@ class Task(BaseAppVp):
         res = self.vp.clear_api_log()
         return self.success(res)
 
+    def rf_proxy(self):
+        """刷新代理服务 - 每天凌晨的01点01分"""
+        res = Http.init_proxy()
+        return self.success(res)
+
     def gpl_info(self):
-        """更新股票基础信息 - 每天上午的01点11分"""
+        """更新股票基础信息 - 每天凌晨的01点11分"""
         code_str = self.params.get('code_str', '')
         is_force = self.params.get('is_force', 0)
         res = self.gpl.quick_update_symbol(code_str, int(is_force), 'GPL_SYM')
@@ -62,7 +67,7 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def gpl_daily(self):
-        """更新股票额外信息 - 每天上午的15点31分"""
+        """更新股票额外信息 - 每天下午的15点31分"""
         code_str = self.params.get('code_str', '')
         is_force = self.params.get('is_force', 0)
         res = self.gpl.quick_update_symbol(code_str, int(is_force), 'GPL_DAY')

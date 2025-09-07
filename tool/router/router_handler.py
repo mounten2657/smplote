@@ -12,20 +12,14 @@ logger = Logger()
 
 class RouterHandler:
 
-    # 免鉴权的开放接口
-    OPEN_ROUTE_LIST = [
-        'bot/index/index',
-        'bot/task/sky_rw',
-        'bot/task/vp_msg',
-        'bot/task/vp_room',
-        'bot/task/vp_log',
-        'bot/task/gpl_info',
-        'bot/task/gpl_ext',
-        'bot/task/gpl_daily',
-        'callback/gitee_callback/smplote',
+    # 免鉴权的开放模块 - 具体到二级即可
+    OPEN_MODULE_LIST = [
+        'bot/index',
+        'bot/task',
+        'callback/gitee_callback',
     ]
 
-    # 路由忽略列表，适合回调和文件预览等
+    # 路由忽略列表，适合回调和文件预览等 - 需要具体到三级
     IGNORE_ROUTE_LIST = [
         'callback/qy_callback/collect_wts',
         'callback/qy_callback/collect_gpl',
@@ -85,8 +79,9 @@ class RouterHandler:
                 # API 鉴权
                 headers = Http.get_request_headers()
                 authcode = Attr.get(headers, 'Authcode')
-                open_list = self.OPEN_ROUTE_LIST + self.IGNORE_ROUTE_LIST
-                if Env.get('APP_AUTH_KEY') != authcode and method_path not in open_list:
+                if not (Env.get('APP_AUTH_KEY') == authcode
+                        or any(str(method_path).startswith(ol) for ol in self.OPEN_MODULE_LIST)
+                        or method_path in self.IGNORE_ROUTE_LIST):
                     return Api.error('Permission denied', None, 99)
                 module_name, method_name = method_path.rsplit('/', 1)
                 module_path = f'{module_name.replace("/", ".")}'

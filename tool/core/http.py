@@ -5,27 +5,38 @@ from flask import request
 from urllib.parse import urlencode, urlparse
 from typing import Union, Dict, Optional
 from tool.core.attr import Attr
+from tool.core.env import Env
+from tool.core.api import Api
 
 
 class Http:
+
+    # IP代理服务商 - 携趣
+    _XQ_OPT_URL = Env.get('PROXY_OPT_URL_XQ')
+    _XQ_OPT_UID = Env.get('PROXY_OPT_UID_XQ')
+    _XQ_OPT_KEY = Env.get('PROXY_OPT_KEY_XQ')
+    _XQ_URL = Env.get('PROXY_API_URL_XQ')
+    _XQ_UID = Env.get('PROXY_API_UID_XQ')
+    _XQ_KEY = Env.get('PROXY_API_KEY_XQ')
 
     @staticmethod
     def send_request(
             method: str,
             url: str,
             params: Union[Dict, str, None] = None,
-            headers: Optional[Dict] = None
+            headers: Optional[Dict] = None,
+            proxy = None
     ) -> Union[Dict, str]:
         """
         发送HTTP请求并自动处理JSON响应
-        Args:
-            method: HTTP方法 (GET/POST/PUT/DELETE等)
-            url: 请求URL
-            params: 查询参数，可以是字典或"a=1&b=2"格式字符串
-            headers: 请求头字典
-        Returns:
-            如果响应是JSON则返回字典，否则返回原始文本
-        Raises:
+
+        :param method: HTTP方法 (GET/POST/PUT/DELETE等)
+        :param url: 请求URL
+        :param params: 查询参数，可以是字典或"a=1&b=2"格式字符串
+        :param headers: 请求头字典
+        :param proxy: 代理
+        :return: 如果响应是JSON则返回字典，否则返回原始文本
+        :raises:
             ValueError: 方法不支持或参数无效
             requests.exceptions.RequestException: 请求失败
         """
@@ -41,6 +52,9 @@ class Http:
             'headers': headers or {},
             'timeout': 30,
         }
+        # 新增代理
+        if proxy is not None:
+            request_kwargs['proxies'] = {'http': proxy, 'https': proxy}
 
         # 处理params参数
         params_str = None
@@ -77,6 +91,91 @@ class Http:
             raise requests.exceptions.RequestException(
                 f"HTTP request failed: {str(e)}"
             ) from e
+
+    @staticmethod
+    def init_proxy():
+        """
+        代理初始化
+
+        :return: 初始化结果
+        """
+        res = {}
+        url = 'http://ip.sb'
+        headers = {"User-Agent": "curl/7.68.0"}
+        res['ip'] = str(Http.send_request('GET', url, headers=headers, proxy='')).strip()
+        if not res['ip']:
+            return Api.error(f"Get local ip failed: {url}")
+        url = f"{Http._XQ_OPT_URL}/IpWhiteList.aspx"
+        params = {
+            "uid": Http._XQ_OPT_UID,
+            "ukey": Http._XQ_OPT_KEY,
+        }
+        res['get'] = Http.send_request('GET', url, params | {"act": "getjson"})  # {"data":[{"IP":"x.x.x.x","MEMO":""}]}
+        if not res['get']:
+            return Api.error(f"Get white ip failed: {res['get']}")
+        wip = Attr.get_by_point(res["get"], 'data.0.IP')
+        if wip == res["ip"]:
+            return res
+        res['del'] = Http.send_request('GET', url, params | {"act": "del", "ip": "all"})  # success
+        if not res['del']:
+            return Api.error(f"Get white ip failed: {res['del']}")
+        res['add'] = Http.send_request('GET', url, params | {"act": "add", "ip": res['ip']})  # success
+        if not res['add']:
+            return Api.error(f"Get white ip failed: {res['add']}")
+        return res
+
+    @staticmethod
+    def get_proxy():
+        """
+        获取代理ip
+
+        :return: 代理ip 和 端口  + 获取结果
+        """
+        url = f"{Http._XQ_URL}/VAD/GetIp.aspx"
+        params = {
+            "act": "getturn51",
+            "uid": Http._XQ_UID,
+            "vkey": Http._XQ_KEY,
+            "time": 6,
+            "plat": 0,
+            "re": 0,
+            "type": 7,
+            "so": 1,
+            "group": 51,
+            "ow": 1,
+            "spl": 1,
+            "addr": "",
+            "db": 1,
+            "num": 1
+        }
+        res = Http.send_request('GET', url, params)  # {"code":0,"success":"true","msg":"","data":[{"IP":"x.x.x.x","Port":5639,"IpAddress":"Unknow"}]}
+        ip = Attr.get_by_point(res, 'data.0.IP')
+        port = Attr.get_by_point(res, 'data.0.Port')
+        if not ip or not port:
+            return res, False
+        return f"http://{ip}:{port}", True
+
+    @staticmethod
+    def send_request_x(
+            method: str,
+            url: str,
+            params: Union[Dict, str, None] = None,
+            headers: Optional[Dict] = None,
+    ) -> Union[Dict, str]:
+        """
+        发送HTTP请求并自动处理JSON响应
+          - 代理模式，确保每次请求的ip都不同
+
+        :param method: HTTP方法 (GET/POST/PUT/DELETE等)
+        :param url: 请求URL
+        :param params: 查询参数，可以是字典或"a=1&b=2"格式字符串
+        :param headers: 请求头字典
+        :return: 如果响应是JSON则返回字典，否则返回原始文本
+        """
+        proxy, pf = Http.get_proxy()
+        if not pf:
+            return Api.error(f"Get http proxy failed: {proxy}")
+        return Http.send_request(method, url, params, headers, proxy)
 
     @staticmethod
     def is_http_request():
@@ -150,11 +249,10 @@ class Http:
     def replace_host(url: str, new_host: str) -> str:
         """
         替换URL中的域名部分
-        Args:
-            url: 原始URL (e.g. "http://aa.bb.com:1011/bot/index.html?q=1")
-            new_host: 新域名 (e.g. "cc.dd.cn")
-        Returns:
-            url: 替换后的URL (e.g. "http://cc.dd.cn:1011/bot/index.html?q=1")
+
+        :param url: 原始URL (e.g. "http://aa.bb.com:1011/bot/index.html?q=1")
+        :param new_host: 新域名 (e.g. "cc.dd.cn")
+        :return url: 替换后的URL (e.g. "http://cc.dd.cn:1011/bot/index.html?q=1")
         """
         # 使用正则表达式匹配并替换域名部分
         return re.sub(

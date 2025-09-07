@@ -8,7 +8,7 @@ from tool.core.dir import Dir
 class Env:
 
     # 根据开发和生产环境的不同读取特定的 .env 文件路径
-    _env_file = '.env.prod' if os.environ.get('IS_PROD', 0) else '.env'
+    _env_file = '.env.prod' if int(os.environ.get('IS_PROD', int(os.name == 'posix'))) else '.env'
     _env_path = Dir.abs_dir(_env_file)
 
     @staticmethod
