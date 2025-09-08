@@ -16,6 +16,7 @@ class RouterHandler:
     OPEN_MODULE_LIST = [
         'bot/index',
         'bot/task',
+        'gpl/symbol',
         'callback/gitee_callback',
     ]
 
