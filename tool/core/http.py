@@ -116,7 +116,7 @@ class Http:
         if not res['get']:
             return Api.error(f"Get white ip failed: {res['get']}")
         wip = Attr.get_by_point(res["get"], 'data.0.IP')
-        if wip == res["ip"]:
+        if not wip or wip == res["ip"]:
             return res
         res['del'] = Http.send_request('GET', url, params | {"act": "del", "ip": "all"})  # success
         if not res['del']:

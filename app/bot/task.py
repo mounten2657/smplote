@@ -48,7 +48,7 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def rf_proxy(self):
-        """刷新代理服务 - 每天凌晨的01点01分"""
+        """刷新代理服务 - 126分钟一次"""
         res = Http.init_proxy()
         return self.success(res)
 
