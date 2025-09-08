@@ -27,6 +27,8 @@ class GplFormatterService:
         :param is_merge: 是否多来源合并，默认否
         :return: 标准股票数据
         """
+        if not code:
+            return {}
         em = self.get_stock_em(code)
         stock_info = em
         if is_merge:

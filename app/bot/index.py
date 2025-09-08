@@ -1,6 +1,7 @@
 from tool.router.base_app_wx import BaseAppWx
 from tool.core import Config, Time
 from service.vps.open_nat_service import OpenNatService
+from service.gpl.gpl_formatter_service import GplFormatterService
 
 
 class Index(BaseAppWx):
@@ -32,3 +33,19 @@ class Index(BaseAppWx):
         res = OpenNatService.init_vps_config_qy()
         return self.success(res)
 
+    def get_stock(self):
+        """检查获取股票基本信息是否通畅"""
+        code = self.params.get('code', '300126')
+        formatter = GplFormatterService()
+        res = formatter.get_stock_info(code)
+        return self.success(res)
+
+    def get_daily(self):
+        """检查获取日线行情信息是否通畅"""
+        code = self.params.get('code', '300126')
+        sd = self.params.get('sd', Time.dft(Time.now() - 5 * 86400, '%Y-%m-%d'))
+        ed = self.params.get('ed', Time.date('%Y-%m-%d'))
+        fq = self.params.get('fq', 'qfq')
+        formatter = GplFormatterService()
+        res = formatter.em.get_daily_quote(code, sd, ed, fq)
+        return self.success(res)

@@ -82,13 +82,14 @@ class EmDataSource:
                     # 使用 nat 请求
                     data = OpenNatService.send_http_request(method, url, params, self.headers, self.timeout)
                 else:
-                    proxy = None
+                    # 代理模式
+                    proxy = ''
                     if any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用代理
                         # 获取代理ip
                         proxy, pf = Http.get_proxy()
                         if not pf:
                             raise Exception(f"Get http proxy failed: {proxy}")
-                    # 使用本地请求 - 代理模式
+                    # 使用本地代理请求
                     data = Http.send_request(method, url, params, self.headers, proxy)
                     params['proxy'] = proxy
                 if pid and not info.get('is_succeed'):
