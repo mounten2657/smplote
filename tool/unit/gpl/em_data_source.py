@@ -59,7 +59,7 @@ class EmDataSource:
             info = {}
             pid = 0
             try:
-                rand = Str.randint(1, 10000) % 20
+                rand = Str.randint(1, 10000) % 10
                 params['nat_int'] = rand
                 # 如果已经有了日志数据就不用请求接口了
                 if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
@@ -71,7 +71,7 @@ class EmDataSource:
                             info = pid
                             pid = pid['id']
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
-                rand = (pid % 20) if pid else rand  # 因为只有本地才能使用代理，所以这里大大增大本地请求的比例
+                rand = (pid % 10) if pid else rand  # 因为只有本地才能使用代理，所以这里大大增大本地请求的比例
                 # rand = 0  # 机器坏了，先指定固定的
                 params['nat_int'] = rand
                 self.headers['Referer'] = Http.get_request_base_url(url)

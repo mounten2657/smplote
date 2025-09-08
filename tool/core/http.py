@@ -1,6 +1,8 @@
 import re
 import json
 import requests
+import random
+import itertools
 from flask import request
 from urllib.parse import urlencode, urlparse
 from typing import Union, Dict, Optional
@@ -125,6 +127,26 @@ class Http:
         return res
 
     @staticmethod
+    def get_proxy_tunnel():
+        """
+        随机获取代理隧道池编号
+        :return:
+        """
+        # {隧道池编号: 数量} - 确保数量多的隧道被选中的概率最高
+        number_counts = {
+            51: 73,
+            82: 17,
+            57: 18,
+            61: 22,
+            62: 13,
+            76: 11
+        }
+        number_list = list(itertools.chain.from_iterable(
+            [num] * count for num, count in number_counts.items()
+        ))
+        return random.choice(number_list)
+
+    @staticmethod
     def get_proxy():
         """
         获取代理ip
@@ -132,8 +154,9 @@ class Http:
         :return: 代理ip 和 端口  + 获取结果
         """
         url = f"{Http._XQ_URL}/VAD/GetIp.aspx"
+        tn = Http.get_proxy_tunnel()  # 从所有的隧道池中随机取出一个
         params = {
-            "act": "getturn51",
+            "act": f"getturn{tn}",
             "uid": Http._XQ_UID,
             "vkey": Http._XQ_KEY,
             "time": 6,
