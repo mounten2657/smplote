@@ -84,7 +84,8 @@ class EmDataSource:
                 else:
                     # 代理模式
                     proxy = ''
-                    if any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用代理
+                    is_night = 21 <= int(Time.date('%H'))  # 晚上第二次执行的都是白天漏掉的，数量很少，所以不使用代理了
+                    if not is_night and any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用代理
                         # 获取代理ip
                         proxy, pf = Http.get_proxy()
                         if not pf:
