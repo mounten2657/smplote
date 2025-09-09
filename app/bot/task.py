@@ -35,7 +35,7 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def vp_room(self):
-        """刷新群聊的信息 - 125分钟一次"""
+        """刷新群聊的信息 - 59分钟一次"""
         if Time.is_night():
             return self.success(True)
         g_wxid_str = self.params.get('g_wxid_str', '')
@@ -48,7 +48,7 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def rf_proxy(self):
-        """刷新代理服务 - 126分钟一次"""
+        """刷新代理服务 - 58分钟一次"""
         res = Http.init_proxy()
         return self.success(res)
 
