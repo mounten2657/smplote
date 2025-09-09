@@ -24,7 +24,7 @@ class RedisTaskKeys:
     RTQ_BATCH_LIST = {
         # gpl
         "GPL_SYM": "service.gpl.gpl_update_service@GPLUpdateService.update_symbol",
-        "GPL_SAF": "service.gpl.gpl_update_service@GPLUpdateService.update_symbol_ext",
         "GPL_DAY": "service.gpl.gpl_update_service@GPLUpdateService.update_symbol_daily",
+        "GPL_SAF": "service.gpl.gpl_update_ext_service@GPLUpdateExtService.update_symbol_ext",
     }
 
