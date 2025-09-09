@@ -428,7 +428,7 @@ class GPLUpdateExtService:
             sd, ed = t_list
             d_info = self.formatter.em.get_zy_item(symbol, sd, ed)
             if not d_info:
-                logger.warning(f"暂无主营构成列表数据<{symbol}><{sd}{ed}>", 'UP_ZYI_WAR')
+                logger.warning(f"暂无主营构成列表数据<{symbol}><{sd}/{ed}>", 'UP_ZYI_WAR')
                 return ret
             for day in list(d_info.keys()):
                 zy_info = Attr.get(zyi_list, f"{symbol}_{day}")
@@ -440,26 +440,75 @@ class GPLUpdateExtService:
             ret['izi'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 
-    def _up_fni_em(self, symbol, fni_list, td_list):
-        """更新股票主营构成列表"""
+    def _up_fni_em(self, symbol, fni_list, td, n):
+        """更新股票财务主要指标"""
         ret = {}
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
         des = '财务主要指标'
         biz_code = 'EM_FN_IT'
-        for t_list in td_list:
-            sd, ed = t_list
-            d_info = self.formatter.em.get_fn_item(symbol, sd, ed)
-            if not d_info:
-                logger.warning(f"暂无财务主要指标数据<{symbol}><{sd}{ed}>", 'UP_FNI_WAR')
-                return ret
-            for day in list(d_info.keys()):
-                zy_info = Attr.get(fni_list, f"{symbol}_{day}")
-                if zy_info or day < self._INIT_ST:
-                    logger.warning(f"跳过财务主要指标数据<{symbol}><{day}>", 'UP_FNI_WAR')
-                    del d_info[day]
-                    continue
-            logger.warning(f"批量插入财务主要指标数据<{symbol}><{sd}/{ed}> - {len(d_info)}", 'UP_FNI_WAR')
-            ret['ifi'] = jdb.add_season_list(symbol, biz_code, des, d_info)
+        d_info = self.formatter.em.get_fn_item(symbol, td, n)
+        if not d_info:
+            logger.warning(f"暂无财务主要指标数据<{symbol}><{td}> - {n}", 'UP_FNI_WAR')
+            return ret
+        for day, d in list(d_info.keys()):
+            fi_info = Attr.get(fni_list, f"{symbol}_{day}")
+            if fi_info or day < self._INIT_ST:
+                logger.warning(f"跳过财务主要指标数据<{symbol}><{day}>", 'UP_FNI_WAR')
+                del d_info[day]
+                continue
+        logger.warning(f"批量插入财务主要指标数据<{symbol}><{td}> - {len(d_info)}", 'UP_FNI_WAR')
+        ret['ifi'] = jdb.add_season_list(symbol, biz_code, des, d_info)
+        return ret
+
+    def _up_fnd_em(self, symbol, fni_list, td, n):
+        """更新股票财务杜邦分析"""
+        ret = {}
+        jdb = GPLSeasonModel()
+        Time.sleep(Str.randint(1, 3) / 10)
+        des = '财务杜邦分析'
+        biz_code = 'EM_FN_DP'
+        d_info = self.formatter.em.get_fn_dupont(symbol, td, n)
+        if not d_info:
+            logger.warning(f"暂无财务杜邦分析数据<{symbol}><{td}> - {n}", 'UP_FND_WAR')
+            return ret
+        for day, d in list(d_info.keys()):
+            fd_info = Attr.get(fni_list, f"{symbol}_{day}")
+            if fd_info or day < self._INIT_ST:
+                logger.warning(f"跳过财务杜邦分析数据<{symbol}><{day}>", 'UP_FND_WAR')
+                del d_info[day]
+                continue
+        logger.warning(f"批量插入财务杜邦分析数据<{symbol}><{td}> - {len(d_info)}", 'UP_FND_WAR')
+        ret['ifd'] = jdb.add_season_list(symbol, biz_code, des, d_info)
+        return ret
+
+    def _up_fnf_em(self, symbol, fni_list, td, n):
+        """更新股票财务公告文件"""
+        ret = {}
+        jdb = GPLSeasonModel()
+        Time.sleep(Str.randint(1, 3) / 10)
+        des = '财务公告文件'
+        biz_code = 'EM_FN_NF'
+        d_info = self.formatter.em.get_fn_dupont(symbol, td, n)
+        total, d_info = Attr.get(d_info, "total"), Attr.get(d_info, "data")
+        if not d_info or not total:
+            logger.warning(f"暂无财务公告文件数据<{symbol}><{td}> - {n}", 'UP_FNF_WAR')
+            return ret
+
+        def save_fn_file_url(d):
+            url = Attr.get(d, 'url')
+            d['file_url'] = url  # 文件下载
+            return d
+
+        for i in range(2, int(total/100) + 1):
+            pass
+        for day, d in list(d_info.keys()):
+            ff_info = Attr.get(fni_list, f"{symbol}_{day}")
+            if ff_info or day < self._INIT_ST:
+                logger.warning(f"跳过财务公告文件数据<{symbol}><{day}>", 'UP_FNF_WAR')
+                del d_info[day]
+                continue
+        logger.warning(f"批量插入财务公告文件数据<{symbol}><{td}> - {len(d_info)}", 'UP_FNF_WAR')
+        ret['iff'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 

@@ -57,6 +57,7 @@ class EmDataSource:
         for i in range(self.retry_times):
             info = {}
             pid = 0
+            proxy = ''
             try:
                 rand = Str.randint(1, 10000) % 10
                 params['nat_int'] = rand
@@ -82,7 +83,6 @@ class EmDataSource:
                     data = OpenNatService.send_http_request(method, url, params, self.headers, self.timeout)
                 else:
                     # 代理模式
-                    proxy = ''
                     is_night = 21 <= int(Time.date('%H'))  # 晚上第二次执行的都是白天漏掉的，数量很少，所以不使用代理了
                     if not is_night and any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用代理
                         # 获取代理ip
@@ -98,6 +98,8 @@ class EmDataSource:
                 return data, pid
             except Exception as e:
                 err = Error.handle_exception_info(e)
+                if proxy:
+                    params['proxy'] = proxy
                 logger.warning(f"请求失败 ({i + 1}/{self.retry_times}): {url} - {params} - 错误 - {err}", 'EM_API_ERR')
                 if i == self.retry_times - 1:
                     return None, 0
