@@ -75,14 +75,14 @@ class EmDataSource:
                 # rand = 0  # 机器坏了，先指定固定的
                 params['nat_int'] = rand
                 self.headers['Referer'] = Http.get_request_base_url(url)
-                # [0a, 1p, 2p, 3b, 4p, 5a, 6p, 7p, 8b, 9p]  # 占比:  vps: 20% | local: 20% | proxy: 60%
-                if rand in [0, 5]:  # [0, 5]
+                # [0l, 1p, 2v, 3p, 4l, 5p, 6v, 7p, 8l, 9p]  # 占比:  vps: 20% | local: 30% | proxy: 50%
+                if rand in [0, 4, 8]:  # [0, 4, 8]
                     # 使用本地请求
                     data = Http.send_request(method, url, params, self.headers)
-                elif rand in [3, 8]:  # [3, 8]
+                elif rand in [2, 6]:  # [2, 6]
                     # 使用 nat 请求
                     data = OpenNatService.send_http_request(method, url, params, self.headers, self.timeout)
-                else:  # [1, 2, 4, 6, 7, 9]
+                else:  # [1, 3, 5, 7, 9]
                     # 代理模式
                     is_night = 21 <= int(Time.date('%H'))  # 晚上第二次执行的都是白天漏掉的，数量很少，所以不使用代理了
                     if not is_night and any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用代理
