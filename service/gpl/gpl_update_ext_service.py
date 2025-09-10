@@ -1,4 +1,5 @@
 from service.gpl.gpl_formatter_service import GplFormatterService
+from service.vpp.vpp_serve_service import VppServeService
 from model.gpl.gpl_symbol_model import GPLSymbolModel
 from model.gpl.gpl_const_kv_model import GPLConstKvModel
 from model.gpl.gpl_concept_model import GPLConceptModel
@@ -489,26 +490,45 @@ class GPLUpdateExtService:
         Time.sleep(Str.randint(1, 3) / 10)
         des = '财务公告文件'
         biz_code = 'EM_FN_NF'
-        d_info = self.formatter.em.get_fn_dupont(symbol, td, n)
-        total, d_info = Attr.get(d_info, "total"), Attr.get(d_info, "data")
-        if not d_info or not total:
-            logger.warning(f"暂无财务公告文件数据<{symbol}><{td}> - {n}", 'UP_FNF_WAR')
-            return ret
 
-        def save_fn_file_url(d):
-            url = Attr.get(d, 'url')
-            d['file_url'] = url  # 文件下载
-            return d
+        def get_fn_file(pn, ps):
+            d = self.formatter.em.get_fn_notice_file(symbol, td, pn, ps)
+            total, d = Attr.get(d, "total"), Attr.get(d, "data")
+            if not d or not total:
+                logger.warning(f"暂无财务公告文件数据<{symbol}><{td}> - {pn}/{ps}", 'UP_FNF_WAR')
+                return 0, {}
+            return total, d
 
+        def save_fn_file(d):
+            res = {}
+            if not d:
+                return res
+            for day, dd in list(d.keys()):
+                ff_info = Attr.get(fni_list, f"{symbol}_{day}")
+                date = day.replace('-', '')
+                month = day[:8].replace('-', '')
+                title = Attr.get(dd, 'title', '')
+                url = Attr.get(dd, 'url', '')
+                # 文件下载
+                fn = f"{symbol}_{date}-{title}.pdf"
+                fd = f"/gpl/notice_file/{symbole}/{month}/"
+                dd['file_url'] = VppServeService.download_website_file(url, biz_code, fn, fd)
+                if ff_info or day < self._INIT_ST:
+                    logger.warning(f"跳过财务公告文件数据<{symbol}><{day}>", 'UP_FNF_WAR')
+                    del d[day]
+                    continue
+            logger.warning(f"批量插入财务公告文件数据<{symbol}><{td}> - {len(d)}", 'UP_FNF_WAR')
+            res['iff'] = jdb.add_season_list(symbol, biz_code, des, d)
+            return res
+
+        # 初次获取和处理
+        total, d_info = get_fn_file(1, 50)
+        ret[1] = save_fn_file(d_info)
+
+        # 处理剩余分页数据
         for i in range(2, int(total/100) + 1):
-            pass
-        for day, d in list(d_info.keys()):
-            ff_info = Attr.get(fni_list, f"{symbol}_{day}")
-            if ff_info or day < self._INIT_ST:
-                logger.warning(f"跳过财务公告文件数据<{symbol}><{day}>", 'UP_FNF_WAR')
-                del d_info[day]
-                continue
-        logger.warning(f"批量插入财务公告文件数据<{symbol}><{td}> - {len(d_info)}", 'UP_FNF_WAR')
-        ret['iff'] = jdb.add_season_list(symbol, biz_code, des, d_info)
+            total, d_info = get_fn_file(i, 50)
+            ret[i] = save_fn_file(d_info)
+
         return ret
 

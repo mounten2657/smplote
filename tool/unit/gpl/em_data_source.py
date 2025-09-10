@@ -87,7 +87,7 @@ class EmDataSource:
                     is_night = 21 <= int(Time.date('%H'))  # 晚上第二次执行的都是白天漏掉的，数量很少，所以不使用代理了
                     if not is_night and any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用代理
                         # 获取代理ip
-                        proxy, pf = Http.get_proxy()
+                        proxy, pf = Http.get_proxy(51)  # 默认使用ip最多的隧道池
                         if not pf:
                             raise Exception(f"Get http proxy failed: {proxy}")
                     # 使用本地代理请求

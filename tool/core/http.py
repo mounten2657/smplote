@@ -127,11 +127,15 @@ class Http:
         return res
 
     @staticmethod
-    def get_proxy_tunnel():
+    def get_proxy_tunnel(pn=None):
         """
         随机获取代理隧道池编号
+
+        :param int pn: 隧道池编号
         :return:
         """
+        if pn is None:
+            return pn
         # {隧道池编号: 数量} - 确保数量多的隧道被选中的概率最高
         number_counts = {
             51: 73,
@@ -147,14 +151,15 @@ class Http:
         return random.choice(number_list)
 
     @staticmethod
-    def get_proxy():
+    def get_proxy(pn=None):
         """
         获取代理ip
 
+        :param int pn: 隧道池编号
         :return: 代理ip 和 端口  + 获取结果
         """
         url = f"{Http._XQ_URL}/VAD/GetIp.aspx"
-        tn = Http.get_proxy_tunnel()  # 从所有的隧道池中随机取出一个
+        tn = Http.get_proxy_tunnel(pn)  # 从所有的隧道池中随机取出一个
         params = {
             "act": f"getturn{tn}",
             "uid": Http._XQ_UID,

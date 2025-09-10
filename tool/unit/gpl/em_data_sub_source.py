@@ -393,7 +393,7 @@ class EmDataSubSource(EmDataSource):
         :param int pn: 页码
         :param int ps: 条数
         :return: 股票财务公告文件
-        {"total": 1141, "data": {"202508": [{"month": "202508", "date": "2025-08-28", "art_code": "AN202508281736010965", "title": "锐奇股份:关于获得政府补助的公告", "type": "获得补贴（资助）", "post_time": "2025-08-28 16:23:12:249", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508281736010965_1.pdf"}, {"month": "202508", "date": "2025-08-27", "art_code": "AN202508261734846386", "title": "锐奇股份:关于计提资产减值准备的公告", "type": "其他", "post_time": "2025-08-26 18:13:09:558", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508261734846386_1.pdf"}, {"month": "202508", "date": "2025-08-27", "art_code": "AN202508261734846388", "title": "锐奇股份: 董事会提名委员会实施细则", "type": "议事规则/实施细则", "post_time": "2025-08-26 18:13:09:521", "url": "https://pdf.dfcfw.com/pdf/H2_AN202508261734846388_1.pdf"}]}}
+        {"total":1141,"data":{"2025-08-28":{"date":"2025-08-28","art_code":"AN202508281736010965","title":"锐奇股份:关于获得政府补助的公告","type":"获得补贴（资助）","post_time":"2025-08-28 16:23:12:249","url":"https://pdf.dfcfw.com/pdf/H2_AN202508281736010965_1.pdf"}}}
         """
         start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
@@ -413,7 +413,6 @@ class EmDataSubSource(EmDataSource):
         res = Attr.get_by_point(data, 'data.list', [])
         total = Attr.get_by_point(data, 'data.total_hits', 0)
         ret = [{
-            'month': d['notice_date'][:8].replace('-', ''),
             'date': d['notice_date'][:10],
             'art_code': Attr.get(d, 'art_code', ''),  # 文件代码
             'title': Attr.get(d, 'title', ''),  # 文件标题
@@ -421,6 +420,7 @@ class EmDataSubSource(EmDataSource):
             'post_time': d['display_time'],  # 发布时间: str - Y-m-d H:i:s
             'url': f'https://pdf.dfcfw.com/pdf/H2_{Attr.get(d, 'art_code', '')}_1.pdf',  # 文件链接
         } for d in res]
-        ret = Attr.group_item_by_key(ret, 'month')
+        ret = Attr.group_item_by_key(ret, 'date')
+        ret = {k: ret[k][0] for k in sorted(ret.keys())}
         ret = {"total": total, "data": ret}  # 由于接口最多只返回 100 条，所以外面调用需要根据总数循环进行请求
         return self._ret(ret, pid, start_time)
