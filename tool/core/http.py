@@ -132,10 +132,10 @@ class Http:
         随机获取代理隧道池编号
 
         :param int pn: 隧道池编号
-        :return:
+        :return: 隧道号
         """
-        if pn is None:
-            return pn
+        if pn is not None:
+            return int(pn)
         # {隧道池编号: 数量} - 确保数量多的隧道被选中的概率最高
         number_counts = {
             51: 73,
