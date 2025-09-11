@@ -114,7 +114,7 @@ class GPLUpdateService:
         """
         更新股票日线数据
         :param code_str: 股票代码列表，一般是50个
-        :param is_force:  99: 仅拉取股票历史数据 | 98: 对历史数据入库 | 0,10: 今日 | 15: 更新最近五天  | 17: 最近一周
+        :param is_force:  99: 仅拉取股票历史数据 | 98: 对历史数据入库 | 10: 今日 | 0,15: 更新最近五天  | 17: 最近一周
         :return:
         """
         code_list = code_str.split(',')
@@ -124,7 +124,7 @@ class GPLUpdateService:
         code_list = [Str.remove_stock_prefix(c) for c in code_list]
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
 
-        n = 0 if is_force == 0 else is_force - 10
+        n = 5 if is_force == 0 else is_force - 10
         st = Time.dft(Time.now() - n * 86400, '%Y-%m-%d')
         et = Time.date('%Y-%m-%d')
         if is_force > 90:  # 初始化

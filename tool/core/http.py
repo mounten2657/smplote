@@ -138,12 +138,12 @@ class Http:
             return int(pn)
         # {隧道池编号: 数量} - 确保数量多的隧道被选中的概率最高
         number_counts = {
-            51: 73,
-            82: 17,
-            57: 18,
-            61: 22,
-            62: 13,
-            76: 11
+            51: 75,  # J池 （50%）
+            82: 18,  # D池
+            57: 18,  # B池
+            61: 18,  # Z池
+            62: 12,  # X池
+            76: 9  # X池 （三分钟版）
         }
         number_list = list(itertools.chain.from_iterable(
             [num] * count for num, count in number_counts.items()
