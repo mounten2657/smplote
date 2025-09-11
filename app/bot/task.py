@@ -28,14 +28,14 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def vp_msg(self):
-        """vp消息重试 - 每小时的10分"""
+        """vp消息重试 - 每小时的第10分钟"""
         if Time.is_night():
             return self.success(True)
         res = self.vp.callback_handler_retry(self.app_key, {"ids": "-1"})
         return self.success(res)
 
     def vp_room(self):
-        """刷新群聊的信息 - 59分钟一次"""
+        """刷新群聊的信息 - 每小时的第58分钟"""
         if Time.is_night():
             return self.success(True)
         g_wxid_str = self.params.get('g_wxid_str', '')
@@ -48,7 +48,7 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def rf_proxy(self):
-        """刷新代理服务 - 58分钟一次"""
+        """刷新代理服务 - 每小时的第11分钟"""
         res = Http.init_proxy()
         return self.success(res)
 
