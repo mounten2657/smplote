@@ -54,22 +54,22 @@ class EmDataSource:
         :param: method: 请求方式: GET | POST
         :return: 解析后的JSON数据，失败返回None
         """
-        for i in range(self.retry_times):
+        for i in range(0, self.retry_times):
             info = {}
             pid = 0
             proxy = ''
+            rand = Str.randint(1, 10000) % 10
+            params['nat_int'] = rand
+            # 如果已经有了日志数据就不用请求接口了
+            if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
+                pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
+                if isinstance(pid, dict):
+                    if pid['response_result'] and isinstance(pid['response_result'], dict):
+                        return pid['response_result'], 0
+                    else:
+                        info = pid
+                        pid = pid['id']
             try:
-                rand = Str.randint(1, 10000) % 10
-                params['nat_int'] = rand
-                # 如果已经有了日志数据就不用请求接口了
-                if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
-                    pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
-                    if isinstance(pid, dict):
-                        if pid['response_result'] and isinstance(pid['response_result'], dict):
-                            return pid['response_result'], 0
-                        else:
-                            info = pid
-                            pid = pid['id']
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
                 rand = (pid % 10) if pid else rand  # 因为只有本地才能使用代理，所以这里大大增大本地请求的比例
                 # rand = 0  # 机器坏了，先指定固定的
@@ -103,6 +103,8 @@ class EmDataSource:
                     params['proxy'] = proxy
                 logger.warning(f"请求失败 ({i + 1}/{self.retry_times}): {url} - {params} - 错误 - {err}", 'EM_API_ERR')
                 if i == self.retry_times - 1:
+                    if pid:
+                        self.ldb.update_gpl_api_log(pid, {'request_params': params})
                     return None, 0
 
     def _ret(self, res, pid, start_time):
