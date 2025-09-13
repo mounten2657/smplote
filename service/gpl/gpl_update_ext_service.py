@@ -511,7 +511,7 @@ class GPLUpdateExtService:
                 url = Attr.get(d[day], 'url', '')
                 # 文件下载
                 fn = f"{symbol}_{date}-{title}.pdf"
-                fd = f"/gpl/notice_file/{symbole}/{month}/"
+                fd = f"/gpl/notice_file/{symbol}/{month}/"
                 d[day]['file_url'] = VppServeService.download_website_file(url, biz_code, fn, fd)
                 if ff_info or day < self._INIT_ST:
                     logger.warning(f"跳过财务公告文件数据<{symbol}><{day}>", 'UP_FNF_WAR')
