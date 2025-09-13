@@ -452,7 +452,7 @@ class GPLUpdateExtService:
         if not d_info:
             logger.warning(f"暂无财务主要指标数据<{symbol}><{td}> - {n}", 'UP_FNI_WAR')
             return ret
-        for day, d in list(d_info.keys()):
+        for day in list(d_info.keys()):
             fi_info = Attr.get(fni_list, f"{symbol}_{day}")
             if fi_info or day < self._INIT_ST:
                 logger.warning(f"跳过财务主要指标数据<{symbol}><{day}>", 'UP_FNI_WAR')
@@ -473,7 +473,7 @@ class GPLUpdateExtService:
         if not d_info:
             logger.warning(f"暂无财务杜邦分析数据<{symbol}><{td}> - {n}", 'UP_FND_WAR')
             return ret
-        for day, d in list(d_info.keys()):
+        for day in list(d_info.keys()):
             fd_info = Attr.get(fni_list, f"{symbol}_{day}")
             if fd_info or day < self._INIT_ST:
                 logger.warning(f"跳过财务杜邦分析数据<{symbol}><{day}>", 'UP_FND_WAR')
@@ -503,16 +503,16 @@ class GPLUpdateExtService:
             res = {}
             if not d:
                 return res
-            for day, dd in list(d.keys()):
+            for day in list(d.keys()):
                 ff_info = Attr.get(fni_list, f"{symbol}_{day}")
                 date = day.replace('-', '')
                 month = day[:8].replace('-', '')
-                title = Attr.get(dd, 'title', '')
-                url = Attr.get(dd, 'url', '')
+                title = Attr.get(d[day], 'title', '')
+                url = Attr.get(d[day], 'url', '')
                 # 文件下载
                 fn = f"{symbol}_{date}-{title}.pdf"
                 fd = f"/gpl/notice_file/{symbole}/{month}/"
-                dd['file_url'] = VppServeService.download_website_file(url, biz_code, fn, fd)
+                d[day]['file_url'] = VppServeService.download_website_file(url, biz_code, fn, fd)
                 if ff_info or day < self._INIT_ST:
                     logger.warning(f"跳过财务公告文件数据<{symbol}><{day}>", 'UP_FNF_WAR')
                     del d[day]
