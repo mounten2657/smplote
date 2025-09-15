@@ -84,6 +84,17 @@ class Time:
             raise ValueError(f"时间戳无效[{timestamp}]。原始错误: {e}")
 
     @staticmethod
+    def dnd(sd, n, date_format="%Y-%m-%d"):
+        """
+        相对日期快捷计算
+        :param str sd:  源日期
+        :param int n:  相对源日期加减多少天
+        :param date_format:  日期格式（如 "%Y-%m-%d %H:%M:%S"）
+        :return:  相对后的日期
+        """
+        return Time.dft(Time.tfd(sd, date_format) + n * 86400, date_format)
+
+    @staticmethod
     def month_last_day(date, date_format='%Y-%m-%d'):
         """
         获取指定月的最后一天

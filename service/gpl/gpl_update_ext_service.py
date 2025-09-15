@@ -57,15 +57,12 @@ class GPLUpdateExtService:
             day_list.append(Time.recent_season_day(nn))
         day_list.reverse()
         day = int(Time.date('%d'))
-        td = Time.date('%Y-%m-%d')
-        check_day = [1, 10, 20]
-        if is_force > 90:  # 初始化
-            check_day = range(1, 32)
-            td = self._INIT_ET
+        td = self._INIT_ET if is_all else Time.date('%Y-%m-%d')
+        sd = self._INIT_ST if is_all else Time.dnd(td, -30)
+        check_day = range(1, 32) if is_all else [1, 10, 20]
         if day in check_day:
             tdl = [] if is_all else day_list
             cdl = [Time.date('%Y-%m') + f"-{chd:02d}" for chd in check_day]
-            md = Time.dft(Time.tfd(self._INIT_ST if is_all else td, '%Y-%m-%d') - 30 * 86400, '%Y-%m-%d')
             if 0 == is_force or 91 == is_force:
                 gd_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_TOP10')
                 gd_list_free = jdb.get_season_list(symbol_list, tdl, 'EM_GD_TOP10_FREE')
@@ -81,15 +78,21 @@ class GPLUpdateExtService:
                 dvo_list = jdb.get_season_list(symbol_list, cdl, 'EM_DV_OV')
                 dvt_list = jdb.get_season_list(symbol_list, cdl, 'EM_DV_OV_TEXT')
             if 0 == is_force or 97 == is_force:
-                dvh_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST', md)
+                dvh_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST', sd)
             if 0 == is_force or 98 == is_force:
-                dvr_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST_R', md)
+                dvr_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST_R', sd)
             if 0 == is_force or 99 == is_force:
-                dvp_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST_P', md)
+                dvp_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST_P', sd)
             if 100 == is_force:
-                b_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_TB'), 'symbol')
+                b_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_ZY_BA'), 'symbol')
             if 0 == is_force or 101 == is_force:
-                zyi_list = jdb.get_season_list(symbol_list, [], 'EM_ZY_IT', md)
+                zyi_list = jdb.get_season_list(symbol_list, [], 'EM_ZY_IT', sd)
+            if 0 == is_force or 102 == is_force:
+                fni_list = jdb.get_season_list(symbol_list, [], 'EM_FN_IT', sd)
+            if 0 == is_force or 103 == is_force:
+                fnd_list = jdb.get_season_list(symbol_list, [], 'EM_FN_DP', sd)
+            if 0 == is_force or 104 == is_force:
+                fnn_list = jdb.get_season_list(symbol_list, [], 'EM_FN_NF', sd)
 
         @Ins.multiple_executor(1)
         def _up_saf_exec(code):
@@ -136,17 +139,17 @@ class GPLUpdateExtService:
                     logger.debug(f"更新分红历史结果<{symbol}>{percent} - DH - {ret}", 'UP_SAF_INF')
                 # 东财分红股息率更新
                 if 0 == is_force or 98 == is_force:
-                    ret = ret | self._up_dvr_em(symbol, dvr_list, self._INIT_ST, self._INIT_ET)
-                    logger.debug(f"更新分红股息率结果<{symbol}>{percent} - DH - {ret}", 'UP_SAF_INF')
+                    ret = ret | self._up_dvr_em(symbol, dvr_list, sd, td)
+                    logger.debug(f"更新分红股息率结果<{symbol}>{percent} - DR - {ret}", 'UP_SAF_INF')
                 # 东财分红股利支付率更新
                 if 0 == is_force or 99 == is_force:
-                    ret = ret | self._up_dvp_em(symbol, dvp_list, self._INIT_ST, self._INIT_ET)
-                    logger.debug(f"更新分红股利支付率结果<{symbol}>{percent} - DH - {ret}", 'UP_SAF_INF')
+                    ret = ret | self._up_dvp_em(symbol, dvp_list, sd, td)
+                    logger.debug(f"更新分红股利支付率结果<{symbol}>{percent} - DP - {ret}", 'UP_SAF_INF')
                 # 东财经营评述长文本更新
                 if 100 == is_force:
                     b_em = Attr.get(b_list_em, symbol, [])
                     ret = ret | self._up_zyb_em(symbol, b_em)
-                    logger.debug(f"更新经营评述长文本结果<{symbol}>{percent} - ETB - {ret}", 'UP_SAF_INF')
+                    logger.debug(f"更新经营评述长文本结果<{symbol}>{percent} - ZYB - {ret}", 'UP_SAF_INF')
                 # 东财主营构成列表更新
                 if 0 == is_force or 101 == is_force:
                     year = int(Time.date('%Y'))
@@ -159,6 +162,18 @@ class GPLUpdateExtService:
                         ]
                     ret = ret | self._up_zyi_em(symbol, zyi_list, td_list)
                     logger.debug(f"更新主营构成列表结果<{symbol}>{percent} - ZYI - {ret}", 'UP_SAF_INF')
+                # 东财财务主要指标更新
+                if 0 == is_force or 102 == is_force:
+                    ret = ret | self._up_fni_em(symbol, fni_list, td, n)
+                    logger.debug(f"更新财务主要指标结果<{symbol}>{percent} - FNI - {ret}", 'UP_SAF_INF')
+                # 东财财务杜邦分析更新
+                if 0 == is_force or 103 == is_force:
+                    ret = ret | self._up_fnd_em(symbol, fnd_list, td, n)
+                    logger.debug(f"更新财务杜邦分析结果<{symbol}>{percent} - FND - {ret}", 'UP_SAF_INF')
+                # 东财财务公告文件更新
+                if 0 == is_force or 104 == is_force:
+                    ret = ret | self._up_fnn_em(symbol, fnn_list, td)
+                    logger.debug(f"更新财务公告文件结果<{symbol}>{percent} - FNN - {ret}", 'UP_SAF_INF')
             if not is_force:
                 cl_em = Attr.get(c_list_em, symbol, [])
                 t_em = Attr.get(t_list_em, symbol, [])
@@ -462,7 +477,7 @@ class GPLUpdateExtService:
         ret['ifi'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 
-    def _up_fnd_em(self, symbol, fni_list, td, n):
+    def _up_fnd_em(self, symbol, fnd_list, td, n):
         """更新股票财务杜邦分析"""
         ret = {}
         jdb = GPLSeasonModel()
@@ -474,7 +489,7 @@ class GPLUpdateExtService:
             logger.warning(f"暂无财务杜邦分析数据<{symbol}><{td}> - {n}", 'UP_FND_WAR')
             return ret
         for day in list(d_info.keys()):
-            fd_info = Attr.get(fni_list, f"{symbol}_{day}")
+            fd_info = Attr.get(fnd_list, f"{symbol}_{day}")
             if fd_info or day < self._INIT_ST:
                 logger.warning(f"跳过财务杜邦分析数据<{symbol}><{day}>", 'UP_FND_WAR')
                 del d_info[day]
@@ -483,7 +498,7 @@ class GPLUpdateExtService:
         ret['ifd'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 
-    def _up_fnf_em(self, symbol, fni_list, td, n):
+    def _up_fnn_em(self, symbol, fnn_list, td):
         """更新股票财务公告文件"""
         ret = {}
         jdb = GPLSeasonModel()
@@ -493,18 +508,18 @@ class GPLUpdateExtService:
 
         def get_fn_file(pn, ps):
             d = self.formatter.em.get_fn_notice_file(symbol, td, pn, ps)
-            total, d = Attr.get(d, "total"), Attr.get(d, "data")
-            if not d or not total:
+            t, d = Attr.get(d, "total"), Attr.get(d, "data")
+            if not d or not t:
                 logger.warning(f"暂无财务公告文件数据<{symbol}><{td}> - {pn}/{ps}", 'UP_FNF_WAR')
                 return 0, {}
-            return total, d
+            return t, d
 
         def save_fn_file(d):
             res = {}
             if not d:
                 return res
             for day in list(d.keys()):
-                ff_info = Attr.get(fni_list, f"{symbol}_{day}")
+                ff_info = Attr.get(fnn_list, f"{symbol}_{day}")
                 date = day.replace('-', '')
                 month = day[:8].replace('-', '')
                 title = Attr.get(d[day], 'title', '')
