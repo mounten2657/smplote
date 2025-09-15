@@ -14,6 +14,10 @@ logger = Logger()
 class GplFormatterService:
     """股票获取类"""
 
+    # 初始化的开始结束日期
+    INIT_ST = '2000-01-01'
+    INIT_ET = '2025-07-31'
+
     def __init__(self):
         self.ak = AkDataSource()
         self.em = EmDataSubSource()

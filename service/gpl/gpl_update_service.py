@@ -15,8 +15,8 @@ class GPLUpdateService:
     """股票更新类"""
 
     # 初始化的开始结束日期
-    _INIT_ST = '2000-01-01'
-    _INIT_ET = '2025-07-31'
+    _INIT_ST = GplFormatterService.INIT_ST
+    _INIT_ET = GplFormatterService.INIT_ET
 
     def __init__(self):
         self.formatter = GplFormatterService()
