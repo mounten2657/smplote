@@ -14,9 +14,6 @@ logger = Logger()
 class GPLUpdateEccService:
     """股票更新附属类 - 概念板块"""
 
-    _INIT_ST = GplFormatterService.INIT_ST
-    _INIT_ET = GplFormatterService.INIT_ET
-
     def __init__(self):
         self.formatter = GplFormatterService()
 

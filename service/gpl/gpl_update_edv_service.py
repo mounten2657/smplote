@@ -10,9 +10,6 @@ logger = Logger()
 class GPLUpdateEdvService:
     """股票更新附属类 - 分红信息"""
 
-    _INIT_ST = GplFormatterService.INIT_ST
-    _INIT_ET = GplFormatterService.INIT_ET
-
     def __init__(self):
         self.formatter = GplFormatterService()
 
@@ -51,7 +48,7 @@ class GPLUpdateEdvService:
             return ret
         for day, d in d_info.items():
             dv_info = Attr.get(dvh_list, f"{symbol}_{day}")
-            if dv_info or day < self._INIT_ST:
+            if dv_info or day < self.formatter.INIT_ST:
                 logger.warning(f"跳过分红历史数据<{symbol}><{day}>", 'UP_DVH_WAR')
                 del d_info[day]
                 continue
@@ -72,7 +69,7 @@ class GPLUpdateEdvService:
             return ret
         for day in list(d_info.keys()):
             dv_info = Attr.get(dvr_list, f"{symbol}_{day}")
-            if dv_info or day < self._INIT_ST:
+            if dv_info or day < self.formatter.INIT_ST:
                 logger.warning(f"跳过分红股息率数据<{symbol}><{day}>", 'UP_DVR_WAR')
                 del d_info[day]
                 continue
@@ -93,7 +90,7 @@ class GPLUpdateEdvService:
             return ret
         for day in list(d_info.keys()):
             dv_info = Attr.get(dvp_list, f"{symbol}_{day}")
-            if dv_info or day < self._INIT_ST:
+            if dv_info or day < self.formatter.INIT_ST:
                 logger.warning(f"跳过分红股利支付率数据<{symbol}><{day}>", 'UP_DVP_WAR')
                 del d_info[day]
                 continue
@@ -136,7 +133,7 @@ class GPLUpdateEdvService:
                 return ret
             for day in list(d_info.keys()):
                 zy_info = Attr.get(zyi_list, f"{symbol}_{day}")
-                if zy_info or day < self._INIT_ST:
+                if zy_info or day < self.formatter.INIT_ST:
                     logger.warning(f"跳过主营构成列表数据<{symbol}><{day}>", 'UP_ZYI_WAR')
                     del d_info[day]
                     continue

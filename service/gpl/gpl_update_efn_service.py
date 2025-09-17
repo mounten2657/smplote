@@ -10,9 +10,6 @@ logger = Logger()
 class GPLUpdateEfnService:
     """股票更新附属类 - 财务信息"""
 
-    _INIT_ST = GplFormatterService.INIT_ST
-    _INIT_ET = GplFormatterService.INIT_ET
-
     def __init__(self):
         self.formatter = GplFormatterService()
 
@@ -29,7 +26,7 @@ class GPLUpdateEfnService:
             return ret
         for day in list(d_info.keys()):
             fi_info = Attr.get(fni_list, f"{symbol}_{day}")
-            if fi_info or day < self._INIT_ST:
+            if fi_info or day < self.formatter.INIT_ST:
                 logger.warning(f"跳过财务主要指标数据<{symbol}><{day}>", 'UP_FNI_WAR')
                 del d_info[day]
                 continue
@@ -50,7 +47,7 @@ class GPLUpdateEfnService:
             return ret
         for day in list(d_info.keys()):
             fd_info = Attr.get(fnd_list, f"{symbol}_{day}")
-            if fd_info or day < self._INIT_ST:
+            if fd_info or day < self.formatter.INIT_ST:
                 logger.warning(f"跳过财务杜邦分析数据<{symbol}><{day}>", 'UP_FND_WAR')
                 del d_info[day]
                 continue
@@ -88,7 +85,7 @@ class GPLUpdateEfnService:
                 fn = f"{symbol}_{date}-{title}.pdf"
                 fd = f"/gpl/notice_file/{symbol}/{month}/"
                 d[day]['file_url'] = VppServeService.download_website_file(url, biz_code, fn, fd)
-                if ff_info or day < self._INIT_ST:
+                if ff_info or day < self.formatter.INIT_ST:
                     logger.warning(f"跳过财务公告文件数据<{symbol}><{day}>", 'UP_FNF_WAR')
                     del d[day]
                     continue
