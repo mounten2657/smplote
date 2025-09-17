@@ -60,10 +60,10 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def gpl_ext(self):
-        """更新股票额外信息 - 每天下午的04点11分"""
+        """更新股票额外信息 - 每天凌晨的04点11分"""
         code_str = self.params.get('code_str', '')
         is_force = self.params.get('is_force', 0)
-        res = self.gpl.quick_update_symbol(code_str, int(is_force), 'GPL_SAF')
+        res = self.gpl.quick_update_symbol(code_str, int(is_force), 'GPL_EXT')
         return self.success(res)
 
     def gpl_daily(self):

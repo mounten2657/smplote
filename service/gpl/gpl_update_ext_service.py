@@ -67,6 +67,7 @@ class GPLUpdateExtService:
 
         # 数据查询配置 - （key: 业务标识, value: (force条件, 执行日期, 业务代码, 参数列表)）
         season_data_config = {
+            # 普通规则 - 日期交叉执行
             "gd": (lambda f: f in (0, 91), [3, 13], "EM_GD_TOP10", [day_list, '']),
             "gd_free": (lambda f: f in (0, 91), [3, 13], "EM_GD_TOP10_FREE", [day_list, '']),
             "gdn": (lambda f: f in (0, 92), [4, 14], "EM_GD_NUM", [day_list, '']),
