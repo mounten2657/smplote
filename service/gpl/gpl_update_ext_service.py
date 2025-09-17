@@ -1,4 +1,5 @@
 from service.gpl.gpl_formatter_service import GplFormatterService
+from service.gpl.gpl_update_ecc_service import GPLUpdateEccService
 from service.gpl.gpl_update_edv_service import GPLUpdateEdvService
 from service.gpl.gpl_update_efn_service import GPLUpdateEfnService
 from service.gpl.gpl_update_egd_service import GPLUpdateEgdService
@@ -28,171 +29,142 @@ class GPLUpdateExtService:
 
     def __init__(self):
         self.formatter = GplFormatterService()
+        self.ecc = GPLUpdateEccService()
         self.edv = GPLUpdateEdvService()
         self.efn = GPLUpdateEfnService()
         self.egd = GPLUpdateEgdService()
 
     def update_symbol_ext(self, code_str, is_force=0):
         """更新股票额外数据 - 多线程"""
-        code_list = code_str.split(',')
+        code_list = [Str.remove_stock_prefix(c) for c in code_str.split(',') if c.strip()]
         if not code_list:
             return False
-        all_code_list = self.formatter.get_stock_code_all()
-        sdb = GPLSymbolModel()
-        kdb = GPLConstKvModel()
-        cdb = GPLConceptModel()
-        tdb = GPLSymbolTextModel()
-        jdb = GPLSeasonModel()
-        code_list = [Str.remove_stock_prefix(c) for c in code_list]
-        symbol_list = [Str.add_stock_prefix(c) for c in code_list]
-        s_list = sdb.get_symbol_list(symbol_list)
-        s_list = {f"{d['symbol']}": d for d in s_list}
-        if not is_force:
-            k_list_em = kdb.get_const_list('EM_CONCEPT')
-            c_list_em = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'EM'), 'symbol')
-            t_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_TC'), 'symbol')
-            if Time.date('%Y-%m-%d') <= self._INIT_ET:
-                k_list_xq = kdb.get_const_list('XQ_CONCEPT')
-                c_list_xq = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, 'XQ'), 'symbol')
 
-        day_list = []
-        n = 102 if is_force > 90 else 3
+        # 初始化数据库实例
+        db_instances = {
+            "sdb": GPLSymbolModel(),
+            "kdb": GPLConstKvModel(),
+            "cdb": GPLConceptModel(),
+            "tdb": GPLSymbolTextModel(),
+            "jdb": GPLSeasonModel()
+        }
+
+        # 获取基础数据
+        all_code_list = self.formatter.get_stock_code_all()
+        symbol_list = [Str.add_stock_prefix(c) for c in code_list]
+        s_list = {d["symbol"]: d for d in db_instances["sdb"].get_symbol_list(symbol_list)}
+
+        # 计算通用时间参数
+        current_date = Time.date('%Y-%m-%d')
+        current_day = int(Time.date('%d'))
         is_all = int(is_force > 90)
-        for nn in range(1, n + 1):
-            day_list.append(Time.recent_season_day(nn))
-        day_list.reverse()
-        day = int(Time.date('%d'))
-        td = self._INIT_ET if is_all else Time.date('%Y-%m-%d')
+        n = 102 if is_all else 3
+        td = self._INIT_ET if is_all else current_date
         sd = self._INIT_ST if is_all else Time.dnd(td, -30)
-        check_day = range(1, 32) if is_all else [1, 10, 20]
-        if day in check_day:
-            tdl = [] if is_all else day_list
-            cdl = [Time.date('%Y-%m') + f"-{chd:02d}" for chd in check_day]
-            if 0 == is_force or 91 == is_force:
-                gd_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_TOP10')
-                gd_list_free = jdb.get_season_list(symbol_list, tdl, 'EM_GD_TOP10_FREE')
-            if 0 == is_force or 92 == is_force:
-                gdn_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_NUM')
-            if 0 == is_force or 93 == is_force:
-                gdt_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_ORG_T')
-            if 0 == is_force or 94 == is_force:
-                gdd_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_ORG_D')
-            if 0 == is_force or 95 == is_force:
-                gdl_list = jdb.get_season_list(symbol_list, tdl, 'EM_GD_ORG_L')
-            if 0 == is_force or 96 == is_force:
-                dvo_list = jdb.get_season_list(symbol_list, cdl, 'EM_DV_OV')
-                dvt_list = jdb.get_season_list(symbol_list, cdl, 'EM_DV_OV_TEXT')
-            if 0 == is_force or 97 == is_force:
-                dvh_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST', sd)
-            if 0 == is_force or 98 == is_force:
-                dvr_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST_R', sd)
-            if 0 == is_force or 99 == is_force:
-                dvp_list = jdb.get_season_list(symbol_list, [], 'EM_DV_HIST_P', sd)
-            if 100 == is_force:
-                b_list_em = Attr.group_item_by_key(tdb.get_text_list(symbol_list, 'EM_ZY_BA'), 'symbol')
-            if 0 == is_force or 101 == is_force:
-                zyi_list = jdb.get_season_list(symbol_list, [], 'EM_ZY_IT', sd)
-            if 0 == is_force or 102 == is_force:
-                fni_list = jdb.get_season_list(symbol_list, [], 'EM_FN_IT', sd)
-            if 0 == is_force or 103 == is_force:
-                fnd_list = jdb.get_season_list(symbol_list, [], 'EM_FN_DP', sd)
-            if 0 == is_force or 104 == is_force:
-                fnn_list = jdb.get_season_list(symbol_list, [], 'EM_FN_NF', sd)
+        day_list = list(reversed([Time.recent_season_day(nn) for nn in range(1, n + 1)]))
+        cdl = [Time.date('%Y-%m-01'), Time.date('%Y-%m-10'), Time.date('%Y-%m-20')]
+        nrd_list = range(1, 32)
+
+        # 数据查询配置 - （key: 业务标识, value: (force条件, 执行日期, 业务代码, 参数列表)）
+        season_data_config = {
+            "gd": (lambda f: f in (0, 91), [3, 13], "EM_GD_TOP10", [day_list, '']),
+            "gd_free": (lambda f: f in (0, 91), [3, 13], "EM_GD_TOP10_FREE", [day_list, '']),
+            "gdn": (lambda f: f in (0, 92), [4, 14], "EM_GD_NUM", [day_list, '']),
+            "gdt": (lambda f: f in (0, 93), [5, 15], "EM_GD_ORG_T", [day_list, '']),
+            "gdd": (lambda f: f in (0, 94), [6, 16], "EM_GD_ORG_D", [day_list, '']),
+            "gdl": (lambda f: f in (0, 95), [7, 17], "EM_GD_ORG_L", [day_list, '']),
+            "dvo": (lambda f: f in (0, 96), [8, 18], "EM_DV_OV", [cdl, '']),
+            "dvt": (lambda f: f in (0, 96), [8, 18], "EM_DV_OV_TEXT", [cdl, '']),
+            "dvh": (lambda f: f in (0, 97), [9, 19], "EM_DV_HIST", [[], sd]),
+            "dvr": (lambda f: f in (0, 98), [10, 20], "EM_DV_HIST_R", [[], sd]),
+            "dvp": (lambda f: f in (0, 99), [11, 21], "EM_DV_HIST_P", [[], sd]),
+            "zyi": (lambda f: f in (0, 100), [12, 22], "EM_ZY_IT", [[], sd]),
+            "fni": (lambda f: f in (0, 101), [13, 23], "EM_FN_IT", [[], sd]),
+            "fnd": (lambda f: f in (0, 102), [14, 24], "EM_FN_DP", [[], sd]),
+            "fnn": (lambda f: f in (0, 103), [15, 25], "EM_FN_NF", [[], sd]),
+            # 特殊规则 - 文本类、一次性等
+            "zyb": (lambda f: f == 200, nrd_list, "EM_ZY_BA", symbol_list),
+            "cem": (lambda f: f == 201, nrd_list, "EM_CONCEPT", symbol_list),
+            "cxq": (lambda f: f == 202, nrd_list, "XQ_CONCEPT", symbol_list),
+        }
+
+        # 批量查询集成数据
+        season_data = {}
+        jdb = db_instances["jdb"]
+        kdb = db_instances["kdb"]
+        cdb = db_instances["cdb"]
+        tdb = db_instances["tdb"]
+        for key, (force_check, rd_list, biz_code, query_param) in season_data_config.items():
+            if force_check(is_force) and current_day in rd_list:
+                if key == "zyb":
+                    season_data[key] = Attr.group_item_by_key(tdb.get_text_list(query_param, biz_code), "symbol")
+                elif key == "cem":
+                    season_data[key]["k_list_em"] = kdb.get_const_list("EM_CONCEPT")
+                    season_data[key]["c_list_em"] = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, "EM"), "symbol")
+                    season_data[key]["t_list_em"] = Attr.group_item_by_key(tdb.get_text_list(symbol_list, "EM_TC"), "symbol")
+                elif key == "cxq":
+                    season_data[key]["k_list_xq"] = kdb.get_const_list("XQ_CONCEPT")
+                    season_data[key]["c_list_xq"] = Attr.group_item_by_key(cdb.get_concept_list(symbol_list, "XQ"), "symbol")
+                else:  # 通用季度数据查询
+                    season_data[key] = jdb.get_season_list(symbol_list, query_param[0], biz_code, query_param[1])
+        # 加载固定执行且不需要原始数据的
+        season_data['scl'] = None
 
         @Ins.multiple_executor(1)
-        def _up_saf_exec(code):
+        def _up_ext_exec(code):
             Time.sleep(Str.randint(1, 10) / 100)
             ret = {}
             symbol = Str.add_stock_prefix(code)
-            info = Attr.get(s_list, symbol)
+            info = s_list.get(symbol)
             percent = self.formatter.get_percent(code, code_list, all_code_list)
+
+            # 参数检查
             if not info:
-                logger.warning(f"未查询到股票数据<{symbol}>{percent}", 'UP_SAF_WAR')
+                logger.warning(f"未查询到股票数据<{symbol}>{percent}", 'UP_EXT_WAR')
                 return False
-            logger.debug(f"更新股票额外数据<{symbol}>{percent} - STA", 'UP_SAF_INF')
-            # 季度相关数据
-            if day in check_day:
-                is_special = int(symbol in self._S_GD_LIST)
-                sd_list = [Time.date('%Y-%m-%d') if not is_force else self._INIT_ET] if is_special else day_list
-                # 东财十大股东更新
-                if 0 == is_force or 91 == is_force:
-                    ret = ret | self.egd.up_gd_em(symbol, gd_list, gd_list_free, sd_list, n, is_special)
-                    logger.debug(f"更新十大股东结果<{symbol}>{percent} - GD - {ret}", 'UP_SAF_INF')
-                # 东财股东人数合计更新
-                if 0 == is_force or 92 == is_force:
-                    ret = ret | self.egd.up_gdn_em(symbol, gdn_list, sd_list, n, is_special)
-                    logger.debug(f"更新股东人数合计结果<{symbol}>{percent} - GN - {ret}", 'UP_SAF_INF')
-                # 东财股东机构合计更新
-                if 0 == is_force or 93 == is_force:
-                    ret = ret | self.egd.up_gdt_em(symbol, gdt_list, day_list)
-                    logger.debug(f"更新股东机构合计结果<{symbol}>{percent} - GT - {ret}", 'UP_SAF_INF')
-                # 东财股东机构明细更新
-                if 0 == is_force or 94 == is_force:
-                    ret = ret | self.egd.up_gdd_em(symbol, gdd_list, day_list)
-                    logger.debug(f"更新股东机构明细结果<{symbol}>{percent} - GA - {ret}", 'UP_SAF_INF')
-                # 东财股东机构列表更新
-                if 0 == is_force or 95 == is_force:
-                    ret = ret | self.egd.up_gdl_em(symbol, gdl_list, day_list)
-                    logger.debug(f"更新股东机构列表结果<{symbol}>{percent} - GL - {ret}", 'UP_SAF_INF')
-                # 东财分红概览更新
-                if 0 == is_force or 96 == is_force:
-                    ret = ret | self.edv.up_dvo_em(symbol, dvo_list, dvt_list, td)
-                    logger.debug(f"更新分红概览结果<{symbol}>{percent} - DO - {ret}", 'UP_SAF_INF')
-                # 东财分红历史更新
-                if 0 == is_force or 97 == is_force:
-                    ret = ret | self.edv.up_dvh_em(symbol, dvh_list, td, n)
-                    logger.debug(f"更新分红历史结果<{symbol}>{percent} - DH - {ret}", 'UP_SAF_INF')
-                # 东财分红股息率更新
-                if 0 == is_force or 98 == is_force:
-                    ret = ret | self.edv.up_dvr_em(symbol, dvr_list, sd, td)
-                    logger.debug(f"更新分红股息率结果<{symbol}>{percent} - DR - {ret}", 'UP_SAF_INF')
-                # 东财分红股利支付率更新
-                if 0 == is_force or 99 == is_force:
-                    ret = ret | self.edv.up_dvp_em(symbol, dvp_list, sd, td)
-                    logger.debug(f"更新分红股利支付率结果<{symbol}>{percent} - DP - {ret}", 'UP_SAF_INF')
-                # 东财经营评述长文本更新
-                if 100 == is_force:
-                    b_em = Attr.get(b_list_em, symbol, [])
-                    ret = ret | self.edv.up_zyb_em(symbol, b_em)
-                    logger.debug(f"更新经营评述长文本结果<{symbol}>{percent} - ZYB - {ret}", 'UP_SAF_INF')
-                # 东财主营构成列表更新
-                if 0 == is_force or 101 == is_force:
-                    year = int(Time.date('%Y'))
-                    td_list = [[f'{year - 1}-01-01', f'{year}-12-31']]
-                    if is_all:
-                        td_list = [
-                            ['2000-01-01', '2010-01-01'],
-                            ['2010-01-01', '2020-01-01'],
-                            ['2020-01-01', '2030-01-01'],
-                        ]
-                    ret = ret | self.edv.up_zyi_em(symbol, zyi_list, td_list)
-                    logger.debug(f"更新主营构成列表结果<{symbol}>{percent} - ZYI - {ret}", 'UP_SAF_INF')
-                # 东财财务主要指标更新
-                if 0 == is_force or 102 == is_force:
-                    ret = ret | self.efn.up_fni_em(symbol, fni_list, td, n)
-                    logger.debug(f"更新财务主要指标结果<{symbol}>{percent} - FNI - {ret}", 'UP_SAF_INF')
-                # 东财财务杜邦分析更新
-                if 0 == is_force or 103 == is_force:
-                    ret = ret | self.efn.up_fnd_em(symbol, fnd_list, td, n)
-                    logger.debug(f"更新财务杜邦分析结果<{symbol}>{percent} - FND - {ret}", 'UP_SAF_INF')
-                # 东财财务公告文件更新
-                if 0 == is_force or 104 == is_force:
-                    ret = ret | self.efn.up_fnn_em(symbol, fnn_list, td)
-                    logger.debug(f"更新财务公告文件结果<{symbol}>{percent} - FNN - {ret}", 'UP_SAF_INF')
-            if not is_force:
-                cl_em = Attr.get(c_list_em, symbol, [])
-                t_em = Attr.get(t_list_em, symbol, [])
-                # 雪球概念更新
-                if Time.date('%Y-%m-%d') <= self._INIT_ET:
-                    cl_xq = Attr.get(c_list_xq, symbol, [])
-                    ret = ret | self.formatter.update_by_xq(symbol, info, k_list_xq, cl_xq)
-                    logger.debug(f"更新股票雪概结果<{symbol}>{percent} - XQ - {ret}", 'UP_SAF_INF')
-                # 东财概念更新
-                ret = ret | self.formatter.update_by_em(symbol, info, k_list_em, cl_em, t_em)
-                logger.debug(f"更新股票东概结果<{symbol}>{percent} - EM - {ret}", 'UP_SAF_INF')
-                # 变更日志更新
-                ret = ret | self.formatter.update_change_log(symbol, info)
-                logger.debug(f"更新股票变更结果<{symbol}>{percent} - CL - {ret}", 'UP_SAF_INF')
+            logger.debug(f"更新股票额外数据<{symbol}>{percent} - STA", 'UP_EXT_INF')
+
+            # 特殊参数
+            is_special = int(symbol in self._S_GD_LIST)
+            sd_list = [current_date if not is_force else self._INIT_ET] if is_special else day_list
+            k_list_em = Attr.get_by_point(season_data, f"cem.k_list_em", [])
+            cl_em = Attr.get_by_point(season_data, f"cem.c_list_em.{symbol}", [])
+            t_em = Attr.get_by_point(season_data, f"cem.t_list_em.{symbol}", [])
+            k_list_xq = Attr.get_by_point(season_data, f"cxq.k_list_xq", [])
+            cl_xq = Attr.get_by_point(season_data, f"cxq.c_list_xq.{symbol}", [])
+
+
+            # 数据更新逻辑（key: 业务标识, value: (更新方法, 日志说明, 日志标识, 额外参数)）
+            season_update_config = {
+                # 普通规则 - 条件执行
+                "gd": (self.egd.up_gd_em, "十大股东", "GDA", (season_data["gd_free"], sd_list, n, is_special)),
+                "gdn": (self.egd.up_gdn_em, "股东人数合计", "GDN", (sd_list, n, is_special)),
+                "gdt": (self.egd.up_gdt_em, "股东机构合计", "GDT", (day_list,)),
+                "gdd": (self.egd.up_gdd_em, "股东机构明细", "GDD", (day_list,)),
+                "gdl": (self.egd.up_gdl_em, "股东机构列表", "GDL", (day_list,)),
+                "dvo": (self.edv.up_dvo_em, "分红概览", "DVO", (season_data["dvt"], td)),
+                "dvh": (self.edv.up_dvh_em, "分红历史", "DVH", (td, n)),
+                "dvr": (self.edv.up_dvr_em, "分红股息率", "DVR", (sd, td)),  # 1000w
+                "dvp": (self.edv.up_dvp_em, "分红股利支付率", "DVP", (sd, td)),
+                "zyi": (self.edv.up_zyi_em, "主营构成列表", "ZYI", (self.edv.get_zyi_td_list(is_all),)),
+                "fni": (self.efn.up_fni_em, "财务主要指标", "FNI", (td, n)),
+                "fnd": (self.efn.up_fnd_em, "财务杜邦分析", "FND", (td, n)),
+                "fnn": (self.efn.up_fnn_em, "财务公告文件", "FNN", (td,)),
+                # 特殊规则 - 一次性 或 固定执行
+                "zyb": (self.edv.up_zyb_em, "经营评述长文本", "ZYB", (Attr.get(season_data["zyb"], symbol, []),)),
+                "cem": (self.ecc.update_by_em, "东财概念", "CEM", (info, k_list_em, cl_em, t_em,)),
+                "cxq": (self.ecc.update_by_xq, "雪球概念", "CXQ", (info, k_list_xq, cl_xq,)),
+                "scl": (self.ecc.update_change_log, "股票变更", "SCL", (info,)),
+            }
+
+            # 批量执行数据更新
+            for key, (update_func, log_txt, log_tag, extra_args) in season_update_config.items():
+                if key in season_data:  # 只更新已查询到数据的业务
+                    update_ret = update_func(symbol, *(season_data[key],) if season_data[key] is not None else (), *extra_args)
+                    ret |= update_ret
+                    logger.debug(f"更新{log_txt}结果<{symbol}>{percent} - {log_tag} - {ret}", 'UP_EXT_RET')
+
             return ret
 
-        return _up_saf_exec(code_list)
+        # return {code: _up_ext_exec(code) for code in code_list}  # 单线程，调试专用，注释装饰器
+        return _up_ext_exec(code_list)  # 多线程

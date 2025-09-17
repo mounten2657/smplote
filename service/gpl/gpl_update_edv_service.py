@@ -60,7 +60,7 @@ class GPLUpdateEdvService:
         return ret
 
     def up_dvr_em(self, symbol, dvr_list, td, ed):
-        """更新股票分红股息率"""
+        """更新股票分红股息率 - 1000w数据"""
         ret = {}
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
@@ -143,3 +143,11 @@ class GPLUpdateEdvService:
             logger.warning(f"批量插入主营构成列表数据<{symbol}><{sd}/{ed}> - {len(d_info)}", 'UP_ZYI_WAR')
             ret['izi'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
+
+    def get_zyi_td_list(self, is_all):
+        """获取主营构成的时间区间列表"""
+        year = int(Time.date('%Y'))
+        if is_all:
+            return [['2000-01-01', '2010-01-01'], ['2010-01-01', '2020-01-01'], ['2020-01-01', '2030-01-01']]
+        return [[f'{year - 1}-01-01', f'{year}-12-31']]
+
