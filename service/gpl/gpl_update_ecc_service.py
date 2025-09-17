@@ -110,9 +110,11 @@ class GPLUpdateEccService:
             })
         return True
 
-    def update_change_log(self, symbol, info):
+    def update_change_log(self, symbol, info, is_scl):
         """更新股票变更日志"""
         ret = {}
+        if not is_scl:
+            return ret
         sdb = GPLSymbolModel()
         jdb = GPLSeasonModel()
         edb = GPLSymbolExtModel()

@@ -118,13 +118,14 @@ class GPLUpdateEdvService:
         })
         return ret
 
-    def up_zyi_em(self, symbol, zyi_list, td_list):
+    def up_zyi_em(self, symbol, zyi_list, is_all):
         """更新股票主营构成列表"""
         ret = {}
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
         des = '主营构成列表'
         biz_code = 'EM_ZY_IT'
+        td_list = self.get_zyi_td_list(is_all)
         for t_list in td_list:
             sd, ed = t_list
             d_info = self.formatter.em.get_zy_item(symbol, sd, ed)

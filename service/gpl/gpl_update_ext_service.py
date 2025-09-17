@@ -127,6 +127,7 @@ class GPLUpdateExtService:
             t_em = Attr.get_by_point(season_data, f"cem.t_list_em.{symbol}", [])
             k_list_xq = Attr.get_by_point(season_data, f"cxq.k_list_xq", [])
             cl_xq = Attr.get_by_point(season_data, f"cxq.c_list_xq.{symbol}", [])
+            is_scl = any('gd' in key for key in season_data.keys())
 
             # 数据更新逻辑（key: 业务标识, value: (更新方法, 日志说明, 日志标识, 额外参数)）
             season_update_config = {
@@ -140,7 +141,7 @@ class GPLUpdateExtService:
                 "dvh": (self.edv.up_dvh_em, "分红历史", "DVH", (td, n,)),
                 "dvr": (self.edv.up_dvr_em, "分红股息率", "DVR", (sd, td,)),  # 1000w
                 "dvp": (self.edv.up_dvp_em, "分红股利支付率", "DVP", (sd, td,)),
-                "zyi": (self.edv.up_zyi_em, "主营构成列表", "ZYI", (self.edv.get_zyi_td_list(is_all),)),
+                "zyi": (self.edv.up_zyi_em, "主营构成列表", "ZYI", (is_all,)),
                 "fni": (self.efn.up_fni_em, "财务主要指标", "FNI", (td, n,)),
                 "fnd": (self.efn.up_fnd_em, "财务杜邦分析", "FND", (td, n,)),
                 "fnn": (self.efn.up_fnn_em, "财务公告文件", "FNN", (td, n, info,)),
@@ -148,7 +149,7 @@ class GPLUpdateExtService:
                 "zyb": (self.edv.up_zyb_em, "经营评述长文本", "ZYB", (Attr.get_by_point(season_data, f"zyb.{symbol}"),)),
                 "cem": (self.ecc.update_by_em, "东财概念", "CEM", (info, k_list_em, cl_em, t_em,)),
                 "cxq": (self.ecc.update_by_xq, "雪球概念", "CXQ", (info, k_list_xq, cl_xq,)),
-                "scl": (self.ecc.update_change_log, "股票变更", "SCL", (info,)),
+                "scl": (self.ecc.update_change_log, "股票变更", "SCL", (info, is_scl)),
             }
 
             # 批量执行数据更新
