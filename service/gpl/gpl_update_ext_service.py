@@ -41,18 +41,16 @@ class GPLUpdateExtService:
             return False
 
         # 初始化数据库实例
-        db_instances = {
-            "sdb": GPLSymbolModel(),
-            "kdb": GPLConstKvModel(),
-            "cdb": GPLConceptModel(),
-            "tdb": GPLSymbolTextModel(),
-            "jdb": GPLSeasonModel()
-        }
+        sdb = GPLSymbolModel()
+        jdb = GPLSeasonModel()
+        kdb = GPLConstKvModel()
+        cdb = GPLConceptModel()
+        tdb = GPLSymbolTextModel()
 
         # 获取基础数据
         all_code_list = self.formatter.get_stock_code_all()
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
-        s_list = {d["symbol"]: d for d in db_instances["sdb"].get_symbol_list(symbol_list)}
+        s_list = {d["symbol"]: d for d in sdb.get_symbol_list(symbol_list)}
 
         # 计算通用时间参数
         current_date = Time.date('%Y-%m-%d')
@@ -91,10 +89,6 @@ class GPLUpdateExtService:
 
         # 批量查询集成数据
         season_data = {}
-        jdb = db_instances["jdb"]
-        kdb = db_instances["kdb"]
-        cdb = db_instances["cdb"]
-        tdb = db_instances["tdb"]
         for key, (force_check, rd_list, biz_code, query_param) in season_data_config.items():
             if force_check(is_force) and current_day in rd_list:
                 if key == "zyb":
