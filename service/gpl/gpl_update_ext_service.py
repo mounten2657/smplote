@@ -34,7 +34,7 @@ class GPLUpdateExtService:
         self.efn = GPLUpdateEfnService()
         self.egd = GPLUpdateEgdService()
 
-    def update_symbol_ext(self, code_str, is_force=0):
+    def update_symbol_ext(self, code_str, is_force=0, current_date=None):
         """更新股票额外数据 - 多线程"""
         code_list = [Str.remove_stock_prefix(c) for c in code_str.split(',') if c.strip()]
         if not code_list:
@@ -53,8 +53,8 @@ class GPLUpdateExtService:
         s_list = {d["symbol"]: d for d in sdb.get_symbol_list(symbol_list)}
 
         # 计算通用时间参数
-        current_date = Time.date('%Y-%m-%d')
-        current_day = int(Time.date('%d'))
+        current_date = current_date if current_date else Time.date('%Y-%m-%d')
+        current_day = int(current_date[-2:])
         is_all = int(is_force > 90)
         n = 103 if is_all else 3
         td = self._INIT_ET if is_all else current_date

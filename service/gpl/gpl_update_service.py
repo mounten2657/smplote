@@ -21,19 +21,22 @@ class GPLUpdateService:
     def __init__(self):
         self.formatter = GplFormatterService()
 
-    def quick_update_symbol(self, code_str='', is_force=0, sk='GPL_SYM'):
+    def quick_update_symbol(self, code_str='', is_force=0, sk='GPL_SYM', td=None):
         """
         多进程快速更新股票基础数据
+
         :param str code_str: 股票代码，不带市场前缀，多个用英文逗号隔开
         :param is_force: 是否强制更新
         :param sk: 更新类型
+        :param str td: 当前日期 - %Y-%m-%d
         :return:
         """
         # 周末不更新
         if not is_force and 6 <= Time.week():
             return False
+        current_date = td if td else Time.date('%Y-%m-%d')
         code_list = code_str.split(',') if code_str else self.formatter.get_stock_code_all()
-        logger.warning(f"总股票数据 - {len(code_list)}", 'UP_SYM_TOL')
+        logger.warning(f"[{current_date}]总股票数据 - {len(code_list)}", 'UP_SYM_TOL')
         if not code_list:
             return False
         chunk_list = Attr.chunk_list(code_list)
@@ -44,14 +47,16 @@ class GPLUpdateService:
             logger.warning(f"删除昨日板块 - {d_count}", 'UP_SYM_YST')
         # 快速转入批量队列中执行
         for c_list in chunk_list:
-            RedisTaskQueue.add_task_batch(sk, ','.join(c_list), is_force)
+            RedisTaskQueue.add_task_batch(sk, ','.join(c_list), is_force, current_date)
         return True
 
-    def update_symbol(self, code_str, is_force=0):
+    def update_symbol(self, code_str, is_force=0, current_date=None):
         """
-        更新股票数据
+        更新股票基础数据
+
         :param str code_str: 股票代码，不带市场前缀，多个用英文逗号隔开
         :param int is_force: 是否强制更新
+        :param str current_date: 当前日期 - %Y-%m-%d
         :return: 更新结果
         """
         sdb = GPLSymbolModel()
@@ -66,7 +71,7 @@ class GPLUpdateService:
 
         @Ins.multiple_executor(1)
         def _up_sym_exec(code):
-            res = {'ul': []}
+            res = {'td': current_date, 'ul': []}
             Time.sleep(Str.randint(1, 10) / 100)
             symbol = Str.add_stock_prefix(code)
             try:
@@ -110,11 +115,13 @@ class GPLUpdateService:
 
         return _up_sym_exec(code_list)
 
-    def update_symbol_daily(self, code_str, is_force=0):
+    def update_symbol_daily(self, code_str, is_force=0, current_date=None):
         """
         更新股票日线数据
+
         :param code_str: 股票代码列表，一般是50个
         :param is_force:  99: 仅拉取股票历史数据 | 98: 对历史数据入库 | 10: 今日 | 0,15: 更新最近五天  | 17: 最近一周
+        :param str current_date: 当前日期 - %Y-%m-%d
         :return:
         """
         code_list = code_str.split(',')
@@ -125,8 +132,8 @@ class GPLUpdateService:
         symbol_list = [Str.add_stock_prefix(c) for c in code_list]
 
         n = 5 if is_force == 0 else is_force - 10
-        st = Time.dft(Time.now() - n * 86400, '%Y-%m-%d')
-        et = Time.date('%Y-%m-%d')
+        et = current_date if current_date else Time.date('%Y-%m-%d')
+        st = Time.dnd(et, 0 - n)
         if is_force > 90:  # 初始化
             st = self._INIT_ST
             et = self._INIT_ET
