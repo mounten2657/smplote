@@ -288,7 +288,7 @@ class EmDataSubSource(EmDataSource):
         start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/get"
-        limit = limit if limit else 2
+        limit = limit if limit else 3
         params = {
             "type": "RPT_F10_FINANCE_MAINFINADATA",
             "sty": "APP_F10_MAINFINADATA",
@@ -367,7 +367,7 @@ class EmDataSubSource(EmDataSource):
         start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._DATA_URL + "/securities/api/data/v1/get"
-        limit = limit if limit else 2
+        limit = limit if limit else 3
         params = {
             "reportName": "RPT_F10_FINANCE_DUPONT",
             "columns": "ALL",

@@ -56,7 +56,7 @@ class GPLUpdateExtService:
         current_date = Time.date('%Y-%m-%d')
         current_day = int(Time.date('%d'))
         is_all = int(is_force > 90)
-        n = 102 if is_all else 3
+        n = 103 if is_all else 3
         td = self._INIT_ET if is_all else current_date
         sd = self._INIT_ST if is_all else Time.dnd(td, -30)
         day_list = list(reversed([Time.recent_season_day(nn) for nn in range(1, n + 1)]))
@@ -128,7 +128,6 @@ class GPLUpdateExtService:
             k_list_xq = Attr.get_by_point(season_data, f"cxq.k_list_xq", [])
             cl_xq = Attr.get_by_point(season_data, f"cxq.c_list_xq.{symbol}", [])
 
-
             # 数据更新逻辑（key: 业务标识, value: (更新方法, 日志说明, 日志标识, 额外参数)）
             season_update_config = {
                 # 普通规则 - 条件执行
@@ -137,14 +136,14 @@ class GPLUpdateExtService:
                 "gdt": (self.egd.up_gdt_em, "股东机构合计", "GDT", (day_list,)),
                 "gdd": (self.egd.up_gdd_em, "股东机构明细", "GDD", (day_list,)),
                 "gdl": (self.egd.up_gdl_em, "股东机构列表", "GDL", (day_list,)),
-                "dvo": (self.edv.up_dvo_em, "分红概览", "DVO", (season_data["dvt"], td)),
-                "dvh": (self.edv.up_dvh_em, "分红历史", "DVH", (td, n)),
-                "dvr": (self.edv.up_dvr_em, "分红股息率", "DVR", (sd, td)),  # 1000w
-                "dvp": (self.edv.up_dvp_em, "分红股利支付率", "DVP", (sd, td)),
+                "dvo": (self.edv.up_dvo_em, "分红概览", "DVO", (season_data["dvt"], td,)),
+                "dvh": (self.edv.up_dvh_em, "分红历史", "DVH", (td, n,)),
+                "dvr": (self.edv.up_dvr_em, "分红股息率", "DVR", (sd, td,)),  # 1000w
+                "dvp": (self.edv.up_dvp_em, "分红股利支付率", "DVP", (sd, td,)),
                 "zyi": (self.edv.up_zyi_em, "主营构成列表", "ZYI", (self.edv.get_zyi_td_list(is_all),)),
-                "fni": (self.efn.up_fni_em, "财务主要指标", "FNI", (td, n)),
-                "fnd": (self.efn.up_fnd_em, "财务杜邦分析", "FND", (td, n)),
-                "fnn": (self.efn.up_fnn_em, "财务公告文件", "FNN", (td,)),
+                "fni": (self.efn.up_fni_em, "财务主要指标", "FNI", (td, n,)),
+                "fnd": (self.efn.up_fnd_em, "财务杜邦分析", "FND", (td, n,)),
+                "fnn": (self.efn.up_fnn_em, "财务公告文件", "FNN", (td, n, info,)),
                 # 特殊规则 - 一次性 或 固定执行
                 "zyb": (self.edv.up_zyb_em, "经营评述长文本", "ZYB", (Attr.get(season_data["zyb"], symbol, []),)),
                 "cem": (self.ecc.update_by_em, "东财概念", "CEM", (info, k_list_em, cl_em, t_em,)),

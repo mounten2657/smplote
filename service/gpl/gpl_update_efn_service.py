@@ -1,6 +1,7 @@
 from service.gpl.gpl_formatter_service import GplFormatterService
 from service.vpp.vpp_serve_service import VppServeService
 from model.gpl.gpl_season_model import GPLSeasonModel
+from model.gpl.gpl_file_model import GplFileModel
 from tool.core import Ins, Logger, Str, Time, Attr
 
 logger = Logger()
@@ -55,13 +56,15 @@ class GPLUpdateEfnService:
         ret['ifd'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 
-    def up_fnn_em(self, symbol, fnn_list, td):
+    def up_fnn_em(self, symbol, fnn_list, td, n, info):
         """更新股票财务公告文件"""
         ret = {}
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
         des = '财务公告文件'
         biz_code = 'EM_FN_NF'
+        is_all = int(n > 50)
+        n = 50 if is_all else n
 
         def get_fn_file(pn, ps):
             d = self.formatter.em.get_fn_notice_file(symbol, td, pn, ps)
@@ -81,25 +84,45 @@ class GPLUpdateEfnService:
                 month = day[:8].replace('-', '')
                 title = Attr.get(d[day], 'title', '')
                 url = Attr.get(d[day], 'url', '')
-                # 文件下载
-                fn = f"{symbol}_{date}-{title}.pdf"
-                fd = f"/gpl/notice_file/{symbol}/{month}/"
-                d[day]['file_url'] = VppServeService.download_website_file(url, biz_code, fn, fd)
                 if ff_info or day < self.formatter.INIT_ST:
                     logger.warning(f"跳过财务公告文件数据<{symbol}><{day}>", 'UP_FNF_WAR')
                     del d[day]
                     continue
+                # 文件下载
+                Time.sleep(Str.randint(1, 5) / 10)
+                fn = Str.filter_target_chars(f"{symbol}_{date}-{title}.pdf")
+                fd = f"/gpl/notice_file/{symbol}/{month}/"
+                d[day]['file_url'] = VppServeService.download_website_file(url, biz_code, fn, fd, 5002)
+                file = VppServeService.download_website_file(url, biz_code, fn, fd, 5002)
+                # 文件数据入库
+                f_info = {}
+                if file.get('url'):
+                    fdb = GplFileModel()
+                    f_info = fdb.get_gpl_file(file['md5'])
+                    if not f_info:
+                        fdb.add_gpl_file(file | {
+                            "symbol": symbol,
+                            "symbol_name": info.get('org_name', symbol),
+                            "season_date": td,
+                            "biz_code": biz_code,
+                        })
+                        f_info = fdb.get_gpl_file(file['md5'])
+                # 将本地文件信息存入数据库
+                d[day]['file_md5'] = f_info.get('file_md5')
+                d[day]['file_path'] = f_info.get('save_path')
+                d[day]['file_url'] = f_info.get('url')
             logger.warning(f"批量插入财务公告文件数据<{symbol}><{td}> - {len(d)}", 'UP_FNF_WAR')
             res['iff'] = jdb.add_season_list(symbol, biz_code, des, d)
             return res
 
         # 初次获取和处理
-        total, d_info = get_fn_file(1, 50)
+        total, d_info = get_fn_file(1, n)
         ret[1] = save_fn_file(d_info)
 
-        # 处理剩余分页数据
-        for i in range(2, int(total/100) + 1):
-            total, d_info = get_fn_file(i, 50)
-            ret[i] = save_fn_file(d_info)
+        if is_all:
+            # 处理剩余分页数据
+            for i in range(2, int(total/100) + 1):
+                total, d_info = get_fn_file(i, 50)
+                ret[i] = save_fn_file(d_info)
 
         return ret

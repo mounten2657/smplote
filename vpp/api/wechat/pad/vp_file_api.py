@@ -41,6 +41,8 @@ class VpFileApi:
                     output_file = self.download_url_file(url, output_file)
                 elif 5001 == fty:  # website file
                     output_file = self.download_url_file(url, output_file)
+                elif 5002 == fty:  # website file - curl
+                    output_file = self.download_url_file_curl(url, output_file)
                 else:  # 图视文音
                     api = '/message/SendCdnDownload'
                     payload = {
@@ -85,6 +87,16 @@ class VpFileApi:
                     if chunk:
                         file.write(chunk)
             return file_path
+        except requests.exceptions.RequestException as e:
+            return ''
+
+    def download_url_file_curl(self, url, file_path):
+        """下载并保存文件 - curl"""
+        try:
+            # 通过curl下载
+            if 0 == os.system(f'curl "{url}" --output {file_path}'):
+                return file_path
+            return ''
         except requests.exceptions.RequestException as e:
             return ''
 

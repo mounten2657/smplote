@@ -11,7 +11,7 @@ class GplFormatterService:
 
     # 初始化的开始结束日期
     INIT_ST = '2000-01-01'
-    INIT_ET = '2025-07-31'
+    INIT_ET = '2025-09-30'
 
     def __init__(self):
         self.ak = AkDataSource()

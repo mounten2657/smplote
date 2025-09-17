@@ -1,5 +1,6 @@
+import random
 from typing import Dict, List
-from tool.core import Logger, Attr, Str, Error, Time, Http
+from tool.core import Logger, Attr, Str, Error, Time, Http, Config
 from model.gpl.gpl_api_log_model import GplApiLogModel
 from service.vps.open_nat_service import OpenNatService
 
@@ -72,7 +73,8 @@ class EmDataSource:
             try:
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
                 rand = (pid % 10) if pid else rand  # 因为只有本地才能使用代理，所以这里大大增大本地请求的比例
-                # rand = 0  # 机器坏了，先指定固定的
+                if not Config.is_prod():  # 机器坏了，先指定固定的
+                    rand = random.choice([0, 3, 5, 8] + [2, 7])
                 params['nat_int'] = rand
                 self.headers['Referer'] = Http.get_request_base_url(url)
                 # [0l, 1p, 2v, 3l, 4p, 5l, 6p, 7v, 8l, 9p]  # 占比:  vps: 20% | local: 40% | proxy: 40%

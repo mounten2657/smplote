@@ -161,6 +161,23 @@ class Str:
         return md5.hexdigest()
 
     @staticmethod
+    def filter_target_chars(input_str: str) -> str:
+        """
+        过滤字符串，仅保留指定字符：
+         - 数字（0-9）、英文（a-z/A-Z）、中文汉字（\u4e00-\u9fa5）、
+         - 书名号（《》）、英文下划线（_）、中划线（-）、小数点（.）
+
+        :param input_str: 待过滤的原始字符串
+        :return: 过滤后的字符串（空字符串输入时返回空）
+        """
+        # 正则匹配规则：
+        # [0-9]：数字；[a-zA-Z]：英文；[\u4e00-\u9fa5]：中文汉字
+        # 《》：书名号；_：下划线；-：中划线；.：小数点
+        pattern = r'[^\u4e00-\u9fa5a-zA-Z0-9《》_\-.]'
+        # 替换非目标字符为空字符串
+        return re.sub(pattern, '', input_str)
+
+    @staticmethod
     def int(str_val, default=None):
         # 将字符串转换成整数，不成功就是 None
         try:
