@@ -393,13 +393,13 @@ class EmDataSubSource(EmDataSource):
         :param int pn: 页码
         :param int ps: 条数
         :return: 股票财务公告文件
-        {"total":1141,"data":{"2025-08-28":{"date":"2025-08-28","art_code":"AN202508281736010965","title":"锐奇股份:关于获得政府补助的公告","type":"获得补贴（资助）","post_time":"2025-08-28 16:23:12:249","url":"https://pdf.dfcfw.com/pdf/H2_AN202508281736010965_1.pdf"}}}
+        {"total":1141,"data":[{"date":"2025-08-28","art_code":"AN202508281736010965","title":"锐奇股份:关于获得政府补助的公告","type":"获得补贴（资助）","post_time":"2025-08-28 16:23:12:249","url":"https://pdf.dfcfw.com/pdf/H2_AN202508281736010965_1.pdf"}]}
         """
         start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._NOTICE_URL + "/api/security/ann"
         params = {
-            "cb": "",
+            # "cb": "",
             "sr": -1,
             "page_index": pn,
             "page_size": ps,
@@ -417,10 +417,8 @@ class EmDataSubSource(EmDataSource):
             'art_code': Attr.get(d, 'art_code', ''),  # 文件代码
             'title': Attr.get(d, 'title', ''),  # 文件标题
             'type': Attr.get(Attr.get_by_point(d, 'columns.0', {}), 'column_name', ''),  # 文件分类
-            'post_time': d['display_time'],  # 发布时间: str - Y-m-d H:i:s
+            'post_time': d['eiTime'][:19],  # 发布时间: str - Y-m-d H:i:s  # display_time 有时会没有
             'url': f'https://pdf.dfcfw.com/pdf/H2_{Attr.get(d, 'art_code', '')}_1.pdf',  # 文件链接
         } for d in res]
-        ret = Attr.group_item_by_key(ret, 'date')
-        ret = {k: ret[k][0] for k in sorted(ret.keys())}
         ret = {"total": total, "data": ret}  # 由于接口最多只返回 100 条，所以外面调用需要根据总数循环进行请求
         return self._ret(ret, pid, start_time)

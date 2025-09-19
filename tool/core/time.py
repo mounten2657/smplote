@@ -132,6 +132,30 @@ class Time:
         return Time.month_last_day(n_date, date_format)
 
     @staticmethod
+    def generate_date_list(start_date: str, end_date: str) -> list:
+        """
+        生成开始日期到结束日期之间的所有日期列表（包含起止日期）
+
+        :param start_date: 开始日期，格式为 'YYYY-MM-DD'
+        :param end_date: 结束日期，格式为 'YYYY-MM-DD'
+        :return: 每个元素为 'YYYY-MM-DD' 格式
+        若开始日期晚于结束日期，返回空列表
+        """
+        try:
+            start_ts = int(datetime.strptime(start_date, '%Y-%m-%d').timestamp())
+            end_ts = int(datetime.strptime(end_date, '%Y-%m-%d').timestamp())
+        except ValueError as e:
+            raise ValueError(f"日期格式错误，请使用'YYYY-MM-DD'格式: {e}")
+        if start_ts > end_ts:
+            return []
+        date_list = []
+        current_ts = start_ts
+        while current_ts <= end_ts:
+            date_list.append(datetime.fromtimestamp(current_ts).strftime('%Y-%m-%d'))
+            current_ts += 86400
+        return date_list
+
+    @staticmethod
     def start_end_time_list(
             params: Union[dict, str, None],
             return_type: str = "timestamp"

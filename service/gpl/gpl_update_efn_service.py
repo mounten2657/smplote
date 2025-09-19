@@ -56,9 +56,9 @@ class GPLUpdateEfnService:
         ret['ifd'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 
-    def up_fnn_em(self, symbol, fnn_list, td, n, info):
+    def up_fnn_em(self, symbol, fnn_list, td, n):
         """更新股票财务公告文件"""
-        ret = {}
+        d_list = []
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
         des = '财务公告文件'
@@ -80,19 +80,61 @@ class GPLUpdateEfnService:
                 return res
             for day in list(d.keys()):
                 ff_info = Attr.get(fnn_list, f"{symbol}_{day}")
-                date = day.replace('-', '')
-                month = day[:8].replace('-', '')
-                title = Attr.get(d[day], 'title', '')
-                url = Attr.get(d[day], 'url', '')
                 if ff_info or day < self.formatter.INIT_ST:
                     logger.warning(f"跳过财务公告文件数据<{symbol}><{day}>", 'UP_FNF_WAR')
                     del d[day]
                     continue
+            logger.warning(f"批量插入财务公告文件数据<{symbol}><{td}> - {len(d)}", 'UP_FNF_WAR')
+            res['iff'] = jdb.add_season_list(symbol, biz_code, des, d)
+            return res
+
+        # 初次获取和处理
+        total, d_info = get_fn_file(1, n)
+        d_list += d_info
+
+        if is_all:
+            # 处理剩余分页数据
+            for i in range(2, int(total/100) + 1):
+                total, d_info = get_fn_file(i, 50)
+                d_list += d_info
+
+        # 统一处理，避免分页拉取的数据不全
+        d_list = Attr.group_item_by_key(d_list, 'date')
+        return save_fn_file(d_list)
+
+    def download_fnn_em(self, symbol, fnn_list, td, sd, info):
+        """下载股票财务公告文件"""
+        ret = {}
+        dfl = []
+        jdb = GPLSeasonModel()
+        des = '财务公告文件'
+        biz_code = 'EM_FN_NF'
+        date_list = Time.generate_date_list(td, sd)
+
+        for d in date_list:
+            dfi = Attr.get(fnn_list, f"{symbol}_{d}")
+            if dfi:
+                dfl.append(dfi)
+        if not dfl:
+            logger.warning(f"暂无财务公告文件数据<{symbol}><{sd} ~ {td}>", 'UP_FNF_WAR')
+            return {}
+
+        for d in dfl:
+            day = d['season_date']
+            date = day.replace('-', '')
+            month = day[:8].replace('-', '')
+            has_update = False
+            for i in range(0, len(d['e_val'])):
+                dd = d['e_val'][i]
+                if dd.get('file_md5') or day < self.formatter.INIT_ST:
+                    logger.warning(f"跳过财务公告文件数据<{symbol}><{day}><{dd['file_md5']}>", 'UP_FNF_WAR')
+                    continue
                 # 文件下载
                 Time.sleep(Str.randint(1, 5) / 10)
+                title = Attr.get(dd, 'title', '')
+                url = Attr.get(dd, 'url', '')
                 fn = Str.filter_target_chars(f"{symbol}_{date}-{title}.pdf")
                 fd = f"/gpl/notice_file/{symbol}/{month}/"
-                d[day]['file_url'] = VppServeService.download_website_file(url, biz_code, fn, fd, 5002)
                 file = VppServeService.download_website_file(url, biz_code, fn, fd, 5002)
                 # 文件数据入库
                 f_info = {}
@@ -107,22 +149,13 @@ class GPLUpdateEfnService:
                             "biz_code": biz_code,
                         })
                         f_info = fdb.get_gpl_file(file['md5'])
-                # 将本地文件信息存入数据库
-                d[day]['file_md5'] = f_info.get('file_md5')
-                d[day]['file_path'] = f_info.get('save_path')
-                d[day]['file_url'] = f_info.get('url')
-            logger.warning(f"批量插入财务公告文件数据<{symbol}><{td}> - {len(d)}", 'UP_FNF_WAR')
-            res['iff'] = jdb.add_season_list(symbol, biz_code, des, d)
-            return res
-
-        # 初次获取和处理
-        total, d_info = get_fn_file(1, n)
-        ret[1] = save_fn_file(d_info)
-
-        if is_all:
-            # 处理剩余分页数据
-            for i in range(2, int(total/100) + 1):
-                total, d_info = get_fn_file(i, 50)
-                ret[i] = save_fn_file(d_info)
-
+                if f_info:
+                    # 将本地文件信息存入数据库
+                    d['e_val'][i]['file_md5'] = f_info.get('file_md5')
+                    d['e_val'][i]['file_path'] = f_info.get('save_path')
+                    d['e_val'][i]['file_url'] = f_info.get('url')
+                    has_update = True
+            if has_update:
+                logger.warning(f"更新财务公告文件数据<{symbol}><{sd} ~ {td}> - <{i}/{len(dfl)}>", 'UP_FNF_WAR')
+                ret['uff'][d['id']] = jdb.update_season(d['id'], {"e_val": d['e_val']})
         return ret
