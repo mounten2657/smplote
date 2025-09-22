@@ -103,12 +103,17 @@ class GPLUpdateEfnService:
         return save_fn_file(d_list)
 
     def download_fnn_em(self, symbol, fnn_list, td, sd, info):
-        """下载股票财务公告文件"""
+        """
+        下载股票财务公告文件
+          - 由于历史文件加起来至少占10T，空间不够，暂时只保留最近一个月的文件
+        """
         ret = {}
         dfl = []
         jdb = GPLSeasonModel()
-        des = '财务公告文件'
         biz_code = 'EM_FN_NF'
+        if symbol:  # 直接覆原始原日期，强制变成一个月
+            td = Time.date('%Y-%m-%d')
+            sd = Time.dnd(td, -30)
         date_list = Time.generate_date_list(td, sd)
 
         for d in date_list:
