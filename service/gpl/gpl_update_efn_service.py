@@ -108,8 +108,8 @@ class GPLUpdateEfnService:
         下载股票财务公告文件
           - 由于历史文件加起来至少占10T，空间不够，暂时只保留最近一个月的文件
         """
-        ret = {}
         dfl = []
+        ret = {'uff': {}}
         jdb = GPLSeasonModel()
         biz_code = 'EM_FN_NF'
         if symbol:  # 直接覆原始原日期，强制变成一个月
@@ -171,8 +171,8 @@ class GPLUpdateEfnService:
         保存股票财务公告文本
           - 由于历史文件加起来占的空间太大，所以以文本方式入库代替
         """
-        ret = {}
         dfl = []
+        ret = {'uft': {}}
         jdb = GPLSeasonModel()
         tdb = GPLSymbolTextModel()
         biz_code = 'EM_FN_NT'
