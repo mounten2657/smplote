@@ -399,7 +399,7 @@ class EmDataSubSource(EmDataSource):
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._NOTICE_URL + "/api/security/ann"
         params = {
-            # "cb": "",
+            # "cb": "",  # jQuery1123006753685043459545_1758496803948
             "sr": -1,
             "page_index": pn,
             "page_size": ps,
@@ -421,4 +421,34 @@ class EmDataSubSource(EmDataSource):
             'url': f'https://pdf.dfcfw.com/pdf/H2_{Attr.get(d, 'art_code', '')}_1.pdf',  # 文件链接
         } for d in res]
         ret = {"total": total, "data": ret}  # 由于接口最多只返回 100 条，所以外面调用需要根据总数循环进行请求
+        return self._ret(ret, pid, start_time)
+
+    def get_fn_notice_txt(self, stock_code: str, art_code: str) -> Dict:
+        """
+        获取股票财务公告文本
+
+        :param str stock_code: 股票代码，如： 002107
+        :param str art_code: 公告唯一代码，如： AN201606170015262533
+        :return: 股票财务公告文本
+        {"title": "xxx公告标题", "content": "xxx\r\nxxx公告内容"}
+        """
+        start_time = Time.now(0)
+        stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
+        url = self._NOTICE_URL + "/api/content/ann"
+        params = {
+            # "cb": "",  # jQuery1123006753685043459545_1758496803950
+            "art_code": art_code,
+            "client_source": 'web',
+            "page_index": 1,
+        }
+        data, pid = self._get(url, params, 'EM_FN_NT', {'he': f'{prefix}{stock_code}', 'hv': f"{art_code}"})
+        # {"data":{"art_code":"AN201606170015262533","attach_list":[{"attach_size":87,"attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","seq":1}],"attach_list_ch":[{"attach_size":87,"attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","seq":1}],"attach_list_en":[],"attach_size":"87","attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","attach_url_web":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","eitime":"2016-06-17 16:51:56","extend":{},"is_ai_summary":0,"is_rich":0,"is_rich2":0,"language":"0","notice_content":"证券代码：002030 证券简称：达安基因 公告编号：2016-045\r\n 中山大学达安基因股份有限公司\r\n 关于已授予股票期权注销完成的公告\r\n 本公司及董事会全体成员保证信息披露内容的真实、准确和完整，没有虚假记载、误导性陈述或重大遗漏。\r\n 中山大学达安基因股份有限公司（以下简称“公司”）第五届董事会第六次会议和第五届监事会第六次会议审议通过了《关于终止实施股票期权激励计划的预案》，并经2015年度股东大会审议通过，会议同意公司终止股票期权激励计划并注销已授予的股票期权。具体内容详见公司于2016年3月31日在《证券时报》、巨潮资讯网上刊登的《中山大学达安基因股份有限公司关于终止实施股票期权激励计划的公告》（公告编号：2016-011）。\r\n 经中国证券登记结算有限责任公司深圳分公司审核确认，公司已完成了对首期股票期权激励计划已授予的全部股票期权注销事宜，涉及激励对象67人，股票期权数量508.464万份。\r\n 特此公告。\r\n 中山大学达安基因股份有限公司\r\n 董事会\r\n 2016年6月17日\r\n","notice_date":"2016-06-18 00:00:00","notice_title":"达安基因:关于已授予股票期权注销完成的公告","page_size":1,"page_size_ch":0,"page_size_cht":0,"page_size_en":0,"security":[{"market_uni":"0","short_name":"达安基因","short_name_ch":"达安基因","short_name_cht":"達安基因","short_name_en":"DAJY","stock":"002030"}],"short_name":"达安基因"},"success":1}
+        res = Attr.get_by_point(data, 'data', {})
+        ret = {
+            # "art_code": art_code,
+            # "attach_url": res.get('attach_url', ''),
+            # "post_time": res.get('eitime', ''),
+            "title": res.get('notice_title', ''),
+            "content": res.get('notice_content', ''),
+        }
         return self._ret(ret, pid, start_time)

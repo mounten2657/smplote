@@ -2,6 +2,7 @@ from service.gpl.gpl_formatter_service import GplFormatterService
 from service.vpp.vpp_serve_service import VppServeService
 from model.gpl.gpl_season_model import GPLSeasonModel
 from model.gpl.gpl_file_model import GplFileModel
+from model.gpl.gpl_symbol_text_model import GPLSymbolTextModel
 from tool.core import Ins, Logger, Str, Time, Attr
 
 logger = Logger()
@@ -70,7 +71,7 @@ class GPLUpdateEfnService:
             d = self.formatter.em.get_fn_notice_file(symbol, td, pn, ps)
             t, d = Attr.get(d, "total"), Attr.get(d, "data")
             if not d or not t:
-                logger.warning(f"暂无财务公告文件数据<{symbol}><{td}> - {pn}/{ps}", 'UP_FNF_WAR')
+                logger.warning(f"暂无财务公告文件数据<{symbol}><{td}> - {pn}/{ps}", 'UP_FNN_WAR')
                 return 0, {}
             return t, d
 
@@ -81,10 +82,10 @@ class GPLUpdateEfnService:
             for day in list(d.keys()):
                 ff_info = Attr.get(fnn_list, f"{symbol}_{day}")
                 if ff_info or day < self.formatter.INIT_ST:
-                    logger.warning(f"跳过财务公告文件数据<{symbol}><{day}>", 'UP_FNF_WAR')
+                    logger.warning(f"跳过财务公告文件数据<{symbol}><{day}>", 'UP_FNN_WAR')
                     del d[day]
                     continue
-            logger.warning(f"批量插入财务公告文件数据<{symbol}><{td}> - {len(d)}", 'UP_FNF_WAR')
+            logger.warning(f"批量插入财务公告文件数据<{symbol}><{td}> - {len(d)}", 'UP_FNN_WAR')
             res['iff'] = jdb.add_season_list(symbol, biz_code, des, d)
             return res
 
@@ -121,7 +122,7 @@ class GPLUpdateEfnService:
             if dfi:
                 dfl.append(dfi)
         if not dfl:
-            logger.warning(f"暂无财务公告文件数据<{symbol}><{sd} ~ {td}>", 'UP_FNF_WAR')
+            logger.warning(f"暂无财务公告文件数据<{symbol}><{sd} ~ {td}>", 'UP_DFN_WAR')
             return {}
 
         for d in dfl:
@@ -132,7 +133,7 @@ class GPLUpdateEfnService:
             for i in range(0, len(d['e_val'])):
                 dd = d['e_val'][i]
                 if dd.get('file_md5') or day < self.formatter.INIT_ST:
-                    logger.warning(f"跳过财务公告文件数据<{symbol}><{day}><{dd['file_md5']}>", 'UP_FNF_WAR')
+                    logger.warning(f"跳过财务公告文件数据<{symbol}><{day}><{dd['file_md5']}>", 'UP_DFN_WAR')
                     continue
                 # 文件下载
                 Time.sleep(Str.randint(1, 5) / 10)
@@ -161,6 +162,54 @@ class GPLUpdateEfnService:
                     d['e_val'][i]['file_url'] = f_info.get('url')
                     has_update = True
             if has_update:
-                logger.warning(f"更新财务公告文件数据<{symbol}><{sd} ~ {td}> - <{i}/{len(dfl)}>", 'UP_FNF_WAR')
+                logger.warning(f"更新财务公告文件数据<{symbol}><{sd} ~ {td}> - <{i}/{len(dfl)}>", 'UP_DFN_WAR')
                 ret['uff'][d['id']] = jdb.update_season(d['id'], {"e_val": d['e_val']})
+        return ret
+
+    def save_fnn_em_txt(self, symbol, fnn_list, td, sd):
+        """
+        保存股票财务公告文本
+          - 由于历史文件加起来占的空间太大，所以以文本方式入库代替
+        """
+        ret = {}
+        dfl = []
+        jdb = GPLSeasonModel()
+        tdb = GPLSymbolTextModel()
+        biz_code = 'EM_FN_NT'
+        date_list = Time.generate_date_list(sd, td)
+
+        for d in date_list:
+            dfi = Attr.get(fnn_list, f"{symbol}_{d}")
+            if dfi:
+                dfl.append(dfi)
+        if not dfl:
+            logger.warning(f"暂无财务公告文本数据<{symbol}><{sd} ~ {td}>", 'UP_SFN_WAR')
+            return {}
+
+        for d in dfl:
+            day = d['season_date']
+            has_update = False
+            for i in range(0, len(d['e_val'])):
+                dd = d['e_val'][i]
+                if dd.get('tid') or day < self.formatter.INIT_ST:
+                    logger.warning(f"跳过财务公告文件数据<{symbol}><{day}><{dd['file_md5']}>", 'UP_SNF_WAR')
+                    continue
+                # 保存文本
+                art_code = Attr.get(dd, 'art_code', '')
+                fn_txt = self.formatter.em.get_fn_notice_txt(symbol, art_code)
+                # 文本数据入库
+                if fn_txt.get('content'):
+                    tid = tdb.add_text({
+                        "symbol": symbol,
+                        "biz_code": biz_code,
+                        "e_key": art_code,
+                        "e_des": fn_txt['title'],
+                        "e_val": fn_txt['content'],
+                    })
+                    if tid:
+                        has_update = True
+                        d['e_val'][i]['tid'] = tid
+            if has_update:
+                logger.warning(f"更新财务公告文本数据<{symbol}><{sd} ~ {td}> - <{i}/{len(dfl)}>", 'UP_SNF_WAR')
+                ret['uft'][d['id']] = jdb.update_season(d['id'], {"e_val": d['e_val']})
         return ret

@@ -81,7 +81,8 @@ class GPLUpdateExtService:
             "fni": (lambda f: f in (0, 101), [13, 23], "EM_FN_IT", [[], sd]),
             "fnd": (lambda f: f in (0, 102), [14, 24], "EM_FN_DP", [[], sd]),
             "fnn": (lambda f: f in (0, 103), [15, 25], "EM_FN_NF", [[], sd]),
-            "dfn": (lambda f: f in (0, 104), [16, 26], "EM_FN_NF", [[], sd]),
+            "sfn": (lambda f: f in (0, 104), [16, 26], "EM_FN_NF", [[], sd]),
+            "dfn": (lambda f: f in (0, 105), [17, 27], "EM_FN_NF", [[], sd]),
             # 特殊规则 - 文本类、一次性等
             "zyb": (lambda f: f == 200, nrd_list, "EM_ZY_BA", symbol_list),
             "cem": (lambda f: f == 201, nrd_list, "EM_CONCEPT", symbol_list),
@@ -146,7 +147,8 @@ class GPLUpdateExtService:
                 "fni": (self.efn.up_fni_em, "财务主要指标", "FNI", (td, n,)),
                 "fnd": (self.efn.up_fnd_em, "财务杜邦分析", "FND", (td, n,)),
                 "fnn": (self.efn.up_fnn_em, "财务公告文件", "FNN", (td, n,)),
-                "dfn": (self.efn.download_fnn_em, "财务公告文件下载", "DFN", (td, sd, info,)),
+                "sfn": (self.efn.save_fnn_em_txt, "保存财务公告文本", "SFN", (td, sd,)),
+                "dfn": (self.efn.download_fnn_em, "下载财务公告文件", "DFN", (td, sd, info,)),
                 # 特殊规则 - 一次性 或 固定执行
                 "zyb": (self.edv.up_zyb_em, "经营评述长文本", "ZYB", (Attr.get_by_point(season_data, f"zyb.{symbol}"),)),
                 "cem": (self.ecc.update_by_em, "东财概念", "CEM", (info, k_list_em, cl_em, t_em,)),
