@@ -197,6 +197,14 @@ class GPLUpdateEfnService:
                 # 保存文本
                 art_code = Attr.get(dd, 'art_code', '')
                 fn_txt = self.formatter.em.get_fn_notice_txt(symbol, art_code)
+                ps = fn_txt['page_size']
+                content = fn_txt['content']
+                # 有分页 - 需整合后再入库
+                if ps > 1:
+                    for i in range(1, ps):
+                        ft = self.formatter.em.get_fn_notice_txt(symbol, art_code, i + 1)
+                        if ft.get('content'):
+                            content += ft['content']
                 # 文本数据入库
                 if fn_txt.get('content'):
                     tid = tdb.add_text({
@@ -204,7 +212,7 @@ class GPLUpdateEfnService:
                         "biz_code": biz_code,
                         "e_key": art_code,
                         "e_des": fn_txt['title'],
-                        "e_val": fn_txt['content'],
+                        "e_val": content,
                     })
                     if tid:
                         has_update = True
