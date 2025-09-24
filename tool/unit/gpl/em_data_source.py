@@ -18,12 +18,14 @@ class EmDataSource:
       - https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_F10_BASIC_ORGINFO&columns=ALL&filter=(SECUCODE=%22920819.BJ%22)
       - https://push2his.eastmoney.com/api/qt/stock/kline/get?fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=101&fqt=1&beg=20250809&end=20250814&secid=1.688662
       - https://np-anotice-stock.eastmoney.com/api/security/ann?cb=&sr=-1&page_size=50&page_index=1&ann_type=A&client_source=web&stock_list=300126&f_node=0&s_node=0
+      - https://np-cnotice-stock.eastmoney.com/api/content/ann?art_code=AN201704210521831617&client_source=web&page_index=1&nat_int=5
     """
 
     _DATA_URL = "https://datacenter.eastmoney.com"
     _PUSH_URL = "https://push2his.eastmoney.com"
     _EWEB_URL = "https://emweb.securities.eastmoney.com"
     _NOTICE_URL = "https://np-anotice-stock.eastmoney.com"
+    _NOTICE_C_URL = "https://np-cnotice-stock.eastmoney.com/"
     _NEWS_URL = "https://emdcnewsapp.eastmoney.com"
 
     def __init__(self, timeout=30, retry_times=1):

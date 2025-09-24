@@ -435,7 +435,7 @@ class EmDataSubSource(EmDataSource):
         """
         start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
-        url = self._NOTICE_URL + "/api/content/ann"
+        url = self._NOTICE_C_URL + "/api/content/ann"
         params = {
             # "cb": "",  # jQuery1123006753685043459545_1758496803950
             "art_code": art_code,
