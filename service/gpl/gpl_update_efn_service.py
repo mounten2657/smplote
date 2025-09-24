@@ -192,7 +192,7 @@ class GPLUpdateEfnService:
             for i in range(0, len(d['e_val'])):
                 dd = d['e_val'][i]
                 if dd.get('tid') or day < self.formatter.INIT_ST:
-                    logger.warning(f"跳过财务公告文件数据<{symbol}><{day}><{dd['file_md5']}>", 'UP_SNF_WAR')
+                    logger.warning(f"跳过财务公告文件数据<{symbol}><{day}><{dd['tid']}>", 'UP_SNF_WAR')
                     continue
                 # 保存文本
                 art_code = Attr.get(dd, 'art_code', '')
