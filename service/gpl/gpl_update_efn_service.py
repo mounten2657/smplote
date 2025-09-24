@@ -201,8 +201,8 @@ class GPLUpdateEfnService:
                 content = fn_txt['content']
                 # 有分页 - 需整合后再入库
                 if ps > 1:
-                    for i in range(1, ps):
-                        ft = self.formatter.em.get_fn_notice_txt(symbol, art_code, i + 1)
+                    for ii in range(1, ps):
+                        ft = self.formatter.em.get_fn_notice_txt(symbol, art_code, ii + 1)
                         if ft.get('content'):
                             content += ft['content']
                 # 文本数据入库
