@@ -213,7 +213,7 @@ class GPLUpdateEfnService:
                         "e_key": art_code,
                         "e_des": fn_txt['title'],
                         "e_val": content,
-                    })
+                    }, True)
                     if tid:
                         has_update = True
                         d['e_val'][i]['tid'] = tid

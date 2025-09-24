@@ -18,12 +18,16 @@ class GPLSymbolTextModel(MysqlBaseModel):
 
     _table = 'gpl_symbol_text'
 
-    def add_text(self, data):
+    def add_text(self, data, check_exist=False):
         """股票文本信息入库"""
         data = data if data else {}
         e_key = data.get('e_key', '')
         if not data or not e_key:
             return 0
+        if check_exist:
+            info = self.get_text(data.get('symbol', ''), data.get('biz_code', ''), data.get('e_key', ''))
+            if info:
+                return info['id']
         insert_data = {
             "symbol": data.get('symbol', ''),
             "biz_code": data.get('biz_code', ''),
