@@ -11,10 +11,10 @@ class GplFileModel(MysqlBaseModel):
         - symbol_name - varchar(64) - 股票名称
         - season_date - date - 季度尾日
         - biz_code - varchar(16) - 业务代码
-        - url - varchar(1024) - 文件链接
-        - fake_path - varchar(1024) - 虚拟路径
+        - url - varchar(2048) - 文件链接
+        - fake_path - varchar(2048) - 虚拟路径
         - save_path - varchar(512) - 真实路径
-        - file_name - varchar(512) - 文件名
+        - file_name - varchar(255) - 文件名
         - file_size - int - 文件大小(byte)
         - file_md5 - varchar(32) - 文件md5
         - create_at - datetime - 记录创建时间
