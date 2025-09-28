@@ -2,6 +2,7 @@ import time
 import random
 import hashlib
 import threading
+import queue
 import concurrent.futures
 from functools import wraps
 from typing import TypeVar, Type, Any
@@ -109,8 +110,8 @@ class Ins:
         return decorator
 
     @staticmethod
-    def multiple_executor(max_workers=5, retries=2):
-        """并行执行装饰器"""
+    def multiple_executor_thread(max_workers=4, retries=2):
+        """并行执行装饰器 - 线程池"""
         def decorator(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
@@ -137,5 +138,55 @@ class Ins:
                                     logger.error(err, 'MULT_EXEC_ERR', 'system')
                                     res[task] = err
                 return res
+            return wrapper
+        return decorator
+
+    @staticmethod
+    def multiple_executor(max_workers=4, retries=2):
+        """并行执行装饰器 - 队列"""
+        def decorator(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                task_list = args[0]
+                result_queue = queue.Queue()
+                task_queue = queue.Queue()
+                # 填充任务队列
+                for task in task_list:
+                    task_queue.put(task)
+                def worker():
+                    while True:
+                        try:
+                            task = task_queue.get_nowait()
+                        except queue.Empty:
+                            break
+                        for attempt in range(retries):
+                            try:
+                                result = func(task, *args[1:], **kwargs)
+                                result_queue.put((task, result))
+                                break
+                            except Exception as e:
+                                err = Error.handle_exception_info(e)
+                                err['ext'] = args[1:]
+                                if attempt < retries - 1:
+                                    time.sleep(random.uniform(1, 3))
+                                else:
+                                    logger.error(err, 'LGT_EXEC_ERR', 'system')
+                                    result_queue.put((task, err))
+                        task_queue.task_done()
+                        time.sleep(0.001)  # 1ms休息减少CPU竞争
+                # 创建有限的工作线程
+                threads = []
+                for i in range(min(max_workers, len(task_list))):
+                    t = threading.Thread(target=worker)
+                    t.daemon = True
+                    t.start()
+                    threads.append(t)
+                # 等待所有任务完成
+                task_queue.join()
+                results = {}
+                while not result_queue.empty():
+                    task, result = result_queue.get()
+                    results[task] = result
+                return results
             return wrapper
         return decorator
