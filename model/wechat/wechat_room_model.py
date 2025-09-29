@@ -129,7 +129,8 @@ class WechatRoomModel(MysqlBaseModel):
                 d_wxid = Attr.get_by_point(d, 'before.wxid', Attr.get_by_point(d, 'after.wxid', ''))
                 if d_wxid:
                     self._del_user_cache(d_wxid)
-                commander.vp_card_msg(title, des)
+                # commander.vp_card_msg(title, des)
+                logger.error(f"{title} - {des}", 'ROOM_NEW_NAME')
         return True
 
     def _del_room_cache(self, g_wxid):

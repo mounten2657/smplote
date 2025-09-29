@@ -12,8 +12,8 @@ class WechatUserModel(MysqlBaseModel):
         - wxid - varchar(32) - 用户微信ID
         - p_wxid - varchar(32) - 自定义微信ID
         - user_type - tinyint(1) - 用户类型(1好友|2群聊)
-        - wx_nickname - varchar(64) - 微信昵称
-        - remark_name - varchar(64) - 备注名
+        - wx_nickname - varchar(128) - 微信昵称
+        - remark_name - varchar(128) - 备注名
         - head_img_url - varchar(255) - 头像地址
         - h_fid - bigint(20) - 头像文件id
         - quan_pin - varchar(64) - 昵称全拼

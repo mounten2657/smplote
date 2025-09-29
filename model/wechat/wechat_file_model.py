@@ -13,15 +13,15 @@ class WechatFileModel(MysqlBaseModel):
         - file_name - varchar(512) - 文件名
         - biz_code - varchar(32) - 业务代码
         - s_wxid - varchar(32) - 发送人wxid
-        - s_wxid_name - varchar(64) - 发送人昵称
+        - s_wxid_name - varchar(128) - 发送人昵称
         - file_size - int - 文件大小(byte)
         - file_md5 - varchar(32) - 文件md5
         - pid - bigint - 队列ID
         - msg_id - bigint - 消息ID
         - t_wxid - varchar(32) - 接收人wxid
-        - t_wxid_name - varchar(64) - 接收人昵称
+        - t_wxid_name - varchar(128) - 接收人昵称
         - g_wxid - varchar(32) - 群聊wxid
-        - g_wxid_name - varchar(64) - 群聊昵称
+        - g_wxid_name - varchar(128) - 群聊昵称
         - create_at - datetime - 记录创建时间
         - update_at - datetime - 记录更新时间
     """
