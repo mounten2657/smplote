@@ -22,7 +22,7 @@ class ParseHandler:
             """程序预热"""
             if int(app_config['APP_AUTO_START_WS']):
                 res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
-            res['que_start'] = RedisTaskQueue.run_consumer()     # 启动 redis task queue
+            # res['que_start'] = RedisTaskQueue.run_consumer()     # 启动 redis task queue
         res = {}
         # 注册结束处理
         signal.signal(signal.SIGINT, ParseHandler.shutdown_handler)
@@ -33,6 +33,9 @@ class ParseHandler:
         # 延迟启动
         res['delay_task'] = Sys.delayed_task(1, hot_load)
         res['clean_log'] = clean_old_logs(30 if Config.is_prod() else 7)
+        from tool.unit.song.music_search_client import MusicSearchClient
+        r = MusicSearchClient('QQ').get_song_data('晴天')
+        print(r)
         return res
 
     @staticmethod
