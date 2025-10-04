@@ -49,7 +49,7 @@ class QQMusicSearch:
         elif type_ == 'songid':
             if song_id:
                 json_data = self.get_mp3_data(song_id)
-                song_url = json_data["songList"][0]["url"]
+                song_url = json_data["songList"][0]["url"] if json_data else ''
                 data = {
                     'type': '歌曲解析',
                     'now': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -105,7 +105,7 @@ class QQMusicSearch:
             song_url = None
             if song_mid:
                 json_data2 = self.get_mp3_data(song_mid)
-                song_url = json_data2["songList"][0]["url"]
+                song_url = json_data2["songList"][0]["url"]  if json_data2 else ''
             song_name = song_desc = info["name"]
             if not song_url:
                 song_url = None
@@ -152,6 +152,9 @@ class QQMusicSearch:
         response = requests.get(url)
         html_str = response.text
         match = re.search(r'>window.__ssrFirstPageData__ =(.*?)</script', html_str)
+        # 此接口被封了，另想办法吧
+        if not match:
+            return None
         json_str = match.group(1)
         json_str = json_str.replace('undefined', '""')
         json_data = json.loads(json_str)

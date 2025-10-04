@@ -33,9 +33,6 @@ class ParseHandler:
         # 延迟启动
         res['delay_task'] = Sys.delayed_task(1, hot_load)
         res['clean_log'] = clean_old_logs(30 if Config.is_prod() else 7)
-        from tool.unit.song.music_search_client import MusicSearchClient
-        r = MusicSearchClient('QQ').get_song_data('晴天')
-        print(r)
         return res
 
     @staticmethod
