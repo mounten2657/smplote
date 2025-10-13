@@ -94,6 +94,7 @@ class WechatRoomModel(MysqlBaseModel):
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
         g_wxid_list = app_config['g_wxid']
+        self_wxid = app_config['wxid']
         if g_wxid not in g_wxid_list:
             return False
         if changes.get('del'):  # 退群提醒
@@ -117,8 +118,8 @@ class WechatRoomModel(MysqlBaseModel):
                 title = f"【欢迎新成员】"
                 des = f"微信昵称：{d['display_name']}\r\n"
                 des += f"入群日期：{Time.date()}"
-                # commander.vp_card_msg(title, des)
-                logger.error(f"{title} - {des}", 'ROOM_NEW_MEM')
+                commander.vp_card_msg(title, des)
+                #logger.error(f"{title} - {des}", 'ROOM_NEW_MEM')
             self._del_room_cache(g_wxid)
         if changes.get('update'):  # 修改昵称提醒
             update_list = changes.get('update')
@@ -129,8 +130,9 @@ class WechatRoomModel(MysqlBaseModel):
                 d_wxid = Attr.get_by_point(d, 'before.wxid', Attr.get_by_point(d, 'after.wxid', ''))
                 if d_wxid:
                     self._del_user_cache(d_wxid)
-                # commander.vp_card_msg(title, des)
-                logger.error(f"{title} - {des}", 'ROOM_NEW_NAME')
+                    if d_wxid != self_wxid:
+                        commander.vp_card_msg(title, des)
+                # logger.error(f"{title} - {des}", 'ROOM_NEW_NAME')
         return True
 
     def _del_room_cache(self, g_wxid):

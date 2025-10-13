@@ -104,6 +104,7 @@ class Http:
         res = {}
         url = 'http://ip.sb'
         headers = {"User-Agent": "curl/7.68.0"}
+        # 获取本地IP
         res['ip'] = str(Http.send_request('GET', url, headers=headers, proxy='')).strip()
         if not res['ip']:
             return Api.error(f"Get local ip failed: {url}")
@@ -112,15 +113,24 @@ class Http:
             "uid": Http._XQ_OPT_UID,
             "ukey": Http._XQ_OPT_KEY,
         }
+        # 获取代理白名单中的IP列表
         res['get'] = Http.send_request('GET', url, params | {"act": "getjson"})  # {"data":[{"IP":"x.x.x.x","MEMO":""}]}
         if not res['get']:
             return Api.error(f"Get white ip failed: {res['get']}")
-        wip = Attr.get_by_point(res["get"], 'data.0.IP')
+        # 白名单中没有备注的都是程序设置的iP
+        wip = ''
+        wd = Attr.get_by_point(res["get"], 'data')
+        for w in wd:
+            if not w.get('MEMO'):
+                wip = w.get('IP')
+                break
         if not wip or wip == res["ip"]:
             return res
-        res['del'] = Http.send_request('GET', url, params | {"act": "del", "ip": "all"})  # success
+        # 删除老IP
+        res['del'] = Http.send_request('GET', url, params | {"act": "del", "ip": wip})  # success
         if not res['del']:
             return Api.error(f"Get white ip failed: {res['del']}")
+        # 添加本地IP到白名单中
         res['add'] = Http.send_request('GET', url, params | {"act": "add", "ip": res['ip']})  # success
         if not res['add']:
             return Api.error(f"Get white ip failed: {res['add']}")
