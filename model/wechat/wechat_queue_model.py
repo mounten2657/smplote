@@ -14,8 +14,8 @@ class WechatQueueModel(MysqlBaseModel):
         - h_value - varchar(64) - 自定义字段，多为某值
         - is_processed - tinyint(1) - 是否处理(0否1是)
         - is_succeed - tinyint(1) - 是否成功(0否1是)
-        - process_params - text - 处理参数
-        - process_result - text - 处理结果
+        - process_params - longtext - 处理参数
+        - process_result - longtext - 处理结果
         - retry_count - int(11) - 重试次数
         - create_at - datetime - 记录创建时间
         - update_at - datetime - 记录更新时间
