@@ -32,7 +32,7 @@ class VpCallbackHandler(VpBaseFactory):
         Time.sleep(0.01)  # 避免满载
         i = int(msg_id) % 4 + 1
         # 先入队列，再由队列发起回调处理 - 队列分流，开4个队列一起消费
-        res = RedisTaskQueue(f'rtq_vp_ch{i}_queue').add_task('VP_CH', data)
+        res = RedisTaskQueue.add_task('VP_CH', data)
         return res
 
     def on_message_filter(self, data):

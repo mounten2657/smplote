@@ -47,7 +47,7 @@ class GPLUpdateService:
             logger.warning(f"删除昨日板块 - {d_count}", 'UP_SYM_YST')
         # 快速转入批量队列中执行
         for c_list in chunk_list:
-            RedisTaskQueue.add_task_batch(sk, ','.join(c_list), is_force, current_date)
+            RedisTaskQueue.add_task(sk, ','.join(c_list), is_force, current_date)
         return True
 
     def update_symbol(self, code_str, is_force=0, current_date=None):

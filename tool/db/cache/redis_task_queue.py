@@ -33,10 +33,7 @@ class RedisTaskQueue:
 
     ARGS_UNIQUE_KEY = True
 
-    queue_list = RedisTaskKeys.RTQ_QUEUE_LIST
-    default_queue = queue_list[0]
-
-    def __init__(self, queue_name: str = default_queue):
+    def __init__(self, queue_name: str):
         """
         Args:
             queue_name: Base name for all Redis keys
@@ -254,41 +251,33 @@ class RedisTaskQueue:
             'stalled': self.redis.hlen(f"{self.processing_queue}:heartbeats")
         }
 
-    def add_task(self, sk, *args):
-        """往队列中添加任务"""
-        service = RedisTaskKeys.RTQ_SERVICE_LIST.get(sk)
-        if not service:
-            raise ValueError(f'Not register service - {sk}')
-        return self.submit(service, *args)
-
     @staticmethod
-    def add_task_batch(sk, *args):
-        """往队列中添加批任务"""
-        service = RedisTaskKeys.RTQ_BATCH_LIST.get(sk)
-        if not service:
+    def add_task(sk, *args):
+        """往队列中添加任务"""
+        service = RedisTaskKeys.RTQ_QUEUE_LIST.get(sk)
+        service_name = service.get('s')
+        queue_num = service.get('n')
+        queue_type = service.get('t')
+        if not service_name:
             raise ValueError(f'Not register service - {sk}')
         i = Str.randint(1, 4)
-        return RedisTaskQueue(f'rtq_batch{i}_queue').submit(service, *args)
+        qk = str(sk).lower() if not queue_type else queue_type
+        qn = f'rtq_{qk}_queue' if queue_num <=1 else f'rtq_{qk}{i}_queue'
+        return RedisTaskQueue(qn).submit(service, *args)
 
     @staticmethod
     def run_consumer():
         """异步延迟启动消费"""
         def run(queue_name):
-            # redis = RedisClient()
-            # time.sleep(Str.randint(1, 10))
-            # # 确保每个队列只能有一个消费者
-            # cache_key = 'LOCK_RTQ_CNS'
-            # if redis.get(cache_key, [queue_name]):
-            #     return False
-            # if not redis.set_nx(cache_key, 1, [queue_name]):
-            #     return False
             uid = Str.uuid()
             print(f'heartbeat - {queue_name}')
             logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
             return RedisTaskQueue(queue_name).consume(uid)
-        for qn in RedisTaskQueue.queue_list:
+        for qk, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
             time.sleep(1)
-            logger.debug(f'redis task queue loading - {qn}', 'RTQ_LOD')
-            thread = threading.Thread(target=run, args=(qn,), daemon=True)
-            thread.start()
+            qnl = [f"rtq_{qk.lower()}_queue"] if qs['n'] <=1 else [f"rtq_{qk.lower()}{i}_queue" for i in range(1, qs['n'] + 1)]
+            for qn in qnl:
+                logger.debug(f'redis task queue loading - {qn}', 'RTQ_LOD')
+                thread = threading.Thread(target=run, args=(qn,), daemon=True)
+                thread.start()
         return True

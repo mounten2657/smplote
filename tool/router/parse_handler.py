@@ -49,6 +49,8 @@ class ParseHandler:
             Time.sleep(3)
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS']
         list(map(lambda key: RedisClient().delete(key, ['*']), key_list))
+        # 清理系统任务
+        Sys.shutdown()
         print(f"PID[{pid}]: 清理完成，主程序结束")
         exit(0)
 

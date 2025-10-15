@@ -31,7 +31,8 @@ class Task(BaseAppVp):
         """vp消息重试 - 每小时的第10分钟"""
         if Time.is_night():
             return self.success(True)
-        res = self.vp.callback_handler_retry(self.app_key, {"ids": "-1"})
+        ids = self.params.get('ids', '-1')
+        res = self.vp.callback_handler_retry(self.app_key, {"ids": ids})
         return self.success(res)
 
     def vp_room(self):
