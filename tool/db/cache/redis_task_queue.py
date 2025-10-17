@@ -262,7 +262,7 @@ class RedisTaskQueue:
         i = Str.randint(1, queue_num)
         qk = service.get('t', str(sk).lower())
         qn = f'rtq_{qk}_queue' if queue_num <=1 else f'rtq_{qk}{i}_queue'
-        return RedisTaskQueue(qn).submit(service, *args)
+        return RedisTaskQueue(qn).submit(service_name, *args)
 
     @staticmethod
     def run_consumer():
