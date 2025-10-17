@@ -257,26 +257,30 @@ class RedisTaskQueue:
         service = RedisTaskKeys.RTQ_QUEUE_LIST.get(sk)
         service_name = service.get('s')
         queue_num = service.get('n')
-        queue_type = service.get('t')
         if not service_name:
             raise ValueError(f'Not register service - {sk}')
-        i = Str.randint(1, 4)
-        qk = str(sk).lower() if not queue_type else queue_type
+        i = Str.randint(1, queue_num)
+        qk = service.get('t', str(sk).lower())
         qn = f'rtq_{qk}_queue' if queue_num <=1 else f'rtq_{qk}{i}_queue'
         return RedisTaskQueue(qn).submit(service, *args)
 
     @staticmethod
     def run_consumer():
         """异步延迟启动消费"""
+        queue_list = []
         def run(queue_name):
             uid = Str.uuid()
             print(f'heartbeat - {queue_name}')
             logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
             return RedisTaskQueue(queue_name).consume(uid)
-        for qk, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
+        for sk, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
             time.sleep(1)
-            qnl = [f"rtq_{qk.lower()}_queue"] if qs['n'] <=1 else [f"rtq_{qk.lower()}{i}_queue" for i in range(1, qs['n'] + 1)]
+            qk = qs.get('t', str(sk).lower())
+            qnl = [f"rtq_{qk}_queue"] if qs['n'] <=1 else [f"rtq_{qk}{i}_queue" for i in range(1, qs['n'] + 1)]
             for qn in qnl:
+                if qn in queue_list:
+                    continue
+                queue_list.append(qn)
                 logger.debug(f'redis task queue loading - {qn}', 'RTQ_LOD')
                 thread = threading.Thread(target=run, args=(qn,), daemon=True)
                 thread.start()

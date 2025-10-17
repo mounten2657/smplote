@@ -47,7 +47,7 @@ class VpClient(VpBaseFactory):
                 return True
             ws = VpSocketFactory(self.app_key)
             return ws.close()
-        res = Sys.delayed_task(1, ws_close)
+        res = Sys.delayed_task(ws_close, delay_seconds=1)
         logger.debug(f'websocket close done {is_all} - {res}', 'WS_END')
         return res
 

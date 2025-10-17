@@ -12,11 +12,10 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from tool.db.cache.redis_client import RedisClient
 from tool.core.logger import Logger
 
-# 线程池：控制并发（默认100）
-_executor = ThreadPoolExecutor(max_workers=100, thread_name_prefix="SysTaskExecutor")
+_timeout = 120  # 超时时间，默认120秒
+_executor = ThreadPoolExecutor(max_workers=100, thread_name_prefix="SysTaskExecutor")  # 线程池：控制并发（默认100）
 _lock_key = "LOCK_SYS_CNS"  # 并发去重锁
 _redis = RedisClient()
-_timeout = 120  # 超时时间，默认120秒
 logger = Logger()
 
 
@@ -61,11 +60,10 @@ class Sys:
         return decorator
 
     @staticmethod
-    def delayed_task(delay_seconds: float, func: Callable, *args, **kwargs) -> str:
+    def delayed_task(func: Callable, *args, **kwargs) -> str:
         """
         延迟执行函数，立即返回task_id
 
-        :param delay_seconds: 延迟秒数
         :param func: 目标函数
         :param args: 函数参数 - p1, p2
         :param kwargs: 函数参数 - p1=11, p2=22
@@ -73,6 +71,7 @@ class Sys:
         """
         # 生成任务ID（去重依据）
         task_id = Sys._generate_task_id(func, *args, **kwargs)
+        delay_seconds = kwargs.pop('delay_seconds', 0.1)
         timeout = kwargs.pop('timeout', _timeout)
 
         # 1. 延迟逻辑：在子线程中先sleep，再提交到线程池
@@ -123,28 +122,28 @@ class Sys:
         """延迟三秒后，拉取最新代码，并重启 flask """
         def pull_code():
             Sys.run_command('sudo /opt/shell/init/reload_flask.sh >>/tmp/reload_flask.log 2>&1')
-        return Sys.delayed_task(3, pull_code)
+        return Sys.delayed_task(pull_code, delay_seconds=3)
 
     @staticmethod
     def delay_kill_gu():
         """终止gu """
-        return Sys.delayed_task(3, lambda: Sys.run_command('sudo pkill -9 -f gunicorn'))
+        return Sys.delayed_task(lambda: Sys.run_command('sudo pkill -9 -f gunicorn'), delay_seconds=3)
 
     @staticmethod
     def delay_reload_gu(is_force=0):
         """重载gu """
         is_force = ' 1' if is_force else ' '
         command = f'sudo /opt/shell/init/init_flask.sh >>/tmp/init_flask.log 2>&1{is_force}'
-        return Sys.delayed_task(3, lambda: Sys.run_command(command))
+        return Sys.delayed_task(lambda: Sys.run_command(command), delay_seconds=3)
 
     @staticmethod
     def delay_kill_vp():
         """终止vp """
-        return Sys.delayed_task(3, lambda: Sys.run_command('sudo pkill -9 -f stay'))
+        return Sys.delayed_task(lambda: Sys.run_command('sudo pkill -9 -f stay'), delay_seconds=3)
 
     @staticmethod
     def delay_reload_vp():
         """重载vp """
         def _exec():
             Sys.run_command('sudo /opt/shell/init/init_wechatpad.sh >>/tmp/init_wechatpad.log 2>&1')
-        return Sys.delayed_task(3, _exec)
+        return Sys.delayed_task(_exec, delay_seconds=3)

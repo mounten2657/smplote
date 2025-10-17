@@ -22,8 +22,8 @@ class Task(BaseAppVp):
         for g_wxid in g_list:
             client = VpCommandService(app_key, g_wxid, s_wxid)
             res[g_wxid] = {
-                "vp_sky_rw": Sys.delayed_task(1, lambda c=client: c.vp_sky_rw()),
-                "vp_sky_hs": Sys.delayed_task(1, lambda c=client: c.vp_sky_hs('', 1)),
+                "vp_sky_rw": Sys.delayed_task(lambda c=client: c.vp_sky_rw()),
+                "vp_sky_hs": Sys.delayed_task(lambda c=client: c.vp_sky_hs('', 1)),
             }
         return self.success(res)
 

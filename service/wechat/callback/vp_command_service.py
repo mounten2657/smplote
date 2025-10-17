@@ -130,7 +130,7 @@ class VpCommandService:
         if fp:
             fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
-            Sys.delayed_task(15, lambda: self.client.send_voice_message(fp, self.g_wxid, self.extra))
+            Sys.delayed_task(lambda: self.client.send_voice_message(fp, self.g_wxid, self.extra), delay_seconds=15)
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
     def vp_sky_rw(self, content=''):

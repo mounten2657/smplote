@@ -102,7 +102,7 @@ class VpCallbackService:
         update_data = {"process_params": {"params": "[PAR]", "app_key": app_key}}
         res['update_db'] = db.update_process(int(pid), update_data)
         # 实际处理逻辑
-        res['que_sub'] = self._callback_handler(pid=pid, params=params)
+        res['que_sub'] = Sys.delayed_task(lambda: self._callback_handler(pid=pid, params=params))
         return 'success' if res['que_sub'] else 'error'
 
     def _callback_handler(self, pid, params):
@@ -115,9 +115,9 @@ class VpCallbackService:
         logger.debug(res['rev_handler'], 'VP_CALL_HD_RES')
         data['pid'] = pid
         # 消息数据入库 - 异步
-        res['ins_handler'] = RedisTaskQueue.add_task('VP_IH', data)
+        res['ins_handler'] = Sys.delayed_task(VpCallbackService.insert_handler, data)
         # 消息指令处理 - 异步
-        res['cmd_handler'] = RedisTaskQueue.add_task('VP_CM', data)
+        res['cmd_handler'] = Sys.delayed_task(VpCallbackService.command_handler, data)
         update_data = {"process_result": res, "process_params": data}
         if res['rev_handler']:
             update_data.update({"is_succeed": 1})
@@ -332,7 +332,7 @@ class VpCallbackService:
             err = Error.handle_exception_info(e)
             logger.error(f"消息入库失败[{pid}] - {err}", "VP_INS_ERR")
             qdb.set_succeed(pid, 0)
-            Sys.delayed_task(5, lambda: VpCallbackService.insert_handler_retry([pid]))
+            Sys.delayed_task(lambda: VpCallbackService.insert_handler_retry([pid]), delay_seconds=5)
             return False
 
     @staticmethod
