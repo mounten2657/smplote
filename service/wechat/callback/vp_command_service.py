@@ -324,6 +324,13 @@ class VpCommandService:
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
     def vp_xw(self, content=''):
+        """每日新闻 - 文字版"""
+        s_res = self.service.get_daily_news()
+        response = s_res.get('main', "暂未查询到每日新闻")
+        Sys.delayed_task(lambda: self.vp_th(), delay_seconds=10)
+        return self.client.send_msg(response, self.g_wxid, [], self.extra)
+
+    def vp_xw_img(self, content=''):
         """每日新闻"""
         file = self.service.get_sky_file('xw')
         fp = file.get('save_path')

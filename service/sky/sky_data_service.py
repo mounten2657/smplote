@@ -230,7 +230,7 @@ class SkyDataService:
         url = f"https://api.mhimg.cn/api/Daily_news"
         res = Http.send_request('GET', url)
         text = res  # 直接返回文字，不是 json 格式
-        return {"title": "每日新闻", "main": text}
+        return {"title": "每日新闻", "main": "【莫简报】\r\n" + text}
 
     def get_today_history(self):
         """
@@ -240,6 +240,5 @@ class SkyDataService:
         url = f"{self._ZXZ_API}/api/lsjt/?type=json"
         res = Http.send_request('GET', url)
         text = res.get('data', [])
-        text = "【历史上的今天】\r\n - " + "\r\n - ".join(text[:5])
-        return {"title": "历史上的今天", "main": text}
+        return {"title": "历史上的今天", "main": "【历史上的今天】\r\n - " + "\r\n - ".join(text[:5])}
 
