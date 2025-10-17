@@ -325,13 +325,12 @@ class VpCommandService:
 
     def vp_xw(self, content=''):
         """每日新闻"""
-        self.vp_ov_wa('')
-        Sys.delayed_task(lambda: self.vp_th(''), delay_seconds=15)
         file = self.service.get_sky_file('xw')
         fp = file.get('save_path')
         if fp:
             fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
+            Sys.delayed_task(lambda: self.vp_th(), delay_seconds=15)
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询每日新闻'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
