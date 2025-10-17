@@ -240,5 +240,5 @@ class SkyDataService:
         url = f"{self._ZXZ_API}/api/lsjt/?type=json"
         res = Http.send_request('GET', url)
         text = res.get('data', [])
-        return {"title": "历史上的今天", "main": "【历史上的今天】" + "\r\n".join(text[:5])}
+        return {"title": "历史上的今天", "main": "【历史上的今天】" + "\r\n - ".join(text[:5])}
 
