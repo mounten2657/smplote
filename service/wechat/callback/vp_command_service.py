@@ -330,7 +330,7 @@ class VpCommandService:
         if fp:
             fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
-            Sys.delayed_task(lambda: self.vp_th(), delay_seconds=15)
+            Sys.delayed_task(lambda: self.vp_th(), delay_seconds=10)
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询每日新闻'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
