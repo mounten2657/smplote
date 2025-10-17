@@ -102,10 +102,11 @@ class VpCallbackService:
         update_data = {"process_params": {"params": "[PAR]", "app_key": app_key}}
         res['update_db'] = db.update_process(int(pid), update_data)
         # 实际处理逻辑
-        res['que_sub'] = Sys.delayed_task(lambda: self._callback_handler(pid=pid, params=params))
+        res['que_sub'] = Sys.delayed_task(VpCallbackService.callback_handler, pid, params)
         return 'success' if res['que_sub'] else 'error'
 
-    def _callback_handler(self, pid, params):
+    @staticmethod
+    def callback_handler_real(pid, params):
         """微信回调真正处理逻辑"""
         res = {"pid": pid}
         db = WechatQueueModel()
