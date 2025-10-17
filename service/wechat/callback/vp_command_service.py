@@ -328,7 +328,7 @@ class VpCommandService:
         Sys.delayed_task(lambda: self.vp_th(), delay_seconds=10)
         s_res = self.service.get_daily_news()
         response = s_res.get('main', "暂未查询到每日新闻")
-        tl = response.split('\r\n-')
+        tl = response.split('\n-')
         if len(tl) > 1:
             n = int(len(tl) / 2) + 1
             response = "\r\n".join(tl[:n])

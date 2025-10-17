@@ -79,7 +79,7 @@ class SkyDataService:
         elif 'bz' == sky_type:
             r_num = extra.get('r_num', 999)
             fn = f"sky_{sky_type}_{r_num}.png"
-            if 0 == r_num % 4:
+            if 0 == r_num % 3:
                 # 真人cos壁纸
                 url = f"{self._ZXZ_API}/api/mhycos/?type=5&num=1"
                 res = Http.send_request('GET', url)
@@ -89,13 +89,12 @@ class SkyDataService:
                     url = img_list[i_num]
                 else:
                     url = ''
-            elif 1 == r_num % 4:
-                # 二次元壁纸
-                fn = f"sky_{sky_type}_{r_num}.png"
-                url = f"{self._ZXZ_API}/api/ecy/?type=json"
-                res = Http.send_request('GET', url)
-                url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
-            elif 2 == r_num % 4:
+            elif 1 == r_num % 3:
+                # 二次元壁纸 - 好像没用了
+                # fn = f"sky_{sky_type}_{r_num}.png"
+                # url = f"{self._ZXZ_API}/api/ecy/?type=json"
+                # res = Http.send_request('GET', url)
+                # url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
                 # 动漫壁纸
                 api = self._OVO_API_FILE_LIST[sky_type]
                 fn = f"sky_{sky_type}_{r_num}.png"
