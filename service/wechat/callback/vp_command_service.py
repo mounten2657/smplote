@@ -325,8 +325,8 @@ class VpCommandService:
 
     def vp_xw(self, content=''):
         """每日新闻"""
+        self.vp_ov_wa('')
         Sys.delayed_task(lambda: self.vp_th(''), delay_seconds=15)
-        Sys.delayed_task(lambda: self.vp_ov_wa(''), delay_seconds=5)
         file = self.service.get_sky_file('xw')
         fp = file.get('save_path')
         if fp:
