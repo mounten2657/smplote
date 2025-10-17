@@ -317,18 +317,21 @@ class VpCommandService:
         response = '暂未查询到壁纸'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
+    def vp_th(self, content):
+        """历史上的今天"""
+        s_res = self.service.get_today_history()
+        response = s_res.get('main', "暂未查询到历史上的今天")
+        return self.client.send_msg(response, self.g_wxid, [], self.extra)
+
     def vp_xw(self, content):
         """每日新闻"""
+        Sys.delayed_task(lambda: self.vp_th(''), delay_seconds=15)
         file = self.service.get_sky_file('xw')
         fp = file.get('save_path')
         if fp:
             fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
-            self.client.send_img_msg(fp, self.g_wxid, self.extra)
-            # 历史上的今天
-            s_res = self.service.get_today_history()
-            response = s_res.get('main', "暂未查询到历史上的今天")
-            return self.client.send_msg(response, self.g_wxid, [], self.extra)
+            return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询每日新闻'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
