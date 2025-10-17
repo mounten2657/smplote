@@ -1,4 +1,6 @@
+import random
 from xml.etree import ElementTree
+from service.wechat.callback.vp_command_service import VpCommandService
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.vp_client import VpClient
 from tool.core import Logger, Attr, Str, Time
@@ -92,12 +94,12 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, f"[语音消息] {p_msg_id}.{content_type}"]
         elif 'red' == content_type:  # 红包
             send_wxid, content = [s_wxid, f"[红包消息] [{content_link['title']}-{content_link['sender_title']}]"]
-            # if self.g_wxid and self.g_wxid in self.a_g_wxid:  # 红包提醒
-            #     title = "【红包提醒】"
-            #     des = f"[%s_wxid_name% {Time.date('%H:%M')} 发送红包]\r\n"
-            #     des += f"[@艾特位招租]"
-            #     commander = VpCommandService(self.app_key, self.g_wxid, send_wxid)
-            #     commander.vp_card_msg(title, des)
+            if self.g_wxid and self.g_wxid in self.a_g_wxid:  # 红包提醒
+                title = "【红包提醒】"
+                des = f"[%s_wxid_name% {Time.date('%H:%M')} 发送红包]\r\n"
+                des += f"[@艾特位招租]"
+                commander = VpCommandService(self.app_key, self.g_wxid, send_wxid)
+                commander.vp_card_msg(title, des)
         elif 'transfer' == content_type:  # 转账
             s_wxid = content_link['payer_username']
             t_wxid = content_link['receiver_username']
@@ -152,6 +154,31 @@ class VpMsgFormatter(VpBaseFactory):
             t_name = t_name if t_name != t_wxid else content_link['i_name']
             self.msg['send_wxid_name'], self.msg['to_wxid_name'], self.msg['from_wxid_name'] = s_name, t_name, f_name
             send_wxid, content = [s_wxid, f"[邀请消息] {s_name} 邀请 {t_name} 加入了群聊"]
+            if self.g_wxid and self.g_wxid in self.a_g_wxid:  # 邀请消息
+                welcome_list = [
+                    "欢迎新成员！祝玩好玩嗨玩出下一代，群里永远有你的快乐位置～",
+                    "热烈欢迎！咱群个个都是人才，说话又好听，来了的都不想走，以后多唠多互动呀～",
+                    "新成员入群啦！温馨提示：爆照极有可能触发群主发对象流程，快准备好你的美照帅照吧～",
+                    "欢迎新朋友！进群就是一家人，跑图有人陪，emo有人哄，福利还能一起冲～",
+                    "热烈欢迎新伙伴！群里没有冷场，只有唠不完的梗和等你一起蹭的图，快融入我们吧～",
+                    "新成员来啦！祝在群里早日找到合拍CP，每天都有好心情，群主的红包也不会少～",
+                    "欢迎加入大家庭！这里没有孤单，只有一群有趣的人陪你聊日常、闯快乐，以后多指教～",
+                    "新伙伴入群欢迎！进群即享：陪跑图不被丢，蹭福利不落后，还有一群逗比陪你走～",
+                    "欢迎新成员！愿你在群里每天都有新快乐，想吃肯德基有人约，想吐槽有人听～",
+                    "热烈欢迎新朋友！咱群主打一个温暖热闹，有困难大家帮，有快乐一起享，期待你的精彩～",
+                    "新成员来啦！祝在群里玩得尽兴，聊得开心，不管是唠嗑还是蹭图，都能找到同频的人～",
+                    "欢迎加入！进群就是缘分，以后一起分享日常，互蹭福利，群主的冷笑话也会按时送达哦～",
+                    "热烈欢迎新伙伴！群里藏着超多有趣灵魂，等你一起唠梗、跑图、盼福利，来了就别想走～",
+                    "欢迎新成员！愿你在群里收获快乐，结交好友，每天都能被温暖和笑声包围～",
+                    "新伙伴入群欢迎！进群福利已就位：陪聊、陪玩、陪吐槽，还有不定期惊喜，快开启你的群聊时光～"
+                ]
+                welcome = random.choice(welcome_list)
+                title = "【欢迎新成员】"
+                des = f"昵称：{t_name}\r\n"
+                des += f"时间：{Time.date()}"
+                commander = VpCommandService(self.app_key, self.g_wxid, send_wxid)
+                commander.vp_card_msg(title, des)
+                commander.vp_normal_msg(welcome, [{"wxid": t_wxid, "nickname": t_name}])
             client.refresh_room(self.g_wxid)
         elif 'revoke' == content_type:  # 撤回
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, self.is_my_protect, client)

@@ -102,7 +102,17 @@ class WechatRoomModel(MysqlBaseModel):
             reason_list = ["群主没有发红包", "群主没有分配对象", "群主没有定期发放福利",
                            "没有滴到对象", "缺乏关爱", "生某人的气了", "一怒之下怒了一下",
                            "蹭不到图", "跑图被丢", "没有CP", "被冥龙创哭", "emo了", "想静静",
-                           "没有吃到肯德基", "山高路远江湖再见，且行且珍惜！"
+                           "没有吃到肯德基", "山高路远江湖再见，且行且珍惜！",
+                           "听说隔壁群发奶茶，我去探探路",
+                           "手机内存告急，先把群聊暂存江湖",
+                           "群主三天没说话，怀疑群要散伙先溜了",
+                           "被群里大佬卷到了，先退群偷偷练号",
+                           "妈妈喊我吃饭，这一去可能就忘了回来",
+                           "退群冷静5分钟，等下换小号装新人混红包",
+                           "群消息99+太吓人，我先躲躲清净",
+                           "承诺的爆照还没等到，本颜狗先撤了",
+                           "怕再待下去会被群主的冷笑话冻僵",
+                           "江湖路远，下次发红包记得@我归队"
                            ]
             reason = random.choice(reason_list)
             for d in del_list:
@@ -113,13 +123,13 @@ class WechatRoomModel(MysqlBaseModel):
                 commander.vp_card_msg(title, des)
             self._del_room_cache(g_wxid)
         if changes.get('add'):  # 入群提醒
-            add_list = changes.get('add')
-            for d in add_list:
-                title = f"【欢迎新成员】"
-                des = f"微信昵称：{d['display_name']}\r\n"
-                des += f"入群日期：{Time.date()}"
-                commander.vp_card_msg(title, des)
-                #logger.error(f"{title} - {des}", 'ROOM_NEW_MEM')
+            # add_list = changes.get('add')
+            # for d in add_list:
+            #     title = f"【欢迎新成员】"
+            #     des = f"微信昵称：{d['display_name']}\r\n"
+            #     des += f"入群日期：{Time.date()}"
+            #     commander.vp_card_msg(title, des)
+            #     #logger.error(f"{title} - {des}", 'ROOM_NEW_MEM')
             self._del_room_cache(g_wxid)
         if changes.get('update'):  # 修改昵称提醒
             update_list = changes.get('update')
