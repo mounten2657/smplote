@@ -79,8 +79,9 @@ class SkyDataService:
         elif 'bz' == sky_type:
             r_num = extra.get('r_num', 999)
             fn = f"sky_{sky_type}_{r_num}.png"
-            if 0 == r_num % 2:
-                url = f"{self._ZXZ_API}//api/mhycos/?type=5&num=1"
+            if 0 == r_num % 4:
+                # 真人cos壁纸
+                url = f"{self._ZXZ_API}/api/mhycos/?type=5&num=1"
                 res = Http.send_request('GET', url)
                 if isinstance(res, dict) and Attr.get_by_point(res, 'data.0.images'):
                     img_list = Attr.get_by_point(res, 'data.0.images')
@@ -88,14 +89,27 @@ class SkyDataService:
                     url = img_list[i_num]
                 else:
                     url = ''
-            else:
+            elif 1 == r_num % 4:
+                # 二次元壁纸
                 fn = f"sky_{sky_type}_{r_num}.png"
                 url = f"{self._ZXZ_API}/api/ecy/?type=json"
                 res = Http.send_request('GET', url)
-                if isinstance(res, dict) and res.get('url'):
-                    url = res.get('url')
-                else:
-                    url = ''
+                url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
+            elif 2 == r_num % 4:
+                # 动漫壁纸
+                api = self._OVO_API_FILE_LIST[sky_type]
+                fn = f"sky_{sky_type}_{r_num}.png"
+                url = f"{self._OVO_API}{api}?key={self.ovo_key}"
+            else:
+                # bing 每日壁纸
+                fn = f"by_{sky_type}_{Time.date('%Y%m%d')}.png"
+                url = f"https://api.nxvav.cn/api/bing/?encode=json"
+                res = Http.send_request('GET', url)
+                url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
+        elif 'xw' == sky_type:
+            # 每日新闻
+            fn = f"xw_{sky_type}_{Time.date('%Y%m%d')}.png"
+            url = 'https://zj.v.api.aa1.cn/api/60s/'
         elif 'ng' == sky_type:
             # 已经全部下载了，就61首
             r_list = [236,235,230,229,226,224,216,212,210,209,208,205,204,202,199,194,193,192,191,186,182,
@@ -207,3 +221,24 @@ class SkyDataService:
         res = Http.send_request('GET', url)
         text = res.get('data', '')
         return {"title": "随机文案", "main": text}
+
+    def get_daily_news(self):
+        """
+        获取每日新闻 - 文字版
+        :return: {"title": "xxx", "main": "xxx"}
+        """
+        url = f"https://api.mhimg.cn/api/Daily_news"
+        res = Http.send_request('GET', url)
+        text = res  # 直接返回文字，不是 json 格式
+        return {"title": "每日新闻", "main": text}
+
+    def get_today_history(self):
+        """
+        获取历史上的今天 - 文字版
+        :return: {"title": "xxx", "main": "xxx"}
+        """
+        url = f"{self._ZXZ_API}/api/lsjt/?type=json"
+        res = Http.send_request('GET', url)
+        text = res.get('data', [])
+        return {"title": "历史上的今天", "main": "\r\n".join(text[:3])}
+

@@ -173,6 +173,7 @@ class VpCallbackService:
                     '#菜单': lambda: commander.vp_manual(content),
                     '#提问': lambda: commander.vp_question(content),
                     '#百科': lambda: commander.vp_science(content),
+                    '#新闻': lambda: commander.vp_xw(content),
                     '#任务': lambda: commander.vp_sky_rw(content),
                     '#红石': lambda: commander.vp_sky_hs(content),
                     '#公告': lambda: commander.vp_sky_gg(content),

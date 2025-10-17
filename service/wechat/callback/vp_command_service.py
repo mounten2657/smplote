@@ -59,6 +59,7 @@ class VpCommandService:
     #公告 - 游戏最新公告
 
     【休闲娱乐】
+    #新闻 - 每日新闻查询
     #天气 - 实时天气查询
     #文案 - 获取朋友圈文案
     #v50 - 来个疯狂星期四
@@ -314,6 +315,21 @@ class VpCommandService:
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到壁纸'
+        return self.client.send_msg(response, self.g_wxid, [], self.extra)
+
+    def vp_xw(self, content):
+        """每日新闻"""
+        file = self.service.get_sky_file('xw')
+        fp = file.get('save_path')
+        if fp:
+            fp = Dir.wechat_dir(f'{fp}')
+            self.extra.update({"file": file})
+            self.client.send_img_msg(fp, self.g_wxid, self.extra)
+            # 历史上的今天
+            s_res = self.service.get_today_history()
+            response = s_res.get('main', "暂未查询到历史上的今天")
+            return self.client.send_msg(response, self.g_wxid, [], self.extra)
+        response = '暂未查询每日新闻'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
     def vp_ov_cg(self, content):
