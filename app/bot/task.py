@@ -26,11 +26,10 @@ class Task(BaseAppVp):
                 raise ValueError(f"不存在的vp方法: {method}")
             return func(*args)
         for g_wxid in g_list:
-            res[g_wxid] = {
-                "vp_sky_rw": Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw'),
-                "vp_sky_hs": Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 1),
-                "vp_xw": Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_xw'),
-            }
+            res[g_wxid]['vp_sky_rw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw')
+            res[g_wxid]['vp_sky_hs'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 1)
+            res[g_wxid]['vp_xw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_xw')
+            res[g_wxid]['vp_ov_wa'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_ov_wa', delay_seconds=20)
         return self.success(res)
 
     def vp_msg(self):
