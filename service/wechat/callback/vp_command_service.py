@@ -301,7 +301,7 @@ class VpCommandService:
         response = s_res.get('main', "暂未查询到v50")
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
-    def vp_ov_wa(self, content):
+    def vp_ov_wa(self, content=''):
         """ov文案"""
         s_res = self.service.get_wa()
         response = s_res.get('main', "暂未查询到文案")
