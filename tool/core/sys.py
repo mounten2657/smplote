@@ -49,7 +49,7 @@ class Sys:
                 # 获取Redis锁（原子操作）
                 acquired = _redis.set_nx(_lock_key, 1, [task_id])
                 if not acquired:
-                    logger.debug(f"任务{task_id}已在执行，跳过重复执行", 'SYS_TASK_LOCK')
+                    logger.debug(f"任务[{task_id}]已在执行，跳过重复执行 - {func}: {args}", 'SYS_TASK_LOCK')
                     return None  # 其他进程已处理
                 try:
                     return func(*args, **kwargs)
@@ -83,6 +83,7 @@ class Sys:
             # 2. 带锁和超时的任务执行逻辑
             @Sys._task_lock(task_id)
             def _run_task():
+                # logger.warning(f"任务[{task_id}]正在执行 - {func}: {args}", 'SYS_TASK_TIMEOUT')
                 return func(*args, **kwargs)
 
             # 3. 提交到线程池并设置超时
@@ -90,9 +91,9 @@ class Sys:
                 future = _executor.submit(_run_task)
                 future.result(timeout=timeout)  # 超时控制
             except FutureTimeoutError:
-                logger.error(f"任务{task_id}执行超时（>{timeout}秒）", 'SYS_TASK_TIMEOUT')
+                logger.error(f"任务[{task_id}]执行超时（>{timeout}秒） - {func}: {args}", 'SYS_TASK_TIMEOUT')
             except Exception as e:
-                logger.error(f"任务{task_id}执行失败: {str(e)}", 'SYS_TASK_ERROR')
+                logger.error(f"任务[{task_id}]执行失败: {str(e)} - {func}: {args}", 'SYS_TASK_ERROR')
 
         # 启动延迟线程（立即返回）
         threading.Thread(target=_delay_wrapper, daemon=True).start()
@@ -145,4 +146,4 @@ class Sys:
     def delay_reload_vp():
         """重载vp """
         command = 'sudo /opt/shell/init/init_wechatpad.sh >>/tmp/init_wechatpad.log 2>&1'
-        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
+        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3.5)

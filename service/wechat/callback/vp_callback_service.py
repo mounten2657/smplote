@@ -302,7 +302,7 @@ class VpCallbackService:
                     "user_list": user_list,
                     "room": room
                 }
-                res['update_user'] = Sys.delayed_task(VpCallbackService.update_user, t_data)
+                res['update_user'] = Sys.delayed_task(VpCallbackService.update_user, t_data, timeout=900)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0
