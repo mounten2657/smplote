@@ -150,6 +150,8 @@ class VpCallbackService:
                 return False
             commands = ",".join([config['command_list'], config['command_list_yl'], config['command_list_sky']]).split(',')
             content = Str.remove_at_user(content).strip()
+            #先去掉#号再加上#号，这样不管带不带#号都能兼容
+            content = f"#{content.replace('#', '')}" if not content.startswith(['1', '2']) else content
             if str(content).startswith(tuple(commands)):
                 is_admin = s_wxid in str(config['admin_list']).split(',')
                 commander = VpCommandService(app_key, g_wxid, s_wxid)
@@ -197,7 +199,7 @@ class VpCallbackService:
                     '#唱歌': lambda: commander.vp_ov_cg(content),
                     '#点歌': lambda: commander.vp_dg(content),
                     '#设置': lambda: commander.vp_setting(content) if is_admin else commander.vp_normal_msg(admin_str),
-                    '#总结': lambda: commander.vp_report(content) if is_admin else commander.vp_normal_msg(admin_str),
+                    '#总结': lambda: commander.vp_report(content) if is_admin else False,
                 }
                 # 检查数字开头的命令
                 if content_str and content_str[0] in ('1', '2'):
@@ -212,7 +214,7 @@ class VpCallbackService:
                         return handler()
                 # 非管理员拦截（所有管理命令都已在上面处理）
                 if not is_admin:
-                    return commander.vp_normal_msg('只有管理员才能使用该功能')
+                    return commander.vp_normal_msg(admin_str)
             # 默认返回
             return False
         except Exception as e:
