@@ -120,30 +120,29 @@ class Sys:
     @staticmethod
     def delay_git_pull():
         """延迟三秒后，拉取最新代码，并重启 flask """
-        def pull_code():
-            Sys.run_command('sudo /opt/shell/init/reload_flask.sh >>/tmp/reload_flask.log 2>&1')
-        return Sys.delayed_task(pull_code, delay_seconds=3)
+        command = 'sudo /opt/shell/init/reload_flask.sh >>/tmp/reload_flask.log 2>&1'
+        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
 
     @staticmethod
     def delay_kill_gu():
         """终止gu """
-        return Sys.delayed_task(lambda: Sys.run_command('sudo pkill -9 -f gunicorn'), delay_seconds=3)
+        command = 'sudo pkill -9 -f gunicorn'
+        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
 
     @staticmethod
     def delay_reload_gu(is_force=0):
         """重载gu """
-        is_force = ' 1' if is_force else ' '
-        command = f'sudo /opt/shell/init/init_flask.sh >>/tmp/init_flask.log 2>&1{is_force}'
-        return Sys.delayed_task(lambda: Sys.run_command(command), delay_seconds=3)
+        command = f'sudo /opt/shell/init/init_flask.sh >>/tmp/init_flask.log 2>&1{' 1' if is_force else ' '}'
+        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
 
     @staticmethod
     def delay_kill_vp():
         """终止vp """
-        return Sys.delayed_task(lambda: Sys.run_command('sudo pkill -9 -f stay'), delay_seconds=3)
+        command = 'sudo pkill -9 -f stay'
+        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
 
     @staticmethod
     def delay_reload_vp():
         """重载vp """
-        def _exec():
-            Sys.run_command('sudo /opt/shell/init/init_wechatpad.sh >>/tmp/init_wechatpad.log 2>&1')
-        return Sys.delayed_task(_exec, delay_seconds=3)
+        command = 'sudo /opt/shell/init/init_wechatpad.sh >>/tmp/init_wechatpad.log 2>&1'
+        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)

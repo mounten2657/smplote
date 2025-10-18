@@ -19,12 +19,17 @@ class Task(BaseAppVp):
         app_key = self.app_key
         s_wxid = self.wxid
         g_list = self.g_wxid_list.split(',')
+        def sky_task_exec(gid, sid, method, *args):
+            client = VpCommandService(app_key, gid, sid)
+            func = getattr(client, method, None)
+            if not func or not callable(func):
+                raise ValueError(f"不存在的vp方法: {method}")
+            return func(*args)
         for g_wxid in g_list:
-            client = VpCommandService(app_key, g_wxid, s_wxid)
             res[g_wxid] = {
-                "vp_sky_rw": Sys.delayed_task(lambda c=client: c.vp_sky_rw()),
-                "vp_sky_hs": Sys.delayed_task(lambda c=client: c.vp_sky_hs('', 1)),
-                "vp_xw": Sys.delayed_task(lambda c=client: c.vp_xw()),
+                "vp_sky_rw": Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw'),
+                "vp_sky_hs": Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 1),
+                "vp_xw": Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_xw'),
             }
         return self.success(res)
 
