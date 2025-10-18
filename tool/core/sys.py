@@ -83,7 +83,7 @@ class Sys:
             # 2. 带锁和超时的任务执行逻辑
             @Sys._task_lock(task_id)
             def _run_task():
-                # logger.warning(f"任务[{task_id}]正在执行 - {func}: {args}", 'SYS_TASK_TIMEOUT')
+                # logger.warning(f"任务[{task_id}]正在执行 - {func}: {args}", 'SYS_TASK_RUNNING')
                 return func(*args, **kwargs)
 
             # 3. 提交到线程池并设置超时
