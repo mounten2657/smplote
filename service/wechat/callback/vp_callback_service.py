@@ -293,8 +293,8 @@ class VpCallbackService:
             wxid_list = [d["wxid"] for d in user_list]
             u_list = udb.get_user_list(wxid_list)
 
-            # 用户入库耗时 - 改为队列中执行
-            if (g_wxid and r_info and (Time.now() - Time.tfd(str(r_info['update_at'])) > 3600)) or not g_wxid:
+            # 用户入库耗时 - 改为异步执行
+            if (g_wxid and r_info) or not g_wxid:
                 t_data = {
                     "app_key": app_key,
                     "g_wxid": g_wxid,
@@ -302,7 +302,7 @@ class VpCallbackService:
                     "user_list": user_list,
                     "room": room
                 }
-                res['update_user'] = RedisTaskQueue.add_task('VP_USR', t_data)
+                res['update_user'] = Sys.delayed_task(VpCallbackService.update_user, t_data)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0
@@ -352,8 +352,8 @@ class VpCallbackService:
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
         if g_wxid:
-            # 群聊更新限速
             Time.sleep(Str.randint(1, 10) / 10)
+            # 群聊更新限速 - 一天检查更新一次
             if not RedisClient().set_nx('VP_ROOM_USR_LOCK', 1, [g_wxid]):
                 return False
         for u in user_list:
