@@ -321,6 +321,7 @@ class VpCommandService:
                 fp = Dir.wechat_dir(f'{fp}')
                 self.extra.update({"file": file})
                 return self.client.send_img_msg(fp, self.g_wxid, self.extra)
+            Time.sleep(1)
         response = f'暂未查询到壁纸 - [{r_num}]'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
