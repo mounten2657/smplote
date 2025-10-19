@@ -310,13 +310,17 @@ class VpCommandService:
 
     def vp_ov_bz(self, content):
         """ov壁纸"""
-        r_num = random.randint(1, 999)
-        file = self.service.get_sky_file('bz', {"r_num": r_num})
-        fp = file.get('save_path')
-        if fp:
-            fp = Dir.wechat_dir(f'{fp}')
-            self.extra.update({"file": file})
-            return self.client.send_img_msg(fp, self.g_wxid, self.extra)
+        r_num = 0
+        # 壁纸失败率太高，如果没有成功，重试两次
+        for i in range(3):
+            Time.sleep(0.1)
+            r_num = random.randint(1, 999)
+            file = self.service.get_sky_file('bz', {"r_num": r_num})
+            fp = file.get('save_path')
+            if fp:
+                fp = Dir.wechat_dir(f'{fp}')
+                self.extra.update({"file": file})
+                return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = f'暂未查询到壁纸 - [{r_num}]'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
