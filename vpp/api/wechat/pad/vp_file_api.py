@@ -64,6 +64,8 @@ class VpFileApi:
                         f.write(binary_data)
             if ('silk' == file_ext and not os.path.exists(f"{base_path}.mp3")) or fd:
                 output_file = self.silk2mp3(output_file)
+            if not output_file:
+                raise Exception(f"Invalid url: {url[:128]}")
             file_url = f"{self.static_url}{fk}"
             file_md5 = self.vp_file_md5(output_file)
             res.update({
