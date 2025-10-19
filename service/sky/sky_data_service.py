@@ -105,7 +105,7 @@ class SkyDataService:
             if not url:
                 # 动漫壁纸
                 api = self._OVO_API_FILE_LIST[sky_type]
-                fn = f"sky_{sky_type}_{r_num}_{Time.date('%Y%m%d')}.png"
+                fn = f"sky_{sky_type}_{r_num}_0_{Time.date('%Y%m%d')}.png"
                 url = f"{self._OVO_API}{api}?key={self.ovo_key}"
         elif 'xw' == sky_type:
             # 每日新闻
