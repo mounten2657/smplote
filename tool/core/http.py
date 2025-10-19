@@ -52,7 +52,7 @@ class Http:
             'method': method,
             'url': url,
             'headers': headers or {},
-            'timeout': 30,
+            'timeout': 60,
         }
         # 新增代理
         if proxy is not None:
