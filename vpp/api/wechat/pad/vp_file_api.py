@@ -95,8 +95,8 @@ class VpFileApi:
     def download_url_file_curl(self, url, file_path):
         """下载并保存文件 - curl"""
         try:
-            # 通过curl下载
-            if 0 == os.system(f'curl "{url}" --output {file_path}'):
+            # 通过curl下载 - 忽略证书验证
+            if 0 == os.system(f'curl "{url}" -k --output {file_path}'):
                 return file_path
             return ''
         except requests.exceptions.RequestException as e:

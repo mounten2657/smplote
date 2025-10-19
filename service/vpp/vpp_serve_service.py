@@ -22,7 +22,7 @@ class VppServeService:
         return VppServeClient().vp_download_file(fty, key, url, fp, fk, fd)
 
     @staticmethod
-    def download_website_file(url, biz_code, file_name, file_dir='', fty=5001):
+    def download_website_file(url, biz_code, file_name, file_dir='', fty=5002):
         """
         下载外部网站文件 - 对外方法
         :param str url: 文件url
