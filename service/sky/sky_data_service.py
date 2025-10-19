@@ -91,14 +91,15 @@ class SkyDataService:
                     url = ''
             elif 1 == r_num % 3:
                 # 二次元壁纸 - 好像没用了
-                # fn = f"sky_{sky_type}_{r_num}.png"
-                # url = f"{self._ZXZ_API}/api/ecy/?type=json"
-                # res = Http.send_request('GET', url)
-                # url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
-                # 动漫壁纸
-                api = self._OVO_API_FILE_LIST[sky_type]
                 fn = f"sky_{sky_type}_{r_num}.png"
-                url = f"{self._OVO_API}{api}?key={self.ovo_key}"
+                url = f"{self._ZXZ_API}/api/ecy/?type=json"
+                res = Http.send_request('GET', url)
+                url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
+                if not url:
+                    # 动漫壁纸
+                    api = self._OVO_API_FILE_LIST[sky_type]
+                    fn = f"sky_{sky_type}_{r_num}.png"
+                    url = f"{self._OVO_API}{api}?key={self.ovo_key}"
             else:
                 # bing 每日壁纸
                 fn = f"by_{sky_type}_{Time.date('%Y%m%d')}.png"
