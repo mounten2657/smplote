@@ -78,20 +78,20 @@ class SkyDataService:
             url = f"{self._ZXZ_API}/api/sjyjsj/m/{r_num}.mp3"
         elif 'bz' == sky_type:
             r_num = extra.get('r_num', 999)
-            fn = f"sky_{sky_type}_{r_num}.png"
             if 0 == r_num % 3:
                 # 真人cos壁纸
+                fn = f"sky_{sky_type}_{r_num}_{Time.date('%Y%m%d')}.png"
                 url = f"{self._ZXZ_API}/api/mhycos/?type=5&num=1"
                 res = Http.send_request('GET', url)
                 if isinstance(res, dict) and Attr.get_by_point(res, 'data.0.images'):
                     img_list = Attr.get_by_point(res, 'data.0.images')
-                    i_num = random.randint(0, len(img_list) - 1)
+                    i_num = 0 # random.randint(0, len(img_list) - 1)
                     url = img_list[i_num]
                 else:
                     url = ''
             elif 1 == r_num % 3:
                 # 二次元壁纸 - 好像没用了
-                fn = f"sky_{sky_type}_{r_num}.png"
+                fn = f"sky_{sky_type}_{r_num}_{Time.date('%Y%m%d')}.png"
                 url = f"{self._ZXZ_API}/api/ecy/?type=json"
                 res = Http.send_request('GET', url)
                 url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
@@ -105,7 +105,7 @@ class SkyDataService:
             if not url:
                 # 动漫壁纸
                 api = self._OVO_API_FILE_LIST[sky_type]
-                fn = f"sky_{sky_type}_{r_num}.png"
+                fn = f"sky_{sky_type}_{r_num}_{Time.date('%Y%m%d')}.png"
                 url = f"{self._OVO_API}{api}?key={self.ovo_key}"
         elif 'xw' == sky_type:
             # 每日新闻
