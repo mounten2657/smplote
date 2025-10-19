@@ -97,7 +97,7 @@ class SkyDataService:
                 url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
             else:
                 # bing 每日壁纸
-                fn = f"by_{sky_type}_{Time.date('%Y%m%d')}.png"
+                fn = f"sky_{sky_type}_by_{Time.date('%Y%m%d')}.png"
                 url = f"https://api.nxvav.cn/api/bing/?encode=json"
                 res = Http.send_request('GET', url)
                 url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
@@ -109,7 +109,7 @@ class SkyDataService:
                 url = f"{self._OVO_API}{api}?key={self.ovo_key}"
         elif 'xw' == sky_type:
             # 每日新闻
-            fn = f"xw_{sky_type}_{Time.date('%Y%m%d')}.png"
+            fn = f"sky_{sky_type}_xw_{Time.date('%Y%m%d')}.png"
             url = 'https://zj.v.api.aa1.cn/api/60s/'
         elif 'ng' == sky_type:
             # 已经全部下载了，就61首
