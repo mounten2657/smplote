@@ -136,7 +136,7 @@ class VpCommandService:
             Sys.delayed_task(self_voice_msg, fp, self.g_wxid, self.extra, delay_seconds=15)
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
-    def vp_sky_rw(self, content=''):
+    def vp_sky_rw(self, content='', is_all=0):
         """sky任务"""
         content = '#任务' if '201' == content else content
         file = self.service.get_sky_file('rw')
@@ -146,15 +146,16 @@ class VpCommandService:
             self.extra.update({"file": file})
             self.client.send_img_msg(fp, self.g_wxid, self.extra)
             # 其它相关信息也一并发送
-            jl = self.service.get_sky_file('jl')
-            self.extra.update({"file": jl})
-            self.client.send_img_msg(Dir.wechat_dir(f'{jl['save_path']}'), self.g_wxid, self.extra)
-            dl = self.service.get_sky_file('dl')
-            self.extra.update({"file": dl})
-            self.client.send_img_msg(Dir.wechat_dir(f'{dl['save_path']}'), self.g_wxid, self.extra)
-            mf = self.service.get_sky_file('mf')
-            self.extra.update({"file": mf})
-            self.client.send_img_msg(Dir.wechat_dir(f'{mf['save_path']}'), self.g_wxid, self.extra)
+            if is_all:
+                jl = self.service.get_sky_file('jl')
+                self.extra.update({"file": jl})
+                self.client.send_img_msg(Dir.wechat_dir(f'{jl['save_path']}'), self.g_wxid, self.extra)
+                dl = self.service.get_sky_file('dl')
+                self.extra.update({"file": dl})
+                self.client.send_img_msg(Dir.wechat_dir(f'{dl['save_path']}'), self.g_wxid, self.extra)
+                mf = self.service.get_sky_file('mf')
+                self.extra.update({"file": mf})
+                self.client.send_img_msg(Dir.wechat_dir(f'{mf['save_path']}'), self.g_wxid, self.extra)
             return True
         response = '获取sky任务失败'
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
