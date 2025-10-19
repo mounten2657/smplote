@@ -7,7 +7,7 @@ from tool.unit.song.music_search_client import MusicSearchClient
 from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
-from tool.core import Config, Attr, Sys, Dir, Transfer, Time
+from tool.core import Config, Attr, Sys, Dir, Transfer, Time, Str
 
 
 class VpCommandService:
@@ -363,13 +363,9 @@ class VpCommandService:
 
     def vp_dg(self, content):
         """点歌"""
-        s_type = 'qq'
-        code = str(content).replace('#点歌', '').strip()
-        if '#' in code:
-            code, t = code.rsplit('#', 1)
-            if str(t).lower() in ['qq', 'wy']:
-                s_type = t
-        res = MusicSearchClient(s_type).get_song_data(code)
+        s_type = 'WY' if '网易' in content else 'QQ'
+        code = Str.replace_multiple(content, ['#', '点歌', '网易'], ['', '', ''])
+        res = MusicSearchClient(s_type).get_song_data(code.strip())
         if res:
             return self.client.send_dg_message(res, self.g_wxid, self.extra)
         response = '暂未找到该歌曲'
