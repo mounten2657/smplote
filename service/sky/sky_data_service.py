@@ -1,9 +1,7 @@
 import random
 from service.vpp.vpp_serve_service import VppServeService
 from model.wechat.wechat_file_model import WechatFileModel
-from tool.core import Time, Http, Env, Attr, Logger
-
-logger = Logger()
+from tool.core import Time, Http, Env, Attr
 
 
 class SkyDataService:
@@ -37,10 +35,8 @@ class SkyDataService:
         fn, url, fd = self._get_sky_filename(sky_type, extra)
         fdb = WechatFileModel()
         file = fdb.get_biz_file_info('VP_SKY', sky_type, fn)
-        logger.warning(f'查询文件信息[{1 if file else 0}] - {fn} - {url} - {fd}', 'SKF_GET')
         if not file:
             file = self.down_sky_file(sky_type, extra)
-        logger.warning(f'最终文件信息[{1 if file else 0}] - {file.get('url')}', 'SKF_GET')
         return file if file else {}
 
     def down_sky_file(self, sky_type='rw', extra=None):
@@ -51,16 +47,13 @@ class SkyDataService:
         :return:  文件信息
         """
         fn, url, fd = self._get_sky_filename(sky_type, extra)
-        logger.warning(f'下载文件信息{1 if extra else 0} - {fn} - {url} - {fd}', 'SKF_DOL')
         if not fn or not url:
             return {}
         file = self.client.download_website_file(url, 'VP_SKY', fn, fd)
-        logger.warning(f'下载文件结果{1 if file else 0} - {file}', 'SKF_DOL')
         f_info = {}
         if file.get('url'):
             fdb = WechatFileModel()
             f_info = fdb.get_file_info(file['md5'])
-            logger.warning(f'是否存在历史文件[{1 if f_info else 0}] - {file['md5']}', 'SKF_DOL')
             if not f_info:
                 fdb.add_file(file, {
                     "send_wxid": sky_type,
