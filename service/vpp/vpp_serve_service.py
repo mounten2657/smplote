@@ -29,7 +29,7 @@ class VppServeService:
         :param str biz_code: 业务码
         :param str file_name: 文件名 - 无路径 - 带后缀
         :param str file_dir: 文件路径 - 默认月份 - / 结尾
-        :param int fty: 文件下载方式: 5001: http | 5002: curl
+        :param int fty: 文件下载方式: 5001: http | 5002: curl  # 因为 5002 可以忽略证书验证，所以将其设为默认值
         :return: 可访问的文件链接 、文件md5 以及 文件大小
         {'url': ''xxx, 'md5': ''xxx, 'size': 100, 'code': 0, 'msg': "", 'save_path': 'xxx', 'file_name': 'xxx', 'fake_path': 'xxx', 'biz_code': 'xxx'}
         """
