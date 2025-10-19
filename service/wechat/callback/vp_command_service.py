@@ -313,7 +313,6 @@ class VpCommandService:
         r_num = 0
         # 壁纸失败率太高，如果没有成功，重试两次
         for i in range(5):
-            Time.sleep(0.1)
             r_num = random.randint(1, 999)
             file = self.service.get_sky_file('bz', {"r_num": r_num})
             fp = file.get('save_path')
