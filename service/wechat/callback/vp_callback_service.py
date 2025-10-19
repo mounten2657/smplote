@@ -9,7 +9,6 @@ from model.wechat.wechat_user_model import WechatUserModel
 from model.wechat.wechat_msg_model import WechatMsgModel
 from model.wechat.wechat_api_log_model import WechatApiLogModel
 from tool.db.cache.redis_client import RedisClient
-from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.core import Logger, Time, Error, Attr, Config, Str, Sys
 
 logger = Logger()
@@ -118,7 +117,7 @@ class VpCallbackService:
         # 消息数据入库 - 异步
         res['ins_handler'] = Sys.delayed_task(VpCallbackService.insert_handler, data)
         # 消息指令处理 - 异步
-        res['cmd_handler'] = Sys.delayed_task(VpCallbackService.command_handler, data)
+        res['cmd_handler'] = Sys.delayed_task(VpCallbackService.command_handler, data, timeout=300)
         update_data = {"process_result": res, "process_params": data}
         if res['rev_handler']:
             update_data.update({"is_succeed": 1})
