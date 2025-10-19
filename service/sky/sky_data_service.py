@@ -55,7 +55,7 @@ class SkyDataService:
         if not fn or not url:
             return {}
         file = self.client.download_website_file(url, 'VP_SKY', fn, fd)
-        logger.warning(f'下载文件结果{1 if file else 0}', 'SKF_DOL')
+        logger.warning(f'下载文件结果{1 if file else 0} - {file}', 'SKF_DOL')
         f_info = {}
         if file.get('url'):
             fdb = WechatFileModel()
