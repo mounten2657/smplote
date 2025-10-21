@@ -30,3 +30,4 @@ class QyClient:
         if Config.is_prod():
             md = LogErrorMd.get_error_markdown(result, log_id)
             return self.send_msg(md)
+        return False

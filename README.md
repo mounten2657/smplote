@@ -1,6 +1,6 @@
 # Smplote 工具集
-[项目地址](https://gitee.com/mounten2657/smplote/)
-一个基于python的个人小工具，如微信本地数据库解密、信息导出、聊天总结，自动回复，AI问答，消息通知，量化交易等服务。
+
+[本项目](https://gitee.com/mounten2657/smplote/)是一个基于python的个人小工具，如微信本地数据库解密、信息导出、聊天总结，自动回复，AI问答，消息通知，量化交易等服务。
 
 ## 功能特点
 

@@ -10,6 +10,7 @@ from typing import Callable
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from tool.db.cache.redis_client import RedisClient
+from tool.core.error import Error
 from tool.core.logger import Logger
 
 _timeout = 120  # 超时时间，默认120秒
@@ -93,7 +94,8 @@ class Sys:
             except FutureTimeoutError:
                 logger.error(f"任务[{task_id}]执行超时（>{timeout}秒） - {func}: {args}", 'SYS_TASK_TIMEOUT')
             except Exception as e:
-                logger.error(f"任务[{task_id}]执行失败: {str(e)} - {func}: {args}", 'SYS_TASK_ERROR')
+                err = Error.handle_exception_info(e)
+                logger.error(f"任务[{task_id}]执行失败: {func}: {args} - {err}", 'SYS_TASK_ERROR')
 
         # 启动延迟线程（立即返回）
         threading.Thread(target=_delay_wrapper, daemon=True).start()
