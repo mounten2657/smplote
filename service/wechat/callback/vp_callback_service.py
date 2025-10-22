@@ -218,7 +218,7 @@ class VpCallbackService:
             return False
         except Exception as e:
             err = Error.handle_exception_info(e)
-            logger.error(f"消息指令处理失败 - {err} - {data.get('content')}", "VP_CMD_ERR")
+            logger.error(f"消息指令处理失败 - {data.get('content')} - {err}", "VP_CMD_ERR")
             return False
 
     @staticmethod

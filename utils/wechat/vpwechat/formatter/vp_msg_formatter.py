@@ -251,7 +251,9 @@ class VpMsgFormatter(VpBaseFactory):
                 "u_name": Str.extract_xml_attr(content_text, 'displayname'),
                 "u_content": Str.extract_xml_attr(content_text, 'content'),
             }
-        elif all(key in content_text for key in ('sysmsg', '邀请', '加入', '群聊')):  # 邀请 - "{g_wxid}:\n{<invited_xml>}"
+        elif all(key in content_text for key in ('sysmsg', '加入', '群聊')):  # 邀请 - "{g_wxid}:\n{<invited_xml>}"
+            # "$username$"邀请"$names$"加入了群聊
+            # "$adder$"通过扫描"$from$"分享的二维码加入群聊
             content_type = 'invited'
             content_link = {
                 "template": Str.extract_xml_attr(content_text, 'template'),
