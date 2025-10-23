@@ -262,6 +262,14 @@ class VpMsgFormatter(VpBaseFactory):
                 "i_wxid": Str.extract_xml_attr(content_text, 'username', 2),
                 "i_name": Str.extract_xml_attr(content_text, 'nickname', 2).replace('\\', ''),
             }
+            if '二维码' in content_text:
+                content_link = {
+                    "template": Str.extract_xml_attr(content_text, 'template'),
+                    "u_wxid": Str.extract_xml_attr(content_text, 'username', 2),
+                    "u_name": Str.extract_xml_attr(content_text, 'nickname', 2).replace('\\', ''),
+                    "i_wxid": Str.extract_xml_attr(content_text, 'username', 1),
+                    "i_name": Str.extract_xml_attr(content_text, 'nickname', 1).replace('\\', ''),
+                }
         elif all(key in content_text for key in ('msg', 'emoji', 'cdnurl')):  # 表情 - "{s_wxid}:\n{<emoji_xml>}"
             content_type = 'gif'
             # 仅保存下载链接，先不进行下载
