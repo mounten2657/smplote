@@ -27,10 +27,12 @@ class Task(BaseAppVp):
             return func(*args)
         for g_wxid in g_list:
             res[g_wxid] = {}
-            res[g_wxid]['vp_sky_rw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw', '', 1, delay_seconds=0.3)
-            res[g_wxid]['vp_sky_hs'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 1, delay_seconds=1)
+            res[g_wxid]['vp_sky_hs'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 1)
+            Time.sleep(15)
+            res[g_wxid]['vp_sky_rw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw', '', 1)
             res[g_wxid]['vp_xw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_xw', delay_seconds=66)  # > 50
             res[g_wxid]['vp_ov_wa'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_ov_wa', delay_seconds=111)  # > 30
+            Time.sleep(60)
         return self.success(res)
 
     def vp_msg(self):
