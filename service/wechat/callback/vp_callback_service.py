@@ -150,7 +150,7 @@ class VpCallbackService:
             commands = ",".join([config['command_list'], config['command_list_yl'], config['command_list_sky']]).split(',')
             content = Str.remove_at_user(content).strip()
             #先去掉#号再加上#号，这样不管带不带#号都能兼容
-            content = f"#{content.replace('#', '')}" if content.startswith(('点歌', '任务', '红石', '提问', '壁纸')) else content
+            content = f"#{content.replace('#', '')}" if content.startswith(('点歌', '壁纸', '提问')) else content
             if str(content).startswith(tuple(commands)):
                 is_admin = s_wxid in str(config['admin_list']).split(',')
                 commander = VpCommandService(app_key, g_wxid, s_wxid)
