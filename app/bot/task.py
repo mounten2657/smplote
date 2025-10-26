@@ -32,7 +32,7 @@ class Task(BaseAppVp):
             res[g_wxid]['vp_sky_rw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw', '', 1, delay_seconds=30 + i) # > 20
             res[g_wxid]['vp_xw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_xw', delay_seconds=90 + i)  # > 50
             res[g_wxid]['vp_ov_wa'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_ov_wa', delay_seconds=150 + i)  # > 30
-            i = 120
+            i += 120
         return self.success(res)
 
     def vp_msg(self):
