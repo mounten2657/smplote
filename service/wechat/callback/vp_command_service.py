@@ -45,6 +45,7 @@ class VpCommandService:
     【基础功能】
     #提问 或 [101] - 智能问答
     #百科 或 [102]  - 知识百科
+    #日榜 - 群聊天记录排名统计
 
     【光遇专区】
     #任务 或 [201] - 每日任务查询
@@ -381,37 +382,74 @@ class VpCommandService:
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
     def vp_report(self, content):
-        """总结"""
-        is_force = 0
-        s_g_wxid = self.g_wxid
+        """聊天总结"""
         code = str(content).replace('#总结', '').strip()
-        if self.g_wxid != self.a_g_wxid:
-            if '' != code:
-                return False
-        else:
-            if '' == code:
-                return False
-            if 3 != len(code) or not code.isdigit() or '0' not in code:
-                return False
-            gid, is_force = map(int, code.split('0', 1))
-            rdb = 'model.wechat.wechat_room_model.WechatRoomModel.get_info'
-            room = Transfer.middle_exec(rdb, [], gid)
-            if not room:
-                return False
-            s_g_wxid = self.a_g_wxid
-            self.g_wxid = room['g_wxid']
-            self.g_wxid_name = room['nickname']
-            self.extra.update({
-                "g_wxid": self.g_wxid,
-                "g_wxid_name": self.g_wxid_name
-            })
-        # response = '数据收集中...\r\n\r\n正在进行总结，请稍后……'
-        # self.client.send_msg(response, self.g_wxid, [], self.extra)
+        check, s_g_wxid, is_force = self._check_g_wxid(code)
+        if not check:
+            return False
         fn_img = AIReportGenService.get_report_img(self.extra, 'simple', is_force)
         if fn_img:
             self.extra.update({"fn_img": fn_img})
             return self.client.send_img_msg(fn_img, s_g_wxid, self.extra)
         return False
+
+    def vp_rank(self, content):
+        """聊天排名"""
+        rs_list = {1: '#昨日榜', 0: '#日榜', 30: '#月榜', 90: '#季榜', 180: '#半年榜', 365: '#年榜'}
+        rt = rn = None
+        for i, rs in rs_list.items():
+            if rs in content:
+                rt = i
+                rn = rs
+                break
+        if rt is None:
+            return False
+        code = Str.replace_multiple(content, rs_list.values()).strip()
+        check, s_g_wxid, is_force = self._check_g_wxid(code)
+        if not check:
+            return False
+        m_date_list = ['', '']
+        if rt != 1:
+            m_date_list[0] = Time.dft(Time.now() - rt * 86400, "%Y-%m-%d 00:00:00")
+            m_date_list[1] = Time.dft(Time.now(), "%Y-%m-%d 23:59:59")
+        rdb = 'model.wechat.wechat_msg_model.WechatMsgModel.get_msg_times_rank'
+        r_list = Transfer.middle_exec(rdb, [], self.g_wxid, m_date_list)
+        if r_list:
+            response = f"【{r_list[0]['g_wxid_name']}】#群聊榜单 #{rn} \r\n"
+            for r in r_list:
+                response += f"  - {r['s_wxid_name']}（{r['count']}次)\r\n"
+            return self.client.send_msg(response, s_g_wxid, [], self.extra)
+        return False
+
+    def _check_g_wxid(self, code):
+        """检查群指令是否正确"""
+        is_force = 0
+        s_g_wxid = self.g_wxid
+        if self.g_wxid != self.a_g_wxid:
+            if '' != code:
+                return False, '', 0
+        else:
+            if '' == code:
+                return False, '', 0
+            if 3 != len(code) or not code.isdigit() or '0' not in code:
+                return False, '', 0
+            gid, is_force = map(int, code.split('0', 1))
+            rdb = 'model.wechat.wechat_room_model.WechatRoomModel.get_info'
+            room = Transfer.middle_exec(rdb, [], gid)
+            if not room:
+                return False, '', 0
+            # 除了管理员群，其他群自己看自己群的信息
+            if self.g_wxid != self.a_g_wxid and room['g_wxid'] != self.g_wxid:
+                return False, '', 0
+            s_g_wxid = self.a_g_wxid
+            self.g_wxid = room['g_wxid']
+            self.g_wxid_name = room['nickname']
+            self.extra.update({
+                "r_wxid": s_g_wxid,
+                "g_wxid": self.g_wxid,
+                "g_wxid_name": self.g_wxid_name
+            })
+        return True, s_g_wxid, is_force
 
     def vp_normal_msg(self, response, ats=None, extra=None):
         """发送普通群消息"""

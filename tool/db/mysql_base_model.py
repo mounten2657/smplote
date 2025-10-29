@@ -188,6 +188,15 @@ class MysqlBaseModel:
             self._state._where_sqls.append(sql)
         return self
 
+    def group(self, column: str) -> 'MysqlBaseModel':
+        """设置分组"""
+        self._state._group_str = self._state._group_str if self._state._group_str else ''
+        if not self._state._group_str:
+            self._state._group_str = f" GROUP BY {column} "
+        else:
+            self._state._group_str += f", {column} "
+        return self
+
     def order(self, column: str, des: str) -> 'MysqlBaseModel':
         """设置排序"""
         self._state._order_str = self._state._order_str if self._state._order_str else ''
@@ -252,9 +261,10 @@ class MysqlBaseModel:
                 else:
                     limit_clause = f"LIMIT {self._state._limit_count}"
 
+            group_str = self._state._group_str if self._state._group_str else ''
             order_str = self._state._order_str if self._state._order_str else ''
 
-            sql = f"SELECT {select_clause} FROM {self._table} WHERE {where_clause} {order_str} {limit_clause}"
+            sql = f"SELECT {select_clause} FROM {self._table} WHERE {where_clause} {group_str} {order_str} {limit_clause}"
             self.logger.debug({"sql": sql.strip(), "params": params}, 'DB_SQL_SELECT', 'mysql')
             return sql.strip(), params
 
@@ -527,6 +537,7 @@ class QueryState(threading.local):
         self._wheres = []
         self._where_ins = []
         self._where_sqls = []
+        self._group_str = None
         self._order_str = None
         self._limit_offset = None
         self._limit_count = None

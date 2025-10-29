@@ -38,7 +38,7 @@ class WechatMsgModel(MysqlBaseModel):
 
     _table = 'wechat_msg'
 
-    def add_msg(self, msg, app_key, pid=0):
+    def add_msg(self, msg, app_key, pid = 0):
         """数据入库"""
         insert_data = {
             "msg_id": msg['msg_id'],
@@ -75,16 +75,35 @@ class WechatMsgModel(MysqlBaseModel):
         """获取消息信息"""
         return self.where({"msg_id": mid}).first()
 
-    def get_msg_list(self, g_wxid, m_date=''):
+    def get_msg_list(self, g_wxid, m_date = ''):
         """获取消息列表 - 今日的最近1000条"""
-        m_date = m_date if m_date else Time.date("%Y-%m-%d 00:00:00")
-        m_where = {"g_wxid": g_wxid, "msg_time": {"opt": ">=", "val": m_date}}
+        m_date = m_date if m_date else Time.dft(Time.now(), "%Y-%m-%d 00:00:00")  # 默认统计今日数据
+        m_e_date = Time.dft(Time.tfd(m_date), "%Y-%m-%d 23:59:59")
+        m_where = {"g_wxid": g_wxid, "msg_time": {"opt": "between", "val": [m_date, m_e_date]}}
         m_count = self.get_count(m_where)
-        if m_count < 200:
-            # 今日数据小于200条，改为从最近三天的数据获取数据
-            m_date = Time.dft(Time.now() - 3 * 86400, "%Y-%m-%d 00:00:00")
-            m_where = {"g_wxid": g_wxid, "msg_time": {"opt": ">=", "val": m_date}}
+        if m_count < 200:  # 数据小于200条，直接返回空
+            return []
         return (((self.where(m_where)
                   .order('msg_time', 'desc'))
                   .limit(0, 1000))
                   .get())
+
+    def get_msg_times_rank(self, g_wxid, m_date_list = None, limit = 5):
+        """获取聊天记录前五名发言次数统计"""
+        if m_date_list is None:
+            m_date_list = ['', '']
+        if not m_date_list[0]:  # 默认统计昨日数据
+            m_date_list[0] = Time.dft(Time.now() - 86400, "%Y-%m-%d 00:00:00")
+            m_date_list[1] = Time.dft(Time.tfd(m_date_list[0]), "%Y-%m-%d 23:59:59")
+        m_date, m_e_date = m_date_list
+        m_where = {"g_wxid": g_wxid, "msg_time": {"opt": "between", "val": [m_date, m_e_date]}}
+        m_field = ['id', 'count(1) as count', 'g_wxid', 'g_wxid_name', 's_wxid', 's_wxid_name', 'msg_time']
+        m_rank = (self.select(m_field)
+                   .where(m_where)
+                   .group('s_wxid')
+                   .order('count', 'desc')
+                   .limit(0, limit)
+                   .get())
+        if m_rank:
+            return m_rank
+        return []

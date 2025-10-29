@@ -147,7 +147,7 @@ class VpCallbackService:
             # 超时的命令不予处理
             if Time.now() - Time.tfd(msg_time) > 900:
                 return False
-            commands = ",".join([config['command_list'], config['command_list_yl'], config['command_list_sky']]).split(',')
+            commands = ",".join([config['command_list'], config['command_list_tj'], config['command_list_yl'], config['command_list_sky']]).split(',')
             content = Str.remove_at_user(content).strip()
             #先去掉#号再加上#号，这样不管带不带#号都能兼容
             content = f"#{content.replace('#', '')}" if content.startswith(('点歌', '壁纸', '提问')) else content
@@ -197,6 +197,12 @@ class VpCallbackService:
                     '#女友': lambda: commander.vp_gf(content),
                     '#唱歌': lambda: commander.vp_ov_cg(content),
                     '#点歌': lambda: commander.vp_dg(content),
+                    '#昨日榜': lambda: commander.vp_rank(content),
+                    '#日榜': lambda: commander.vp_rank(content),
+                    '#月榜': lambda: commander.vp_rank(content),
+                    '#季榜': lambda: commander.vp_rank(content) if is_admin else False,
+                    '#半年榜': lambda: commander.vp_rank(content) if is_admin else False,
+                    '#年榜': lambda: commander.vp_rank(content) if is_admin else False,
                     '#设置': lambda: commander.vp_setting(content) if is_admin else commander.vp_normal_msg(admin_str),
                     '#总结': lambda: commander.vp_report(content) if is_admin else False,
                 }
