@@ -104,6 +104,6 @@ class WechatMsgModel(MysqlBaseModel):
                    .order('count', 'desc')
                    .limit(0, limit)
                    .get())
-        if m_rank:
+        if m_rank and len(m_rank) >= limit:
             return m_rank
         return []

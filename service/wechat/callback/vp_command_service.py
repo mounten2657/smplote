@@ -415,9 +415,9 @@ class VpCommandService:
         rdb = 'model.wechat.wechat_msg_model.WechatMsgModel.get_msg_times_rank'
         r_list = Transfer.middle_exec(rdb, [], self.g_wxid, m_date_list)
         if r_list:
-            response = f"【{r_list[0]['g_wxid_name']}】#群聊榜单 {rn} \r\n"
+            response = f"【{r_list[0]['g_wxid_name']}】#群聊榜单 {rn}"
             for r in r_list:
-                response += f"  - {r['s_wxid_name']}（{r['count']}次)\r\n"
+                response += f"\r\n  - {r['s_wxid_name']}（{r['count']}次)"
             return self.client.send_msg(response, s_g_wxid, [], self.extra)
         return False
 
