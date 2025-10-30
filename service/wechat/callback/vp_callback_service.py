@@ -340,7 +340,7 @@ class VpCallbackService:
             return res
         except Exception as e:
             err = Error.handle_exception_info(e)
-            logger.error(f"消息入库失败[{pid}] - {err}", "VP_INS_ERR")
+            logger.error(f"消息入库失败[{pid}] - {e} - {err}", "VP_INS_ERR")
             qdb.set_succeed(pid, 0)
             Sys.delayed_task(VpCallbackService.insert_handler_retry, [pid], delay_seconds=5)
             return False
