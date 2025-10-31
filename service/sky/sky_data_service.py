@@ -230,6 +230,7 @@ class SkyDataService:
         :return: {"title": "xxx", "main": "xxx"}
         """
         # 备用 - /api/sky/rwwz/rw
+        # 备用 -  https://api.zxz.ee/api/sky/?type=json&lx=rw
         url = f"{self._OVO_API}/api/sky/rwwz/rw1?key={self.ovo_key}"
         res = Http.send_request('GET', url)
         if not res.get('rw1'):
