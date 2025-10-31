@@ -269,7 +269,8 @@ class VpCallbackService:
             if m_info and not is_retry:
                 return True
             # 内容为空 - 直接跳过
-            if not data.get('content'):
+            data['content'] = data.get('content', '')
+            if not data['content']:
                 return False
             # 只有一个消费者，所以不用加锁
             client = VpClient(app_key)
@@ -329,7 +330,7 @@ class VpCallbackService:
                 r_msg_id = data['content_link']['p_new_msg_id']
                 r_msg = WechatQueueModel().get_by_msg_id(r_msg_id)
                 if r_msg:
-                    data['content'] += f"<{r_msg['process_params']['content']}>"
+                    data['content'] += f"<{Attr.get_by_point(r_msg, 'process_params.content', '')}>"
             mid = m_info['id'] if m_info and m_info['id'] else 0
             up_key = 'upd_msg' if mid else 'ins_msg'
             res[up_key] = mdb.add_msg(data, app_key, mid)
@@ -340,7 +341,7 @@ class VpCallbackService:
             return res
         except Exception as e:
             err = Error.handle_exception_info(e)
-            logger.error(f"消息入库失败[{pid}] - {e} - {err}", "VP_INS_ERR")
+            logger.error(f"消息入库失败[{pid}] - {err}", "VP_INS_ERR")
             qdb.set_succeed(pid, 0)
             Sys.delayed_task(VpCallbackService.insert_handler_retry, [pid], delay_seconds=5)
             return False
