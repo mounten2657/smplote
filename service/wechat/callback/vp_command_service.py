@@ -140,6 +140,12 @@ class VpCommandService:
     def vp_sky_rw(self, content='', is_all=0):
         """sky任务"""
         content = '#任务' if '201' == content else content
+        # 新增文字版 - 都熟悉了，没必要图片，占内存
+        if 2 == is_all:
+            s_res = self.service.get_rw_txt()
+            response = s_res.get('main', "暂未查询到每日任务")
+            return self.client.send_msg(response, self.g_wxid, [], self.extra)
+        # 以下是之前的正常逻辑
         file = self.service.get_sky_file('rw')
         fp = file.get('save_path')
         if fp:

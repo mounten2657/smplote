@@ -224,6 +224,23 @@ class SkyDataService:
         text = res.get('data', '')
         return {"title": "随机文案", "main": text}
 
+    def get_rw_txt(self):
+        """
+        获取每日任务文字
+        :return: {"title": "xxx", "main": "xxx"}
+        """
+        # 备用 - /api/sky/rwwz/rw
+        url = f"{self._OVO_API}/api/sky/rwwz/rw1?key={self.ovo_key}"
+        res = Http.send_request('GET', url)
+        if not res.get('rw1'):
+            return {}
+        content = ''
+        for k, v in res.items():
+            if 'rw' in k:
+             content += f"\r\n  - {v}"
+        text = (f"【光遇每日任务】- {res.get('time')}" + content) if content else ""
+        return {"title": "每日任务", "main": text}
+
     def get_daily_news(self):
         """
         获取每日新闻 - 文字版
