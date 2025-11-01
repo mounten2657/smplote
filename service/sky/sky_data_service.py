@@ -159,19 +159,19 @@ class SkyDataService:
 
     def get_sky_djs(self):
         """
-        获取sky倒计时
+        获取sky日历
         :return: {"title": "xxx", "main": "xxx"}
         """
         url = f"{self._OVO_API}/api/skygm/hd?key={self.ovo_key}"
         res = Http.send_request('GET', url)
-        text = "【Sky倒计时】\r\n\r\n  " + res.get('hb', '')
+        text = "【Sky日历】\r\n\r\n  " + res.get('hb', '')
         url = f"{self._OVO_API}/api/sky/jjsj/sj?key={self.ovo_key}"
         res = Http.send_request('GET', url)
         text += "\r\n\r\n季节季蜡："
         for i in range(1, 10):
             text += f"\r\n{res.get(f'msg{i}', '')}"
         text += f"\r\n\r\n{res.get('msg', '')}"
-        return {"title": "倒计时", "main": text}
+        return {"title": "日历", "main": text}
 
     def get_v50(self):
         """
@@ -256,18 +256,8 @@ class SkyDataService:
         content = ''
         if '降落时间' in content_data:
          content += f"\r\n  {content_data}"
-        text = (f"【Sky红石降落点】- {res.get('time')}" + content) if content else ""
+        text = (f"【Sky红石降落】- {res.get('time')}" + content) if content else ""
         return {"title": "红石降落", "main": text}
-
-    def get_daily_news(self):
-        """
-        获取每日新闻 - 文字版
-        :return: {"title": "xxx", "main": "xxx"}
-        """
-        url = f"https://api.mhimg.cn/api/Daily_news"
-        res = Http.send_request('GET', url)
-        text = res  # 直接返回文字，不是 json 格式
-        return {"title": "每日新闻", "main": "【莫简报】\r\n" + text}
 
     def get_today_history(self):
         """
@@ -278,4 +268,14 @@ class SkyDataService:
         res = Http.send_request('GET', url)
         text = res.get('data', [])
         return {"title": "历史上的今天", "main": "【历史上的今天】\r\n - " + "\r\n - ".join(text[:5])}
+
+    def get_daily_news(self):
+        """
+        获取每日新闻 - 文字版
+        :return: {"title": "xxx", "main": "xxx"}
+        """
+        url = f"https://api.mhimg.cn/api/Daily_news"
+        res = Http.send_request('GET', url)
+        text = res  # 直接返回文字，不是 json 格式
+        return {"title": "每日新闻", "main": "【莫简报】\r\n" + text}
 
