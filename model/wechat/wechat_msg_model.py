@@ -38,7 +38,7 @@ class WechatMsgModel(MysqlBaseModel):
 
     _table = 'wechat_msg'
 
-    def add_msg(self, msg, app_key, pid = 0):
+    def add_msg(self, msg, app_key, pid=0):
         """数据入库"""
         insert_data = {
             "msg_id": msg['msg_id'],
@@ -75,7 +75,7 @@ class WechatMsgModel(MysqlBaseModel):
         """获取消息信息"""
         return self.where({"msg_id": mid}).first()
 
-    def get_msg_list(self, g_wxid, m_date = ''):
+    def get_msg_list(self, g_wxid, m_date=''):
         """获取消息列表 - 今日的最近1000条"""
         m_date = m_date if m_date else Time.dft(Time.now(), "%Y-%m-%d 00:00:00")  # 默认统计今日数据
         m_e_date = Time.dft(Time.tfd(m_date), "%Y-%m-%d 23:59:59")
@@ -88,7 +88,7 @@ class WechatMsgModel(MysqlBaseModel):
                   .limit(0, 1000))
                   .get())
 
-    def get_msg_times_rank(self, g_wxid, m_date_list = None, limit = 5):
+    def get_msg_times_rank(self, g_wxid, m_date_list=None, limit=5):
         """获取聊天记录前五名发言次数统计"""
         if m_date_list is None:
             m_date_list = ['', '']
@@ -97,6 +97,9 @@ class WechatMsgModel(MysqlBaseModel):
             m_date_list[1] = Time.dft(Time.tfd(m_date_list[0]), "%Y-%m-%d 23:59:59")
         m_date, m_e_date = m_date_list
         m_where = {"g_wxid": g_wxid, "msg_time": {"opt": "between", "val": [m_date, m_e_date]}}
+        m_count = self.get_count(m_where)
+        if m_count < 200:  # 数据小于200条，直接返回空
+            return [], 0
         m_field = ['id', 'count(1) as count', 'g_wxid', 'g_wxid_name', 's_wxid', 's_wxid_name', 'msg_time']
         m_rank = (self.select(m_field)
                    .where(m_where)
@@ -105,5 +108,5 @@ class WechatMsgModel(MysqlBaseModel):
                    .limit(0, limit)
                    .get())
         if m_rank and len(m_rank) >= limit:
-            return m_rank
-        return []
+            return m_rank, m_count
+        return [], 0

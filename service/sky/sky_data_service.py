@@ -164,13 +164,13 @@ class SkyDataService:
         """
         url = f"{self._OVO_API}/api/skygm/hd?key={self.ovo_key}"
         res = Http.send_request('GET', url)
-        text = res.get('hb', '')
+        text = "【Sky倒计时】\r\n\r\n  " + res.get('hb', '')
         url = f"{self._OVO_API}/api/sky/jjsj/sj?key={self.ovo_key}"
         res = Http.send_request('GET', url)
         text += "\r\n\r\n季节季蜡：\r\n"
         for i in range(1, 10):
             text += f"{res.get(f'msg{i}', '')}\r\n"
-        return {"title": "倒计时", "main": text, "code": 0}
+        return {"title": "倒计时", "main": text}
 
     def get_v50(self):
         """
@@ -239,8 +239,23 @@ class SkyDataService:
         for k, v in res.items():
             if 'rw' in k:
              content += f"\r\n  - {v}"
-        text = (f"【光遇每日任务】- {res.get('time')}" + content) if content else ""
+        text = (f"【Sky每日任务】- {res.get('time')}" + content) if content else ""
         return {"title": "每日任务", "main": text}
+
+    def get_hs_txt(self):
+        """
+        获取红石降落文字
+        :return: {"title": "xxx", "main": "xxx"}
+        """
+        url = f"{self._OVO_API}/api/sky/hswz/hs2?key={self.ovo_key}"
+        res = Http.send_request('GET', url)
+        content = res.get('data', '')
+        if not content:
+            return {}
+        if '降落时间' in content:
+         content += f"\r\n  {content}"
+        text = (f"【Sky红石降落点】- {res.get('time')}" + content) if content else ""
+        return {"title": "红石降落", "main": text}
 
     def get_daily_news(self):
         """

@@ -140,6 +140,9 @@ class VpCommandService:
     def vp_sky_rw(self, content='', is_all=0):
         """sky任务"""
         content = '#任务' if '201' == content else content
+        code = str(content).replace('#任务', '').strip()
+        if 1 == len(code) and int(code) > 0:
+            is_all = int(code)
         # 新增文字版 - 都熟悉了，没必要图片，占内存
         if 2 == is_all:
             s_res = self.service.get_rw_txt()
@@ -167,10 +170,21 @@ class VpCommandService:
         response = '获取sky任务失败'
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
-    def vp_sky_hs(self, content='', is_week=0):
+    def vp_sky_hs(self, content='', is_all=0):
         """sky红石"""
         content = '#红石' if '202' == content else content
-        if is_week and Time.week() < 5:
+        code = str(content).replace('#红石', '').strip()
+        if 1 == len(code) and int(code) > 0:
+            is_all = int(code)
+        # 新增文字版，节省空间
+        is_week = Time.week() < 5
+        if 2 == is_all:
+            if is_week:
+                return False
+            s_res = self.service.get_hs_txt()
+            response = s_res.get('main', '')
+            return self.client.send_msg(response, self.g_wxid, [], self.extra) if response else False
+        if is_all and is_week:
             return False
         file = self.service.get_sky_file('hs')
         fp = file.get('save_path')
@@ -209,17 +223,21 @@ class VpCommandService:
         response = s_res.get('main', "暂未查询到公告")
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
-    def vp_sky_rl(self, content):
+    def vp_sky_rl(self, content, is_all=0):
         """sky日历"""
+        code = str(content).replace('#日历', '').strip()
+        if 1 == len(code) and int(code) > 0:
+            is_all = int(code)
+        if 2 == is_all:
+            # 只发送文字版
+            text = self.service.get_sky_djs()
+            return self.client.send_msg(text['main'], self.g_wxid, [], self.extra)
         file = self.service.get_sky_file('rl')
         fp = file.get('save_path')
         if fp:
             fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
             self.client.send_img_msg(fp, self.g_wxid, self.extra)
-            # 其它相关信息也一并发送
-            text = self.service.get_sky_djs()
-            return self.client.send_msg(text['main'], self.g_wxid, [], self.extra)
         response = '暂未查询到日历'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
@@ -419,11 +437,11 @@ class VpCommandService:
             m_date_list[0] = Time.dft(Time.now() - rt * 86400, "%Y-%m-%d 00:00:00")
             m_date_list[1] = Time.dft(Time.now(), "%Y-%m-%d 23:59:59")
         rdb = 'model.wechat.wechat_msg_model.WechatMsgModel.get_msg_times_rank'
-        r_list = Transfer.middle_exec(rdb, [], self.g_wxid, m_date_list)
+        r_list, r_count = Transfer.middle_exec(rdb, [], self.g_wxid, m_date_list)
         if r_list:
             response = f"【{r_list[0]['g_wxid_name']}】#群聊榜单 {rn}"
             for r in r_list:
-                response += f"\r\n  - {r['s_wxid_name']}（{r['count']}次)"
+                response += f"\r\n  - {r['s_wxid_name']}（{r['count']}次 | {round(100 * r['count'] / r_count, 3)})"
             return self.client.send_msg(response, s_g_wxid, [], self.extra)
         return False
 
