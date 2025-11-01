@@ -167,9 +167,10 @@ class SkyDataService:
         text = "【Sky倒计时】\r\n\r\n  " + res.get('hb', '')
         url = f"{self._OVO_API}/api/sky/jjsj/sj?key={self.ovo_key}"
         res = Http.send_request('GET', url)
-        text += "\r\n\r\n季节季蜡：\r\n"
+        text += "\r\n\r\n季节季蜡："
         for i in range(1, 10):
-            text += f"{res.get(f'msg{i}', '')}\r\n"
+            text += f"\r\n{res.get(f'msg{i}', '')}"
+        text += f"\r\n\r\n{res.get('msg', '')}"
         return {"title": "倒计时", "main": text}
 
     def get_v50(self):
@@ -249,11 +250,12 @@ class SkyDataService:
         """
         url = f"{self._OVO_API}/api/sky/hswz/hs2?key={self.ovo_key}"
         res = Http.send_request('GET', url)
-        content = res.get('data', '')
-        if not content:
+        content_data = res.get('data', '')
+        if not content_data:
             return {}
-        if '降落时间' in content:
-         content += f"\r\n  {content}"
+        content = ''
+        if '降落时间' in content_data:
+         content += f"\r\n  {content_data}"
         text = (f"【Sky红石降落点】- {res.get('time')}" + content) if content else ""
         return {"title": "红石降落", "main": text}
 
