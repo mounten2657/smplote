@@ -1,4 +1,5 @@
 import decimal
+import random
 import re
 import ast
 import json
@@ -93,6 +94,11 @@ class Attr:
             return current
         except (KeyError, IndexError, TypeError, ValueError):
             return default
+
+    @staticmethod
+    def random_choice(a_list):
+        """从列表中随机返回一个"""
+        return random.choice(a_list)
 
     @staticmethod
     def parse_json_ignore(data):

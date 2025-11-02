@@ -28,9 +28,10 @@ class Task(BaseAppVp):
         i = 0
         for g_wxid in g_list:
             res[g_wxid] = {}
-            res[g_wxid]['vp_sky_rl'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rl', '', 2, delay_seconds=0.1 + i) # > 15
+            res[g_wxid]['vp_morning'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_morning', delay_seconds=0.1 + i) # > 15
+            res[g_wxid]['vp_sky_rl'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rl', '', 2, delay_seconds=10 + i) # > 15
             res[g_wxid]['vp_sky_rw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw', '', 2, delay_seconds=20 + i) # > 15
-            res[g_wxid]['vp_sky_hs'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 2, delay_seconds=40 + i) # > 15
+            res[g_wxid]['vp_sky_hs'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 2, delay_seconds=30 + i) # > 15
             res[g_wxid]['vp_xw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_xw', delay_seconds=100 + i)  # > 50
             res[g_wxid]['vp_rank'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_rank', '#昨日榜', delay_seconds=130 + i)  # > 30
             res[g_wxid]['vp_ov_wa'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_ov_wa', delay_seconds=150 + i)  # > 20

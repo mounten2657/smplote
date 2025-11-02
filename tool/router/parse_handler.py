@@ -31,8 +31,8 @@ class ParseHandler:
         list(map(lambda key: RedisClient().delete(key, ['*']), key_list))
         app_config = Config.app_config()
         # 延迟启动
-        res['delay_task'] = Sys.delayed_task(hot_load, delay_seconds=1)
         res['clean_log'] = clean_old_logs(30 if Config.is_prod() else 7)
+        res['delay_task'] = Sys.delayed_task(hot_load, delay_seconds=1)
         return res
 
     @staticmethod
