@@ -164,7 +164,7 @@ class SkyDataService:
         """
         url = f"{self._OVO_API}/api/skygm/hd?key={self.ovo_key}"
         res = Http.send_request('GET', url)
-        text = "【Sky日历】\r\n\r\n  " + res.get('hb', '')
+        text = "【Sky活动日历】\r\n\r\n  " + res.get('hb', '')
         url = f"{self._OVO_API}/api/sky/jjsj/sj?key={self.ovo_key}"
         res = Http.send_request('GET', url)
         text += "\r\n\r\n季节季蜡："

@@ -199,6 +199,21 @@ class Str:
         return random.randint(int(start), int(end))
 
     @staticmethod
+    def rev_float(f, n=3, p=0):
+        """返回补0后的逆转字符串"""
+        float_str = str(f)
+        if '.' in float_str:
+            integer_part, decimal_part = float_str.split('.', 1)
+        else:
+            integer_part = float_str
+            decimal_part = ''
+        padded_decimal = decimal_part.ljust(n, '0')
+        reversed_decimal = padded_decimal[::-1]
+        padded_integer = integer_part.rjust(p, '0')
+        reversed_integer = padded_integer[::-1]
+        return f"{reversed_decimal}.{reversed_integer}"
+
+    @staticmethod
     def base64_encode(data: str, encoding: str = 'utf-8') -> str:
         """
         将字符串进行Base64编码
