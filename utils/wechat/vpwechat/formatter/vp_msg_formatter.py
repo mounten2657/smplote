@@ -98,8 +98,8 @@ class VpMsgFormatter(VpBaseFactory):
                 title = "【红包提醒】"
                 des = f"[%s_wxid_name% {Time.date('%H:%M')} 发送红包]\r\n"
                 des += f"[@艾特位招租]"
-                commander = VpCommandService(self.app_key, self.g_wxid, send_wxid)
-                commander.vp_card_msg(title, des)
+                # commander = VpCommandService(self.app_key, self.g_wxid, send_wxid)
+                # commander.vp_card_msg(title, des)
         elif 'transfer' == content_type:  # 转账
             s_wxid = content_link['payer_username']
             t_wxid = content_link['receiver_username']
