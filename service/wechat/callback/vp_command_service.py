@@ -443,7 +443,7 @@ class VpCommandService:
             for r in r_list:
                 percent = round(100 * r['count'] / r_count, 3)
                 percent = f"T{Str.rev_float(percent, 3, 2)}{Str.randint(1, 9)}"
-                response += f"\r\n  - {r['s_wxid_name']} {r['count']}次 <{percent}>"
+                response += f"\r\n  - {r['s_wxid_name']} <{r['count']}次|{percent}>"
             return self.client.send_msg(response, s_g_wxid, [], self.extra)
         return False
 
