@@ -34,7 +34,7 @@ class Task(BaseAppVp):
             res[g_wxid]['vp_sky_hs'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 2, delay_seconds=30 + i) # > 15
             res[g_wxid]['vp_xw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_xw', delay_seconds=40 + i)  # > 50
             res[g_wxid]['vp_rank'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_rank', '#昨日榜', delay_seconds=50 + i)  # > 30
-            res[g_wxid]['vp_ov_wa'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_ov_wa', delay_seconds=60 + i)  # > 20
+            res[g_wxid]['vp_ov_wa'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_ov_wa', delay_seconds=70 + i)  # > 20
             i += 120
         return self.success(res)
 
