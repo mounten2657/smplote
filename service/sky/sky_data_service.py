@@ -274,9 +274,13 @@ class SkyDataService:
         获取每日新闻 - 文字版
         :return: {"title": "xxx", "main": "xxx"}
         """
-        # url = f"https://api.mhimg.cn/api/Daily_news"  # 备用，现在已经失效，不知何时恢复
         url = f"https://60s.viki.moe/v2/60s?encoding=text"  # 把 encoding 去掉就是 json 格式
-        res = Http.send_request('GET', url)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "zh-CN,zh;q=0.9"
+        }
+        res = Http.send_request('GET', url, headers=headers)
         text = res  # 直接返回文字，不是 json 格式
         return {"title": "每日新闻", "main": "【莫简报】 " + text}
 
