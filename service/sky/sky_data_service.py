@@ -274,12 +274,9 @@ class SkyDataService:
         获取每日新闻 - 文字版
         :return: {"title": "xxx", "main": "xxx"}
         """
-        url = f"https://60s.viki.moe/v2/60s?encoding=text"  # 把 encoding 去掉就是 json 格式
-        headers = {
-            "User-Agent": "curl/7.79.1",
-            "Accept": "*/*"
-        }
-        res = Http.send_request('GET', url, headers=headers)
+        # url = f"https://60s.viki.moe/v2/60s?encoding=text"  # 备用，但是这个域名好像只有本地能够使用
+        url = f"https://60s-api-cf.114128.xyz/v2/60s?encoding=text"  # 把 encoding 去掉就是 json 格式
+        res = Http.send_request('GET', url)
         text = res  # 直接返回文字
         return {"title": "每日新闻", "main": "【莫简报】 " + text}
 
