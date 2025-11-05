@@ -358,13 +358,11 @@ class VpCommandService:
     def vp_xw(self, content=''):
         """每日新闻 - 文字版"""
         s_res = self.service.get_daily_news()
-        response = s_res.get('main', "暂未查询到每日新闻")
-        tl = response.split('\n-')
-        if len(tl) > 1:
-            n = int(len(tl) / 2) + 1
-            response = "\r\n".join(tl[:n])
-        self.client.send_msg(response, self.g_wxid, [], self.extra)
-        return self.vp_th()
+        response = s_res.get('main', "")
+        if response:
+            self.client.send_msg(response, self.g_wxid, [], self.extra)
+            return self.vp_th()
+        return False
 
     def vp_xw_img(self, content=''):
         """每日新闻 - 图片版"""
