@@ -170,7 +170,7 @@ class SkyDataService:
         text += "\r\n\r\n季节季蜡"
         for i in range(1, 10):
             text += f"\r\n{res.get(f'msg{i}', '')}"
-        text += f"\r\n\r\n{res.get('msg', '')}"
+        # text += f"\r\n\r\n{res.get('msg', '')}"
         return {"title": "日历", "main": text}
 
     def get_v50(self):
