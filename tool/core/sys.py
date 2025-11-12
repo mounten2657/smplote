@@ -123,7 +123,7 @@ class Sys:
     @staticmethod
     def delay_git_pull():
         """延迟三秒后，拉取最新代码，并重启 flask """
-        command = 'sudo /opt/shell/init/reload_flask.sh >>/tmp/reload_flask.log 2>&1'
+        command = 'sudo /opt/shell/init/reload_flask.sh >>/dev/null 2>&1'
         return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
 
     @staticmethod
@@ -135,7 +135,7 @@ class Sys:
     @staticmethod
     def delay_reload_gu(is_force=0):
         """重载gu """
-        command = f'sudo /opt/shell/init/init_flask.sh >>/tmp/init_flask.log 2>&1{' 1' if is_force else ' '}'
+        command = f'sudo /opt/shell/init/init_flask.sh >>/dev/null 2>&1{' 1' if is_force else ' '}'
         return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
 
     @staticmethod
@@ -147,5 +147,5 @@ class Sys:
     @staticmethod
     def delay_reload_vp():
         """重载vp """
-        command = 'sudo /opt/shell/init/init_wechatpad.sh >>/tmp/init_wechatpad.log 2>&1'
+        command = 'sudo /opt/shell/init/init_wechatpad.sh >>/dev/null 2>&1'
         return Sys.delayed_task(Sys.run_command, command, delay_seconds=3.5)
