@@ -234,6 +234,7 @@ class VpCommandService:
             # 只发送文字版
             text = self.service.get_sky_djs()
             return self.client.send_msg(text['main'], self.g_wxid, [], self.extra)
+        # 图片版好像失效了，请用上面的文字版
         file = self.service.get_sky_file('rl')
         fp = file.get('save_path')
         if fp:
@@ -357,13 +358,15 @@ class VpCommandService:
         response = s_res.get('main', "暂未查询到历史上的今天")
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
-    def vp_xw(self, content=''):
+    def vp_xw(self, content='', is_all=0):
         """每日新闻 - 文字版"""
+        """is_all: 0: 仅新闻 | 1: 新闻 + 历史上的今天"""
         s_res = self.service.get_daily_news()
         response = s_res.get('main', "")
         if response:
-            self.client.send_msg(response, self.g_wxid, [], self.extra)
-            return self.vp_th()
+            res = self.client.send_msg(response, self.g_wxid, [], self.extra)
+            is_all and  self.vp_th()
+            return res
         return False
 
     def vp_xw_img(self, content=''):
