@@ -161,12 +161,13 @@ class VpCommandService:
                 jl = self.service.get_sky_file('jl')
                 self.extra.update({"file": jl})
                 jl.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{jl['save_path']}'), self.g_wxid, self.extra)
-                dl = self.service.get_sky_file('dl')
-                self.extra.update({"file": dl})
-                dl.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{dl['save_path']}'), self.g_wxid, self.extra)
-                mf = self.service.get_sky_file('mf')
-                self.extra.update({"file": mf})
-                mf.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{mf['save_path']}'), self.g_wxid, self.extra)
+                # 大蜡和魔法不常用，先屏蔽
+                # dl = self.service.get_sky_file('dl')
+                # self.extra.update({"file": dl})
+                # dl.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{dl['save_path']}'), self.g_wxid, self.extra)
+                # mf = self.service.get_sky_file('mf')
+                # self.extra.update({"file": mf})
+                # mf.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{mf['save_path']}'), self.g_wxid, self.extra)
             return True
         response = '获取sky任务失败'
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
