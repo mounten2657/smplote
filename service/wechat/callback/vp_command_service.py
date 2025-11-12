@@ -139,6 +139,7 @@ class VpCommandService:
 
     def vp_sky_rw(self, content='', is_all=0):
         """sky任务"""
+        """is_all:  0: 仅任务图片 | 1: 所有任务相关图片 | 2: 文字版"""
         content = '#任务' if '201' == content else content
         code = str(content).replace('#任务', '').strip()
         if 1 == len(code) and int(code) > 0:
@@ -160,19 +161,19 @@ class VpCommandService:
                 jl = self.service.get_sky_file('jl')
                 self.extra.update({"file": jl})
                 jl.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{jl['save_path']}'), self.g_wxid, self.extra)
-                # 大蜡和魔法不常用，先屏蔽
-                # dl = self.service.get_sky_file('dl')
-                # self.extra.update({"file": dl})
-                # dl.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{dl['save_path']}'), self.g_wxid, self.extra)
-                # mf = self.service.get_sky_file('mf')
-                # self.extra.update({"file": mf})
-                # mf.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{mf['save_path']}'), self.g_wxid, self.extra)
+                dl = self.service.get_sky_file('dl')
+                self.extra.update({"file": dl})
+                dl.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{dl['save_path']}'), self.g_wxid, self.extra)
+                mf = self.service.get_sky_file('mf')
+                self.extra.update({"file": mf})
+                mf.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{mf['save_path']}'), self.g_wxid, self.extra)
             return True
         response = '获取sky任务失败'
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
     def vp_sky_hs(self, content='', is_all=0):
         """sky红石"""
+        """is_all:  0: 图片(每天发) | 1: 图片(仅周末发) | 2: 文字版(仅周末发)"""
         content = '#红石' if '202' == content else content
         code = str(content).replace('#红石', '').strip()
         if 1 == len(code) and int(code) > 0:
