@@ -419,19 +419,21 @@ class VpCommandService:
         if res:
             # 随机 appid - 会员歌曲免费听
             appid_list = [
-                'wxda2ce55e23a3e06c',
-                'wx281a70a3d390bdf2',
-                'wxb09d381947fc1678',
-                'wxe0cf858703575ebb',
-                'wxffee936f89cd0db9',
-                'wx5fa4ebf320cf69f5',
-                'wxe6f1e2780ae2a481',
-                'wxaf048e83e0ab3f08',
-                'wx9ad15554b19159ee',
-                'wx7395b7ea7ae1cab7',
-                'wx77909ff94ab8b236',
-                'wxbd1caba2e56648a2',
-                'wx3e73d1816c6e065a'
+                'wx2654d9155d70a468',
+                'wxba9074d7f4eeae4e',
+                # 'wxda2ce55e23a3e06c',
+                # 'wx281a70a3d390bdf2',
+                # 'wxb09d381947fc1678',
+                # 'wxe0cf858703575ebb',
+                # 'wxffee936f89cd0db9',
+                # 'wx5fa4ebf320cf69f5',
+                # 'wxe6f1e2780ae2a481',
+                # 'wxaf048e83e0ab3f08',
+                # 'wx9ad15554b19159ee',
+                # 'wx7395b7ea7ae1cab7',
+                # 'wx77909ff94ab8b236',
+                # 'wxbd1caba2e56648a2',
+                # 'wx3e73d1816c6e065a'
             ]
             res['appid'] = Attr.random_choice(appid_list)
             return self.client.send_dg_message(res, self.g_wxid, self.extra)
