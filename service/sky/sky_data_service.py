@@ -153,7 +153,7 @@ class SkyDataService:
         :return: {"title": "xxx", "main": "xxx"}
         """
         # url = f"{self._OVO_API}/api/sky/sgwz/sgd?key={self.ovo_key}&id={code}"  # 每次都要好友码
-        url = f"{self._OVO_API}/api/api/sky/sgwz/sgv1?key={self.ovo_key}&id={code}"  # 第一次好友码，后续长ID
+        url = f"{self._OVO_API}/api/sky/sgwz/sgv1?key={self.ovo_key}&id={code}"  # 第一次好友码，后续长ID
         res = Http.send_request('GET', url)
         text = res
         return {"title": "身高查询", "main": text}
@@ -164,7 +164,7 @@ class SkyDataService:
         :param code: 长ID
         :return: {"title": "xxx", "main": "xxx"}
         """
-        url = f"{self._OVO_API}/api/api/sky/gycx/gka?key={self.ovo_key}&id={code}&type="  # 长ID
+        url = f"{self._OVO_API}/api/sky/gycx/gka?key={self.ovo_key}&id={code}&type="  # 长ID
         res = Http.send_request('GET', url)
         text = res
         return {"title": "光翼查询", "main": text}
