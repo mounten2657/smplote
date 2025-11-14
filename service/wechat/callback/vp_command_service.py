@@ -230,7 +230,7 @@ class VpCommandService:
             return self.client.send_msg('每分钟只能查询光翼一次', self.g_wxid, self.at_list, self.extra)
         content = '#光翼查询' if '204' == content else content
         code = str(content).replace('#光翼查询', '').strip()
-        if len(code) < 14:
+        if len(code) < 9:
             response = '请输入"#光翼查询 [长ID]"进行查询，如： #光翼查询 xxxx-xxxx-xxxx-xxxx-xxxx'
         else:
             s_res = self.service.get_sky_gy(code)
