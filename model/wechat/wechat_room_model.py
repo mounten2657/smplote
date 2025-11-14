@@ -120,7 +120,8 @@ class WechatRoomModel(MysqlBaseModel):
                 des = f"成员：{d['display_name']} {Time.date('%H:%M')} 退群\r\n"
                 des += f"原因：{reason}"
                 self._del_user_cache(d['wxid'])
-                commander.vp_card_msg(title, des)
+                # commander.vp_card_msg(title, des)
+                # logger.error(f"{title} - {des}", 'ROOM_QUIT_MEM')
             self._del_room_cache(g_wxid)
         if changes.get('add'):  # 入群提醒
             # add_list = changes.get('add')
