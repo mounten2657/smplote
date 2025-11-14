@@ -50,7 +50,8 @@ class VpCommandService:
     【光遇专区】
     #任务 或 [201] - 每日任务查询
     #红石 或 [202] - 红石掉落时间
-    #身高 或 [203] - 身高预测计算
+    #身高查询 - 身高预测计算
+    #光翼查询 - 光翼散落统计
     #日历 - 季节日历查询
     #先祖 - 旅行先祖查询
     #代币 - 活动代币查询
@@ -204,20 +205,36 @@ class VpCommandService:
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
     def vp_sky_sg(self, content):
-        """sky身高"""
+        """sky身高查询"""
         redis = RedisClient()
         cache_key = 'LOCK_SKY_API_SG'
         if redis.get(cache_key, [self.s_wxid]) and not self.is_admin:
             return self.client.send_msg('每分钟只能查询身高一次', self.g_wxid, self.at_list, self.extra)
-        content = '#身高' if '203' == content else content
-        code = str(content).replace('#身高', '').strip()
+        content = '#身高查询' if '203' == content else content
+        code = str(content).replace('#身高查询', '').strip()
         if len(code) < 14:
-            response = '请输入"#身高 [好友码]"进行查询，如： #身高 B1A9-KMV2-4ZG5'
+            response = '请输入"#身高查询 [好友码]"进行查询，如： #身高查询 B1A9-KMV2-4ZG5  (注：第一次好友码，后续长ID)'
         elif self.g_wxid_count > 50:
-            response = '只有管理员才能使用该功能'
+            # response = '只有管理员才能使用该功能'
+            response = '哦No！欠费了，谁赞助一下，一毛一次'
         else:
             s_res = self.service.get_sky_sg(code)
             response = s_res.get('main', "暂未查询到身高")
+        return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
+
+    def vp_sky_gy(self, content):
+        """sky光翼查询"""
+        redis = RedisClient()
+        cache_key = 'LOCK_SKY_API_GY'
+        if redis.get(cache_key, [self.s_wxid]) and not self.is_admin:
+            return self.client.send_msg('每分钟只能查询光翼一次', self.g_wxid, self.at_list, self.extra)
+        content = '#光翼查询' if '204' == content else content
+        code = str(content).replace('#光翼查询', '').strip()
+        if len(code) < 14:
+            response = '请输入"#光翼查询 [长ID]"进行查询，如： #光翼查询 xxxx-xxxx-xxxx-xxxx-xxxx'
+        else:
+            s_res = self.service.get_sky_gy(code)
+            response = s_res.get('main', "暂未查询到光翼")
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
     def vp_sky_gg(self, content):

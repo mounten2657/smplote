@@ -168,7 +168,6 @@ class VpCallbackService:
                     '2': {
                         '201': lambda: commander.vp_sky_rw(content),
                         '202': lambda: commander.vp_sky_hs(content),
-                        '203': lambda: commander.vp_sky_sg(content),
                     },
                     # 特殊前缀命令（按优先级排序）
                     # [!] 加命名前别忘记在config中也加上 !!!
@@ -188,7 +187,8 @@ class VpCallbackService:
                     '#神龛': lambda: commander.vp_sky_permanent(content),
                     '#献祭': lambda: commander.vp_sky_permanent(content),
                     '#烛火': lambda: commander.vp_sky_permanent(content),
-                    '#身高': lambda: commander.vp_sky_sg(content),
+                    '#身高查询': lambda: commander.vp_sky_sg(content),
+                    '#光翼查询': lambda: commander.vp_sky_gy(content),
                     '#天气': lambda: commander.vp_zxz_tq(content),
                     '#v50': lambda: commander.vp_zxz_v50(content),
                     '#文案': lambda: commander.vp_ov_wa(content),
