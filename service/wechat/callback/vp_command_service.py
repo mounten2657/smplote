@@ -231,7 +231,7 @@ class VpCommandService:
         content = '#光翼查询' if '204' == content else content
         code = str(content).replace('#光翼查询', '').strip()
         if len(code) < 9:
-            response = '请输入"#光翼查询 [长ID]"进行查询，如： #光翼查询 xxxx-xxxx-xxxx-xxxx-xxxx'
+            response = '请输入"#光翼查询 [短ID]"进行查询，如： #光翼查询 908339761'
         else:
             s_res = self.service.get_sky_gy(code)
             response = s_res.get('main', "暂未查询到光翼")

@@ -160,11 +160,11 @@ class SkyDataService:
 
     def get_sky_gy(self, code):
         """
-        获取sky光翼 - 长ID
-        :param code: 长ID
+        获取sky光翼 - 短ID
+        :param code: 短ID | 长ID
         :return: {"title": "xxx", "main": "xxx"}
         """
-        url = f"{self._OVO_API}/api/sky/gycx/gka?key={self.ovo_key}&id={code}&type="  # 长ID
+        url = f"{self._OVO_API}/api/sky/gycx/gka?key={self.ovo_key}&id={code}&type="
         res = Http.send_request('GET', url)
         text = res
         return {"title": "光翼查询", "main": text}
