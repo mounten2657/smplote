@@ -170,8 +170,10 @@ class VpCommandService:
                 # self.extra.update({"file": mf})
                 # mf.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{mf['save_path']}'), self.g_wxid, self.extra)
             return True
-        response = '获取sky任务失败'
-        return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
+        # 没有图片就发送文字版
+        s_res = self.service.get_rw_txt()
+        response = s_res.get('main', "暂未查询到每日任务")
+        return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
     def vp_sky_hs(self, content='', is_all=0):
         """sky红石"""
