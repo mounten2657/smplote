@@ -175,7 +175,7 @@ class VpCommandService:
         response = s_res.get('main', "暂未查询到每日任务")
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
-    def vp_sky_hs(self, content='', is_all=0):
+    def vp_sky_hs(self, content='', is_all=2):
         """sky红石"""
         """is_all:  0: 图片(每天发) | 1: 图片(仅周末发) | 2: 文字版(仅周末发)"""
         content = '#红石' if '202' == content else content

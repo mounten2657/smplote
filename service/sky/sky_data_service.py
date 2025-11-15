@@ -11,7 +11,7 @@ class SkyDataService:
     _OVO_API_FILE_LIST = {
         # "rw": "/api/sky/rwby/rw",  # "/api/sky/rwtp/rwt",
         "rw": "/api/sky/rwtp/rwt",  # "/api/sky/rwby/rw",
-        "hs": "/api/sky/hstp/hs",
+        "hs": "/api/sky/hstp/hs",  # 有点不准
         "rl": "/api/sky/rltp/rl",
         "mf": "/api/sky/mftp/mf",
         #"jl": "/api/sky/rwby/jl",     # "/api/sky/jlwz/jl",
