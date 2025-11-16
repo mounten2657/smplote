@@ -1,5 +1,6 @@
 import random
 from service.wechat.callback.vp_command_service import VpCommandService
+from model.wechat.wechat_user_model import WechatUserModel
 from tool.db.mysql_base_model import MysqlBaseModel
 from tool.db.cache.redis_client import RedisClient
 from tool.core import Ins, Attr, Time, Config, Logger
@@ -120,8 +121,8 @@ class WechatRoomModel(MysqlBaseModel):
                     title = '【退群提醒】'
                     des = f"成员：{d['display_name']} {Time.date('%H:%M')} 退群\r\n"
                     des += f"原因：{reason}"
-                    c_user = self.get_user_cache(g_wxid, d['wxid'])
-                    commander.vp_card_msg(title, des, c_user.get('small_head_img_url', ''))
+                    c_head = self.get_user_head(g_wxid, d['wxid'])
+                    commander.vp_card_msg(title, des, c_head)
                     self._del_user_cache(d['wxid'])
             self._del_room_cache(g_wxid)
         if changes.get('add'):  # 入群提醒
@@ -137,29 +138,33 @@ class WechatRoomModel(MysqlBaseModel):
                 if d_wxid:
                     self._del_user_cache(d_wxid)
                     if d_wxid != self_wxid:
-                        c_user = self.get_user_cache(g_wxid, d['wxid'])
-                        commander.vp_card_msg(title, des, c_user.get('small_head_img_url', ''))
+                        c_head = self.get_user_head(g_wxid, d['wxid'])
+                        commander.vp_card_msg(title, des, c_head)
                 # logger.error(f"{title} - {des}", 'ROOM_NEW_NAME')
         return True
 
-    def get_user_cache(self, g_wxid, u_wxid):
+    def get_user_head(self, g_wxid, u_wxid):
         """
-        获取群用户缓存
+        获取群用户头像 - 优先从缓存中获取
         :param g_wxid:  群wxid
         :param u_wxid:  用户wxid
         :return: json
         {"user_name":"wxid_xxx","nick_name":"xxx","display_name":"xxx","big_head_img_url":"xxx","small_head_img_url":"xxx","chatroom_member_flag":1}
         """
-        user = {}
         redis = RedisClient()
         user_list = redis.get('VP_ROOM_GRP_USL', [g_wxid])
         if not user_list:
-            return user
+            return ''
         user_list = Attr.get_by_point(user_list, 'Data.member_data.chatroom_member_list')
         if not user_list:
-            return user
+            return ''
         user = Attr.select_item_by_where(user_list, {"user_name": u_wxid}, {})
-        return user
+        head = user.get('small_head_img_url', '')
+        # 如果缓存中没有，再从数据库中取
+        if not head:
+            user = WechatUserModel().get_user_info(u_wxid)
+            head = user.get('head_img_url', '')
+        return head
 
     def _del_room_cache(self, g_wxid):
         """删除群聊缓存"""
