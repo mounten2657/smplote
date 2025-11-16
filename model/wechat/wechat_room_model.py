@@ -64,6 +64,7 @@ class WechatRoomModel(MysqlBaseModel):
         g_wxid = info['g_wxid']
         app_key = info['app_key']
         change_log = info['change_log'] if info['change_log'] else []
+        member_list = room.get('member_list', [])
         # 比较两个信息，如果有变动，就插入变更日志
         fields = ['nickname', 'notice', 'member_count', 'owner', 'head_img_url', 'member_list']
         change = Attr.data_diff(Attr.select_keys(info, fields), Attr.select_keys(room, fields), 'wxid')
@@ -82,6 +83,7 @@ class WechatRoomModel(MysqlBaseModel):
             update_data['change_log'] = change_log
             self.update({"id": pid}, update_data)
             self.check_member_change(change, g_wxid, app_key)
+        # self.update_member_info(g_wxid, member_list, app_key)  # 有则更新，无则新增
         return True
 
     def check_member_change(self, change, g_wxid, app_key):
@@ -165,6 +167,15 @@ class WechatRoomModel(MysqlBaseModel):
             user = WechatUserModel().get_user_info(u_wxid)
             head = user.get('head_img_url', '')
         return head
+
+    def update_member_info(self, g_wxid, member_list, app_key):
+        """更新群里用户信息 - 每次更新相隔两小时"""
+        # 先检查更新锁 - 【!】先观察下前面的规则有没有生效 - 没有再写这个
+        # redis = RedisClient()
+        # [{"wxid":"wxid_xxx","display_name":"xxx"}]
+        if not member_list:
+            return False
+        return True
 
     def _del_room_cache(self, g_wxid):
         """删除群聊缓存"""

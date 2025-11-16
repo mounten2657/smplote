@@ -361,7 +361,7 @@ class VpCallbackService:
         app_config = config['app_list'][app_key]
         if g_wxid:
             Time.sleep(Str.randint(1, 10) / 10)
-            # 群聊更新限速 - 一天检查更新一次
+            # 群聊更新限速 - 六小时检查更新一次
             if not RedisClient().set_nx('VP_ROOM_USR_LOCK', 1, [g_wxid]):
                 return False
         for u in user_list:
