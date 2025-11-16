@@ -115,13 +115,14 @@ class WechatRoomModel(MysqlBaseModel):
                            "江湖路远，下次发红包记得@我归队"
                            ]
             reason = random.choice(reason_list)
-            for d in del_list:
-                title = '【退群提醒】'
-                des = f"成员：{d['display_name']} {Time.date('%H:%M')} 退群\r\n"
-                des += f"原因：{reason}"
-                c_user = self.get_user_cache(g_wxid, d['wxid'])
-                commander.vp_card_msg(title, des, c_user.get('small_head_img_url', ''))
-                self._del_user_cache(d['wxid'])
+            if len(del_list) < 3:
+                for d in del_list:
+                    title = '【退群提醒】'
+                    des = f"成员：{d['display_name']} {Time.date('%H:%M')} 退群\r\n"
+                    des += f"原因：{reason}"
+                    c_user = self.get_user_cache(g_wxid, d['wxid'])
+                    commander.vp_card_msg(title, des, c_user.get('small_head_img_url', ''))
+                    self._del_user_cache(d['wxid'])
             self._del_room_cache(g_wxid)
         if changes.get('add'):  # 入群提醒
             # 在格式化消息时已经发送，这里就不重新发送了
