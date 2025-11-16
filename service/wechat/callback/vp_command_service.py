@@ -419,25 +419,6 @@ class VpCommandService:
         code = Str.replace_multiple(content, ['#', '点歌', '网易'], ['', '', ''])
         res = MusicSearchClient(s_type).get_song_data(code.strip())
         if res:
-            # 随机 appid - 会员歌曲免费听
-            # appid_list = [
-            #     'wx2654d9155d70a468',
-            #     'wxba9074d7f4eeae4e',
-            #     # 'wxda2ce55e23a3e06c',
-            #     # 'wx281a70a3d390bdf2',
-            #     # 'wxb09d381947fc1678',
-            #     # 'wxe0cf858703575ebb',
-            #     # 'wxffee936f89cd0db9',
-            #     # 'wx5fa4ebf320cf69f5',
-            #     # 'wxe6f1e2780ae2a481',
-            #     # 'wxaf048e83e0ab3f08',
-            #     # 'wx9ad15554b19159ee',
-            #     # 'wx7395b7ea7ae1cab7',
-            #     # 'wx77909ff94ab8b236',
-            #     # 'wxbd1caba2e56648a2',
-            #     # 'wx3e73d1816c6e065a'
-            # ]
-            # res['appid'] = Attr.random_choice(appid_list)
             return self.client.send_dg_message(res, self.g_wxid, self.extra)
         response = '暂未找到该歌曲'
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
@@ -484,7 +465,7 @@ class VpCommandService:
             response = f"【{r_list[0]['g_wxid_name']}】#群聊榜单 {rn}"
             for r in r_list:
                 percent = round(100 * r['count'] / r_count, 3)
-                percent = f"T{Str.rev_float(percent, 3, 2)}{Str.randint(1, 9)}"
+                percent = f"T{Str.rev_float(percent, 3, 2, '')}{Str.randint(1, 9)}"
                 response += f"\r\n  - {r['s_wxid_name']} <{r['count']}次|{percent}>"
             return self.client.send_msg(response, s_g_wxid, [], self.extra)
         return False
@@ -563,7 +544,7 @@ class VpCommandService:
         extra = extra if extra else self.extra
         return self.client.send_msg(response, self.g_wxid, ats, extra)
 
-    def vp_card_msg(self, title, des, url='#', head='', extra=None):
+    def vp_card_msg(self, title, des, head='', url='#', extra=None):
         """发送卡片群消息"""
         extra = extra if extra else self.extra
         res = {

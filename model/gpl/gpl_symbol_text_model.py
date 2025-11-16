@@ -10,7 +10,7 @@ class GPLSymbolTextModel(MysqlBaseModel):
         - symbol - varchar(16) - 股票代码(带市场前缀)
         - biz_code - varchar(16) - 业务代码
         - e_key - varchar(32) - kv键
-        - e_des - varchar(128) - kv描述
+        - e_des - varchar(255) - kv描述
         - e_val - longtext - kv值
         - create_at - datetime - 记录创建时间
         - update_at - datetime - 记录更新时间
