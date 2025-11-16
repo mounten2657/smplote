@@ -140,16 +140,14 @@ class VpCommandService:
 
     def vp_sky_rw(self, content='', is_all=0):
         """sky任务"""
-        """is_all:  0: 仅任务图片 | 1: 所有任务相关图片 | 2: 文字版"""
+        """is_all:  0: 仅任务图片 | 1: 所有任务相关图片 | 2: 文字版 | 20: 图片+文字 | 21: 所有图片+文字"""
         content = '#任务' if '201' == content else content
         code = str(content).replace('#任务', '').strip()
         if 1 == len(code) and int(code) > 0:
             is_all = int(code)
         # 新增文字版 - 都熟悉了，没必要图片，占内存
         if 2 == is_all:
-            s_res = self.service.get_rw_txt()
-            response = s_res.get('main', "暂未查询到每日任务")
-            return self.client.send_msg(response, self.g_wxid, [], self.extra)
+            return self.vp_sky_rw_txt()
         # 以下是之前的正常逻辑
         file = self.service.get_sky_file('rw')
         fp = file.get('save_path')
@@ -157,8 +155,8 @@ class VpCommandService:
             fp = Dir.wechat_dir(f'{fp}')
             self.extra.update({"file": file})
             self.client.send_img_msg(fp, self.g_wxid, self.extra)
-            # 其它相关信息也一并发送
-            if is_all:
+            if is_all in [1, 21]:
+                # 其它相关信息也一并发送
                 jl = self.service.get_sky_file('jl')
                 self.extra.update({"file": jl})
                 jl.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{jl['save_path']}'), self.g_wxid, self.extra)
@@ -170,7 +168,13 @@ class VpCommandService:
                 # self.extra.update({"file": mf})
                 # mf.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{mf['save_path']}'), self.g_wxid, self.extra)
             return True
-        # 没有图片就发送文字版
+        if is_all == 20:
+            return self.vp_sky_rw_txt()
+        # 没有查询到
+        return self.client.send_msg('未查询到每日任务', self.g_wxid, [], self.extra)
+
+    def vp_sky_rw_txt(self, content=''):
+        """sky任务 - 文字版"""
         s_res = self.service.get_rw_txt()
         response = s_res.get('main', "暂未查询到每日任务")
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
