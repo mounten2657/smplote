@@ -107,7 +107,7 @@ class GPLUpdateExtService:
         # 加载固定执行且不需要原始数据的
         season_data['scl'] = None
 
-        @Ins.multiple_executor(14)
+        @Ins.multiple_executor(2)
         def _up_ext_exec(code):
             Time.sleep(Str.randint(1, 10) / 100)
             ret = {}
