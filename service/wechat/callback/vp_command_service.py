@@ -167,11 +167,10 @@ class VpCommandService:
                 # mf = self.service.get_sky_file('mf')
                 # self.extra.update({"file": mf})
                 # mf.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{mf['save_path']}'), self.g_wxid, self.extra)
-            return True
         if is_all == 20:
             return self.vp_sky_rw_txt()
         # 没有查询到
-        return self.client.send_msg('未查询到每日任务', self.g_wxid, [], self.extra)
+        return False
 
     def vp_sky_rw_txt(self, content=''):
         """sky任务 - 文字版"""
