@@ -59,6 +59,7 @@ class WechatRoomModel(MysqlBaseModel):
 
     def check_room_info(self, room, info):
         """检查是否有变化"""
+        res = {}
         if not room['g_wxid']:
             return 0
         pid = info['id']
@@ -81,10 +82,10 @@ class WechatRoomModel(MysqlBaseModel):
                 logger.error(f"获取群成员失败 - {pid} - {update_data}", 'ROOM_EMP_MEM')
                 return 0
             update_data['change_log'] = change_log
-            self.update({"id": pid}, update_data)
-            self.check_member_change(change, g_wxid, app_key)
-        self.update_member_info(g_wxid, room, app_key)  # 有则更新，无则新增
-        return True
+            res['u'] = self.update({"id": pid}, update_data)
+            res['c'] = self.check_member_change(change, g_wxid, app_key)
+        res['m'] = self.update_member_info(g_wxid, room, app_key)  # 有则更新，无则新增
+        return res
 
     def check_member_change(self, change, g_wxid, app_key):
         """检查群成员变化并发送通知"""
