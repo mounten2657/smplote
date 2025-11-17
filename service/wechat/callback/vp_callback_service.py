@@ -61,7 +61,7 @@ class VpCallbackService:
         rdb = WechatRoomModel()
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
-        g_wxid_str = g_wxid_str if g_wxid_str else app_config['g_wxid']
+        g_wxid_str = g_wxid_str if g_wxid_str else app_config['g_wxid']  # 只刷新已入驻的群聊
         g_list = str(g_wxid_str).split(',')
         for g_wxid in g_list:
             client.refresh_room(g_wxid)
@@ -170,8 +170,7 @@ class VpCallbackService:
                         '202': lambda: commander.vp_sky_hs(content),
                     },
                     # 特殊前缀命令（按优先级排序）
-                    # [!] 加命名前别忘记在config中也加上 !!!
-                    '#菜单': lambda: commander.vp_manual(content),
+                    '#菜单': lambda: commander.vp_manual(content),            # [!] 加命令前别忘记在 config/vp.json 中也加上 !!!
                     '#提问': lambda: commander.vp_question(content),
                     '#百科': lambda: commander.vp_science(content),
                     '#新闻': lambda: commander.vp_xw(content),
@@ -361,7 +360,7 @@ class VpCallbackService:
         app_config = config['app_list'][app_key]
         if g_wxid:
             Time.sleep(Str.randint(1, 10) / 10)
-            # 群聊更新限速 - 六小时检查更新一次
+            # 群聊更新限速 - 六小时检查更新一次 - 不能依赖这个进行全部的用户更新 - 此处基本等效于初始化
             if not RedisClient().set_nx('VP_ROOM_USR_LOCK', 1, [g_wxid]):
                 return False
         for u in user_list:

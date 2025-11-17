@@ -26,7 +26,9 @@ class RedisKeys:
         "VP_ROOM_GRP_INF": {"key": "wechatpad:room:grp_info:%s", "ttl": 86400},
         "VP_ROOM_GRP_USL": {"key": "wechatpad:room:grp_users:%s", "ttl": 86400},
         "VP_ROOM_GRP_NTC": {"key": "wechatpad:room:grp_notice:%s", "ttl": 86400},
-        "VP_ROOM_USR_LOCK": {"key": "wechatpad:room:usr_lock:%s", "ttl": 21600},
+        "VP_ROOM_USR_LOCK": {"key": "wechatpad:room:usr_lock:%s", "ttl": 6 * 3600},
+        "VP_ROOM_USR_UP_LOCK": {"key": "wechatpad:room:usr_up_lock:%s", "ttl": 2 * 3600},
+        "VP_ROOM_USR_IMG_LOCK": {"key": "wechatpad:room:usr_img_lock:%s", "ttl": 2 * 86400},
         # 微信消息相关
         "VP_MSG_INS_LOCK": {"key": "wechatpad:msg:ins_lock:%s", "ttl": 180},
         # sky 接口相关
