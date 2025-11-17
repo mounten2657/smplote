@@ -143,7 +143,7 @@ class VpCommandService:
         """is_all:  0: 仅任务图片 | 1: 所有任务相关图片 | 2: 文字版 | 20: 图片+文字 | 21: 所有图片+文字"""
         content = '#任务' if '201' == content else content
         code = str(content).replace('#任务', '').strip()
-        if 1 == len(code) and int(code) > 0:
+        if len(code) <= 2 and int(code) > 0:
             is_all = int(code)
         # 新增文字版 - 都熟悉了，没必要图片，占内存
         if 2 == is_all:
