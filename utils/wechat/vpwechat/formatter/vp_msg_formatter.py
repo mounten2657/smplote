@@ -176,8 +176,10 @@ class VpMsgFormatter(VpBaseFactory):
                 title = "【欢迎新成员】"
                 des = f"昵称：{t_name}\r\n"
                 des += f"时间：{Time.date()}"
+                to_user = client.get_user(t_wxid)
+                t_head = to_user.get('head_img_url_small', '')
                 commander = VpCommandService(self.app_key, self.g_wxid, send_wxid)
-                commander.vp_card_msg(title, des)
+                commander.vp_card_msg(title, des, t_head)
                 commander.vp_normal_msg(welcome, [{"wxid": t_wxid, "nickname": t_name}])
             client.refresh_room(self.g_wxid)
         elif 'revoke' == content_type:  # 撤回
