@@ -118,9 +118,9 @@ class WechatRoomModel(MysqlBaseModel):
                            "怕再待下去会被群主的冷笑话冻僵",
                            "江湖路远，下次发红包记得@我归队"
                            ]
-            reason = random.choice(reason_list)
-            if len(del_list) < 3:
+            if len(del_list) <= 3:
                 for d in del_list:
+                    reason = random.choice(reason_list)
                     title = '【退群提醒】'
                     des = f"成员：{d['display_name']} {Time.date('%H:%M')} 退群\r\n"
                     des += f"原因：{reason}"
