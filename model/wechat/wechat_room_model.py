@@ -84,6 +84,7 @@ class WechatRoomModel(MysqlBaseModel):
             update_data['change_log'] = change_log
             res['u'] = self.update({"id": pid}, update_data)
             res['c'] = self.check_member_change(change, g_wxid, app_key)
+        room['remark'] = info['remark']
         res['m'] = self.update_member_info(g_wxid, room, app_key)  # 有则更新，无则新增
         return res
 
@@ -176,13 +177,14 @@ class WechatRoomModel(MysqlBaseModel):
           - 因为消息同步时，只能同步已发言的成员，如果该成员一直没有发言，则不会同步，故需要定时任务同步
           - 而且消息同步时的成员同步，其作用基本等同于初始化
         """
+        res = {}
         member_list = room.get('member_list', [])
         if not member_list:
             return False
         redis = RedisClient()
         if not redis.set_nx('VP_ROOM_USR_UP_LOCK', 1, [g_wxid]):  # 更新限速
             return False
-        res = {}
+        redis.set_nx('VP_ROOM_GRP_RMK', room['remark'], [g_wxid])  # 更新一下群备注
         client = VpClient(app_key)
         udb = WechatUserModel()
         # 依次检查并插入用户

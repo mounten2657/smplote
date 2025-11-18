@@ -172,7 +172,6 @@ class VpMsgFormatter(VpBaseFactory):
                     "欢迎新成员！愿你在群里收获快乐，结交好友，每天都能被温暖和笑声包围～",
                     "新伙伴入群欢迎！进群福利已就位：陪聊、陪玩、陪吐槽，还有不定期惊喜，快开启你的群聊时光～"
                 ]
-                welcome = random.choice(welcome_list)
                 title = "【欢迎新成员】"
                 des = f"昵称：{t_name}\r\n"
                 des += f"时间：{Time.date()}"
@@ -180,6 +179,10 @@ class VpMsgFormatter(VpBaseFactory):
                 t_head = to_user.get('head_img_url_small', '')
                 commander = VpCommandService(self.app_key, self.g_wxid, send_wxid)
                 commander.vp_card_msg(title, des, t_head)
+                # 发送欢迎语 + 群备注
+                welcome = random.choice(welcome_list)
+                g_remark = client.get_room_grp_rmk(self.g_wxid)
+                welcome += f"\r\n\r\n{g_remark}" if g_remark else ''
                 commander.vp_normal_msg(welcome, [{"wxid": t_wxid, "nickname": t_name}])
             client.refresh_room(self.g_wxid)
         elif 'revoke' == content_type:  # 撤回

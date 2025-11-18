@@ -182,6 +182,10 @@ class VpClient(VpBaseFactory):
     def get_room_grp_usl(self, g_wxid):
         return self.client.get_room_user_list(g_wxid)
 
+    def get_room_grp_rmk(self, g_wxid):
+        """获取群备注"""
+        return RedisClient().get('VP_ROOM_GRP_RMK', [g_wxid])
+
     def download_file(self, message):
         """下载文件"""
         return self.client.download_file(message)
