@@ -29,7 +29,7 @@ class Task(BaseAppVp):
         for g_wxid in g_list:
             ad = int(i == 0)  # 是否为管理员群
             res[g_wxid] = {}
-            res[g_wxid]['vp_morning'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_morning', delay_seconds=0.1 + i) if not ad else 0 # > 10
+            res[g_wxid]['vp_good_morning'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_good_morning', delay_seconds=0.1 + i) if not ad else 0 # > 10
             res[g_wxid]['vp_rank'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_rank', '#昨日榜', delay_seconds=10 + i) if not ad else 0  # > 20
             res[g_wxid]['vp_xw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_xw', '', 0 if ad else 1, delay_seconds=30 + i)  # > 15  # 0: 仅新闻 | 1: 新闻 + 历史上的今天
             res[g_wxid]['vp_sky_rl'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rl', '', 2, delay_seconds=45 + i) if not ad else 0 # > 15  # 管理员群不发

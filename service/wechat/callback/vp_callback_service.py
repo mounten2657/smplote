@@ -1,4 +1,7 @@
 from service.wechat.callback.vp_command_service import VpCommandService
+from service.wechat.reply.vp_msg_service import VpMsgService
+from service.wechat.sync.vp_room_service import VpRoomService
+from service.wechat.sync.vp_user_service import VpUserService
 from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
 from model.wechat.wechat_queue_model import WechatQueueModel
@@ -59,6 +62,7 @@ class VpCallbackService:
         res = {}
         client = VpClient(app_key)
         rdb = WechatRoomModel()
+        vrs = VpRoomService()
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
         g_wxid_str = g_wxid_str if g_wxid_str else app_config['g_wxid']  # 只刷新已入驻的群聊
@@ -67,7 +71,7 @@ class VpCallbackService:
             client.refresh_room(g_wxid)
             room = client.get_room(g_wxid)
             r_info = rdb.get_room_info(g_wxid)
-            res[g_wxid] = rdb.check_room_info(room, r_info)
+            res[g_wxid] = vrs.check_room_info(room, r_info)
         return res
 
     @staticmethod
@@ -155,7 +159,9 @@ class VpCallbackService:
                 is_admin = s_wxid in str(config['admin_list']).split(',')
                 commander = VpCommandService(app_key, g_wxid, s_wxid)
                 content_str = str(content)
-                admin_str = "只有管理员才能使用该功能"
+                def only_admin_str():
+                    admin_str = "只有管理员才能使用该功能"
+                    return VpMsgService.vp_normal_msg(admin_str, None, g_wxid, app_key)
                 # 定义命令前缀与处理函数的映射关系
                 command_map = {
                     # 数字命令
@@ -202,7 +208,7 @@ class VpCallbackService:
                     '#季榜': lambda: commander.vp_rank(content) if is_admin else False,
                     '#半年榜': lambda: commander.vp_rank(content) if is_admin else False,
                     '#年榜': lambda: commander.vp_rank(content) if is_admin else False,
-                    '#设置': lambda: commander.vp_setting(content) if is_admin else commander.vp_normal_msg(admin_str),
+                    '#设置': lambda: commander.vp_setting(content) if is_admin else only_admin_str(),
                     '#总结': lambda: commander.vp_report(content) if is_admin else False,
                 }
                 # 检查数字开头的命令
@@ -218,7 +224,7 @@ class VpCallbackService:
                         return handler()
                 # 非管理员拦截（所有管理命令都已在上面处理）
                 if not is_admin:
-                    return commander.vp_normal_msg(admin_str)
+                    return only_admin_str()
             # 默认返回
             return False
         except Exception as e:
@@ -356,6 +362,7 @@ class VpCallbackService:
         room = data['room']
         client = VpClient(app_key)
         udb = WechatUserModel()
+        vus = VpUserService()
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
         if g_wxid:
@@ -379,7 +386,7 @@ class VpCallbackService:
                 user['wx_nickname'] = user['nickname']
                 res['ins_user'] = udb.add_user(user, app_key)
                 u_info = udb.get_user_info(wxid)
-                udb.check_img_info(u_info, u_info['head_img_url'], u_info['sns_img_url'])
+                vus.check_img_info(u_info, u_info['head_img_url'], u_info['sns_img_url'])
             if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 3600):
                 # 特定群才更新
                 if g_wxid and g_wxid not in str(app_config['g_wxid']).split(','):
@@ -393,7 +400,7 @@ class VpCallbackService:
                     user['is_friend'] = client.get_user_is_friend(wxid)
                 user['user_type'] = 1 if user['is_friend'] else 2
                 user['room_list'].update(u_info['room_list'])
-                res['chk_user'] = udb.check_user_info(user, u_info, g_wxid)
+                res['chk_user'] = vus.check_user_info(user, u_info, g_wxid)
         return res
 
     @staticmethod

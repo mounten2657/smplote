@@ -1,8 +1,8 @@
-from tool.router.base_app import BaseApp
-from service.wechat.callback.vp_command_service import VpCommandService
+from tool.router.base_app_vp import BaseAppVp
+from service.wechat.reply.vp_msg_service import VpMsgService
 
 
-class VpMsg(BaseApp):
+class VpMsg(BaseAppVp):
 
     _rule_list = {
         "send_msg": {
@@ -17,7 +17,6 @@ class VpMsg(BaseApp):
     def send_msg(self):
         """通过链接发送微信消息"""
         content = self.params.get('content')
-        commander = VpCommandService(self.app_key)
-        res = commander.vp_normal_msg(content)
+        res = VpMsgService.vp_normal_msg(content, None, self.g_wxid, self.app_key)
         return self.success(res)
 

@@ -1,5 +1,5 @@
 from tool.router.base_app import BaseApp
-from service.wechat.reply.send_wx_msg_service import SendWxMsgService
+from service.wechat.reply.qy_msg_service import QyMsgService
 
 
 class QyMsg(BaseApp):
@@ -17,6 +17,6 @@ class QyMsg(BaseApp):
     def send_msg(self):
         """通过链接发送企业应用消息"""
         content = self.params.get('content')
-        res = SendWxMsgService.send_qy_msg(self.app_key, content)
+        res = QyMsgService.send_qy_msg(self.app_key, content)
         return self.success(res)
 
