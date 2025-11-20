@@ -150,7 +150,7 @@ class VpMsgFormatter(VpBaseFactory):
             self.msg['send_wxid_name'], self.msg['to_wxid_name'], self.msg['from_wxid_name'] = s_name, t_name, f_name
             send_wxid, content = [s_wxid, f"[邀请消息] {s_name} 邀请 {t_name} 加入了群聊"]
             if self.g_wxid and self.g_wxid in self.a_g_wxid:  # 邀请消息
-                VpMsgService.vp_join_room(t_wxid, t_name)
+                VpMsgService.vp_join_room(t_wxid, t_name, self.g_wxid, self.app_key)
             client.refresh_room(self.g_wxid)
         elif 'revoke' == content_type:  # 撤回
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, self.is_my_protect, client)
