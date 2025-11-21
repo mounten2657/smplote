@@ -219,7 +219,7 @@ class VpCommandService:
         content = '#身高查询' if '203' == content else content
         code = str(content).replace('#身高查询', '').strip()
         if len(code) < 14:
-            response = '请输入"#身高查询 [好友码]"进行查询，如： #身高查询 B1A9-KMV2-4ZG5  (注：第一次好友码，后续长ID)'
+            response = '请输入"#身高查询 [好友码]"进行查询(备注不能含敏感字)，如： #身高查询 B1A9-KMV2-4ZG5  (注：第一次好友码，后续长ID)'
         elif self.g_wxid_count > 50:
             # response = '只有管理员才能使用该功能'
             response = '哦No！欠费了，谁赞助一下，一毛一次'
