@@ -44,7 +44,7 @@ class VpRoomService:
             head = user.get('head_img_url', '')
         return head
 
-    def check_room_info(self, room, info):
+    def check_room_info(self, room, info, is_force=0):
         """检查是否有变化 - 由定时任务触发"""
         res = {}
         if not room['g_wxid']:
@@ -72,13 +72,13 @@ class VpRoomService:
                 return 0
             update_data['change_log'] = change_log
             res['u'] = rdb.update({"id": pid}, update_data)
-            res['c'] = self.check_member_change(change, g_wxid, app_key)
+            res['c'] = self.check_member_change(change, g_wxid, app_key, is_force)
         # 后续操作
         res['m'] = self.update_member_info(g_wxid, room, app_key)  # 有则更新，无则新增
         res['r'] = redis.set('VP_ROOM_GRP_RMK', info['remark'], [g_wxid])  # 更新一下群备注
         return res
 
-    def check_member_change(self, change, g_wxid, app_key):
+    def check_member_change(self, change, g_wxid, app_key, is_force=0):
         """检查群成员变化并发送通知"""
         change_str = change.get('member_list', '')
         if not change_str:
@@ -93,7 +93,7 @@ class VpRoomService:
             return False
         if changes.get('del'):  # 退群提醒
             del_list = changes.get('del')
-            if len(del_list) <= 3:
+            if len(del_list) <= 3 and not is_force:
                 for d in del_list:
                     c_head = self._get_user_head(g_wxid, d['wxid'])
                     VpMsgService.vp_quit_room(d['display_name'], c_head, g_wxid, app_key)
@@ -106,7 +106,7 @@ class VpRoomService:
             update_list = changes.get('update')
             for d in update_list:
                 d_wxid = Attr.get_by_point(d, 'before.wxid', Attr.get_by_point(d, 'after.wxid', ''))
-                if d_wxid:
+                if d_wxid and not is_force:
                     if d_wxid != self_wxid:
                         c_head = self._get_user_head(g_wxid, d['wxid'])
                         VpMsgService.vp_change_name(d['before']['display_name'], d['after']['display_name'], c_head, g_wxid, app_key)

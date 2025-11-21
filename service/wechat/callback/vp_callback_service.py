@@ -66,12 +66,13 @@ class VpCallbackService:
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
         g_wxid_str = g_wxid_str if g_wxid_str else app_config['g_wxid']  # 只刷新已入驻的群聊
+        is_force = 1 if g_wxid_str else 0
         g_list = str(g_wxid_str).split(',')
         for g_wxid in g_list:
             client.refresh_room(g_wxid)
             room = client.get_room(g_wxid)
             r_info = rdb.get_room_info(g_wxid)
-            res[g_wxid] = vrs.check_room_info(room, r_info)
+            res[g_wxid] = vrs.check_room_info(room, r_info, is_force)
         return res
 
     @staticmethod
