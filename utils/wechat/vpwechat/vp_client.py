@@ -182,6 +182,27 @@ class VpClient(VpBaseFactory):
     def get_room_grp_usl(self, g_wxid):
         return self.client.get_room_user_list(g_wxid)
 
+    def get_room_user(self, g_wxid, u_wxid):
+        """
+        获取群用户信息
+          - display_name - 用户群昵称
+          - small_head_img_url - 用户小头像
+          - big_head_img_url - 用户大头像
+
+        :param g_wxid:  群wxid
+        :param u_wxid:  用户wxid
+        :return: json
+        {"user_name":"wxid_xxx","nick_name":"xxx","display_name":"xxx","big_head_img_url":"xxx","small_head_img_url":"xxx","chatroom_member_flag":1}
+        """
+        redis = RedisClient()
+        user_list = redis.get('VP_ROOM_GRP_USL', [g_wxid])
+        if not user_list:
+            return {}
+        user_list = Attr.get_by_point(user_list, 'Data.member_data.chatroom_member_list')
+        if not user_list:
+            return {}
+        return Attr.select_item_by_where(user_list, {"user_name": u_wxid}, {})
+
     def get_room_grp_rmk(self, g_wxid):
         """获取群备注"""
         return RedisClient().get('VP_ROOM_GRP_RMK', [g_wxid])

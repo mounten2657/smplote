@@ -155,9 +155,11 @@ class VpMsgService:
         if s_wxid:  # 先屏蔽吧，没什么人用
             return False
         client = VpClient(ak)
-        s_user = client.get_user(s_wxid)
-        s_name = s_user.get('nickname', '')
-        s_head = s_user.get('head_img_url_small', '')
+        s_user = client.get_user(g_wxid, s_wxid)
+        if not s_user:
+            return False
+        s_name = s_user.get('display_name', '')
+        s_head = s_user.get('small_head_img_url', '')
         title = "【红包提醒】"
         des = f"[{s_name} {Time.date('%H:%M')} 发送红包]\r\n"
         des += f"[@艾特位招租]"

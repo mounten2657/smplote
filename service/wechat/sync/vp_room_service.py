@@ -25,22 +25,18 @@ class VpRoomService:
         redis.delete('VP_USER_FRD_INF', [wxid])
         return True
 
-    def _get_user_head(self, g_wxid, u_wxid):
+    def _get_user_head(self, g_wxid, u_wxid, app_key):
         """
         获取群用户头像 - 优先从缓存中获取
+
         :param g_wxid:  群wxid
         :param u_wxid:  用户wxid
-        :return: json
-        {"user_name":"wxid_xxx","nick_name":"xxx","display_name":"xxx","big_head_img_url":"xxx","small_head_img_url":"xxx","chatroom_member_flag":1}
+        :return: 用户头像
         """
-        redis = RedisClient()
-        user_list = redis.get('VP_ROOM_GRP_USL', [g_wxid])
-        if not user_list:
+        client = VpClient(app_key)
+        user = client.get_room(g_wxid, u_wxid)
+        if not user:
             return ''
-        user_list = Attr.get_by_point(user_list, 'Data.member_data.chatroom_member_list')
-        if not user_list:
-            return ''
-        user = Attr.select_item_by_where(user_list, {"user_name": u_wxid}, {})
         head = user.get('small_head_img_url', '')
         # 如果缓存中没有，再从数据库中取
         if not head:
