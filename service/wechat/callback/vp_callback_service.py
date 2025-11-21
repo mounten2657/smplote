@@ -65,8 +65,8 @@ class VpCallbackService:
         vrs = VpRoomService()
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
-        g_wxid_str = g_wxid_str if g_wxid_str else app_config['g_wxid']  # 只刷新已入驻的群聊
         is_force = 1 if g_wxid_str else 0
+        g_wxid_str = g_wxid_str if g_wxid_str else app_config['g_wxid']  # 只刷新已入驻的群聊
         g_list = str(g_wxid_str).split(',')
         for g_wxid in g_list:
             client.refresh_room(g_wxid)
