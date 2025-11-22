@@ -95,7 +95,7 @@ class VpRoomService:
             del_list = changes.get('del')
             if len(del_list) <= 3 and not is_force:
                 for d in del_list:
-                    c_head = self._get_user_head(g_wxid, d['wxid'])
+                    c_head = self._get_user_head(g_wxid, d['wxid'], app_key)
                     VpMsgService.vp_quit_room(d['display_name'], c_head, g_wxid, app_key)
                     self._del_user_cache(d['wxid'])
             self._del_room_cache(g_wxid)
@@ -108,7 +108,7 @@ class VpRoomService:
                 d_wxid = Attr.get_by_point(d, 'before.wxid', Attr.get_by_point(d, 'after.wxid', ''))
                 if d_wxid and not is_force:
                     if d_wxid != self_wxid:
-                        c_head = self._get_user_head(g_wxid, d['wxid'])
+                        c_head = self._get_user_head(g_wxid, d['wxid'], app_key)
                         VpMsgService.vp_change_name(d['before']['display_name'], d['after']['display_name'], c_head, g_wxid, app_key)
                     self._del_user_cache(d_wxid)
         return True
