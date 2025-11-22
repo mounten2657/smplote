@@ -421,7 +421,13 @@ class VpCommandService:
         """点歌"""
         s_type = 'WY' if '网易' in content else 'QQ'
         code = Str.replace_multiple(content, ['#', '点歌', '网易'], ['', '', ''])
-        res = MusicSearchClient(s_type).get_song_data(code.strip())
+        try:
+            res = MusicSearchClient(s_type).get_song_data(code.strip())
+        except Exception as e:
+            if s_type == 'QQ':  # qq音乐搜索失败再次尝试使用网易搜索
+                res = MusicSearchClient('WY').get_song_data(code.strip())
+            else:
+                return f"{e}"
         if res:
             return self.client.send_dg_message(res, self.g_wxid, self.extra)
         response = '暂未找到该歌曲'
