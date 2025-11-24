@@ -155,7 +155,7 @@ class VpCallbackService:
             commands = ",".join([config['command_list'], config['command_list_tj'], config['command_list_yl'], config['command_list_sky']]).split(',')
             content = Str.remove_at_user(content).strip()
             #先去掉#号再加上#号，这样不管带不带#号都能兼容
-            n_list = ['提问', '点歌', '身高查询', '今日任务', '今日红石', '礼包查询']  # 可省略 # 号的命令
+            n_list = ['提问', '点歌', '身高查询', '今日任务', '今日红石', '礼包查询', '光翼查询']  # 可省略 # 号的命令
             content = f"#{content.replace('#', '')}" if content.startswith(tuple(n_list)) else content
             if str(content).startswith(tuple(commands)):
                 is_admin = s_wxid in str(config['admin_list']).split(',')
