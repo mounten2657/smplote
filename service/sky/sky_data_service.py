@@ -189,7 +189,7 @@ class SkyDataService:
         text += f"礼包明细: \r\n"
         for i, p in enumerate(res.get('purchasedList')):
             text += f" - ({i+1}). {p['name']} ￥ {p['price']}\r\n"
-        text += f"\r\n查询时间: {Time.date()}\r\n"
+        text += f"\r\n查询时间: {Time.date()}"
         return {"title": "礼包查询", "main": text}
 
     def get_sky_djs(self):
