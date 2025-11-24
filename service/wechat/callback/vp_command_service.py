@@ -243,6 +243,21 @@ class VpCommandService:
             response = s_res.get('main', "暂未查询到光翼")
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
+    def vp_sky_lb(self, content):
+        """sky礼包查询"""
+        redis = RedisClient()
+        cache_key = 'LOCK_SKY_API_GY'
+        if redis.get(cache_key, [self.s_wxid]) and not self.is_admin:
+            return self.client.send_msg('每分钟只能查询礼包一次', self.g_wxid, self.at_list, self.extra)
+        content = '#礼包查询' if '205' == content else content
+        code = str(content).replace('#礼包查询', '').strip()
+        if len(code) < 9:
+            response = '请输入"#礼包查询 [长ID]"进行查询，如： #礼包查询 fe4b932e-837d-4989-b07f-e1941bfa364c'
+        else:
+            s_res = self.service.get_sky_lb(code)
+            response = s_res.get('main', "暂未查询到礼包")
+        return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
+
     def vp_sky_gg(self, content):
         """sky公告"""
         s_res = self.service.get_sky_gg()

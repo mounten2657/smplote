@@ -170,6 +170,17 @@ class SkyDataService:
         text = res
         return {"title": "光翼查询", "main": text}
 
+    def get_sky_lb(self, code):
+        """
+        获取sky礼包 - 长ID
+        :param code: 短ID | 长ID
+        :return: {"title": "xxx", "main": "xxx"}
+        """
+        url = f"{self._OVO_API}/api/sky/lbcx/gflb?key={self.ovo_key}&id={code}"
+        res = Http.send_request('GET', url)
+        text = res
+        return {"title": "礼包查询", "main": text}
+
     def get_sky_djs(self):
         """
         获取sky日历
