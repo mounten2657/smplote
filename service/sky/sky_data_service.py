@@ -178,7 +178,14 @@ class SkyDataService:
         """
         url = f"{self._OVO_API}/api/sky/lbcx/gflb?key={self.ovo_key}&id={code}"
         res = Http.send_request('GET', url)
-        text = res
+        if not Attr.get(res, 'purchasedList', 0):
+            return {}
+        text = f"【Sky用户礼包】\r\n"
+        text += f" - 礼包总额: {res.get('totalPrice')} 元\r\n"
+        text += f" - 礼包总数: {res.get('totalCount')} 个\r\n"
+        text += f" - 礼包明细: \r\n"
+        for p in res.get('purchasedList'):
+            text += f"   - {p['name']} ￥ {p['price']}\r\n"
         return {"title": "礼包查询", "main": text}
 
     def get_sky_djs(self):
