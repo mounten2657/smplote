@@ -83,11 +83,29 @@ class VpCallbackHandler(VpBaseFactory):
             if all(key in contents for key in ('sysmsg', 'secmsg', 'session')):  # 群系统通知
                 logger.warning(f"on message: 忽略消息[T23]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
+            if all(key in contents for key in ('sysmsg', 'mmchatroomtopmsg', 'chatroominfoversion')):  # 群置顶通知
+                logger.warning(f"on message: 忽略消息[T24]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
+            if all(key in contents for key in ('sysmsg', 'mmchatroombarannouncememt', 'announcement_id')):  # 群公告通知
+                logger.warning(f"on message: 忽略消息[T25]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
+            if all(key in contents for key in ('sysmsg', 'mmec_gift_msg', 'gift_msg_xml')):  # 无法识别的群礼物
+                logger.warning(f"on message: 忽略消息[T26]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
+            if all(key in contents for key in ('xml', 'bigheadimgurl', 'nickname', 'province', 'sex')):  # 疑似群成员换头像
+                logger.warning(f"on message: 忽略消息[T27]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
             if f_wxid in str(app_config['g_wxid_exc']).split(','):  # 无用群
                 logger.warning(f"on message: 忽略消息[T3]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
             if '@openim' in f_wxid:  # 无用企业号
                 logger.warning(f"on message: 忽略消息[T31]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
+            if any(key in contents for key in ('ClientCheckConsistency', 'bizlivenotify')):  # 没什么大用的消息
+                logger.warning(f"on message: 忽略消息[T32]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
+                return False
+            if 'fmessage' in f_wxid:  # 朋友推荐消息 - 如 加好友消息
+                logger.warning(f"on message: 忽略消息[T33]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')
                 return False
             # if f_wxid not in str(a_g_wxid).split(',') and not (is_my or is_sl):  # 仅限特定群、自己发的消息 和 私聊
             #     logger.warning(f"on message: 忽略消息[T4]<{msg_id}> 来自 <{f_wxid}>", 'VP_FLT_SKP')

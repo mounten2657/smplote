@@ -33,7 +33,7 @@ class Task(BaseAppVp):
             # res[g_wxid]['vp_rank'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_rank', '#昨日榜', delay_seconds=10 + i) if not ad else 0  # > 20  # 反响不好，暂时屏蔽
             res[g_wxid]['vp_xw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_xw', '', 0 if ad else 1, delay_seconds=30 + i)  # > 15  # 0: 仅新闻 | 1: 新闻 + 历史上的今天
             res[g_wxid]['vp_sky_rl'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rl', '', 2, delay_seconds=45 + i) if not ad else 0 # > 15  # 管理员群不发
-            res[g_wxid]['vp_sky_rw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw', '', 20, delay_seconds=60 + i) # > 40  # 0: 仅任务图片 | 1: 所有任务相关图片 | 2: 文字版 | 20: 图片+文字 | 21: 所有图片+文字
+            res[g_wxid]['vp_sky_rw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw', '', 2, delay_seconds=60 + i) # > 40  # 0: 仅任务图片 | 1: 所有任务相关图片 | 2: 文字版 | 20: 图片+文字 | 21: 所有图片+文字
             res[g_wxid]['vp_sky_hs'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 2, delay_seconds=100 + i) # > 30  # 0: 图片(每天发) | 1: 图片(仅周末发) | 2: 文字版(仅周末发)
             res[g_wxid]['vp_ov_wa'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_ov_wa', delay_seconds=130 + i)  # > 15
             i += 120

@@ -361,10 +361,16 @@ class Str:
         return re.findall(ip_pattern, text)
 
     @staticmethod
-    def html_unescape(s):
+    def html_unescape(s, max_iter=9):
         """字符串实体转义"""
         try:
-            return html.unescape(s)
+            # return html.unescape(s)  # 只还原一次无法保证转义完毕
+            for _ in range(max_iter):
+                new_s = html.unescape(s)
+                if new_s == s:  # 字符串无变化，表示已经拿到最终的结果，提前退出循环
+                    break
+                s = new_s
+            return s
         except:
             return ''
 
