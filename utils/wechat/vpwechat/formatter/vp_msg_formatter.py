@@ -375,7 +375,7 @@ class VpMsgFormatter(VpBaseFactory):
                 "p_new_msg_id": Str.extract_xml_attr(content_text, 'newmsgid'),
                 "title": '',
             }
-        elif all(key in content_text for key in ('appmsg', 'title', 'des', 'dataurl', 'songalbumurl','songlyric', 'appname')):  # 点歌 - "{s_wxid}:\n{<song_xml>}"
+        elif all(key in content_text for key in ('appmsg', 'title', 'des', 'dataurl', 'img_url', 'songalbumurl','songlyric', 'appname')):  # 点歌 - "{s_wxid}:\n{<song_xml>}"
             content_type = 'song'
             content_link = {
                 "title": Str.extract_xml_attr(content_text, 'title'),
