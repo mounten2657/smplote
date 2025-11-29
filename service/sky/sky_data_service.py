@@ -192,17 +192,19 @@ class SkyDataService:
         text += f"\r\n查询时间: {Time.date()}"
         return {"title": "礼包查询", "main": text}
 
-    def get_sky_djs(self):
+    def get_sky_djs(self, is_all):
         """
         获取sky日历
         :return: {"title": "xxx", "main": "xxx"}
         """
-        url = f"{self._OVO_API}/api/skygm/hd?key={self.ovo_key}"
-        res = Http.send_request('GET', url)
-        text = "【Sky活动日历】\r\n\r\n" + res.get('hb', '')
+        text = "【Sky活动日历】\r\n\r\n"
+        if 21 == is_all:
+            url = f"{self._OVO_API}/api/skygm/hd?key={self.ovo_key}"
+            res = Http.send_request('GET', url)
+            text += res.get('hb', '') + '\r\n\r\n'
         url = f"{self._OVO_API}/api/sky/jjsj/sj?key={self.ovo_key}"
         res = Http.send_request('GET', url)
-        text += "\r\n\r\n季节季蜡"
+        text += "季节季蜡"
         for i in range(1, 10):
             text += f"\r\n{res.get(f'msg{i}', '')}"
         # text += f"\r\n\r\n{res.get('msg', '')}"

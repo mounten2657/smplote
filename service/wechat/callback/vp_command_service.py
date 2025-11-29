@@ -269,9 +269,9 @@ class VpCommandService:
         code = str(content).replace('#日历', '').strip()
         if 1 == len(code) and int(code) > 0:
             is_all = int(code)
-        if 2 == is_all:
+        if is_all in [2, 21]:
             # 只发送文字版
-            text = self.service.get_sky_djs()
+            text = self.service.get_sky_djs(is_all)
             return self.client.send_msg(text['main'], self.g_wxid, [], self.extra)
         # 图片版好像失效了，请用上面的文字版
         file = self.service.get_sky_file('rl')
