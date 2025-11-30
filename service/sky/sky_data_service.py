@@ -80,6 +80,8 @@ class SkyDataService:
             url = f"{self._ZXZ_API}/api/sjyjsj/m/{r_num}.mp3"
         elif 'bz' == sky_type:
             r_num = extra.get('r_num', 999)
+            r_type = extra.get('r_type', 0)  # 壁纸类型：1:二次元 | 2:必应 | 3:cosplay
+            r_num = r_type if r_type else r_num
             if 0 == r_num % 3:
                 # 真人cos壁纸
                 fn = f"sky_{sky_type}_{r_num}_{Time.date('%Y%m%d')}.png"

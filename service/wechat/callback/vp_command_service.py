@@ -375,13 +375,15 @@ class VpCommandService:
         response = s_res.get('main', "暂未查询到文案")
         return self.client.send_msg(response, self.g_wxid, [], self.extra)
 
-    def vp_ov_bz(self, content):
+    def vp_ov_bz(self, content, r_type=0):
         """ov壁纸"""
         r_num = 0
+        code = str(content).replace('#壁纸', '').strip()
+        r_type = r_type if r_type else Str.int(code)  # # 壁纸类型：1:二次元 | 2:必应 | 3:cosplay
         # 壁纸失败率太高，如果没有成功，重试两次
         for i in range(5):
             r_num = random.randint(1, 999)
-            file = self.service.get_sky_file('bz', {"r_num": r_num})
+            file = self.service.get_sky_file('bz', {"r_num": r_num, "r_type": r_type})
             fp = file.get('save_path')
             if fp:
                 fp = Dir.wechat_dir(f'{fp}')

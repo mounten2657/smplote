@@ -178,16 +178,16 @@ class Str:
         return re.sub(pattern, '', input_str)
 
     @staticmethod
-    def int(str_val, default=None):
-        # 将字符串转换成整数，不成功就是 None
+    def int(str_val, default=0):
+        # 将字符串转换成整数，不成功就是 0
         try:
             return int(str_val)
         except Exception:
             return default
 
     @staticmethod
-    def float(str_val, default=None):
-        # 将字符串转换成浮点数，不成功就是 None
+    def float(str_val, default=0.0):
+        # 将字符串转换成浮点数，不成功就是 0.0
         try:
             return float(str_val)
         except Exception:
