@@ -212,7 +212,7 @@ class GPLUpdateEfnService:
                         "biz_code": biz_code,
                         "e_key": art_code,
                         "e_des": fn_txt['title'],
-                        "e_val": content,
+                        "e_val": str(content).strip(),
                     }, True)
                     if tid:
                         has_update = True
