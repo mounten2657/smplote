@@ -101,6 +101,12 @@ class Attr:
         return random.choice(a_list)
 
     @staticmethod
+    def random_list(a_list):
+        """将列随机打乱，每个元素的个数不会发生改变"""
+        # random.shuffle(a_list)  # 直接改变原列表，无返回值
+        return random.sample(a_list, len(a_list))  # 返回新列表，不会改变原列表
+
+    @staticmethod
     def parse_json_ignore(data):
         try:
             return json.loads(data)

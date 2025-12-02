@@ -221,3 +221,11 @@ class GPLUpdateEfnService:
                 logger.warning(f"更新财务公告文本数据<{symbol}><{sd} ~ {td}> - <{i}/{len(dfl)}>", 'UP_SNF_WAR')
                 ret['uft'][d['id']] = jdb.update_season(d['id'], {"e_val": d['e_val']})
         return ret
+
+    def cache_fnn_em_txt(self, symbol, fnn_list, td, sd):
+        """
+        缓存股票财务公告文本
+          - 由于总数太多，正常一个个请求会需要很长地时间，故此通过代理池在短时间内完成大量网络请求并缓存
+        """
+        dfl = []
+

@@ -7,6 +7,7 @@ import concurrent.futures
 from functools import wraps
 from typing import TypeVar, Type, Any
 from tool.core.attr import Attr
+from tool.core.str import Str
 from tool.core.error import Error
 from tool.core.logger import Logger
 from tool.db.cache.redis_client import RedisClient
@@ -186,7 +187,8 @@ class Ins:
                 results = {}
                 while not result_queue.empty():
                     task, result = result_queue.get()
-                    results[task] = result
+                    tk = Str.md5(str(task)) if isinstance(task, dict) else task
+                    results[tk] = result
                 return results
             return wrapper
         return decorator

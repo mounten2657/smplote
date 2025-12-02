@@ -1,7 +1,6 @@
 import re
 import json
 import requests
-import random
 import itertools
 from flask import request
 from urllib.parse import urlencode, urlparse
@@ -137,37 +136,40 @@ class Http:
         return res
 
     @staticmethod
-    def get_proxy_tunnel(pn=None):
+    def get_proxy_tunnel(pn=0):
         """
         随机获取代理隧道池编号
 
         :param int pn: 隧道池编号
         :return: 隧道号
         """
-        if pn is not None:
+        if pn:
             return int(pn)
         # {隧道池编号: 数量} - 确保数量多的隧道被选中的概率最高
         number_counts = {
-            51: 75,  # J池 （50%）
-            82: 18,  # D池
-            57: 18,  # B池
-            61: 18,  # Z池
-            62: 12,  # X池
-            76: 9  # X池 （三分钟版）
+            51: 535,  # J池 - 53.5%
+            82: 140,  # D池
+            57: 135,  # B池
+            61: 130,  # Z池
+            62: 50,  # X池
+            76: 10  # X池 （三分钟版）
         }
         number_list = list(itertools.chain.from_iterable(
             [num] * count for num, count in number_counts.items()
         ))
-        return random.choice(number_list)
+        return Attr.random_choice(Attr.random_list(number_list))
 
     @staticmethod
-    def get_proxy(pn=None):
+    def get_proxy(num=1, pn=0):
         """
         获取代理ip
+         - 文档地址 - https://12qk8h1t7l.apifox.cn/323203443e0
 
+        :param int num: 提取个数，一个时返回字符串，多个时返回列表
         :param int pn: 隧道池编号
         :return: 代理ip 和 端口  + 获取结果
         """
+        ip_list = []
         url = f"{Http._XQ_URL}/VAD/GetIp.aspx"
         tn = Http.get_proxy_tunnel(pn)  # 从所有的隧道池中随机取出一个
         params = {
@@ -184,14 +186,17 @@ class Http:
             "spl": 1,
             "addr": "",
             "db": 1,
-            "num": 1
+            "num": num
         }
         res = Http.send_request('GET', url, params)  # {"code":0,"success":"true","msg":"","data":[{"IP":"x.x.x.x","Port":5639,"IpAddress":"Unknow"}]}
-        ip = Attr.get_by_point(res, 'data.0.IP')
-        port = Attr.get_by_point(res, 'data.0.Port')
-        if not ip or not port:
-            return res, False
-        return f"http://{ip}:{port}", True
+        ret = Attr.get_by_point(res, 'data', [])
+        for r in ret:
+            if r.get('IP') and r.get('Port'):
+                ip = f"http://{r['IP']}:{r['Port']}"
+                ip_list.append(ip)
+        if not ip_list:
+            return '' if num == 1 else [], False
+        return ip_list[0] if num == 1 else ip_list , True
 
     @staticmethod
     def send_request_x(

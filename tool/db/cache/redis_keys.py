@@ -40,6 +40,8 @@ class RedisKeys:
         "GPL_STOCK_TD_LIST": {"key": "gpl:stock:td_list", "ttl": 'today'},
         "GPL_STOCK_INFO_XQ": {"key": "gpl:stock:xq:%s", "ttl": 'today'},
         "GPL_STOCK_INFO_EM": {"key": "gpl:stock:em:%s", "ttl": 'today'},
+        # 通用业务缓存
+        "NET_BATCH_REQ": {"key": "net:batch_req:%s", "ttl": 15 * 86400},
     }
 
 
