@@ -222,12 +222,14 @@ class GPLUpdateEfnService:
                 ret['uft'][d['id']] = jdb.update_season(d['id'], {"e_val": d['e_val']})
         return ret
 
-    def cache_fnn_em_txt(self, symbol, fnn_list, td, sd):
+    def cache_fnn_em_txt(self, r_type=1):
         """
         缓存股票财务公告文本
           - 由于总数太多，正常一个个请求会需要很长地时间，故此通过代理池在短时间内完成大量网络请求并缓存
-          - 需要执行两次，第一次统一请求第一页，全部完成后，再进行第二次，第二次根据第一次的结果再判断要请求几次分页数据
-          - 已经入库的数据不用再去请求
+          - 已经入库的数据不用再去请求，注意过滤
+
+        :param r_type: 由于需要执行两次：第一次统一请求第一页，全部完成后，再进行第二次，第二次根据第一次的结果再判断要请求几次分页数据
+        :return:
         """
         dfl = []
         # {"data":{"art_code":"AN201606170015262533","attach_list":[{"attach_size":87,"attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","seq":1}],"attach_list_ch":[{"attach_size":87,"attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","seq":1}],"attach_list_en":[],"attach_size":"87","attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","attach_url_web":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","eitime":"2016-06-17 16:51:56","extend":{},"is_ai_summary":0,"is_rich":0,"is_rich2":0,"language":"0","notice_content":"证券代码：002030 证券简称：达安基因 公告编号：2016-045\r\n 中山大学达安基因股份有限公司\r\n 关于已授予股票期权注销完成的公告\r\n 本公司及董事会全体成员保证信息披露内容的真实、准确和完整，没有虚假记载、误导性陈述或重大遗漏。\r\n 中山大学达安基因股份有限公司（以下简称“公司”）第五届董事会第六次会议和第五届监事会第六次会议审议通过了《关于终止实施股票期权激励计划的预案》，并经2015年度股东大会审议通过，会议同意公司终止股票期权激励计划并注销已授予的股票期权。具体内容详见公司于2016年3月31日在《证券时报》、巨潮资讯网上刊登的《中山大学达安基因股份有限公司关于终止实施股票期权激励计划的公告》（公告编号：2016-011）。\r\n 经中国证券登记结算有限责任公司深圳分公司审核确认，公司已完成了对首期股票期权激励计划已授予的全部股票期权注销事宜，涉及激励对象67人，股票期权数量508.464万份。\r\n 特此公告。\r\n 中山大学达安基因股份有限公司\r\n 董事会\r\n 2016年6月17日\r\n","notice_date":"2016-06-18 00:00:00","notice_title":"达安基因:关于已授予股票期权注销完成的公告","page_size":1,"page_size_ch":0,"page_size_cht":0,"page_size_en":0,"security":[{"market_uni":"0","short_name":"达安基因","short_name_ch":"达安基因","short_name_cht":"達安基因","short_name_en":"DAJY","stock":"002030"}],"short_name":"达安基因"},"success":1}

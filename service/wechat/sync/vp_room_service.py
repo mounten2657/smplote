@@ -68,7 +68,7 @@ class VpRoomService:
                 change_log.pop(0)
             m_len = len(Attr.get(update_data, 'member_list', []))
             if not m_len and not update_data.get('head_img_url'):
-                logger.error(f"获取群成员失败 - {pid} - {update_data}", 'ROOM_EMP_MEM')
+                logger.error(f"获取群成员失败 - {pid} - {update_data} - {change_log}", 'ROOM_EMP_MEM')
                 return 0
             update_data['change_log'] = change_log
             res['u'] = rdb.update({"id": pid}, update_data)
