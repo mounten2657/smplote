@@ -553,3 +553,8 @@ class Attr:
         :return list: 分块后的列表列表
         """
         return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+    @staticmethod
+    def unique_list(lst):
+        """对列表进行去除 - 保留首次出现的顺序"""
+        return list(dict.fromkeys(lst))

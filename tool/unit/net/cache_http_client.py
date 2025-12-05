@@ -4,24 +4,51 @@ from tool.db.cache.redis_client import RedisClient
 
 class CacheHttpClient:
 
+    REQ_CACHE_KEY = 'NET_BATCH_REQ'  # 链接缓存键名的唯一值为：u_key = Str.md5(f"{url}@{params}")
+
+    @staticmethod
+    def get_req_key(url, params):
+        """
+        获取链接缓存键名唯一值
+
+        :param url: 请求链接
+        :param params:  请求参数
+        :return:
+        """
+        return Str.md5(f"{url}@{params}")
+
+    @staticmethod
+    def get_req_cache(url, params=None):
+        """
+        获取链接缓存
+
+        :param url: 请求链接
+        :param params:  请求参数
+        :return:
+        """
+        redis = RedisClient()
+        cache_key = CacheHttpClient.REQ_CACHE_KEY
+        u_key = CacheHttpClient.get_req_key(url, params)
+        return redis.get(cache_key, [u_key])
+
     @staticmethod
     def batch_request(r_list, success=None):
         """
         批量进行网络请求并对其结果缓存
           - [!] 注意不要嵌套多线程；一般是放在初始化的程序中执行，确保外面同一时间只有一个线程在调用
           - 推荐使用延迟任务进行调用，因为这个方法很耗时
-          - 每个链接的缓存键为：u_key = Str.md5(f"{url}--{params}")
 
         :param r_list: 请求参数列表 - [{"method":"GET", "url":"xxx", "params":{}, "headers": {}}]
         :param success: 成功标志 - {"key": "code", "val": "200", "hpk": "data.0.name"}
         :return: 成功缓存的个数
         """
         r_list = Attr.chunk_list(r_list, 100)  # 对列表进行分块
+        redis = RedisClient()
+        cache_key = CacheHttpClient.REQ_CACHE_KEY
 
         # 分块处理方法
         def _chunk_request(par):
             proxy_list = []
-            redis = RedisClient()
             if not len(par):
                 return False
             # 批量获取代理链接
@@ -44,9 +71,8 @@ class CacheHttpClient:
             @Ins.multiple_executor(8)
             def _cache_req(p)->dict | bool:
                 is_cache = False
-                cache_key = 'NET_BATCH_REQ'
-                u_key = Str.md5(f"{p['url']}--{p['params']}")  # 请求的唯一标识
-                if redis.get(cache_key, [u_key]):  # 如果已经存在了就没必要继续请求了
+                u_key = CacheHttpClient.get_req_key(p['url'], p['params'])
+                if CacheHttpClient.get_req_cache(p['url'], p['params']):  # 如果已经存在了就没必要继续请求了
                     return False
                 res = Http.send_request(p['method'], p['url'], p['params'], p['headers'], p['proxy'])
                 if not res:

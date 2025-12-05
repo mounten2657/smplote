@@ -94,3 +94,13 @@ class GPLSeasonModel(MysqlBaseModel):
         if e_key:
             where['e_key'] = e_key
         return self.where(where).first()
+
+    def get_anr_code_list(self, symbol, season_date=None):
+        """获取股票的所有报告文件代码列表"""
+        where = {'symbol': symbol, 'biz_code': 'EM_FN_NF'}
+        if season_date:
+            where['season_date'] = season_date
+        d_list = self.where(where).get()
+        if not d_list:
+            return []
+        return [d['e_val']['art_code'] for d in d_list]

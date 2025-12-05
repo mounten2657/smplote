@@ -46,7 +46,7 @@ class GplFormatterService:
     def get_stock_code_all(self):
         """
         获取所有股票代码列表 - 不含市场标识 - 约 5423 只
-        :return: 股票代码列表
+        :return: 股票代码列表 - 不带前缀 - ["123456", ...]
         """
         code_list = self.ak.stock_info_a_code_name()
         code_list = [str(item['code']) for item in code_list]
