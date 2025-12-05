@@ -103,4 +103,11 @@ class GPLSeasonModel(MysqlBaseModel):
         d_list = self.where(where).get()
         if not d_list:
             return []
-        return [d['e_val']['art_code'] for d in d_list]
+        ret = []
+        for dl in d_list:
+            if isinstance(dl['e_val'], list):
+                for d in dl['e_val']:
+                    ret.append(d['art_code'])
+            elif isinstance(dl['e_val'], dict):
+                ret.append(dl['e_val']['art_code'])
+        return ret

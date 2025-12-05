@@ -242,14 +242,18 @@ class GPLUpdateEfnService:
         # 先统一整理数据，之后再作请求动作
         for code in code_list:
             symbol = Str.add_stock_prefix(code)
+            percent = self.formatter.get_percent(code, code_list, code_list)
+            logger.warning(f"获取财务公告文本数据缓存参数<{symbol}>{percent}", 'C_FNN_WAR')
             a_list = jdb.get_anr_code_list(symbol)  # 根据股票代码获取其下所有报告文件的代码
             if not a_list:
                 continue
             t_list = tdb.get_text_list([symbol], biz_code)  # 获取所有已保存的报告文件列表
-            a_list = [t['e_key'] for t in t_list if t['e_key'] not in a_list]  # 只保留未获取过的数据
+            t_list = [t['e_key'] for t in t_list if t['e_key']]
+            a_list = [a for a in a_list if a not in t_list]  # 只保留未获取过的数据
             if not a_list:
                 continue
             for art_code in a_list:
+                logger.debug(f"获取财务公告文本数据报告代码<{symbol}>{percent} - {art_code}", 'C_FNN_DBG')
                 par = self.formatter.em.get_fn_notice_txt_par(art_code, 1)
                 a_cache = CacheHttpClient.get_req_cache(par['url'], par['params'])
                 # {"data":{"art_code":"AN201606170015262533","attach_list":[{"attach_size":87,"attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","seq":1}],"attach_list_ch":[{"attach_size":87,"attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","seq":1}],"attach_list_en":[],"attach_size":"87","attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","attach_url_web":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","eitime":"2016-06-17 16:51:56","extend":{},"is_ai_summary":0,"is_rich":0,"is_rich2":0,"language":"0","notice_content":"证券代码：002030 证券简称：达安基因 公告编号：2016-045\r\n 中山大学达安基因股份有限公司\r\n 关于已授予股票期权注销完成的公告\r\n 本公司及董事会全体成员保证信息披露内容的真实、准确和完整，没有虚假记载、误导性陈述或重大遗漏。\r\n 中山大学达安基因股份有限公司（以下简称“公司”）第五届董事会第六次会议和第五届监事会第六次会议审议通过了《关于终止实施股票期权激励计划的预案》，并经2015年度股东大会审议通过，会议同意公司终止股票期权激励计划并注销已授予的股票期权。具体内容详见公司于2016年3月31日在《证券时报》、巨潮资讯网上刊登的《中山大学达安基因股份有限公司关于终止实施股票期权激励计划的公告》（公告编号：2016-011）。\r\n 经中国证券登记结算有限责任公司深圳分公司审核确认，公司已完成了对首期股票期权激励计划已授予的全部股票期权注销事宜，涉及激励对象67人，股票期权数量508.464万份。\r\n 特此公告。\r\n 中山大学达安基因股份有限公司\r\n 董事会\r\n 2016年6月17日\r\n","notice_date":"2016-06-18 00:00:00","notice_title":"达安基因:关于已授予股票期权注销完成的公告","page_size":1,"page_size_ch":0,"page_size_cht":0,"page_size_en":0,"security":[{"market_uni":"0","short_name":"达安基因","short_name_ch":"达安基因","short_name_cht":"達安基因","short_name_en":"DAJY","stock":"002030"}],"short_name":"达安基因"},"success":1}
@@ -263,7 +267,7 @@ class GPLUpdateEfnService:
                     else:
                         pn = Attr.get_by_point(a_cache, 'data.data.page_size', 0)
                         if not pn:  # 这种的应该是数据错误了，记个错误日志
-                            logger.error(f"获取财务公告文本数据错误<{symbol}><{pn}> - {a_cache}", 'C_FNN_ERR')
+                            logger.error(f"获取财务公告文本数据错误<{symbol}>{percent} - {pn} - {a_cache}", 'C_FNN_ERR')
                             continue
                         if 1== pn:  # 排除只有一页的数据，剩下的就都是多页的数据了
                             continue
