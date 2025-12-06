@@ -10,6 +10,8 @@ from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
 from tool.core import Config, Attr, Sys, Dir, Transfer, Time, Str
 
+redis = RedisClient()
+
 
 class VpCommandService:
 
@@ -88,7 +90,6 @@ class VpCommandService:
 
     def vp_question(self, content):
         """AI问答"""
-        redis = RedisClient()
         cache_key = 'LOCK_AI_VP_QUS'
         if redis.get(cache_key, [self.s_wxid]) and not self.is_admin:
             response, aid = '每分钟只能提问一次', 0
@@ -101,7 +102,6 @@ class VpCommandService:
 
     def vp_science(self, content):
         """AI百科"""
-        redis = RedisClient()
         cache_key = 'LOCK_AI_VP_QUS'
         if redis.get(cache_key, [self.s_wxid]) and not self.is_admin:
             response, aid = '每分钟只能百科一次', 0
@@ -212,7 +212,6 @@ class VpCommandService:
 
     def vp_sky_sg(self, content):
         """sky身高查询"""
-        redis = RedisClient()
         cache_key = 'LOCK_SKY_API_SG'
         if redis.get(cache_key, [self.s_wxid]) and not self.is_admin:
             return self.client.send_msg('每分钟只能查询身高一次', self.g_wxid, self.at_list, self.extra)
@@ -230,7 +229,6 @@ class VpCommandService:
 
     def vp_sky_gy(self, content):
         """sky光翼查询"""
-        redis = RedisClient()
         cache_key = 'LOCK_SKY_API_GY'
         if redis.get(cache_key, [self.s_wxid]) and not self.is_admin:
             return self.client.send_msg('每分钟只能查询光翼一次', self.g_wxid, self.at_list, self.extra)
@@ -245,7 +243,6 @@ class VpCommandService:
 
     def vp_sky_lb(self, content):
         """sky礼包查询"""
-        redis = RedisClient()
         cache_key = 'LOCK_SKY_API_GY'
         if redis.get(cache_key, [self.s_wxid]) and not self.is_admin:
             return self.client.send_msg('每分钟只能查询礼包一次', self.g_wxid, self.at_list, self.extra)

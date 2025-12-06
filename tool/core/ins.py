@@ -14,6 +14,8 @@ from tool.db.cache.redis_client import RedisClient
 
 T = TypeVar('T')
 logger = Logger()
+redis = RedisClient()
+
 
 class Ins:
 
@@ -51,7 +53,7 @@ class Ins:
             def wrapper(self, *args, **kwargs):
                 # 使用 redis 分布式锁
                 lock_key = f'sync_lock_{self._lock_name}{lock_name}'.lower()
-                lock = RedisClient().client.lock(lock_key, timeout=35)
+                lock = redis.client.lock(lock_key, timeout=35)
                 with lock:
                     return func(self, *args, **kwargs)
             return wrapper
@@ -84,7 +86,6 @@ class Ins:
         """缓存装饰器"""
         def decorator(method):
             def wrapper(self, *args, **kwargs):
-                redis = RedisClient()
                 # 尝试从缓存获取
                 if cache := redis.get(cache_key, tuple(args)):
                     return cache

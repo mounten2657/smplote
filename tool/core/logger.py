@@ -51,7 +51,7 @@ class Logger:
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super().__new__(cls)
-            cls._instance.__init__()
+            # cls._instance.__init__()  # new 执行完后会自动调用 init
         return cls._instance
 
     def __init__(self):

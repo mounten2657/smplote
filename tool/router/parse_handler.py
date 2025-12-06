@@ -11,6 +11,7 @@ from utils.wechat.vpwechat.vp_client import VpClient
 from log_clean import clean_old_logs
 
 logger = Logger()
+redis = RedisClient()
 
 
 class ParseHandler:
@@ -28,7 +29,7 @@ class ParseHandler:
         signal.signal(signal.SIGINT, ParseHandler.shutdown_handler)
         # 程序开始前先释放锁
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS', 'LOCK_SQL_CNT', 'LOCK_WSS_CNT']
-        list(map(lambda key: RedisClient().delete(key, ['*']), key_list))
+        list(map(lambda key: redis.delete(key, ['*']), key_list))
         app_config = Config.app_config()
         # 延迟启动
         res['clean_log'] = clean_old_logs(30 if Config.is_prod() else 7)
@@ -48,7 +49,7 @@ class ParseHandler:
             # 等待资源释放完毕
             Time.sleep(3)
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS']
-        list(map(lambda key: RedisClient().delete(key, ['*']), key_list))
+        list(map(lambda key: redis.delete(key, ['*']), key_list))
         # 清理系统任务
         Sys.shutdown()
         print(f"PID[{pid}]: 清理完成，主程序结束")

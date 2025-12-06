@@ -6,6 +6,7 @@ from tool.db.cache.redis_client import RedisClient
 from tool.core import Logger, Sys, Ins, Attr, Str, Time
 
 logger = Logger()
+redis = RedisClient()
 
 
 @Ins.singleton
@@ -22,7 +23,6 @@ class VpClient(VpBaseFactory):
         def ws_start():
             Time.sleep(Str.randint(1, 10))
             # 确保只能有一个 socket
-            redis = RedisClient()
             cache_key = 'LOCK_WSS_CNT'
             if redis.get(cache_key):
                 return False
@@ -40,7 +40,7 @@ class VpClient(VpBaseFactory):
         """关闭 websocket"""
         def ws_close():
             logger.debug(f'websocket close - {is_all}', 'WS_CED')
-            RedisClient().delete('LOCK_WSS_CNT')
+            redis.delete('LOCK_WSS_CNT')
             if is_all:
                 VpSocketFactory('a1').close()
                 VpSocketFactory('a2').close()
@@ -78,7 +78,7 @@ class VpClient(VpBaseFactory):
     def refresh_user(self, wxid, g_wxid=''):
         """刷用户缓存"""
         key_list = ['VP_USER_INFO', 'VP_USER_FRD_INF', 'VP_USER_FRD_RAL', 'VP_USER_FRD_LAB']
-        list(map(lambda key: RedisClient().delete(key, [wxid]), key_list))
+        list(map(lambda key: redis.delete(key, [wxid]), key_list))
         return self.get_user(wxid, g_wxid)
 
     @Ins.cached('VP_USER_INFO')
@@ -136,7 +136,7 @@ class VpClient(VpBaseFactory):
     def refresh_room(self, g_wxid):
         """刷群聊缓存"""
         key_list = ['VP_ROOM_INFO', 'VP_ROOM_GRP_INF', 'VP_ROOM_GRP_USL', 'VP_ROOM_GRP_NTC']
-        list(map(lambda key: RedisClient().delete(key, [g_wxid]), key_list))
+        list(map(lambda key: redis.delete(key, [g_wxid]), key_list))
         return True
 
     @Ins.cached('VP_ROOM_INFO')
@@ -194,7 +194,6 @@ class VpClient(VpBaseFactory):
         :return: json
         {"user_name":"wxid_xxx","nick_name":"xxx","display_name":"xxx","big_head_img_url":"xxx","small_head_img_url":"xxx","chatroom_member_flag":1}
         """
-        redis = RedisClient()
         user_list = redis.get('VP_ROOM_GRP_USL', [g_wxid])
         if not user_list:
             return {}
@@ -205,7 +204,7 @@ class VpClient(VpBaseFactory):
 
     def get_room_grp_rmk(self, g_wxid):
         """获取群备注"""
-        return RedisClient().get('VP_ROOM_GRP_RMK', [g_wxid])
+        return redis.get('VP_ROOM_GRP_RMK', [g_wxid])
 
     def download_file(self, message):
         """下载文件"""

@@ -7,12 +7,13 @@ from tool.core import Attr, Time, Config, Logger
 from utils.wechat.vpwechat.vp_client import VpClient
 
 logger = Logger()
+redis = RedisClient()
+
 
 class VpRoomService:
 
     def _del_room_cache(self, g_wxid):
         """删除群聊缓存"""
-        redis = RedisClient()
         redis.delete('VP_ROOM_INFO', [g_wxid])
         redis.delete('VP_ROOM_GRP_INF', [g_wxid])
         redis.delete('VP_ROOM_GRP_USL', [g_wxid])
@@ -20,7 +21,6 @@ class VpRoomService:
 
     def _del_user_cache(self, wxid):
         """删除用户缓存"""
-        redis = RedisClient()
         redis.delete('VP_USER_INFO', [wxid])
         redis.delete('VP_USER_FRD_INF', [wxid])
         return True
@@ -50,7 +50,6 @@ class VpRoomService:
         if not room['g_wxid']:
             return 0
         rdb = WechatRoomModel()
-        redis = RedisClient()
         pid = info['id']
         g_wxid = info['g_wxid']
         app_key = info['app_key']
@@ -124,7 +123,6 @@ class VpRoomService:
         member_list = room.get('member_list', [])
         if not member_list:
             return False
-        redis = RedisClient()
         if not redis.set_nx('VP_ROOM_USR_UP_LOCK', 1, [g_wxid]):  # 更新限速
             return False
         client = VpClient(app_key)

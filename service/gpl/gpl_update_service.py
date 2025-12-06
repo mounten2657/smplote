@@ -8,6 +8,7 @@ from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.core import Ins, Logger, Str, Time, Attr, Error
 
 logger = Logger()
+redis = RedisClient()
 
 
 @Ins.singleton
@@ -85,7 +86,7 @@ class GPLUpdateService:
                 # 删除缓存
                 if is_force and 6 > int(Time.date('%H')):
                     key_list = ['GPL_STOCK_INFO_XQ', 'GPL_STOCK_INFO_EM']
-                    list(map(lambda key: RedisClient().delete(key, [code]), key_list))
+                    list(map(lambda key: redis.delete(key, [code]), key_list))
                 stock = self.formatter.get_stock_info(code)
                 if not stock:
                     res['ul'].append(code)

@@ -5,6 +5,7 @@ from tool.db.cache.redis_client import RedisClient
 from tool.core import Logger, Error, Time, Sys, Str
 
 logger = Logger()
+redis = RedisClient()
 
 
 class VpCallbackHandler(VpBaseFactory):
@@ -12,7 +13,6 @@ class VpCallbackHandler(VpBaseFactory):
     def on_error(self, data):
         """ws 连接错误处理"""
         Time.sleep(Str.randint(1, 5))
-        redis = RedisClient()
         cache_key = 'LOCK_WS_ON_ERR'
         if redis.get(cache_key) or not redis.set_nx(cache_key, 1):
             return False

@@ -15,6 +15,7 @@ from tool.db.cache.redis_client import RedisClient
 from tool.core import Logger, Time, Error, Attr, Config, Str, Sys
 
 logger = Logger()
+redis = RedisClient()
 
 
 class VpCallbackService:
@@ -249,7 +250,6 @@ class VpCallbackService:
         pid = data['pid']
         qdb = WechatQueueModel()
         mdb = WechatMsgModel()
-        rdc =  RedisClient()
         cache_key = 'VP_MSG_INS_LOCK'
         try:
             res = {}
@@ -271,7 +271,7 @@ class VpCallbackService:
                 return False
             # 还是得加锁，因为有重试机制，会导致消息重复推送
             Time.sleep(Str.randint(1, 10) / 10)
-            if not rdc.set_nx(cache_key, 1, [msg_id]):
+            if not redis.set_nx(cache_key, 1, [msg_id]):
                 return False
             # 先判断消息有没有入库 - 已入库就不继续执行了
             m_info = mdb.get_msg_info(msg_id)
@@ -347,7 +347,7 @@ class VpCallbackService:
             # 入库成功 - 更新队列表的 retry_count
             res['upd_cnt_2'] = qdb.set_retry_count(pid, 2)
             # 删除入库状态锁
-            rdc.delete(cache_key, [msg_id])
+            redis.delete(cache_key, [msg_id])
             return res
         except Exception as e:
             err = Error.handle_exception_info(e)
@@ -373,7 +373,7 @@ class VpCallbackService:
         if g_wxid:
             Time.sleep(Str.randint(1, 10) / 10)
             # 群聊更新限速 - 六小时检查更新一次 - 不能依赖这个进行全部的用户更新 - 此处基本等效于初始化
-            if not RedisClient().set_nx('VP_ROOM_USR_LOCK', 1, [g_wxid]):
+            if not redis.set_nx('VP_ROOM_USR_LOCK', 1, [g_wxid]):
                 return False
         for u in user_list:
             wxid = u['wxid']

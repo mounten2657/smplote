@@ -6,6 +6,7 @@ from typing import Union, List, Dict, Optional, Any
 from dbutils.persistent_db import PersistentDB
 from tool.core import Logger, Error, Config, Attr, Time, Str
 
+logger = Logger()
 _mysql_pool = None
 _pool_lock = Semaphore()
 
@@ -87,7 +88,7 @@ class MysqlBaseModel:
     _pool = None
 
     def __init__(self):
-        self.logger = Logger()
+        self.logger = logger
         self.prefix = self._db_config['prefix']
         self._table = self.prefix + self._table if self._table else None
         self._state = QueryState(self._table)
@@ -101,7 +102,6 @@ class MysqlBaseModel:
         if _mysql_pool is None:
             with _pool_lock:
                 if _mysql_pool is None:
-                    logger = Logger()
                     logger.warning("----Initializing gevent-compatible MySQL pool----", 'DB_CONN', 'mysql')
                     _mysql_pool = PersistentDB(
                         creator=lambda: mysql.connector.connect(

@@ -3,6 +3,8 @@ from utils.wechat.qywechat.factory.qy_client_factory import QyClientFactory
 from tool.db.cache.redis_client import RedisClient
 from tool.core import Que, Ins, Time, Str
 
+redis = RedisClient()
+
 
 @Ins.singleton
 class QyMsgSender(QyClientFactory, Que):
@@ -18,7 +20,7 @@ class QyMsgSender(QyClientFactory, Que):
         Time.sleep(Str.randint(1, 20) / 10)
         md5 = Str.md5(f"{str(content)}{str(msg_type)}{str(app_key)}")
         # 短时间内重复的消息不要重复发
-        if not RedisClient().set_nx('LOCK_QY_MSG', 1, [md5]):
+        if not redis.set_nx('LOCK_QY_MSG', 1, [md5]):
             return False
         return self.que_submit(content=content, msg_type=msg_type, app_key=app_key)
 

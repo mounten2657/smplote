@@ -1,6 +1,8 @@
 from tool.core import Http, Attr, Str, Ins
 from tool.db.cache.redis_client import RedisClient
 
+redis = RedisClient()
+
 
 class CacheHttpClient:
 
@@ -26,7 +28,6 @@ class CacheHttpClient:
         :param params:  请求参数
         :return:
         """
-        redis = RedisClient()
         cache_key = CacheHttpClient.REQ_CACHE_KEY
         u_key = CacheHttpClient.get_req_key(url, params)
         return redis.get(cache_key, [u_key])
@@ -43,7 +44,6 @@ class CacheHttpClient:
         :return: 成功缓存的个数
         """
         r_list = Attr.chunk_list(r_list, 100)  # 对列表进行分块
-        redis = RedisClient()
         cache_key = CacheHttpClient.REQ_CACHE_KEY
 
         # 分块处理方法

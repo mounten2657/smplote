@@ -5,6 +5,9 @@ from tool.db.cache.redis_keys import RedisKeys
 from tool.core.config import Config
 from tool.core.attr import Attr
 from tool.core.str import Str
+from tool.core.logger import Logger
+
+logger = Logger()
 
 
 class RedisClient:
@@ -24,14 +27,16 @@ class RedisClient:
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
             cls._instance = super().__new__(cls)
-            cls._instance.__init__()
+            # cls._instance.__init__()  # new 执行完后会自动调用 init
         return cls._instance
 
     def __init__(self):
         """
         初始化连接池（通过装饰器保证单例）
         """
-        self._init_pool()
+        if self._pool is None:
+            logger.warning("----Initializing gevent-compatible Redis pool----", 'RD_CONN')
+            self._init_pool()
 
     def _init_pool(self):
         """初始化连接池"""

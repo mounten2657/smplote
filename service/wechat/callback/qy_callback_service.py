@@ -5,6 +5,7 @@ from utils.wechat.qywechat.callback.qy_callback_handler import QyCallbackHandler
 from model.callback.callback_queue_model import CallbackQueueModel
 
 logger = Logger()
+redis = RedisClient()
 
 
 class QyCallbackService(Que):
@@ -15,7 +16,7 @@ class QyCallbackService(Que):
         # 加锁去重
         Time.sleep(Str.randint(1, 20) / 10)
         md5 = Str.md5(str(params))
-        if not RedisClient().set_nx('LOCK_QY_CAL', 1, [md5]):
+        if not redis.set_nx('LOCK_QY_CAL', 1, [md5]):
             return 'error'
         logger.info(params, 'QY_CALL_PAR')
         db = CallbackQueueModel()
