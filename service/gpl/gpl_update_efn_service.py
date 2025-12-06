@@ -240,14 +240,16 @@ class GPLUpdateEfnService:
         biz_code = 'EM_FN_NT'
         par_list = []
         # 先统一整理数据，之后再作请求动作
-        for code in code_list:
-            symbol = Str.add_stock_prefix(code)
-            percent = self.formatter.get_percent(code, code_list, code_list) + f" - {len(par_list)}"
+        c_list = Attr.chunk_list(code_list, 50)  # 50个一组集中查询
+        for cl in c_list:
+            symbol_list = [Str.add_stock_prefix(c) for c in cl]
+            symbol = symbol_list[0]
+            percent = self.formatter.get_percent(cl[0], cl, code_list) + f" - {len(par_list)}"
             logger.info(f"获取财务公告文本数据缓存参数<{symbol}>{percent}", 'C_FNN_WAR')
-            s_list = jdb.get_anr_code_list(symbol)  # 根据股票代码获取其下所有报告文件的代码
+            s_list = jdb.get_anr_code_list(symbol_list)  # 根据股票代码获取其下所有报告文件的代码
             if not s_list:
                 continue
-            t_list = tdb.get_text_list([symbol], biz_code)  # 获取所有已保存的报告文件列表
+            t_list = tdb.get_text_list(symbol_list, biz_code, ['id', 'e_key'])  # 获取所有已保存的报告文件列表
             t_list = [t['e_key'] for t in t_list if t['e_key']]
             a_list = [s for s in s_list if s not in t_list]  # 只保留未获取过的数据
             if not a_list:
@@ -274,8 +276,6 @@ class GPLUpdateEfnService:
                         for p in range(1, pn):
                             par_list.append(par | {"page_index": p + 1})
         # 已经获取到了所有参数，现在分为1000个一组，批量进行请求
-        if not par_list:
-            return 0
         par_len = len(par_list)
         success = {"hpk": "data.notice_content"}  # 有具体内容才算成功
         par_list = Attr.chunk_list(par_list, 1000)

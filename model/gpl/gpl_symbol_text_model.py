@@ -41,11 +41,12 @@ class GPLSymbolTextModel(MysqlBaseModel):
         """更新股票文本信息"""
         return self.update({'id': pid}, data)
 
-    def get_text_list(self, symbol_list, biz_code):
+    def get_text_list(self, symbol_list, biz_code, field_list=None):
         """获取股票文本信息列表"""
+        field_list = field_list if field_list else []
         if len(symbol_list) == 1:
-            return self.where({'symbol': symbol_list[0], 'biz_code': biz_code}).get()
-        return self.where_in('symbol', symbol_list).where({'biz_code': biz_code}).get()
+            return self.where({'symbol': symbol_list[0], 'biz_code': biz_code}).select(field_list).get()
+        return self.where_in('symbol', symbol_list).where({'biz_code': biz_code}).select(field_list).get()
 
     def get_text(self, symbol, biz_code, e_key):
         """获取股票文本信息"""

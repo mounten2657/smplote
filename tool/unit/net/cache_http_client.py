@@ -43,6 +43,8 @@ class CacheHttpClient:
         :param success: 成功标志 - {"key": "code", "val": "200", "hpk": "data.0.name"}
         :return: 成功缓存的个数
         """
+        if not len(r_list):
+            return 0
         r_list = Attr.chunk_list(r_list, 100)  # 对列表进行分块
         cache_key = CacheHttpClient.REQ_CACHE_KEY
 
