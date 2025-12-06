@@ -43,6 +43,8 @@ class GPLSymbolTextModel(MysqlBaseModel):
 
     def get_text_list(self, symbol_list, biz_code):
         """获取股票文本信息列表"""
+        if len(symbol_list) == 1:
+            return self.where({'symbol': symbol_list[0], 'biz_code': biz_code}).get()
         return self.where_in('symbol', symbol_list).where({'biz_code': biz_code}).get()
 
     def get_text(self, symbol, biz_code, e_key):

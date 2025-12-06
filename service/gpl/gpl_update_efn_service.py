@@ -243,7 +243,7 @@ class GPLUpdateEfnService:
         for code in code_list:
             symbol = Str.add_stock_prefix(code)
             percent = self.formatter.get_percent(code, code_list, code_list) + f" - {len(par_list)}"
-            logger.warning(f"获取财务公告文本数据缓存参数<{symbol}>{percent}", 'C_FNN_WAR')
+            logger.info(f"获取财务公告文本数据缓存参数<{symbol}>{percent}", 'C_FNN_WAR')
             s_list = jdb.get_anr_code_list(symbol)  # 根据股票代码获取其下所有报告文件的代码
             if not s_list:
                 continue
