@@ -107,6 +107,7 @@ class GPLSeasonModel(MysqlBaseModel):
         if not d_list:
             return []
         ret = []
+        # 前期的代码缺陷，存储的数据中有些是字典，后期都是列表，故此需要兼容
         for dl in d_list:
             if isinstance(dl['e_val'], list):
                 for d in dl['e_val']:

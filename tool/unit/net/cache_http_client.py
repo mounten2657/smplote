@@ -1,7 +1,8 @@
-from tool.core import Http, Attr, Str, Ins
+from tool.core import Http, Attr, Str, Ins, Logger, Error
 from tool.db.cache.redis_client import RedisClient
 
 redis = RedisClient()
+logger = Logger()
 
 
 class CacheHttpClient:
@@ -76,7 +77,14 @@ class CacheHttpClient:
                 u_key = CacheHttpClient.get_req_key(p['url'], p['params'])
                 if CacheHttpClient.get_req_cache(p['url'], p['params']):  # 如果已经存在了就没必要继续请求了
                     return False
-                res = Http.send_request(p['method'], p['url'], p['params'], p['headers'], p['proxy'])
+                try:
+                    res = Http.send_request(p['method'], p['url'], p['params'], p['headers'], p['proxy'])
+                    # res = Http.send_request(p['method'], p['url'], p['params'], p['headers'])
+                    msg = res
+                except Exception as e:
+                    res = {}
+                    msg = Error.handle_exception_info(e)
+                logger.info(f"代理请求 - {p['url']} - {p['params']} - {p['proxy']} - {str(msg)[:1024]}", 'C_HTTP_INF')
                 if not res:
                     is_cache = False
                 if success:
@@ -93,7 +101,7 @@ class CacheHttpClient:
                     redis.set(cache_key, ret, [u_key])  # 缓存请求结果
                 return is_cache
 
-            res = _cache_req(proxy_list)  # 批量执行 - {md5xx1": False, "md5xx2": True}
-            return sum(int(v) for v in res.values())  # 返回成功个数
+            rel = _cache_req(proxy_list)  # 批量执行 - {md5xx1": False, "md5xx2": True}
+            return sum(int(v) for v in rel.values())  # 返回成功个数
 
         return sum([_chunk_request(r) for r in r_list])  # 返回成功缓存的个数

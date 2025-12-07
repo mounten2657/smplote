@@ -245,7 +245,7 @@ class GPLUpdateEfnService:
             symbol_list = [Str.add_stock_prefix(c) for c in cl]
             symbol = symbol_list[0]
             percent = self.formatter.get_percent(cl[0], cl, code_list) + f" - {len(par_list)}"
-            logger.info(f"获取财务公告文本数据缓存参数<{symbol}>{percent}", 'C_FNN_WAR')
+            logger.info(f"获取财务公告文本数据缓存参数<{symbol}>{percent}", 'P_FNN_INF')
             s_list = jdb.get_anr_code_list(symbol_list)  # 根据股票代码获取其下所有报告文件的代码
             if not s_list:
                 continue
@@ -268,7 +268,7 @@ class GPLUpdateEfnService:
                         par_list.append(par)
                     else:
                         pn = Attr.get_by_point(a_cache, 'data.data.page_size', 0)
-                        if not pn:  # 这种的应该是数据错误了，记个错误日志
+                        if not pn:  # 这种的是东财没有翻译成功的，记个错误日志
                             logger.error(f"获取财务公告文本数据错误<{symbol}>{percent} - {pn} - {a_cache}", 'C_FNN_ERR')
                             continue
                         if 1== pn:  # 排除只有一页的数据，剩下的就都是多页的数据了
@@ -280,7 +280,9 @@ class GPLUpdateEfnService:
         success = {"hpk": "data.notice_content"}  # 有具体内容才算成功
         par_list = Attr.chunk_list(par_list, 1000)
         for pl in par_list:
-            CacheHttpClient.batch_request(pl, success)
+            art_code = pl[0]['params']['art_code']
+            n = CacheHttpClient.batch_request(pl, success)
+            logger.info(f"批量缓存财务公告文本数据结果<{art_code}> - [{len(pl)}/{n}]", 'C_FNN_INF')
             Time.sleep(1)  # 休眠一秒
         return par_len  # 返回数据总长度
 
