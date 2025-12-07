@@ -79,12 +79,10 @@ class CacheHttpClient:
                     return False
                 try:
                     res = Http.send_request(p['method'], p['url'], p['params'], p['headers'], p['proxy'])
-                    # res = Http.send_request(p['method'], p['url'], p['params'], p['headers'])
-                    msg = res
+                    logger.info(f"代理请求结果 - {p['url']} - {p['params']} - {p['proxy']} - {str(res)[:1024]}", 'C_HTTP_INF')
                 except Exception as e:
                     res = {}
-                    msg = Error.handle_exception_info(e)
-                logger.info(f"代理请求 - {p['url']} - {p['params']} - {p['proxy']} - {str(msg)[:1024]}", 'C_HTTP_INF')
+                    logger.error(f"代理请求错误 - {p['url']} - {p['params']} - {p['proxy']} - {Error.handle_exception_info(e)}", 'C_HTTP_ERR')
                 if not res:
                     is_cache = False
                 if success:
