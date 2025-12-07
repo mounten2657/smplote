@@ -449,9 +449,9 @@ class EmDataSubSource(EmDataSource):
             # "art_code": art_code,
             # "attach_url": res.get('attach_url', ''),
             # "post_time": res.get('eitime', ''),
-            "page_size": int(res.get('page_size', 1)),  # # page_size > 1 说明有多页数据 - 外面处理
+            "page_size": int(res.get('page_size', 0)),  # 0表示没有翻译成功，内容一定是空; page_size > 1 说明有多页数据 - 外面处理
             "title": res.get('notice_title', ''),
-            "content": res.get('notice_content', ''),
+            "content": res.get('notice_content', ''),  # 一起以这个值为准，内容为空就是失败
         }
         return self._ret(ret, pid, start_time)
 
