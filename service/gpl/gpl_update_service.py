@@ -222,3 +222,8 @@ class GPLUpdateService:
 
         return _up_day_exec(code_list)
 
+    @staticmethod
+    def clear_api_log():
+        """清理api日志 - 保留一百万条记录"""
+        return GplApiLogModel().clear_history(1000000)
+
