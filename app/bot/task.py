@@ -60,7 +60,7 @@ class Task(BaseAppVp):
         """清理历史日志 - 每天上午的06点06分"""
         res = {}
         res['vp'] = self.vp.clear_api_log()
-        res['gpl'] = self.gpl.clear_api_log()
+        res['gpl'] = Sys.delayed_task(self.gpl.clear_api_log)
         return self.success(res)
 
     def rf_proxy(self):
