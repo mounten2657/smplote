@@ -53,12 +53,13 @@ class GPLUpdateExtService:
         s_list = {d["symbol"]: d for d in sdb.get_symbol_list(symbol_list)}
 
         # 计算通用时间参数
+        debug = False  # 本地调试模式 - 请确保线上一定是 False
         current_date = current_date if current_date else Time.date('%Y-%m-%d')
         current_day = int(current_date[-2:])
-        is_all = int(is_force > 90)
+        is_all = int(is_force > 900 if debug else 90)
         n = 103 if is_all else 3
         td = self._INIT_ET if is_all else current_date
-        sd = self._INIT_ST if is_all else Time.dnd(td, -30)
+        sd = self._INIT_ST if is_all else Time.dnd(td, -120 if debug else 30)
         day_list = list(reversed([Time.recent_season_day(nn) for nn in range(1, n + 1)]))
         cdl = [Time.date('%Y-%m-01'), Time.date('%Y-%m-10'), Time.date('%Y-%m-20')]
         nrd_list = range(1, 32)
@@ -92,6 +93,7 @@ class GPLUpdateExtService:
         # 批量查询集成数据
         season_data = {}
         for key, (force_check, rd_list, biz_code, query_param) in season_data_config.items():
+            rd_list = list(range(32)) if debug else rd_list
             if force_check(is_force) and current_day in rd_list:
                 if key == "zyb":
                     season_data[key] = Attr.group_item_by_key(tdb.get_text_list(query_param, biz_code), "symbol")

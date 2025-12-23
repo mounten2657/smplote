@@ -127,7 +127,8 @@ class Time:
                 m = '09'
             else:
                 m = '12'
-                y -= 1
+                if i > 1:
+                    y -= 1
         n_date = f"{y}-{m}"
         return Time.month_last_day(n_date, date_format)
 

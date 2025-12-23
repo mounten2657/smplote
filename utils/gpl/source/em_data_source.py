@@ -336,6 +336,7 @@ class EmDataSource:
         data, pid = self._get(url, params, 'EM_GD_TOP10_FREE', {'he': f'{prefix}{stock_code}', 'hv': sd})
         res = Attr.get_by_point(data, 'sdltgd', [])
         ret = [{
+            'date': d['END_DATE'][:10],
             'rank': d['HOLDER_RANK'],  # 排名
             'gd_name': d['HOLDER_NAME'],  # 股东名
             'gd_type': d['HOLDER_TYPE'],  # 股东类型： 个人 | 投资公司 | 机构
