@@ -12,8 +12,8 @@ class GPLChangeLogModel(MysqlBaseModel):
         - cl_key - varchar(32) - 变更字段
         - cl_time - datetime - 变更时间
         - cl_md5 - varchar(32) - 变更md5
-        - cl_bef - text - 变更前的值
-        - cl_aft - text - 变更后的值
+        - cl_bef - longtext - 变更前的值
+        - cl_aft - longtext - 变更后的值
         - create_at - datetime - 记录创建时间
         - update_at - datetime - 记录更新时间
     """
