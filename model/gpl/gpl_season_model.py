@@ -40,15 +40,20 @@ class GPLSeasonModel(MysqlBaseModel):
         res = 0
         insert_list = []
         for date, d in data_list.items():
-            insert_data = {
+            i_where = {
                 "symbol": symbol,
                 "season_date": date,
                 "biz_code": biz_code,
                 "e_key": biz_code.lower(),
+            }
+            insert_data = i_where | {
                 "e_des": des,
                 "e_val": d,
             }
-            insert_list.append(insert_data)
+            # 再次查询是否已经入库 - 慢点就慢点吧，先确保数据的准确性
+            exist = self.where(i_where).first()
+            if not exist:
+                insert_list.append(insert_data)
             if len(insert_list) >= 50:
                 res = self.insert(insert_list)
                 insert_list = []
