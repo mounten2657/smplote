@@ -79,6 +79,9 @@ class GPLUpdateEdvService:
 
     def up_dvp_em(self, symbol, dvp_list, td, ed):
         """更新股票分红股利支付率"""
+        # 只有每年的12月31才有数据，一二月份跑一下就行了
+        if int(ed[5:7]) > 2:
+            return {}
         ret = {}
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
