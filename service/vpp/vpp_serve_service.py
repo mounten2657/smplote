@@ -40,9 +40,9 @@ class VppServeService:
             file_dir = file_dir if file_dir else f"{Time.date('%Y%m')}/"
             fp = f"/website/{biz_code.lower().replace('vp_', '')}/{file_dir}{file_name}"
         fk = File.enc_dir(fp)
-        logger.warning(f'下载文件参数 - {(fty, key, url, fp, fk, 0)}', 'FILE_DOW_STA')
+        logger.info(f'下载文件参数 - {(fty, key, url, fp, fk, 0)}', 'FILE_DOW_STA')
         res = VppServeClient().vp_download_file(fty, key, url, fp, fk, 0)
-        logger.warning(f'下载文件结果 - {res}', 'FILE_DOW_END')
+        logger.info(f'下载文件结果 - {res}', 'FILE_DOW_END')
         data = res.get('data', {})
         data.update({
             "save_path": fp,
