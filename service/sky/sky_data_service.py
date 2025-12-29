@@ -101,10 +101,13 @@ class SkyDataService:
                 url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
             else:
                 # bing 每日壁纸
-                fn = f"sky_{sky_type}_by_{Time.date('%Y%m%d')}.png"
                 url = f"https://api.nxvav.cn/api/bing/?encode=json"
-                res = Http.send_request('GET', url)
-                url = res.get('url') if isinstance(res, dict) and res.get('url') else ''
+                res = Http.send_request('GET', url)  # 返回的结构可能随时变更，注意变通
+                # {"code":200,"message":"获取成功","data":{"title":"一座比城市更悠久的教堂","description":"阿尼遗址的圣格雷戈里教堂，卡尔斯省，土耳其","cover":"https://bing.com/th?id=OHR.AniTurkey_ZH-CN5838141955_1920x1080.jpg","cover_4k":"https://bing.com/th?id=OHR.AniTurkey_ZH-CN5838141955_UHD.jpg","copyright":"© Kenan Talas/Getty Images","update_date":"2025-12-29 09:58:54","update_date_at":1766973534}}
+                # 1k 用 cover  |  4k 用 cover_4k
+                url = Attr.get_by_point(res, 'data.cover_4k', '')
+                ext = url.split('.')[-1] if '.' in url else 'png'
+                fn = f"sky_{sky_type}_by_{Time.date('%Y%m%d')}.{ext}"
             # 用这个兜底吧
             if not url:
                 # 动漫壁纸
