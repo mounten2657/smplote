@@ -3,6 +3,8 @@ import json
 import base64
 from pathlib import Path
 from typing import Union, Any, Optional
+from spire.pdf.common import *
+from spire.pdf import *
 from tool.core.attr import Attr
 from tool.core.dir import Dir
 from tool.core.str import Str
@@ -130,6 +132,32 @@ class File:
         if not file_path.exists():
             return 0
         return int(file_path.stat().st_mtime)
+
+    @staticmethod
+    def get_pdf_txt(f):
+        """获取 pdf 文件中的文字"""
+        text = ''
+        if not File.exists(f):
+            return ''
+        # 创建 pdf 对象
+        pdf = PdfDocument()
+        pdf.LoadFromFile(f)
+        # 获取 pdf 文件的总页数
+        page_count = pdf.Pages.Count
+        # 创建 PdfTextExtractOptions 对象
+        options = PdfTextExtractOptions()
+        # 启用提取全部文本（包含空格）
+        options.IsExtractAllText = True
+        for page_num in range(page_count):
+            extractor = PdfTextExtractor(pdf.Pages.get_Item(page_num))
+            text += extractor.ExtractText(options)
+        # 关闭对象
+        pdf.Close()
+        # 去除水印
+        text = text.replace('Evaluation Warning : The document was created with Spire.PDF for Python.', "")
+        # 减少无意义的空行
+        text = Str.replace_multiple(text, ["\r\r\r\r", "\n\n\n\n", "\r\n\r\n", "\n\r\n\r"], ["\r\n", "\r\n", "\r\n", "\r\n"])
+        return text
 
     @staticmethod
     def get_base64(file_path: str) -> str:
