@@ -3,7 +3,7 @@ from service.vpp.vpp_serve_service import VppServeService
 from model.gpl.gpl_season_model import GPLSeasonModel
 from model.gpl.gpl_file_model import GplFileModel
 from model.gpl.gpl_symbol_text_model import GPLSymbolTextModel
-from tool.core import Ins, Logger, Str, Time, Attr
+from tool.core import Ins, Logger, Str, Time, Attr, File, Dir
 from tool.unit.net.cache_http_client import CacheHttpClient
 
 logger = Logger()
@@ -167,7 +167,7 @@ class GPLUpdateEfnService:
                 ret['uff'][d['id']] = jdb.update_season(d['id'], {"e_val": d['e_val']})
         return ret
 
-    def save_fnn_em_txt(self, symbol, fnn_list, td, sd):
+    def save_fnn_em_txt(self, symbol, fnn_list, td, sd, is_ocr=1):
         """
         保存股票财务公告文本
           - 由于历史文件加起来占的空间太大，所以以文本方式入库代替
@@ -195,24 +195,34 @@ class GPLUpdateEfnService:
                 if dd.get('tid') or day < self.formatter.INIT_ST:
                     logger.warning(f"跳过财务公告文件数据<{symbol}><{day}><{dd['tid']}>", 'UP_SNF_WAR')
                     continue
-                # 保存文本
                 art_code = Attr.get(dd, 'art_code', '')
-                fn_txt = self.formatter.em.get_fn_notice_txt(symbol, art_code)
-                ps = fn_txt['page_size']
-                content = fn_txt['content']
-                # 有分页 - 需整合后再入库
-                if ps > 1:
-                    for ii in range(1, ps):
-                        ft = self.formatter.em.get_fn_notice_txt(symbol, art_code, ii + 1)
-                        if ft.get('content'):
-                            content += ft['content']
+                title = Attr.get(dd, 'title', '')
+                file_path = Attr.get(dd, 'file_path', '')
+                # 这里改为直接识别下载好的pdf文件，而非从网络接口获取（一是不全，二是占带宽）
+                if is_ocr:
+                    #本地识别获取文本
+                    if not file_path:
+                        content = ''
+                    else:
+                        content = File.get_pdf_txt(Dir.wechat_dir(f'{file_path[1:]}'))
+                else:
+                    # 网络请求获取文本
+                    fn_txt = self.formatter.em.get_fn_notice_txt(symbol, art_code)
+                    ps = fn_txt['page_size']
+                    content = fn_txt['content']
+                    # 有分页 - 需整合后再入库
+                    if ps > 1:
+                        for ii in range(1, ps):
+                            ft = self.formatter.em.get_fn_notice_txt(symbol, art_code, ii + 1)
+                            if ft.get('content'):
+                                content += ft['content']
                 # 文本数据入库
-                if fn_txt.get('content'):
+                if content:
                     tid = tdb.add_text({
                         "symbol": symbol,
                         "biz_code": biz_code,
                         "e_key": art_code,
-                        "e_des": fn_txt['title'],
+                        "e_des": title,
                         "e_val": str(content).strip(),
                     }, True)
                     if tid:
