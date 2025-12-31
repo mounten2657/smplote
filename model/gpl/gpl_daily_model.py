@@ -54,6 +54,10 @@ class GPLDailyModel(MysqlBaseModel):
         for data in data_list:
             if not data.get('f0_open', 0) and not data.get('f0_close', 0):
                 continue
+            # 再次检查是否已经入库 - 慢点无所谓，关键不要出错
+            exist = self.where({"symbol": data['symbol'], "trade_date": data['trade_date']}).first()
+            if exist:
+                continue
             insert_list.append({
                 "symbol": data.get('symbol', ''),
                 "trade_date": data.get('trade_date', ''),

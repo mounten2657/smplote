@@ -75,7 +75,7 @@ class EmDataSource:
             try:
                 # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
                 rand = (pid % 10) if pid else rand  # 因为只有本地才能使用代理，所以这里大大增大本地请求的比例
-                if not Config.is_prod():  # 机器坏了，先指定固定的
+                if not Config.is_prod() or 1:  # 机器坏了，先指定固定的
                     rand = random.choice([0, 3, 5, 8] + [2, 7])
                 params['nat_int'] = rand
                 self.headers['Referer'] = Http.get_request_base_url(url)
