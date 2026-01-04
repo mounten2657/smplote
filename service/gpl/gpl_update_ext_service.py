@@ -53,7 +53,7 @@ class GPLUpdateExtService:
         s_list = {d["symbol"]: d for d in sdb.get_symbol_list(symbol_list)}
 
         # 计算通用时间参数
-        debug = False  # 本地调试模式 - 请确保线上一定是 False
+        debug = False if current_date != Time.date('%Y-%m-%d') else True  # 调试模式 - 线上默认今日日期一定是 False
         current_date = current_date if current_date else Time.date('%Y-%m-%d')
         current_day = int(current_date[-2:])
         is_all = int(is_force > (900 if debug else 90))
