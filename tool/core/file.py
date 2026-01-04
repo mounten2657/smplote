@@ -156,7 +156,7 @@ class File:
         # 去除水印
         text = text.replace('Evaluation Warning : The document was created with Spire.PDF for Python.', "")
         # 减少无意义的空行
-        text = Str.replace_multiple(text, ["\r\r\r\r", "\n\n\n\n", "\r\n\r\n", "\n\r\n\r"], ["\r\n", "\r\n", "\r\n", "\r\n"])
+        text = Str.replace_multiple(text, ["\r\r", "\n\n", "\r\n\r\n", "\n\r\n\r"], ["\r\n", "\r\n", "\r\n", "\r\n"])
         return text
 
     @staticmethod
