@@ -222,8 +222,22 @@ class GPLUpdateService:
 
         return _up_day_exec(code_list)
 
-    @staticmethod
-    def clear_api_log():
-        """清理api日志 - 保留一百万条记录"""
-        return GplApiLogModel().clear_history(1000000)
+    def clear_api_log(self):
+        """清理api日志 - 保留10万条记录"""
+        if True:
+            return GplApiLogModel().clear_history() # 先用这个方式看看是否会超时，不行再用下面的方法
+        r = 0
+        save_count = 1000000
+        ldb = GplApiLogModel()
+        code_list = self.formatter.get_stock_code_all()
+        count = 14097871 #ldb.get_count()
+        mid = ldb.get_max_id()
+        if mid <= save_count or count <= save_count or not code_list:
+            return r
+        for i, code in enumerate(code_list):
+            symbol = Str.add_stock_prefix(code)
+            percent = self.formatter.get_percent(code, code_list, code_list)
+            r += ldb.delete({'id': {'opt': '<=', 'val': mid - save_count}, 'h_event': symbol})
+            logger.info(f"删除接口日志数据[{i}/{r}]<{symbol}>{percent}", 'DEL_API_LOG')
+        return r
 

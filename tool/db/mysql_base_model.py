@@ -505,19 +505,27 @@ class MysqlBaseModel:
         """根据主键获取第一条记录"""
         return self.where({"id": pid}).first()
 
-    def get_count(self, where):
+    def get_count(self, where=None):
         """获取总条数"""
+        if not where:
+            ret = self.query_sql(f'SELECT count(1) AS count FROM {self._table}')
+            return ret[0]['count'] if ret else 0
         info = (self.where(where)
                 .select(['count(1) as count'])
                 .first())
         return info['count'] if info else 0
 
+    def get_max_id(self):
+        """获取最大的id"""
+        ret = self.query_sql(f'SELECT max(id) AS mid FROM {self._table}')
+        mid = Attr.get_by_point(ret, '0.mid')
+        return mid or 0
+
     def clear_history(self, save_count=100000):
         """清除历史数据"""
-        ret = self.query_sql(f'SELECT max(id) AS mid FROM {self._table}')
-        if not ret:
+        mid = self.get_max_id()
+        if not mid:
             return False
-        mid = int(ret[0]['mid'])
         if not mid or mid <= save_count:
             return 0
         return self.delete({'id': {'opt': '<=', 'val': mid - save_count}})
