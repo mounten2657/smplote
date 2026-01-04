@@ -156,7 +156,7 @@ class File:
         # 去除水印
         text = text.replace('Evaluation Warning : The document was created with Spire.PDF for Python.', "")
         # 减少无意义的空行
-        text = Str.remove_mult_lines(text)
+        text = Str.remove_mult_lines(text, 5)
         return text
 
     @staticmethod

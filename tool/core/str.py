@@ -302,10 +302,11 @@ class Str:
         return pattern.sub(lambda x: replacements[x.group()], text)
 
     @staticmethod
-    def remove_mult_lines(text):
+    def remove_mult_lines(text, deep=3):
         """删除多余的空行"""
         text = text.replace('\r', '\n')
-        return Str.replace_multiple(text, ["\n\n\n\n\n", "\n\n\n\n", "\n\n\n", "\n\n"], ["\r\n", "\r\n", "\r\n", "\r\n"])
+        r1, r2 = ([("\n" * (i + 2)) for i in range(deep - 1)][::-1], ["\r\n"] * (deep - 1))
+        return Str.replace_multiple(text, r1, r2)
 
     @staticmethod
     def sub_str_len(s, max_len=65535, position=0, encoding='utf-8'):
