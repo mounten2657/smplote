@@ -78,8 +78,8 @@ class File:
                 content = json.dumps(content, ensure_ascii=False, indent=4)
             with open(save_path, mode, encoding=encoding) as f:
                 f.write(str(content))
-                if new_line and not content.endswith('\n'):  # 确保内容以换行结尾
-                    f.write('\n')
+                if new_line and not content.endswith("\n"):  # 确保内容以换行结尾
+                    f.write("\r\n")
             return True
         except Exception as e:
             return False
@@ -156,7 +156,7 @@ class File:
         # 去除水印
         text = text.replace('Evaluation Warning : The document was created with Spire.PDF for Python.', "")
         # 减少无意义的空行
-        text = Str.replace_multiple(text, ["\r\r", "\n\n", "\r\n\r\n", "\n\r\n\r"], ["\r\n", "\r\n", "\r\n", "\r\n"])
+        text = Str.remove_mult_lines(text)
         return text
 
     @staticmethod
