@@ -56,10 +56,10 @@ class GPLUpdateExtService:
         debug = False  # 本地调试模式 - 请确保线上一定是 False
         current_date = current_date if current_date else Time.date('%Y-%m-%d')
         current_day = int(current_date[-2:])
-        is_all = int(is_force > 900 if debug else 90)
+        is_all = int(is_force > (900 if debug else 90))
         n = 103 if is_all else 3
         td = self._INIT_ET if is_all else current_date
-        sd = self._INIT_ST if is_all else Time.dnd(td, - 120 if debug else 30)
+        sd = self._INIT_ST if is_all else Time.dnd(td, 0 - (120 if debug else 30))
         day_list = list(reversed([Time.recent_season_day(nn) for nn in range(1, n + 1)]))
         cdl = [Time.date('%Y-%m-01'), Time.date('%Y-%m-10'), Time.date('%Y-%m-20')]
         nrd_list = range(1, 32)
