@@ -1,7 +1,7 @@
 import random
 from service.vpp.vpp_serve_service import VppServeService
 from model.wechat.wechat_file_model import WechatFileModel
-from tool.core import Time, Http, Env, Attr
+from tool.core import Time, Http, Env, Attr, Str
 
 
 class SkyDataService:
@@ -107,7 +107,9 @@ class SkyDataService:
                 # 1k 用 cover  |  4k 用 cover_4k
                 url = Attr.get_by_point(res, 'data.cover_4k', '')
                 ext = url.split('.')[-1] if '.' in url else 'png'
-                fn = f"sky_{sky_type}_by_{Time.date('%Y%m%d')}.{ext}"
+                byn = Attr.get_by_point(res, 'data.title', '') + '-' + Attr.get_by_point(res, 'data.description', '')
+                byn = Str.filter_target_chars(byn)
+                fn = f"{Time.date('%Y%m%d')}_by_{byn}.{ext}"
             # 用这个兜底吧
             if not url:
                 # 动漫壁纸
