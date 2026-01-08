@@ -8,7 +8,7 @@ class FilePreviewService:
 
     BASE_STORAGE_DIR = Dir.abs_dir('storage/upload')
     ALLOW_IMAGE_EXT = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'}
-    ALLOW_FILE_EXT = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv', '.png', '.gif', '.mp4', '.mp3'}
+    ALLOW_FILE_EXT = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv', '.mp4', '.mp3'} | ALLOW_IMAGE_EXT
 
     @staticmethod
     def enc_path(file_path):
