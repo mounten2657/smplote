@@ -46,7 +46,7 @@ class GPLUpdateEdvService:
         if not d_info:
             logger.warning(f"暂无分红历史数据<{symbol}><{td}> - {n}", 'UP_DVH_WAR')
             return ret
-        for day, d in d_info.items():
+        for day in list(d_info.keys()):
             dv_info = Attr.get(dvh_list, f"{symbol}_{day}")
             if dv_info or day < self.formatter.INIT_ST:
                 logger.warning(f"跳过分红历史数据<{symbol}><{day}>", 'UP_DVH_WAR')
