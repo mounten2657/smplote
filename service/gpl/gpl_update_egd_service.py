@@ -58,7 +58,7 @@ class GPLUpdateEgdService:
         biz_list = ['EM_GD_TOP10',  'EM_GD_TOP10_FREE']
         sc_list = Attr.chunk_list(symbol_list, 25)
 
-        @Ins.multiple_executor(8)
+        @Ins.multiple_executor(64)
         def _fix_gd_exec(s_list):
             rc = 0
             Time.sleep(Str.randint(1, 10) / 100)
@@ -76,7 +76,10 @@ class GPLUpdateEgdService:
                     e_val = []
                     for i in range(len(g['e_val'])):
                         e_val.append({"date": g['season_date']} | g['e_val'][i])  # 之前的数据缺少日期，现在一律补上
+                    if not e_val:
+                        continue
                     jdb.update_season(g['id'], {"e_val": e_val})
+                    logger.debug(f"修正数据<{g['symbol']}> - {g['id']} {percent}", 'FIX_GD_DEG')
                     rc += 1
             return rc
 

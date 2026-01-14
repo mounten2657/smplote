@@ -44,6 +44,8 @@ class VpSocketFactory(VpBaseFactory):
 
     def _on_error(self, ws, error):
         logger.error(f"[{self.app_key}]连接错误: {error}", "VP_ERR")
+        # {"Code":300,"Data":null,"Text":"WX \xe9\x95\xbf\xe9\x93\xbe\xe6\x8e\xa5\xe4\xb8\x8d\xe5\xad\x98\xe5\x9c\xa8"}
+        # WX 长链接不存在 - 一般是 vp 还没准备好导致的，等待个五分钟就好了
         self._stop_event = True
         self._handler_exec('on_error', {"message": error})
 

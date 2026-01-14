@@ -47,7 +47,7 @@ class VpRoomService:
     def check_room_info(self, room, info, is_force=0):
         """检查是否有变化 - 由定时任务触发"""
         res = {}
-        if not room['g_wxid']:
+        if not room['g_wxid'] or not room['nickname']:
             return 0
         rdb = WechatRoomModel()
         pid = info['id']
