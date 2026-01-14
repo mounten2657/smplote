@@ -52,6 +52,36 @@ class GPLUpdateEgdService:
                             ret['igd'] = jdb.add_season(symbol, d2, biz_code, biz_data)
         return ret
 
+    def fix_gd_em(self, symbol_list):
+        """top10股东数据修复 - 一次性程序 - 用于修复之前的老数据"""
+        jdb = GPLSeasonModel()
+        biz_list = ['EM_GD_TOP10',  'EM_GD_TOP10_FREE']
+        sc_list = Attr.chunk_list(symbol_list, 25)
+
+        @Ins.multiple_executor(8)
+        def _fix_gd_exec(s_list):
+            rc = 0
+            Time.sleep(Str.randint(1, 10) / 100)
+            percent = self.formatter.get_percent(s_list[0], s_list, sc_list)
+            logger.info(f"正在检查数据<{s_list[0]}> - {percent}", 'FIX_GD_INF')
+            for biz_code in biz_list:
+                g_list = jdb.get_season_list(s_list, [], biz_code)
+                if not g_list:
+                    continue
+                for k, g in g_list.items():
+                    e0 = Attr.get_by_point(g, 'e_val.0.date', None)
+                    if e0:
+                        logger.debug(f"跳过完善数据<{g['symbol']}> - {g['id']} {percent}", 'FIX_GD_DEG')
+                        continue
+                    e_val = []
+                    for i in range(len(g['e_val'])):
+                        e_val.append({"date": g['season_date']} | g['e_val'][i])  # 之前的数据缺少日期，现在一律补上
+                    jdb.update_season(g['id'], {"e_val": e_val})
+                    rc += 1
+            return rc
+
+        return _fix_gd_exec(sc_list)
+
     def up_gdn_em(self, symbol, gdn_list, day_list, n, is_special):
         """更新股票股东人数"""
         ret = {}
