@@ -188,7 +188,7 @@ class Ins:
                 results = {}
                 while not result_queue.empty():
                     task, result = result_queue.get()
-                    tk = Str.md5(str(task)) if isinstance(task, dict) else task
+                    tk = Str.md5(str(task)) if not isinstance(task, (str, int)) else task
                     results[tk] = result
                 return results
             return wrapper
