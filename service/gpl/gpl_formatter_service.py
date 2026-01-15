@@ -209,5 +209,7 @@ class GplFormatterService:
     def get_percent(self, code, code_list, all_code_list):
         """获取进度条"""
         ind = Attr.list_index(all_code_list, code) + 1
-        return (f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}% "
-                   f"| {round(100 * (code_list.index(code) + 1) / len(code_list), 2)}%)")
+        per = f"[{ind}/{len(all_code_list)}]({round(100 * ind / len(all_code_list), 2)}%)"
+        if code_list:
+            per += f" | ({round(100 * (code_list.index(code) + 1) / len(code_list), 2)}%)"
+        return per

@@ -62,7 +62,7 @@ class GPLUpdateEgdService:
         def _fix_gd_exec(s_list):
             rc = 0
             Time.sleep(Str.randint(1, 10) / 100)
-            percent = self.formatter.get_percent(s_list[0], s_list, symbol_list)
+            percent = self.formatter.get_percent(s_list[0], [], symbol_list)
             logger.info(f"正在检查数据<{s_list[0]}> - {percent}", 'FIX_GD_INF')
             for biz_code in biz_list:
                 g_list = jdb.get_season_list(s_list, [], biz_code)
