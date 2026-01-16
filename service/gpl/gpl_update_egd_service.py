@@ -48,7 +48,7 @@ class GPLUpdateEgdService:
                         if not gd:
                             g2 = [{**g3, "rank": Attr.get(g3, 'rank', i + 1)} for i, g3 in enumerate(g2)]
                             biz_data = {'key': key, 'des': des, 'val': g2}
-                            ret['igd'] = jdb.add_season(symbol, d2, biz_code, biz_data)
+                            ret['igd'] = jdb.add_season(symbol, d2, biz_code, biz_data, True)
         return ret
 
     def fix_gd_em(self, symbol_list):
