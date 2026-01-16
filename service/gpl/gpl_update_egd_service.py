@@ -46,7 +46,6 @@ class GPLUpdateEgdService:
                     for d2, g2 in g_list.items():
                         gd = Attr.get(d['d_list'], f"{symbol}_{d2}")
                         if not gd:
-                            # g2 = [Attr.remove_keys(g3, ['date']) for g3 in g2]
                             g2 = [{**g3, "rank": Attr.get(g3, 'rank', i + 1)} for i, g3 in enumerate(g2)]
                             biz_data = {'key': key, 'des': des, 'val': g2}
                             ret['igd'] = jdb.add_season(symbol, d2, biz_code, biz_data)
@@ -106,7 +105,8 @@ class GPLUpdateEgdService:
                 gdn_info = Attr.get(gdn_list, f"{symbol}_{d['date']}")
                 if not gdn_info:
                     biz_data = {'key': biz_code.lower(), 'des': '股东人数合计', 'val': d}
-                    ret['ign'] = jdb.add_season(symbol, d['date'], biz_code, biz_data)
+                    # 有些数据日期不是在季节末的，所有还要再次查询数据库中有无这些数据
+                    ret['ign'] = jdb.add_season(symbol, d['date'], biz_code, biz_data, True)
         return ret
 
     def up_gdt_em(self, symbol, gdt_list, day_list):
