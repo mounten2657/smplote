@@ -55,9 +55,10 @@ class Logger:
         return cls._instance
 
     def __init__(self):
-        self.logger_dir = Dir.root_dir()
+        self.root_dir = Dir.root_dir()
         self.config = Config.logger_config()
         self.log_level = self.config.get('log_level', 'DEBUG')
+        self.log_path = self.config.get('log_path', 'storage/logs')
         self.display_json = int(self.config.get('log_display_json', '0'))
         self.display_light = int(self.config.get('log_display_light', '0'))
         self.display_colors = self.COLORS_LIGHT if self.display_light else self.COLORS_LOWER
@@ -76,13 +77,15 @@ class Logger:
         display_colors = self.display_colors
 
         today = datetime.now().strftime('%Y%m%d')
-        log_dir = os.path.join(self.logger_dir, self.config.get('log_path', 'storage/logs'), today)
+        log_dir = f"{self.root_dir}/{self.log_path}/{today}"
         os.makedirs(log_dir, exist_ok=True)
 
         log_name = log_name if log_name else self.config.get('log_name_default', 'app')
-        log_file = os.path.join(log_dir, f'{log_name}_{log_type}_{today}.log')
+        log_file = f'{log_dir}/{log_name}_{log_type}_{today}.log'
 
-        file_handler = TimedRotatingFileHandler(log_file, when='midnight', backupCount=7, encoding='utf-8')
+        # 使用轮转规则，虽然可以自动清除超过七天的日志文件，但是跨天会生成冗余文件，故舍弃，改为普通 Handler
+        # file_handler = TimedRotatingFileHandler(log_file, when='midnight', backupCount=7, encoding='utf-8')
+        file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
         file_handler.setLevel(log_level)
 
         console_handler = logging.StreamHandler()
