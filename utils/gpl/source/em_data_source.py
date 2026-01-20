@@ -1,6 +1,6 @@
 import random
 from typing import Dict, List
-from tool.core import Logger, Attr, Str, Error, Time, Http, Config
+from tool.core import Logger, Attr, Str, Error, Time, Http, Config, Env
 from model.gpl.gpl_api_log_model import GplApiLogModel
 from service.vps.open_nat_service import OpenNatService
 
@@ -42,7 +42,8 @@ class EmDataSource:
             'Accept': 'application/json, text/plain, */*',
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
             'Referer': 'https://www.eastmoney.com/',
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'Cookie': Env.get('GPL_EM_COOKIE', ''),  # 至关重要的属性，必须传递Cookie才不容易被封，即使被封也容易解禁
         }
         self.ldb = GplApiLogModel()
 
