@@ -66,7 +66,7 @@ class BsDataSource:
             frequency=period_dict[period], adjustflag=adjust_dict[adjust]
         )
         rst = rs.get_data()
-        if not rst:
+        if rst.empty:
             return []
         rst = rst.to_dict('records')
         if rst:
