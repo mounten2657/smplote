@@ -78,7 +78,7 @@ class EmDataSource:
                 rand = (pid % 10) if pid else rand  # 因为只有本地才能使用代理，所以这里大大增大本地请求的比例
                 if not Config.is_prod() or 1:  # 机器坏了，先指定固定的
                     rand = random.choice([0, 3, 5, 8] + [2, 7])
-                params['nat_int'] = rand
+                params['nat_int'] = f"{rand}-{len(self.headers['Cookie'])}"
                 self.headers['Referer'] = Http.get_request_base_url(url)
                 # [0l, 1p, 2v, 3l, 4p, 5l, 6p, 7v, 8l, 9p]  # 占比:  vps: 20% | local: 40% | proxy: 40%
                 if rand in [0, 3, 5, 8]:  # [0, 3, 5, 8]
