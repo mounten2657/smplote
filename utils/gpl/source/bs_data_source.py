@@ -65,7 +65,10 @@ class BsDataSource:
             code, fields, start_date=sd, end_date=ed,
             frequency=period_dict[period], adjustflag=adjust_dict[adjust]
         )
-        rst = rs.get_data().to_dict('records')
+        rst = rs.get_data()
+        if not rst:
+            return []
+        rst = rst.to_dict('records')
         if rst:
             for i, rt in enumerate(rst):
                 rt['volume'] = round(float(rt['volume']) / 100, 2)  # 成交量单位换成手，100股 = 1手
