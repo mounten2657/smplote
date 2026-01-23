@@ -23,3 +23,4 @@ pypinyin~=0.54.0
 pandas~=2.2.3
 pycryptodome==3.22.0
 spire-pdf>=10.12.1,<=11.12.1
+baostock==0.8.9

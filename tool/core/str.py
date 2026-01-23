@@ -6,8 +6,9 @@ import random
 import base64
 import hashlib
 import urllib.parse
-from pypinyin import pinyin, Style
 from urllib.parse import unquote, quote
+from decimal import Decimal, ROUND_HALF_UP
+from pypinyin import pinyin, Style
 from tool.core.env import Env
 
 
@@ -186,12 +187,35 @@ class Str:
             return default
 
     @staticmethod
+    def is_int(str_val):
+        # 判断是否为整数
+        try:
+            int(str_val)
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
     def float(str_val, default=0.0):
         # 将字符串转换成浮点数，不成功就是 0.0
         try:
             return float(str_val)
         except Exception:
             return default
+
+    @staticmethod
+    def is_float(str_val):
+        # 判断是否为浮点数
+        try:
+            float(str_val)
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
+    def round(str_val, p=2):
+        """四舍五入保留两位小数 - 返回 Decimal 类型"""
+        return Decimal(str(str_val)).quantize(Decimal(f"0.{'0' * p}" if p >0 else '0'), rounding=ROUND_HALF_UP)
 
     @staticmethod
     def randint(start=1, end=100):

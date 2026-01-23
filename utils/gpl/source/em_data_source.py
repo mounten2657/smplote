@@ -262,7 +262,7 @@ class EmDataSource:
                 "close": float(parts[2]),
                 "high": float(parts[3]),
                 "low": float(parts[4]),
-                "volume": int(parts[5]),
+                "volume": float(parts[5]),  # 单位是手
                 "amount": float(parts[6]) if len(parts) > 6 else 0,
                 "amplitude": float(parts[7]) if len(parts) > 7 else 0,
                 "pct_change": float(parts[8]) if len(parts) > 8 else 0,

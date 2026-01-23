@@ -84,6 +84,30 @@ class Time:
             raise ValueError(f"时间戳无效[{timestamp}]。原始错误: {e}")
 
     @staticmethod
+    def dfd(date_str, date_format="%Y-%m-%d %H:%M:%S"):
+        """
+        将常见日期字符串转换为标准日期格式 - date_from_date
+        :param date_str: 日期字符串（如 "2025-04-10 09:19:59"）
+        :param date_format: 日期格式（如 "%Y-%m-%d %H:%M:%S"）
+        :return: 默认格式 "YYYY-MM-DD HH:MM:SS"（如 "2025-04-10 09:19:59"）
+        """
+        if not date_str:
+            return ''
+        # 定义所有可能的时间格式（按优先级排序）
+        formats = [
+            "%Y%m%d", "%Y/%m/%d %H:%M:%S", "%Y%m%d%H%M%S",
+            "%Y-%m-%d", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S"
+        ]
+        # 自动识别，成功就返回
+        for fmt in formats:
+            try:
+                dt = datetime.strptime(date_str, fmt)
+                return dt.strftime(date_format)
+            except ValueError:
+                continue
+        raise ValueError(f"无法解析时间字符串 '{date_str}'，请检查格式")
+
+    @staticmethod
     def dnd(sd, n, date_format="%Y-%m-%d"):
         """
         相对日期快捷计算

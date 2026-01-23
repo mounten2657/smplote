@@ -13,7 +13,7 @@ class GPLDailyModel(MysqlBaseModel):
         - f0_close - decimal(12,2) - 不复权收盘价
         - f0_high - decimal(12,2) - 不复权最高价
         - f0_low - decimal(12,2) - 不复权最低价
-        - f0_volume - bigint(20) - 不复权成交量(股)
+        - f0_volume - decimal(20,2) - 不复权成交量(手)
         - f0_amount - decimal(20,2) - 不复权成交额(元)
         - f0_amplitude - decimal(12,2) - 不复权振幅
         - f0_pct_change - decimal(10,2) - 不复权涨跌幅(%)
@@ -23,7 +23,7 @@ class GPLDailyModel(MysqlBaseModel):
         - f1_close - decimal(12,2) - 前复权收盘价
         - f1_high - decimal(12,2) - 前复权最高价
         - f1_low - decimal(12,2) - 前复权最低价
-        - f1_volume - bigint(20) - 前复权成交量(股)
+        - f1_volume - decimal(20,2) - 前复权成交量(手)
         - f1_amount - decimal(20,2) - 前复权成交额(元)
         - f1_amplitude - decimal(12,2) - 前复权振幅
         - f1_pct_change - decimal(10,2) - 前复权涨跌幅(%)
@@ -33,7 +33,7 @@ class GPLDailyModel(MysqlBaseModel):
         - f2_close - decimal(12,2) - 后复权收盘价
         - f2_high - decimal(12,2) - 后复权最高价
         - f2_low - decimal(12,2) - 后复权最低价
-        - f2_volume - bigint(20) - 后复权成交量(股)
+        - f2_volume - decimal(20,2) - 后复权成交量(手)
         - f2_amount - decimal(20,2) - 后复权成交额(元)
         - f2_amplitude - decimal(12,2) - 后复权振幅
         - f2_pct_change - decimal(10,2) - 后复权涨跌幅(%)

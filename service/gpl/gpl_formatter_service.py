@@ -1,5 +1,6 @@
 from model.gpl.gpl_symbol_model import GPLSymbolModel
 from utils.gpl.source.ak_data_source import AkDataSource
+from utils.gpl.source.bs_data_source import BsDataSource
 from utils.gpl.source.em_data_sub_source import EmDataSubSource
 from tool.core import Ins, Logger, Str, Time, Attr, Error
 
@@ -15,6 +16,7 @@ class GplFormatterService:
 
     def __init__(self):
         self.ak = AkDataSource()
+        self.bs = BsDataSource()
         self.em = EmDataSubSource()
         self.sdb = GPLSymbolModel()
 

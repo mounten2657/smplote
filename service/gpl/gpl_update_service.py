@@ -5,7 +5,7 @@ from model.gpl.gpl_daily_model import GPLDailyModel
 from model.gpl.gpl_api_log_model import GplApiLogModel
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
-from tool.core import Ins, Logger, Str, Time, Attr, Error
+from tool.core import Ins, Logger, Str, Time, Attr, Error, Env
 
 logger = Logger()
 redis = RedisClient()
@@ -18,6 +18,9 @@ class GPLUpdateService:
     # 初始化的开始结束日期
     _INIT_ST = GplFormatterService.INIT_ST
     _INIT_ET = GplFormatterService.INIT_ET
+
+    # 重点关注的股票列表
+    _S_ZD_LIST = Env.get('GPL_ZD_LIST', '').split(',')
 
     def __init__(self):
         self.formatter = GplFormatterService()
@@ -158,9 +161,11 @@ class GPLUpdateService:
 
         @Ins.multiple_executor(4)
         def _up_day_exec(code):
-            Time.sleep(Str.randint(1, 10) / 100)
+            # 延迟久一点，防止被封
+            Time.sleep(Str.randint(1, 200) / 100)
             res = []
             symbol = Str.add_stock_prefix(code)
+            is_special = int(symbol in GPLUpdateService._S_ZD_LIST)
             percent = self.formatter.get_percent(code, code_list, all_code_list)
             insert_list = {}
             fq_list = {"": "0", "qfq": "1", "hfq": "2"}
@@ -171,8 +176,15 @@ class GPLUpdateService:
                     logger.debug(f"日线数据已入库[{v}]<{symbol}><{tds}>{percent}", 'UP_DAY_SKP')
                     continue
                 Time.sleep(Str.randint(5, 9) / 10)
-                day_list = log_info['process_params'] if (log_info and is_force != 99) else \
-                    self.formatter.em.get_daily_quote(code, st, et, k)
+                if log_info and is_force != 99:
+                    day_list = log_info['process_params']
+                else:
+                    if k == 'hfq' or is_special:
+                        # 东方财富的接口很珍贵，以后非重点股票只跑后复权数据了，以防被封IP
+                        day_list = self.formatter.em.get_daily_quote(code, st, et, k)
+                    else:
+                        # 日常任务用 bs 去请求
+                        day_list = self.formatter.bs.get_daily_quote_bs(code, st, et, k)
                 res.append(len(day_list))
                 logger.debug(f"接口请求日线数据[{v}]<{symbol}><{tds}>{percent} - {k}"
                              f" - [{len(day_list)}]", 'UP_DAY_SKP')
