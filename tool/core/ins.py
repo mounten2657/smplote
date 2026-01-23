@@ -144,7 +144,7 @@ class Ins:
         return decorator
 
     @staticmethod
-    def multiple_executor(max_workers=4, retries=2):
+    def multiple_executor(max_workers=4, retries=2, time_sleep=0):
         """并行执行装饰器 - 队列"""
         def decorator(func):
             @wraps(func)
@@ -179,6 +179,8 @@ class Ins:
                 # 创建有限的工作线程
                 threads = []
                 for i in range(min(max_workers, len(task_list))):
+                    if time_sleep > 0:
+                        time.sleep(Str.randint(10, 99) / 100 + time_sleep)
                     t = threading.Thread(target=worker)
                     t.daemon = True
                     t.start()
