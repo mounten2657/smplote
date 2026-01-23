@@ -179,8 +179,6 @@ class Ins:
                 # 创建有限的工作线程
                 threads = []
                 for i in range(min(max_workers, len(task_list))):
-                    if time_sleep > 0:
-                        time.sleep(Str.randint(10, 99) / 100 + time_sleep)
                     t = threading.Thread(target=worker)
                     t.daemon = True
                     t.start()
@@ -189,6 +187,8 @@ class Ins:
                 task_queue.join()
                 results = {}
                 while not result_queue.empty():
+                    if time_sleep > 0:
+                        time.sleep(Str.randint(10, 99) / 100 + time_sleep)
                     task, result = result_queue.get()
                     tk = Str.md5(str(task)) if not isinstance(task, (str, int)) else task
                     results[tk] = result
