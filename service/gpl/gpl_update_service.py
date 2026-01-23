@@ -159,7 +159,7 @@ class GPLUpdateService:
         l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
         l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
-        @Ins.multiple_executor(4)
+        @Ins.multiple_executor(1)  # bs 不支持多线程，所以这里只能设为1了
         def _up_day_exec(code):
             # 延迟久一点，防止被封
             Time.sleep(Str.randint(1, 200) / 100)

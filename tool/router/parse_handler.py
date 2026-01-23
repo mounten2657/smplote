@@ -25,7 +25,7 @@ class ParseHandler:
             if int(app_config['APP_AUTO_START_WS']):
                 res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
             res['que_start'] = RedisTaskQueue.run_consumer()     # 启动 redis task queue
-            res['bs_login'] = bs.login()     # bs 登录
+            res['bs_login'] = bs.login() if not Config.is_prod() else False  # bs 登录
         res = {}
         # 注册结束处理
         signal.signal(signal.SIGINT, ParseHandler.shutdown_handler)
@@ -52,8 +52,7 @@ class ParseHandler:
             Time.sleep(3)
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS']
         list(map(lambda key: redis.delete(key, ['*']), key_list))
-        # bs 登出
-        bs.logout()
+        not Config.is_prod() and bs.logout()  # bs 登出
         # 清理系统任务
         Sys.shutdown()
         print(f"PID[{pid}]: 清理完成，主程序结束")

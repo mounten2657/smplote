@@ -1,4 +1,5 @@
 import threading
+import baostock as bs
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.factory.vp_socket_factory import VpSocketFactory
 from utils.wechat.vpwechat.factory.vp_client_factory import VpClientFactory
@@ -28,6 +29,7 @@ class VpClient(VpBaseFactory):
                 return False
             redis.set(cache_key, 1)
             logger.debug('websocket starting', 'WS_STA')
+            bs.login() # bs 登录
             ws = VpSocketFactory(self.app_key)
             return ws.start()
         # res = Sys.delayed_task(3, ws_start)
@@ -40,6 +42,7 @@ class VpClient(VpBaseFactory):
         """关闭 websocket"""
         def ws_close():
             logger.debug(f'websocket close - {is_all}', 'WS_CED')
+            bs.logout()  # bs 登出
             redis.delete('LOCK_WSS_CNT')
             if is_all:
                 VpSocketFactory('a1').close()
