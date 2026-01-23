@@ -1,4 +1,5 @@
 import baostock as bs
+import pandas as pd
 from tool.core import Logger, Error, Str, Attr, Time
 
 logger = Logger()
@@ -37,6 +38,20 @@ class BsDataSource:
                 return []
         return wrapper
 
+    @staticmethod
+    def get_data(res):
+        """
+        从 baostock ResultData 对象中安全地取出全部数据
+        替代 ResultData.get_data()，兼容 pandas >= 2.0
+        """
+        rows = []
+        # 按 baostock 官方推荐方式逐行读取
+        while res.error_code == '0' and res.next():
+            rows.append(res.get_row_data())
+        if not rows:
+            return pd.DataFrame()
+        return pd.DataFrame(rows, columns=res.fields)
+
     def get_daily_quote_bs(self, stock_code: str, sd: str = "2000-01-01", ed: str = "2099-01-01", adjust: str = "", period: str = "daily"):
         """
         获取股票日线行情 - BS
@@ -65,7 +80,7 @@ class BsDataSource:
             code, fields, start_date=sd, end_date=ed,
             frequency=period_dict[period], adjustflag=adjust_dict[adjust]
         )
-        rst = rs.get_data()
+        rst = BsDataSource.get_data(rs)
         if rst.empty:
             return []
         rst = rst.to_dict('records')
