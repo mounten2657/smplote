@@ -17,7 +17,7 @@ class VpCallbackHandler(VpBaseFactory):
         if redis.get(cache_key) or not redis.set_nx(cache_key, 1):
             return False
         # 重启 gu - 这里不要重启 vp ，静静等待就好
-        res = {'rgu': Sys.delay_reload_gu(1), 'err': data}
+        res = {'rgu': Sys.delay_reload_gu(), 'err': data}
         return res
 
     def on_message(self, data):

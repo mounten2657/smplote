@@ -2,6 +2,9 @@ import re
 import json
 import requests
 import itertools
+import uuid
+import time
+import random
 from flask import request
 from urllib.parse import urlencode, urlparse
 from typing import Union, Dict, Optional
@@ -13,12 +16,145 @@ from tool.core.api import Api
 class Http:
 
     # IP代理服务商 - 携趣
+    _VPN_URL = Env.get('PROXY_VPN')
     _XQ_OPT_URL = Env.get('PROXY_OPT_URL_XQ')
     _XQ_OPT_UID = Env.get('PROXY_OPT_UID_XQ')
     _XQ_OPT_KEY = Env.get('PROXY_OPT_KEY_XQ')
     _XQ_URL = Env.get('PROXY_API_URL_XQ')
     _XQ_UID = Env.get('PROXY_API_UID_XQ')
     _XQ_KEY = Env.get('PROXY_API_KEY_XQ')
+
+    @staticmethod
+    def get_random_headers():
+        """
+        生成随机的仿浏览器请求头 - 避免被识别为爬虫
+
+        @return: dict - 随机请求头
+        """
+        # 随机UA
+        user_agents = [
+            # Chrome - Windows 不同版本
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            # Chrome - macOS 不同版本
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+            # Firefox - 不同系统/版本
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0",
+            # Edge - 不同版本
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
+            # Safari - 不同版本
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+            # 随机值
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+        ]
+        # 随机语言
+        accept_languages = [
+            "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+            "zh-CN,zh;q=0.9",
+            "zh-CN,zh;q=0.8,en-US;q=0.7,en;q=0.6",
+            "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7"
+        ]
+        # 随机Referer
+        referer = [
+            "https://quote.eastmoney.com/",
+            "https://www.eastmoney.com/",
+            "https://finance.eastmoney.com/",
+            "https://www.baidu.com/",
+            "https://www.google.com/",
+            "https://www.bing.com/",
+            "https://www.zhihu.com/",
+            "https://www.sina.com.cn/",
+            "https://www.163.com/",
+            None, None, None, None, None, None,  # 随机无Referer
+        ]
+        # 随机Sec-CH-UA
+        sec_ch_ua_list = [
+            '"Not_A Brand";v="8", "Chromium";v="121", "Microsoft Edge";v="121"',
+            '"Google Chrome";v="121", "Not:A-Brand";v="8", "Chromium";v="121"',
+            '"Microsoft Edge";v="120", "Chromium";v="120", "Not.A/Brand";v="24"',
+            '"Firefox";v="122", "Not=A?Brand";v="99"'
+        ]
+        # 随机Sec-CH-UA-Platform
+        sec_ch_ua_platform = [
+            '"Windows"',
+            '"macOS"',
+            '"Linux"'
+        ]
+        # 可选的额外头（随机添加）
+        optional_headers = {
+            "X-Requested-With": ["XMLHttpRequest", "com.android.browser"],
+            "Sec-Fetch-Site": ["none", "same-origin", "cross-site"],
+            "Sec-Fetch-Mode": ["navigate", "no-cors", "cors"],
+            "Sec-Fetch-Dest": ["document", "empty", "iframe"],
+            "Sec-Fetch-User": ["?1", None],  # 随机有无
+            "Priority": ["u=0, i", "u=1, i", None],  # 优先级头
+            "Sec-CH-UA-Mobile": ["?0", "?1"],  # 移动端/桌面端
+            "If-Modified-Since": [time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime()), None]  # 缓存头
+        }
+        headers = {
+            "User-Agent": random.choice(user_agents),
+            "Accept": random.choice([
+                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "text/html,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "application/json, text/plain, */*",
+                "application/json;q=0.9,*/*;q=0.8",
+            ]),
+            "Accept-Language": random.choice(accept_languages),
+            "Accept-Encoding": random.choice([
+                "gzip, deflate, br",
+                "gzip, deflate",
+                "br, gzip, deflate"
+            ]),
+            "Connection": random.choice(["keep-alive", "close"]),
+            "Cache-Control": random.choice([
+                "max-age=0",
+                "no-cache",
+                "no-store, max-age=0",
+                "private, max-age=0"
+            ]),
+        }
+        # 可选属性 - 低概率
+        if random.random() < 0.3:
+            headers["DNT"] = random.choice(["1", "0"])
+        if random.random() < 0.2:
+            headers["Upgrade-Insecure-Requests"] = "1"
+        if random.random() < 0.4:
+            headers["X-Request-Id"] = str(uuid.uuid4())
+        if random.random() < 0.3:
+            headers["X-Requested-With"] = "XMLHttpRequest"
+        if random.random() < 0.2:
+            headers["X-Timestamp"] = str(int(time.time()))
+        # sec 谨慎添加 - 超低概率
+        if random.random() < 0.01:
+            headers = headers | {
+                "Sec-CH-UA": random.choice(sec_ch_ua_list),
+                "Sec-CH-UA-Platform": random.choice(sec_ch_ua_platform),
+                "Sec-CH-UA-Mobile": random.choice(optional_headers["Sec-CH-UA-Mobile"]),
+                "Sec-Fetch-Dest": random.choice(optional_headers["Sec-Fetch-Dest"]),
+                "Sec-Fetch-Mode": random.choice(optional_headers["Sec-Fetch-Mode"]),
+                "Sec-Fetch-Site": random.choice(optional_headers["Sec-Fetch-Site"])
+            }
+        # 随机Referer（可能为空）
+        referer = random.choice(referer)
+        if referer:
+            headers["Referer"] = referer
+        # 返回headers
+        return headers
 
     @staticmethod
     def send_request(
@@ -45,12 +181,14 @@ class Http:
         method = method.upper()
         if method not in ('GET', 'POST', 'JSON', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'):
             raise ValueError(f"Unsupported HTTP method: {method}")
+        if not url:
+            raise ValueError("URL cannot be None")
 
         # 初始化请求参数
         request_kwargs = {
             'method': method,
             'url': url,
-            'headers': headers or {},
+            'headers': headers or Http.get_random_headers(),
             'timeout': 120,
         }
         # 新增代理
@@ -218,6 +356,26 @@ class Http:
         proxy, pf = Http.get_proxy()
         if not pf:
             return Api.error(f"Get http proxy failed: {proxy}")
+        return Http.send_request(method, url, params, headers, proxy)
+
+    @staticmethod
+    def send_request_v(
+            method: str,
+            url: str,
+            params: Union[Dict, str, None] = None,
+            headers: Optional[Dict] = None,
+    ) -> Union[Dict, str]:
+        """
+        发送HTTP请求并自动处理JSON响应
+          - 代理模式，使用VPN - 可翻墙
+
+        :param method: HTTP方法 (GET/POST/PUT/DELETE等)
+        :param url: 请求URL
+        :param params: 查询参数，可以是字典或"a=1&b=2"格式字符串
+        :param headers: 请求头字典
+        :return: 如果响应是JSON则返回字典，否则返回原始文本
+        """
+        proxy = Http._VPN_URL
         return Http.send_request(method, url, params, headers, proxy)
 
     @staticmethod

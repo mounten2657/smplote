@@ -37,12 +37,8 @@ class EmDataSource:
         """
         self.timeout = timeout
         self.retry_times = retry_times
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.35 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.35',
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+        self.headers = Http.get_random_headers() | {
             'Referer': 'https://www.eastmoney.com/',
-            'X-Requested-With': 'XMLHttpRequest',
             'Cookie': Env.get('GPL_EM_COOKIE', ''),  # 至关重要的属性，必须传递Cookie才不容易被封，即使被封也容易解禁
         }
         self.ldb = GplApiLogModel()
