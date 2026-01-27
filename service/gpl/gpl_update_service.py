@@ -159,7 +159,7 @@ class GPLUpdateService:
         l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
         l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
-        @Ins.multiple_executor(1, time_sleep=1)  # 单线程，间隔一秒一个
+        @Ins.multiple_executor(1, time_sleep=0.1)  # 单线程，间隔一秒一个
         def _up_day_exec(code):
             res = []
             symbol = Str.add_stock_prefix(code)

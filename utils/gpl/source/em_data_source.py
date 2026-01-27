@@ -37,7 +37,7 @@ class EmDataSource:
         """
         self.timeout = timeout
         self.retry_times = retry_times
-        self.headers = Http.get_random_headers() | {
+        self.headers = {
             'Referer': 'https://www.eastmoney.com/',
             'Cookie': Env.get('GPL_EM_COOKIE', ''),  # 重要的属性，传递Cookie能快速解禁，但次数有限
         }
@@ -59,8 +59,7 @@ class EmDataSource:
             pid = 0
             proxy = ''
             rand = Str.randint(1, 10000) % 10
-            params['_cln'] = f"{len(self.headers)}-{len(self.headers['Cookie'])}"
-            params['_nat'] = rand
+            headers = Http.get_random_headers() | self.headers  # 每次都是随机的 header
             # 如果已经有了日志数据就不用请求接口了
             if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
                 pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
@@ -74,13 +73,12 @@ class EmDataSource:
                 rand = (pid % 10) if pid else rand  # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
                 if not Config.is_prod():
                     rand = random.choice([0, 3, 8] + [2, 5, 7])
-                params['_nat'] = rand
-                self.headers['Referer'] = Http.get_request_base_url(url)
+                headers['Referer'] = Http.get_request_base_url(url)
                 # [0l, 1p, 2v, 3l, 4p, 5v, 6p, 7v, 8l, 9p]  # 占比:  vps: 30% | local: 30% | proxy: 40%
                 if rand in [0, 3, 8]:  # [0, 3, 8] - 本地
-                    data = Http.send_request(method, url, params, self.headers)
+                    data = Http.send_request(method, url, params, headers)
                 elif rand in [2, 5, 7]:  # [2, 5, 7] - vps
-                    data = OpenNatService.send_http_request(method, url, params, self.headers, self.timeout)
+                    data = OpenNatService.send_http_request(method, url, params, headers, self.timeout)
                 else:  # [1, 4, 6, 9] - proxy
                     # 代理模式
                     is_night = 22 <= int(Time.date('%H'))  # 晚上第二次执行的都是白天漏掉的，数量很少，所以不使用代理了
@@ -90,15 +88,14 @@ class EmDataSource:
                         # proxy, pf = Http.get_proxy()  # 轮询隧道 - 这个要钱，暂时不用
                         # if not pf:
                         #     raise Exception(f"Get http proxy failed: {proxy}")
-                    data = Http.send_request(method, url, params, self.headers, proxy)  # 如果没有proxy则等于本地请求
-                    params['proxy'] = proxy
+                    data = Http.send_request(method, url, params, headers, proxy)  # 如果没有proxy则等于本地请求
                 if pid and not info.get('is_succeed'):
+                    params = params | {"_cln": f"{len(headers)}-{len(headers['Cookie'])}", "_nat": rand, "_proxy": proxy}
                     self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})
                 return data, pid
             except Exception as e:
                 err = Error.handle_exception_info(e)
-                if proxy:
-                    params['proxy'] = proxy
+                params = params | {"_cln": f"{len(headers)}-{len(headers['Cookie'])}", "_nat": rand, "_proxy": proxy}
                 logger.warning(f"请求失败 ({i + 1}/{self.retry_times}): {url} - {params} - 错误 - {err}", 'EM_API_ERR')
                 if i == self.retry_times - 1:
                     if pid:
