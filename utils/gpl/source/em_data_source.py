@@ -71,8 +71,8 @@ class EmDataSource:
                         pid = pid['id']
             try:
                 rand = (pid % 10) if pid else rand  # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
-                if not Config.is_prod():
-                    rand = random.choice([0, 3, 8] + [2, 5, 7])
+                # if not Config.is_prod():
+                #     rand = random.choice([0, 3, 8] + [2, 5, 7])
                 headers['Referer'] = Http.get_request_base_url(url)
                 # [0l, 1p, 2v, 3l, 4p, 5v, 6p, 7v, 8l, 9p]  # 占比:  vps: 30% | local: 30% | proxy: 40%
                 if rand in [0, 3, 8]:  # [0, 3, 8] - 本地
