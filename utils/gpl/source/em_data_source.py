@@ -18,7 +18,7 @@ class EmDataSource:
       - https://datacenter.eastmoney.com/securities/api/data/v1/get?reportName=RPT_F10_BASIC_ORGINFO&columns=ALL&filter=(SECUCODE=%22920819.BJ%22)
       - https://push2his.eastmoney.com/api/qt/stock/kline/get?fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=101&fqt=1&beg=20250809&end=20250814&secid=1.688662
       - https://np-anotice-stock.eastmoney.com/api/security/ann?cb=&sr=-1&page_size=50&page_index=1&ann_type=A&client_source=web&stock_list=300126&f_node=0&s_node=0
-      - https://np-cnotice-stock.eastmoney.com/api/content/ann?art_code=AN201704210521831617&client_source=web&page_index=1&nat_int=5
+      - https://np-cnotice-stock.eastmoney.com/api/content/ann?art_code=AN201704210521831617&client_source=web&page_index=1
     """
 
     _DATA_URL = "https://datacenter.eastmoney.com"
@@ -39,7 +39,7 @@ class EmDataSource:
         self.retry_times = retry_times
         self.headers = Http.get_random_headers() | {
             'Referer': 'https://www.eastmoney.com/',
-            'Cookie': Env.get('GPL_EM_COOKIE', ''),  # 至关重要的属性，必须传递Cookie才不容易被封，即使被封也容易解禁
+            'Cookie': Env.get('GPL_EM_COOKIE', ''),  # 重要的属性，传递Cookie能快速解禁，但次数有限
         }
         self.ldb = GplApiLogModel()
 
@@ -59,7 +59,8 @@ class EmDataSource:
             pid = 0
             proxy = ''
             rand = Str.randint(1, 10000) % 10
-            params['nat_int'] = rand
+            params['_cln'] = f"{len(self.headers)}-{len(self.headers['Cookie'])}"
+            params['_nat'] = rand
             # 如果已经有了日志数据就不用请求接口了
             if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
                 pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
@@ -70,33 +71,29 @@ class EmDataSource:
                         info = pid
                         pid = pid['id']
             try:
-                # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
-                rand = (pid % 10) if pid else rand  # 因为只有本地才能使用代理，所以这里大大增大本地请求的比例
-                if not Config.is_prod() or 1:  # 机器坏了，先指定固定的
-                    rand = random.choice([0, 3, 5, 8] + [2, 7])
-                params['nat_int'] = f"{rand}-{len(self.headers['Cookie'])}"
+                rand = (pid % 10) if pid else rand  # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
+                if not Config.is_prod():
+                    rand = random.choice([0, 3, 8] + [2, 5, 7])
+                params['_nat'] = rand
                 self.headers['Referer'] = Http.get_request_base_url(url)
-                # [0l, 1p, 2v, 3l, 4p, 5l, 6p, 7v, 8l, 9p]  # 占比:  vps: 20% | local: 40% | proxy: 40%
-                if rand in [0, 3, 5, 8]:  # [0, 3, 5, 8]
-                    # 使用本地请求
+                # [0l, 1p, 2v, 3l, 4p, 5v, 6p, 7v, 8l, 9p]  # 占比:  vps: 30% | local: 30% | proxy: 40%
+                if rand in [0, 3, 8]:  # [0, 3, 8] - 本地
                     data = Http.send_request(method, url, params, self.headers)
-                elif rand in [2, 7]:  # [2, 7]
-                    # 使用 nat 请求
+                elif rand in [2, 5, 7]:  # [2, 5, 7] - vps
                     data = OpenNatService.send_http_request(method, url, params, self.headers, self.timeout)
-                else:  # [1, 4, 6, 9]
+                else:  # [1, 4, 6, 9] - proxy
                     # 代理模式
-                    is_night = 21 <= int(Time.date('%H'))  # 晚上第二次执行的都是白天漏掉的，数量很少，所以不使用代理了
+                    is_night = 22 <= int(Time.date('%H'))  # 晚上第二次执行的都是白天漏掉的，数量很少，所以不使用代理了
                     if not is_night and any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用代理
                         # 获取代理ip
-                        proxy, pf = Http.get_proxy()  # 轮询隧道
-                        if not pf:
-                            raise Exception(f"Get http proxy failed: {proxy}")
-                    # 使用本地代理请求
-                    data = Http.send_request(method, url, params, self.headers, proxy)
+                        proxy = Http.get_vpn_url()  # 先用 vpn 请求试试
+                        # proxy, pf = Http.get_proxy()  # 轮询隧道 - 这个要钱，暂时不用
+                        # if not pf:
+                        #     raise Exception(f"Get http proxy failed: {proxy}")
+                    data = Http.send_request(method, url, params, self.headers, proxy)  # 如果没有proxy则等于本地请求
                     params['proxy'] = proxy
                 if pid and not info.get('is_succeed'):
                     self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})
-
                 return data, pid
             except Exception as e:
                 err = Error.handle_exception_info(e)
@@ -107,6 +104,7 @@ class EmDataSource:
                     if pid:
                         self.ldb.update_gpl_api_log(pid, {'request_params': params})
                     return None, 0
+        return None, 0
 
     def _ret(self, res, pid, start_time):
         """格式化返回"""

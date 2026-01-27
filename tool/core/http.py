@@ -359,6 +359,11 @@ class Http:
         return Http.send_request(method, url, params, headers, proxy)
 
     @staticmethod
+    def get_vpn_url():
+        """获取vpn链接 - 对外提供的方法"""
+        return Http._VPN_URL
+
+    @staticmethod
     def send_request_v(
             method: str,
             url: str,
@@ -375,7 +380,7 @@ class Http:
         :param headers: 请求头字典
         :return: 如果响应是JSON则返回字典，否则返回原始文本
         """
-        proxy = Http._VPN_URL
+        proxy = Http.get_vpn_url()
         return Http.send_request(method, url, params, headers, proxy)
 
     @staticmethod

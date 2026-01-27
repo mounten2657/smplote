@@ -159,7 +159,7 @@ class GPLUpdateService:
         l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
         l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
-        @Ins.multiple_executor(1, time_sleep=5)  # bs 不支持多线程，所以这里只能设为1了
+        @Ins.multiple_executor(1, time_sleep=1)  # 单线程，间隔一秒一个
         def _up_day_exec(code):
             res = []
             symbol = Str.add_stock_prefix(code)
@@ -177,12 +177,13 @@ class GPLUpdateService:
                 if log_info and is_force != 99:
                     day_list = log_info['process_params']
                 else:
-                    if k == 'hfq' or is_special:
-                        # 东方财富的接口很珍贵，以后非重点股票只跑后复权数据了，以防被封IP
-                        day_list = self.formatter.em.get_daily_quote(code, st, et, k)
-                    else:
-                        # 日常任务用 bs 去请求
-                        day_list = self.formatter.bs.get_daily_quote_bs(code, st, et, k)
+                    day_list = self.formatter.em.get_daily_quote(code, st, et, k)  # 里面有nat分流，如果不行再用下面这种方式
+                    # if k == 'hfq' or is_special:
+                    #     # 东方财富的接口很珍贵，以后非重点股票只跑后复权数据了，以防被封IP
+                    #     day_list = self.formatter.em.get_daily_quote(code, st, et, k)
+                    # else:
+                    #     # 日常任务用 bs 去请求
+                    #     day_list = self.formatter.bs.get_daily_quote_bs(code, st, et, k)
                 res.append(len(day_list))
                 logger.debug(f"接口请求日线数据[{v}]<{symbol}><{tds}>{percent} - {k}"
                              f" - [{len(day_list)}]", 'UP_DAY_SKP')
