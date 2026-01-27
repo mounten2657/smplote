@@ -4,7 +4,7 @@ from tool.core.http import Http
 
 class Nat(BaseApp):
 
-    def ppx(self):
+    def ppr(self):
         """利用代理池发起请求"""
         method = self.params.get('m', 'GET')
         url = self.params.get('u', '')
