@@ -81,30 +81,6 @@ class Http:
             "https://www.163.com/",
             None, None, None, None, None, None,  # 随机无Referer
         ]
-        # 随机Sec-CH-UA
-        sec_ch_ua_list = [
-            '"Not_A Brand";v="8", "Chromium";v="121", "Microsoft Edge";v="121"',
-            '"Google Chrome";v="121", "Not:A-Brand";v="8", "Chromium";v="121"',
-            '"Microsoft Edge";v="120", "Chromium";v="120", "Not.A/Brand";v="24"',
-            '"Firefox";v="122", "Not=A?Brand";v="99"'
-        ]
-        # 随机Sec-CH-UA-Platform
-        sec_ch_ua_platform = [
-            '"Windows"',
-            '"macOS"',
-            '"Linux"'
-        ]
-        # 可选的额外头（随机添加）
-        optional_headers = {
-            "X-Requested-With": ["XMLHttpRequest", "com.android.browser"],
-            "Sec-Fetch-Site": ["none", "same-origin", "cross-site"],
-            "Sec-Fetch-Mode": ["navigate", "no-cors", "cors"],
-            "Sec-Fetch-Dest": ["document", "empty", "iframe"],
-            "Sec-Fetch-User": ["?1", None],  # 随机有无
-            "Priority": ["u=0, i", "u=1, i", None],  # 优先级头
-            "Sec-CH-UA-Mobile": ["?0", "?1"],  # 移动端/桌面端
-            "If-Modified-Since": [time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime()), None]  # 缓存头
-        }
         headers = {
             "User-Agent": random.choice(user_agents),
             "Accept": random.choice([
@@ -141,6 +117,30 @@ class Http:
             headers["X-Timestamp"] = str(int(time.time()))
         # sec 谨慎添加 - 超低概率
         if random.random() < 0.01:
+            # 随机Sec-CH-UA
+            sec_ch_ua_list = [
+                '"Not_A Brand";v="8", "Chromium";v="121", "Microsoft Edge";v="121"',
+                '"Google Chrome";v="121", "Not:A-Brand";v="8", "Chromium";v="121"',
+                '"Microsoft Edge";v="120", "Chromium";v="120", "Not.A/Brand";v="24"',
+                '"Firefox";v="122", "Not=A?Brand";v="99"'
+            ]
+            # 随机Sec-CH-UA-Platform
+            sec_ch_ua_platform = [
+                '"Windows"',
+                '"macOS"',
+                '"Linux"'
+            ]
+            # 可选的额外头
+            optional_headers = {
+                "X-Requested-With": ["XMLHttpRequest", "com.android.browser"],
+                "Sec-Fetch-Site": ["none", "same-origin", "cross-site"],
+                "Sec-Fetch-Mode": ["navigate", "no-cors", "cors"],
+                "Sec-Fetch-Dest": ["document", "empty", "iframe"],
+                "Sec-Fetch-User": ["?1", None],  # 随机有无
+                "Priority": ["u=0, i", "u=1, i", None],  # 优先级头
+                "Sec-CH-UA-Mobile": ["?0", "?1"],  # 移动端/桌面端
+                "If-Modified-Since": [time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime()), None]  # 缓存头
+            }
             headers = headers | {
                 "Sec-CH-UA": random.choice(sec_ch_ua_list),
                 "Sec-CH-UA-Platform": random.choice(sec_ch_ua_platform),
@@ -188,7 +188,7 @@ class Http:
         request_kwargs = {
             'method': method,
             'url': url,
-            'headers': headers or Http.get_random_headers(),
+            'headers': headers or {},
             'timeout': 120,
         }
         # 新增代理
