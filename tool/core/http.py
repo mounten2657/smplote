@@ -18,6 +18,7 @@ class Http:
     # IP代理服务商 - 携趣
     _VPN_URL = Env.get('PROXY_VPN_URL')
     _VPN_PORT = Env.get('PROXY_VPN_PORT')
+    _VPN_RAND = Env.get('PROXY_VPN_RAND')
     _XQ_OPT_URL = Env.get('PROXY_OPT_URL_XQ')
     _XQ_OPT_UID = Env.get('PROXY_OPT_UID_XQ')
     _XQ_OPT_KEY = Env.get('PROXY_OPT_KEY_XQ')
@@ -368,7 +369,9 @@ class Http:
     def get_vpn_url(i=0):
         """获取vpn链接 - 对外提供的方法"""
         port_list = Http._VPN_PORT.split(',')
-        i = i if i else Attr.random_choice(list(range(1, len(port_list) + 1)))  # 没有指定就随机选一个
+        rand_list = Http._VPN_RAND.split(',')
+        rand_list = rand_list if len(rand_list) > 0 else list(range(1, len(port_list) + 1))  # 优先以自己指定的概率为准
+        i = i if i else Attr.random_choice(rand_list)  # 没有指定就随机选一个
         if i > len(port_list):
             return ''
         return Http._VPN_URL + ':' + port_list[i - 1]

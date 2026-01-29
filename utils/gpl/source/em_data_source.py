@@ -28,7 +28,7 @@ class EmDataSource:
     _NOTICE_C_URL = "https://np-cnotice-stock.eastmoney.com/"
     _NEWS_URL = "https://emdcnewsapp.eastmoney.com"
 
-    def __init__(self, timeout=30, retry_times=1):
+    def __init__(self, timeout=30, retry_times=3):
         """
         初始化数据来源
 
@@ -54,10 +54,12 @@ class EmDataSource:
         :param: method: 请求方式: GET | POST
         :return: 解析后的JSON数据，失败返回None
         """
+        proxy = ''
         for i in range(0, self.retry_times):
+            if i > 0 and not proxy:  # 只有代理模式才有重试机制
+                return None, 0
             info = {}
             pid = 0
-            proxy = ''
             rand = Str.randint(1, 10000) % 10  # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
             headers = Http.get_random_headers() | self.headers  # 每次都是随机的 header
             # 如果已经有了日志数据就不用请求接口了
