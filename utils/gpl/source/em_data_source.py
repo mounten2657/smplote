@@ -58,7 +58,7 @@ class EmDataSource:
             info = {}
             pid = 0
             proxy = ''
-            rand = Str.randint(1, 10000) % 10
+            rand = Str.randint(1, 10000) % 10  # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
             headers = Http.get_random_headers() | self.headers  # 每次都是随机的 header
             # 如果已经有了日志数据就不用请求接口了
             if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
@@ -70,24 +70,18 @@ class EmDataSource:
                         info = pid
                         pid = pid['id']
             try:
-                rand = (pid % 10) if pid else rand  # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
                 # if not Config.is_prod():
-                #     rand = random.choice([0, 3, 8] + [2, 5, 7])
+                #     rand = random.choice([0, 5])  # 代理坏的情况下使用
                 headers['Referer'] = Http.get_request_base_url(url)
-                # [0l, 1p, 2v, 3l, 4p, 5v, 6p, 7v, 8l, 9p]  # 占比:  vps: 30% | local: 30% | proxy: 40%
-                if rand in [0, 3, 8]:  # [0, 3, 8] - 本地
+                # [0l, 1p, 2p, 3p, 4p, 5v, 6p, 7p, 8p, 9p]  # 占比:  vps: 10% | local: 10% | proxy: 80%
+                if rand in [0]:  # [0] - 本地
                     data = Http.send_request(method, url, params, headers)
-                elif rand in [2, 5, 7]:  # [2, 5, 7] - vps
+                elif rand in [5]:  # [5] - vps
                     data = OpenNatService.send_http_request(method, url, params, headers, self.timeout)
-                else:  # [1, 4, 6, 9] - proxy
+                else:  # [1, 2, 3, 4, 6, 7, 8, 9] - proxy
                     # 代理模式
-                    is_night = 22 <= int(Time.date('%H'))  # 晚上第二次执行的都是白天漏掉的，数量很少，所以不使用代理了
-                    if not is_night and any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用代理
-                        # 获取代理ip
-                        proxy = Http.get_vpn_url()  # 先用 vpn 请求试试
-                        # proxy, pf = Http.get_proxy()  # 轮询隧道 - 这个要钱，暂时不用
-                        # if not pf:
-                        #     raise Exception(f"Get http proxy failed: {proxy}")
+                    if any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用代理
+                        proxy = Http.get_vpn_url()  # 随机vpn代理链接
                     data = Http.send_request(method, url, params, headers, proxy)  # 如果没有proxy则等于本地请求
                 if pid and not info.get('is_succeed'):
                     params = params | {"_cln": f"{len(headers)}-{len(headers['Cookie'])}", "_nat": rand, "_proxy": proxy}

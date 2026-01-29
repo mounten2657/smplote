@@ -16,7 +16,8 @@ from tool.core.api import Api
 class Http:
 
     # IP代理服务商 - 携趣
-    _VPN_URL = Env.get('PROXY_VPN')
+    _VPN_URL = Env.get('PROXY_VPN_URL')
+    _VPN_PORT = Env.get('PROXY_VPN_PORT')
     _XQ_OPT_URL = Env.get('PROXY_OPT_URL_XQ')
     _XQ_OPT_UID = Env.get('PROXY_OPT_UID_XQ')
     _XQ_OPT_KEY = Env.get('PROXY_OPT_KEY_XQ')
@@ -359,9 +360,18 @@ class Http:
         return Http.send_request(method, url, params, headers, proxy)
 
     @staticmethod
-    def get_vpn_url():
+    def get_vpn_count():
+        """获取vpn总数"""
+        return len(Http._VPN_PORT.split(','))
+
+    @staticmethod
+    def get_vpn_url(i=0):
         """获取vpn链接 - 对外提供的方法"""
-        return Http._VPN_URL
+        port_list = Http._VPN_PORT.split(',')
+        i = i if i else Attr.random_choice(list(range(1, len(port_list) + 1)))  # 没有指定就随机选一个
+        if i > len(port_list):
+            return ''
+        return Http._VPN_URL + ':' + port_list[i - 1]
 
     @staticmethod
     def send_request_v(
@@ -369,6 +379,7 @@ class Http:
             url: str,
             params: Union[Dict, str, None] = None,
             headers: Optional[Dict] = None,
+            i = 0
     ) -> Union[Dict, str]:
         """
         发送HTTP请求并自动处理JSON响应
@@ -378,9 +389,10 @@ class Http:
         :param url: 请求URL
         :param params: 查询参数，可以是字典或"a=1&b=2"格式字符串
         :param headers: 请求头字典
+        :param i: VPN 序号，不给就随机选一个
         :return: 如果响应是JSON则返回字典，否则返回原始文本
         """
-        proxy = Http.get_vpn_url()
+        proxy = Http.get_vpn_url(i)
         return Http.send_request(method, url, params, headers, proxy)
 
     @staticmethod
