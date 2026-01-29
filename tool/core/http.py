@@ -371,7 +371,7 @@ class Http:
         port_list = Http._VPN_PORT.split(',')
         rand_list = Http._VPN_RAND.split(',')
         rand_list = rand_list if len(rand_list) > 0 else list(range(1, len(port_list) + 1))  # 优先以自己指定的概率为准
-        i = i if i else Attr.random_choice(rand_list)  # 没有指定就随机选一个
+        i = int(i if i else Attr.random_choice(rand_list))  # 没有指定就随机选一个
         if i > len(port_list):
             return ''
         return Http._VPN_URL + ':' + port_list[i - 1]
