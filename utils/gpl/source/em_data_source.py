@@ -1,8 +1,7 @@
-import random
 from typing import Dict, List
-from tool.core import Logger, Attr, Str, Error, Time, Http, Config, Env
+from tool.core import Logger, Attr, Str, Time, Http, Env
 from model.gpl.gpl_api_log_model import GplApiLogModel
-from service.vps.open_nat_service import OpenNatService
+from service.source.nat_service import NatService
 
 logger = Logger()
 
@@ -28,15 +27,9 @@ class EmDataSource:
     _NOTICE_C_URL = "https://np-cnotice-stock.eastmoney.com/"
     _NEWS_URL = "https://emdcnewsapp.eastmoney.com"
 
-    def __init__(self, timeout=30, retry_times=3):
-        """
-        初始化数据来源
-
-        :param: timeout: 请求超时时间(秒)
-        :param: retry_times: 请求重试次数
-        """
-        self.timeout = timeout
-        self.retry_times = retry_times
+    def __init__(self):
+        """初始化数据来源"""
+        self.nat = NatService()
         self.headers = {
             'Referer': 'https://www.eastmoney.com/',
             'Cookie': Env.get('GPL_EM_COOKIE', ''),  # 重要的属性，传递Cookie能快速解禁，但次数有限
@@ -54,55 +47,41 @@ class EmDataSource:
         :param: method: 请求方式: GET | POST
         :return: 解析后的JSON数据，失败返回None
         """
-        proxy = ''
-        for i in range(0, self.retry_times):
-            if i > 0 and not proxy:  # 只有代理模式才有重试机制
-                return None, 0
-            info = {}
-            pid = 0
-            rand = Str.randint(1, 10000) % 10  # 由于同一台机器短时间内大量请求会被封，所以这里用不同机器进行分流
-            headers = Http.get_random_headers() | self.headers  # 每次都是随机的 header
-            # 如果已经有了日志数据就不用请求接口了
-            if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
-                pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
-                if isinstance(pid, dict):
-                    if pid['response_result'] and isinstance(pid['response_result'], dict):
-                        return pid['response_result'], 0
-                    else:
-                        info = pid
-                        pid = pid['id']
-            try:
-                # if not Config.is_prod():
-                #     rand = random.choice([0, 5])  # 代理坏的情况下使用
-                headers['Referer'] = Http.get_request_base_url(url)
-                # [0l, 1p, 2p, 3p, 4p, 5v, 6p, 7p, 8p, 9p]  # 占比:  vps: 10% | local: 10% | proxy: 80%
-                if rand in [0]:  # [0] - 本地
-                    data = Http.send_request(method, url, params, headers)
-                elif rand in [5]:  # [5] - vps
-                    data = OpenNatService.send_http_request(method, url, params, headers, self.timeout)
-                else:  # [1, 2, 3, 4, 6, 7, 8, 9] - proxy
-                    # 代理模式
-                    if any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用代理
-                        proxy = Http.get_vpn_url()  # 随机vpn代理链接
-                    data = Http.send_request(method, url, params, headers, proxy)  # 如果没有proxy则等于本地请求
-                if pid and not info.get('is_succeed'):
-                    params = params | {"_cln": f"{len(headers)}-{len(headers['Cookie'])}", "_nat": rand, "_proxy": proxy}
-                    self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})
-                return data, pid
-            except Exception as e:
-                err = Error.handle_exception_info(e)
-                params = params | {"_cln": f"{len(headers)}-{len(headers['Cookie'])}", "_nat": rand, "_proxy": proxy}
-                logger.warning(f"请求失败 ({i + 1}/{self.retry_times}): {url} - {params} - 错误 - {err}", 'EM_API_ERR')
-                if i == self.retry_times - 1:
-                    if pid:
-                        self.ldb.update_gpl_api_log(pid, {'request_params': params})
-                    return None, 0
-        return None, 0
+        pid = 0
+        info = {}
+        headers = Http.get_random_headers() | self.headers  # 每次都是随机的 header
+        headers['Referer'] = Http.get_request_base_url(url)    # 来源固定
+        # 如果已经有了日志数据就不用请求接口了
+        if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
+            pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
+            if isinstance(pid, dict):
+                #if pid['response_result'] and isinstance(pid['response_result'], dict):  # 有结果就返回老数据
+                if pid.get('is_succeed'):  # 只有成功才返回老数据
+                    return pid['response_result'], 0
+                else:
+                    info = pid
+                    pid = pid['id']
+        # 非常重要业务才使用混合模式
+        if any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 概率分配和重试机制在里面实现了
+            data, r_type, proxy = self.nat.mixed_request(method, url, params, headers)
+        else:  # 本地请求
+            data = Http.send_request(method, url, params, headers)
+            r_type, proxy = 'l', '_'
+        # 记录执行的参数
+        params = params | {"_cln": f"{len(headers)}-{len(headers['Cookie'])}", "_rty": r_type, "_proxy": proxy}
+        if pid:
+            if not info.get('is_succeed'):  # 第一次请求都会进入这里
+                self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})
+            else:  # 一般不会进入这里
+                # self.ldb.update_gpl_api_log(pid, {'request_params': params})
+                pass
+        return data, pid
 
-    def _ret(self, res, pid, start_time):
+    def _ret(self, res, pid, start_time, is_succeed=None):
         """格式化返回"""
+        is_succeed = is_succeed if is_succeed else int(bool(res))
         run_time = round(Time.now(0) - start_time, 3) * 1000
-        res and self.ldb.update_gpl_api_log(pid, {'process_params': res, 'is_succeed': 1, 'response_time': run_time})
+        res and self.ldb.update_gpl_api_log(pid, {'process_params': res, 'is_succeed': is_succeed, 'response_time': run_time})
         return res
 
     def _format_stock_code(self, stock_code):
@@ -236,7 +215,7 @@ class EmDataSource:
         data, pid = self._get(url, params, f'EM_DAILY_{adjust_dict[adjust]}', {'he': f'{prefix}{stock_code}', 'hv': f'{sd}~{ed}'})
         kline_list = Attr.get_by_point(data, 'data.klines', [])
         if not kline_list:
-            return []
+            return self._ret([], pid, start_time, 0)
         # 解析K线数据
         daily_data = []
         for kline in kline_list:
@@ -293,6 +272,8 @@ class EmDataSource:
             }
             data, pid = self._get(url, params, 'EM_GD_TOP10', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{limit}"})
             res = Attr.get_by_point(data, 'result.data', [])
+        if not res:
+            return self._ret([], pid, start_time, 0)
         ret = [{
             'date': d['END_DATE'][:10],
             'rank': d['HOLDER_RANK'],  # 排名
@@ -323,6 +304,8 @@ class EmDataSource:
         start_time = Time.now(0)
         data, pid = self._get(url, params, 'EM_GD_TOP10_FREE', {'he': f'{prefix}{stock_code}', 'hv': sd})
         res = Attr.get_by_point(data, 'sdltgd', [])
+        if not res:
+            return self._ret([], pid, start_time, 0)
         ret = [{
             'date': d['END_DATE'][:10],
             'rank': d['HOLDER_RANK'],  # 排名
@@ -362,6 +345,8 @@ class EmDataSource:
         }
         data, pid = self._get(url, params, 'EM_GD_NUM', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
+        if not res:
+            return self._ret([], pid, start_time, 0)
         ret = [{
             'date': d['END_DATE'][:10],
             'total_num': Attr.get(d, 'HOLDER_TOTAL_NUM', 0),  # 总股东人数（户）
@@ -399,6 +384,8 @@ class EmDataSource:
         }
         data, pid = self._get(url, params, 'EM_GD_ORG_T', {'he': f'{prefix}{stock_code}', 'hv': f"{td}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
+        if not res:
+            return self._ret([], pid, start_time, 0)
         ret = [{
             'date': d['REPORT_DATE'][:10],
             'total_org': Attr.get(d, 'TOTAL_ORG_NUM', 0),  # 总机构数
@@ -435,6 +422,8 @@ class EmDataSource:
         }
         data, pid = self._get(url, params, 'EM_GD_ORG_D', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
+        if not res:
+            return self._ret([], pid, start_time, 0)
         ret = [{
             'date': d['REPORT_DATE'][:10],
             'total_org': Attr.get(d, 'TOTAL_ORG_NUM', 0),  # 总机构数
@@ -477,6 +466,8 @@ class EmDataSource:
         }
         data, pid = self._get(url, params, 'EM_GD_ORG_L', {'he': f'{prefix}{stock_code}', 'hv': f"{sd}~{is_all}"})
         res = Attr.get_by_point(data, 'result.data', {})
+        if not res:
+            return self._ret([], pid, start_time, 0)
         ret = [{
             'date': d['REPORT_DATE'][:10],
             'des': Attr.get(d, 'HOLDER_NAME', ''),  # 机构名称

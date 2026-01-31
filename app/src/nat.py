@@ -1,8 +1,12 @@
 from tool.router.base_app import BaseApp
-from tool.core.http import Http
+from service.source.nat_service import NatService
 
 
 class Nat(BaseApp):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.nat = NatService()
 
     def ppr(self):
         """利用代理池发起请求"""
@@ -11,7 +15,7 @@ class Nat(BaseApp):
         params = self.params.get('p', '')
         if not url:
             return self.error('Invalid url')
-        return self.success(Http.send_request_x(method, url, params))
+        return self.success(self.nat.proxy_pool_request(method, url, params))
 
     def vpn(self):
         """利用vpn发起请求"""
@@ -20,4 +24,13 @@ class Nat(BaseApp):
         params = self.params.get('p', '')
         if not url:
             return self.error('Invalid url')
-        return self.success(Http.send_request_v(method, url, params))
+        return self.success(self.nat.vpn_request(method, url, params))
+
+    def vps(self):
+        """利用vps发起请求"""
+        method = self.params.get('m', 'GET')
+        url = self.params.get('u', '')
+        params = self.params.get('p', '')
+        if not url:
+            return self.error('Invalid url')
+        return self.success(self.nat.vps_request(method, url, params))

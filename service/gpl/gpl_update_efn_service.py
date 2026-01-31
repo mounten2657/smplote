@@ -4,7 +4,6 @@ from model.gpl.gpl_season_model import GPLSeasonModel
 from model.gpl.gpl_file_model import GplFileModel
 from model.gpl.gpl_symbol_text_model import GPLSymbolTextModel
 from tool.core import Ins, Logger, Str, Time, Attr, File, Dir
-from tool.unit.net.cache_http_client import CacheHttpClient
 
 logger = Logger()
 
@@ -232,68 +231,3 @@ class GPLUpdateEfnService:
                 logger.warning(f"更新财务公告文本数据<{symbol}><{sd} ~ {td}> - <{i}/{len(dfl)}>", 'UP_SNF_WAR')
                 ret['uft'][d['id']] = jdb.update_season(d['id'], {"e_val": d['e_val']})
         return ret
-
-    def cache_fnn_em_txt(self, r_type=1, code_str=''):
-        """
-        缓存股票财务公告文本
-          - 由于总数太多，正常一个个请求会需要很长地时间，故此通过代理池在短时间内完成大量网络请求并缓存
-          - 已经入库的数据不用再去请求，注意过滤
-
-        :param r_type: 执行次数：第一次统一请求第一页，全部完成后，再进行第二次，第二次根据第一次的结果再判断要请求几次分页数据
-        :param code_str: 股票代码列表 - 多个用英文逗号隔开，为空默认全股票
-        :return:
-        """
-        code_list = [Str.remove_stock_prefix(c) for c in code_str.split(',') if c.strip()]  # 有无前缀都去掉
-        code_list = code_list if code_list else self.formatter.get_stock_code_all()  # 默认获取所有的股票代码列表
-        jdb = GPLSeasonModel()
-        tdb = GPLSymbolTextModel()
-        biz_code = 'EM_FN_NT'
-        par_list = []
-        # 先统一整理数据，之后再作请求动作
-        c_list = Attr.chunk_list(code_list, 50)  # 50个一组集中查询
-        for cl in c_list:
-            symbol_list = [Str.add_stock_prefix(c) for c in cl]
-            symbol = symbol_list[0]
-            percent = self.formatter.get_percent(cl[0], cl, code_list) + f" - {len(par_list)}"
-            logger.info(f"获取财务公告文本数据缓存参数<{symbol}>{percent}", 'P_FNN_INF')
-            s_list = jdb.get_anr_code_list(symbol_list)  # 根据股票代码获取其下所有报告文件的代码
-            if not s_list:
-                continue
-            t_list = tdb.get_text_list(symbol_list, biz_code, ['id', 'e_key'])  # 获取所有已保存的报告文件列表
-            t_list = [t['e_key'] for t in t_list if t['e_key']]
-            a_list = [s for s in s_list if s not in t_list]  # 只保留未获取过的数据
-            if not a_list:
-                continue
-            for art_code in a_list:
-                logger.debug(f"获取财务公告文本数据报告代码<{symbol}>{percent} - ({len(s_list)}/{len(t_list)}/{len(a_list)}) - {art_code}", 'C_FNN_DBG')
-                par = self.formatter.em.get_fn_notice_txt_par(art_code, 1)
-                a_cache = CacheHttpClient.get_req_cache(par['url'], par['params'])
-                # {"data":{"art_code":"AN201606170015262533","attach_list":[{"attach_size":87,"attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","seq":1}],"attach_list_ch":[{"attach_size":87,"attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","seq":1}],"attach_list_en":[],"attach_size":"87","attach_type":"0","attach_url":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","attach_url_web":"https://pdf.dfcfw.com/pdf/H2_AN201606170015262533_1.pdf?1647088592000.pdf","eitime":"2016-06-17 16:51:56","extend":{},"is_ai_summary":0,"is_rich":0,"is_rich2":0,"language":"0","notice_content":"证券代码：002030 证券简称：达安基因 公告编号：2016-045\r\n 中山大学达安基因股份有限公司\r\n 关于已授予股票期权注销完成的公告\r\n 本公司及董事会全体成员保证信息披露内容的真实、准确和完整，没有虚假记载、误导性陈述或重大遗漏。\r\n 中山大学达安基因股份有限公司（以下简称“公司”）第五届董事会第六次会议和第五届监事会第六次会议审议通过了《关于终止实施股票期权激励计划的预案》，并经2015年度股东大会审议通过，会议同意公司终止股票期权激励计划并注销已授予的股票期权。具体内容详见公司于2016年3月31日在《证券时报》、巨潮资讯网上刊登的《中山大学达安基因股份有限公司关于终止实施股票期权激励计划的公告》（公告编号：2016-011）。\r\n 经中国证券登记结算有限责任公司深圳分公司审核确认，公司已完成了对首期股票期权激励计划已授予的全部股票期权注销事宜，涉及激励对象67人，股票期权数量508.464万份。\r\n 特此公告。\r\n 中山大学达安基因股份有限公司\r\n 董事会\r\n 2016年6月17日\r\n","notice_date":"2016-06-18 00:00:00","notice_title":"达安基因:关于已授予股票期权注销完成的公告","page_size":1,"page_size_ch":0,"page_size_cht":0,"page_size_en":0,"security":[{"market_uni":"0","short_name":"达安基因","short_name_ch":"达安基因","short_name_cht":"達安基因","short_name_en":"DAJY","stock":"002030"}],"short_name":"达安基因"},"success":1}
-                if 1 == r_type:  # 第一次请求
-                    if a_cache:  # 有缓存的直接跳过
-                        continue
-                    par_list.append(par)
-                else:  # 第二次请求
-                    if not a_cache:
-                        par_list.append(par)
-                    else:
-                        pn = Attr.get_by_point(a_cache, 'data.data.page_size', 0)
-                        if not pn:  # 这种的是东财没有翻译成功的，记个错误日志
-                            logger.error(f"获取财务公告文本数据错误<{symbol}>{percent} - {pn} - {a_cache}", 'C_FNN_ERR')
-                            continue
-                        if 1== pn:  # 排除只有一页的数据，剩下的就都是多页的数据了
-                            continue
-                        for p in range(1, pn):
-                            par_list.append(par | {"page_index": p + 1})
-        # 已经获取到了所有参数，现在分为1000个一组，批量进行请求
-        par_len = len(par_list)
-        success = {"hpk": "data.notice_content"}  # 有具体内容才算成功
-        par_list = Attr.chunk_list(par_list, 1000)
-        for pl in par_list:
-            art_code = pl[0]['params']['art_code']
-            n = CacheHttpClient.batch_request(pl, success)
-            logger.info(f"批量缓存财务公告文本数据结果<{art_code}> - [{len(pl)}/{n}]", 'C_FNN_INF')
-            Time.sleep(1)  # 休眠一秒
-        return par_len  # 返回数据总长度
-
-

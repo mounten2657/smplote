@@ -16,12 +16,19 @@ from tool.core.api import Api
 class Http:
 
     # IP代理服务商 - 携趣
-    _VPN_URL = Env.get('PROXY_VPN_URL')
-    _VPN_PORT = Env.get('PROXY_VPN_PORT')
-    _VPN_RAND = Env.get('PROXY_VPN_RAND')
     _XQ_OPT_URL = Env.get('PROXY_OPT_URL_XQ')
     _XQ_OPT_UID = Env.get('PROXY_OPT_UID_XQ')
     _XQ_OPT_KEY = Env.get('PROXY_OPT_KEY_XQ')
+
+    # VPN 代理 - 多种合并
+    _VPN_URL = Env.get('PROXY_VPN_URL')
+    _VPN_PORT = Env.get('PROXY_VPN_PORT')
+    _VPN_RAND = Env.get('PROXY_VPN_RAND')
+
+    # 混合模式下各种请求的概率
+    _PROXY_RAND = Env.get('PROXY_RAND')
+
+    # 雪球财经相关配置
     _XQ_URL = Env.get('PROXY_API_URL_XQ')
     _XQ_UID = Env.get('PROXY_API_UID_XQ')
     _XQ_KEY = Env.get('PROXY_API_KEY_XQ')
@@ -307,7 +314,7 @@ class Http:
 
         :param int num: 提取个数，一个时返回字符串，多个时返回列表
         :param int pn: 隧道池编号
-        :return: 代理ip 和 端口  + 获取结果
+        :return: 代理ip
         """
         ip_list = []
         url = f"{Http._XQ_URL}/VAD/GetIp.aspx"
@@ -335,8 +342,8 @@ class Http:
                 ip = f"http://{r['IP']}:{r['Port']}"
                 ip_list.append(ip)
         if not ip_list:
-            return '' if num == 1 else [], False
-        return ip_list[0] if num == 1 else ip_list , True
+            return '' if num == 1 else []
+        return ip_list[0] if num == 1 else ip_list
 
     @staticmethod
     def send_request_x(
@@ -355,8 +362,8 @@ class Http:
         :param headers: 请求头字典
         :return: 如果响应是JSON则返回字典，否则返回原始文本
         """
-        proxy, pf = Http.get_proxy()
-        if not pf:
+        proxy= Http.get_proxy(1)
+        if not proxy:
             return Api.error(f"Get http proxy failed: {proxy}")
         return Http.send_request(method, url, params, headers, proxy)
 
@@ -386,7 +393,7 @@ class Http:
     ) -> Union[Dict, str]:
         """
         发送HTTP请求并自动处理JSON响应
-          - 代理模式，使用VPN - 可翻墙
+          - VPN模式，使用VPN - 可翻墙
 
         :param method: HTTP方法 (GET/POST/PUT/DELETE等)
         :param url: 请求URL
@@ -397,6 +404,12 @@ class Http:
         """
         proxy = Http.get_vpn_url(i)
         return Http.send_request(method, url, params, headers, proxy)
+
+    @staticmethod
+    def get_mixed_rand():
+        """获取混合模式下的随机值"""
+        rand_list = Http._PROXY_RAND.split(',')
+        return Attr.random_choice(rand_list)  # l, z, v, x
 
     @staticmethod
     def is_http_request():

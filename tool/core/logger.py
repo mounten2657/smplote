@@ -1,12 +1,11 @@
 import os
-import logging
 import re
 import sys
 import json
+import logging
 from flask import request
 from queue import Queue
 from threading import Lock
-from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
 from tool.core.dir import Dir
 from tool.core.config import Config
@@ -84,7 +83,6 @@ class Logger:
         log_file = f'{log_dir}/{log_name}_{log_type}_{today}.log'
 
         # 使用轮转规则，虽然可以自动清除超过七天的日志文件，但是跨天会生成冗余文件，故舍弃，改为普通 Handler
-        # file_handler = TimedRotatingFileHandler(log_file, when='midnight', backupCount=7, encoding='utf-8')
         file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
         file_handler.setLevel(log_level)
 
