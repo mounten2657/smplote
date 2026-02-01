@@ -19,6 +19,9 @@ class Http:
     _XQ_OPT_URL = Env.get('PROXY_OPT_URL_XQ')
     _XQ_OPT_UID = Env.get('PROXY_OPT_UID_XQ')
     _XQ_OPT_KEY = Env.get('PROXY_OPT_KEY_XQ')
+    _XQ_URL = Env.get('PROXY_API_URL_XQ')
+    _XQ_UID = Env.get('PROXY_API_UID_XQ')
+    _XQ_KEY = Env.get('PROXY_API_KEY_XQ')
 
     # VPN 代理 - 多种合并
     _VPN_URL = Env.get('PROXY_VPN_URL')
@@ -27,11 +30,6 @@ class Http:
 
     # 混合模式下各种请求的概率
     _PROXY_RAND = Env.get('PROXY_RAND')
-
-    # 雪球财经相关配置
-    _XQ_URL = Env.get('PROXY_API_URL_XQ')
-    _XQ_UID = Env.get('PROXY_API_UID_XQ')
-    _XQ_KEY = Env.get('PROXY_API_KEY_XQ')
 
     @staticmethod
     def get_random_headers():
@@ -270,12 +268,13 @@ class Http:
             if not w.get('MEMO'):
                 wip = w.get('IP')
                 break
-        if not wip or wip == res["ip"]:
-            return res
-        # 删除老IP
-        res['del'] = Http.send_request('GET', url, params | {"act": "del", "ip": wip})  # success
-        if not res['del']:
-            return Api.error(f"Get white ip failed: {res['del']}")
+        if not (len(wd) == 1 and not wip):  # not 没有本地ip
+            if not wip or wip == res["ip"]:
+                return res
+            # 删除老IP
+            res['del'] = Http.send_request('GET', url, params | {"act": "del", "ip": wip})  # success
+            if not res['del']:
+                return Api.error(f"Get white ip failed: {res['del']}")
         # 添加本地IP到白名单中
         res['add'] = Http.send_request('GET', url, params | {"act": "add", "ip": res['ip']})  # success
         if not res['add']:
@@ -318,6 +317,7 @@ class Http:
         """
         ip_list = []
         url = f"{Http._XQ_URL}/VAD/GetIp.aspx"
+        pn = 51 if num >= 200 else pn # 只有 J 池数量才管够
         tn = Http.get_proxy_tunnel(pn)  # 从所有的隧道池中随机取出一个
         params = {
             "act": f"getturn{tn}",

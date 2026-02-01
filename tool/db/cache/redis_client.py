@@ -61,6 +61,7 @@ class RedisClient:
     def client(self) -> redis.Redis:
         """
         获取Redis连接客户端
+
         :return: redis.Redis 实例
         :raises: RuntimeError 如果连接未初始化
         """
@@ -92,12 +93,9 @@ class RedisClient:
         """
         获取Redis缓存key信息（键名 + 过期时间）
 
-        Args:
-            key_name: 缓存键名称（如"VP_USER_INFO"）
-            args: 格式化键所需的参数列表（可为None或空列表）
-
-        Returns:
-            key, ttl
+        :param: key_name: 缓存键名称（如"VP_USER_INFO"）
+        :param: args: 格式化键所需的参数列表（可为None或空列表）
+        :return: key, ttl
         """
         if key_name not in RedisKeys.CACHE_KEY_STRING:
             raise ValueError(f"未定义缓存键: {key_name}")
@@ -118,19 +116,18 @@ class RedisClient:
         if 'today' == ttl:
             ttl = (86400 - datetime.datetime.now().timestamp() % 86400)
         # ttl 必然有值，随机加上一个时间，避免所有缓存在同一时间失效
-        ttl = int(ttl) + Str.randint(1, 300)  # 误差为 5 分钟
+        ttl = int(ttl)
+        if ttl >= 900:
+            ttl += Str.randint(1, 300)  # 误差为 5 分钟
         return formatted_key, ttl
 
     def get(self, key_name, args=None):
         """
         获取Redis缓存值
 
-        Args:
-            key_name: 缓存键名称（如"VP_USER_INFO"）
-            args: 格式化键所需的参数列表（可为None或空列表）
-
-        Returns:
-            缓存值（如果是JSON字符串会自动解析为对象）
+        :param: key_name: 缓存键名称（如"VP_USER_INFO"）
+        :param: args: 格式化键所需的参数列表（可为None或空列表）
+        :return: 缓存值（如果是JSON字符串会自动解析为对象）
         """
         formatted_key, ttl = self._format_key(key_name, args)
         value = self.client.get(formatted_key)
@@ -140,15 +137,12 @@ class RedisClient:
 
     def set(self, key_name, value, args=None):
         """
-        设置Redis缓存值（使用setex）
+        设置Redis缓存值 - setex
 
-        Args:
-            key_name: 缓存键名称（如"VP_USER_INFO"）
-            value: 要缓存的值（如果是对象会自动转为JSON字符串）
-            args: 格式化键所需的参数列表（可为None或空列表）
-
-        Returns:
-            Redis操作结果
+        :param: key_name: 缓存键名称（如"VP_USER_INFO"）
+        :param: value: 要缓存的值（如果是对象会自动转为JSON字符串）
+        :param: args: 格式化键所需的参数列表（可为None或空列表）
+        :return: Redis操作结果
         """
         formatted_key, ttl = self._format_key(key_name, args)
         # 尝试将值序列化为JSON
@@ -157,15 +151,12 @@ class RedisClient:
 
     def set_nx(self, key_name, value, args=None):
         """
-        设置Redis缓存值（使用setnx）
+        设置Redis缓存值 - setnx
 
-        Args:
-            key_name: 缓存键名称（如"VP_USER_INFO"）
-            value: 要缓存的值（如果是对象会自动转为JSON字符串）
-            args: 格式化键所需的参数列表（可为None或空列表）
-
-        Returns:
-            Redis操作结果
+        :param: key_name: 缓存键名称（如"VP_USER_INFO"）
+        :param: value: 要缓存的值（如果是对象会自动转为JSON字符串）
+        :param: args: 格式化键所需的参数列表（可为None或空列表）
+        :return: Redis操作结果
         """
         formatted_key, ttl = self._format_key(key_name, args)
         # 尝试将值序列化为JSON
@@ -174,16 +165,53 @@ class RedisClient:
         self.client.expire(formatted_key, int(ttl))
         return res
 
+    def l_len(self, key_name, args=None):
+        """
+        获取列表长度
+
+        :param: key_name: 缓存键名称（如"XXX_LIST"）
+        :param: args: 格式化键所需的参数列表（可为None或空列表）
+        :return: 列表长度
+        """
+        formatted_key, ttl = self._format_key(key_name, args)
+        list_len = self.client.llen(formatted_key)
+        return list_len or 0
+
+    def l_push(self, key_name, d_list=None, args=None):
+        """
+        往列表中插入数据 - 左进
+
+        :param: key_name: 缓存键名称（如"XXX_LIST"）
+        :param: d_list: 数据列表
+        :param: args: 格式化键所需的参数列表（可为None或空列表）
+        :return: Redis 操作结果
+        """
+        formatted_key, ttl = self._format_key(key_name, args)
+        res = self.client.lpush(formatted_key, *d_list)
+        print(ttl)
+        self.client.expire(formatted_key, int(ttl))
+        return res
+
+    def r_pop(self, key_name, count=1, args=None):
+        """
+        从列表中弹出元素 - 右出
+
+        :param: key_name: 缓存键名称（如"XXX_LIST"）
+        :param: count: 弹出个数，默认一个
+        :param: args: 格式化键所需的参数列表（可为None或空列表）
+        :return: Redis 操作结果
+        """
+        formatted_key, ttl = self._format_key(key_name, args)
+        res = self.client.rpop(formatted_key, count)
+        return res
+
     def delete(self, key_name, args=None):
         """
         删除Redis缓存值
 
-        Args:
-            key_name: 缓存键名称（如"VP_USER_INFO"）
-            args: 格式化键所需的参数列表（可为None或空列表）
-
-        Returns:
-            删除结果
+        :param: key_name: 缓存键名称（如"VP_USER_INFO"）
+        :param: args: 格式化键所需的参数列表（可为None或空列表）
+        :return: 删除结果
         """
         formatted_key, ttl = self._format_key(key_name, args)
         if '*' in formatted_key:
