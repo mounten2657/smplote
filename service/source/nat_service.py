@@ -79,12 +79,12 @@ class NatService:
         for i in range(0, retry_times):
             r_type = Http.get_mixed_rand() if i else r_type
             try:
-                if r_type == 'x':  # 代理池 - 80%
+                if r_type == 'x':  # 代理池 - 80%  --> 0%   # 收费太贵且效果不佳，暂不考虑
                     proxy = self.get_proxy_cache()
                     if not proxy:
                         Error.throw_exception('获取代理池失败，请检查缓存或代理商白名单')
                     res = Http.send_request(method, url, params, headers, proxy)
-                elif r_type == 'v':  # VPN - 10%
+                elif r_type == 'v':  # VPN - 10% --> 90%
                     proxy = Http.get_vpn_url()
                     res = Http.send_request(method, url, params, headers, proxy)
                 elif r_type == 'z':   # VPS - 5%
@@ -93,6 +93,8 @@ class NatService:
                 else:  # 本地 - 5%
                     proxy = '_'
                     res = Http.send_request(method, url, params, headers)
+                if proxy and r_type in ('x', 'x'):
+                    logger.info(f"代理请求<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params}", 'MIXED_INF')
             except Exception as e:
                 err = Error.handle_exception_info(e)
                 if i < retry_times - 1:
