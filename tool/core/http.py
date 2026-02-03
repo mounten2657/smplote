@@ -452,6 +452,12 @@ class Http:
         return f"{parsed.scheme}://{parsed.netloc}"
 
     @staticmethod
+    def get_request_host_url(url):
+        """获取请求的主机地址 - 不含 http"""
+        parsed = urlparse(url)
+        return parsed.netloc
+
+    @staticmethod
     def get_request_route(strip=False):
         """获取除去域名和参数部分的请求路由地址"""
         if strip:

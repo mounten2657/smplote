@@ -34,6 +34,7 @@ class EmDataSource:
             'Referer': 'https://www.eastmoney.com/',
             'Cookie': Env.get('GPL_EM_COOKIE', ''),  # 重要的属性，传递Cookie能快速解禁，但次数有限
         }
+        self.his = Env.get('GPL_EM_HIS_IP', '').split(',')
         self.ldb = GplApiLogModel()
 
     def _get(self, url: str, params: Dict = None, biz_code='', ext=None, method='GET'):
@@ -51,6 +52,10 @@ class EmDataSource:
         info = {}
         headers = Http.get_random_headers() | self.headers  # 每次都是随机的 header
         headers['Referer'] = Http.get_request_base_url(url)    # 来源固定
+        headers['Host'] = Http.get_request_host_url(url)        # 主机固定
+        # 如果有免解析，就替换请求链接，链路更短
+        if self.his and self._PUSH_URL in url:
+            url = str(url).replace(self._PUSH_URL, "http://" + Attr.random_choice(self.his))
         # 如果已经有了日志数据就不用请求接口了
         if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
             pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
