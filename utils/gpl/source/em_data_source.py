@@ -30,11 +30,10 @@ class EmDataSource:
     def __init__(self):
         """初始化数据来源"""
         self.nat = NatService()
-        self.headers = {
-            'Referer': 'https://www.eastmoney.com/',
-            'Cookie': Env.get('GPL_EM_COOKIE', ''),  # 重要的属性，传递Cookie能快速解禁，但次数有限
-        }
-        self.his = Env.get('GPL_EM_HIS_IP', '').split(',')
+        self.headers = {'Referer': 'https://www.eastmoney.com'}
+        cookie = Env.get('GPL_EM_COOKIE', '')
+        if cookie:
+            self.headers['Cookie'] = cookie  # 重要的属性，传递Cookie能快速解禁，但次数有限
         self.ldb = GplApiLogModel()
 
     def _get(self, url: str, params: Dict = None, biz_code='', ext=None, method='GET'):
@@ -53,9 +52,6 @@ class EmDataSource:
         headers = Http.get_random_headers() | self.headers  # 每次都是随机的 header
         headers['Referer'] = Http.get_request_base_url(url)    # 来源固定
         headers['Host'] = Http.get_request_host_url(url)        # 主机固定
-        # 如果有免解析，就替换请求链接，链路更短
-        if self.his and self._PUSH_URL in url:
-            url = str(url).replace(self._PUSH_URL, "http://" + Attr.random_choice(self.his))
         # 如果已经有了日志数据就不用请求接口了
         if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
             pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
@@ -73,7 +69,7 @@ class EmDataSource:
             data = Http.send_request(method, url, params, headers)
             r_type, proxy = 'l', '_'
         # 记录执行的参数
-        params = params | {"_cln": f"{len(headers)}-{len(headers['Cookie'])}", "_rty": r_type, "_proxy": proxy}
+        params = params | {"_cln": f"{len(headers)}-{len(headers.get('Cookie', ''))}", "_rty": r_type, "_proxy": proxy}
         if pid:
             if not info.get('is_succeed'):  # 第一次请求都会进入这里
                 self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})
@@ -203,6 +199,7 @@ class EmDataSource:
         start_time = Time.now(0)
         stock_code, prefix, prefix_int = self._format_stock_code(stock_code)
         url = self._PUSH_URL + "/api/qt/stock/kline/get"
+        url = str(url).replace('push2his.',  f'{Str.randint(1, 100)}.push2his.')  # 添加随机的数字前缀
         adjust_dict = {"qfq": "1", "hfq": "2", "": "0"}
         period_dict = {"daily": "101", "weekly": "102", "monthly": "103"}
         params = {

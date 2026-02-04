@@ -73,7 +73,7 @@ class Http:
             "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
             "zh-CN,zh;q=0.9",
             "zh-CN,zh;q=0.8,en-US;q=0.7,en;q=0.6",
-            "en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7"
+            #"en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7"
         ]
         # 随机Referer
         referer = [
@@ -123,7 +123,7 @@ class Http:
         if random.random() < 0.2:
             headers["X-Timestamp"] = str(int(time.time()))
         # sec 谨慎添加 - 超低概率
-        if random.random() < 0.01:
+        if random.random() < 0.001:
             # 随机Sec-CH-UA
             sec_ch_ua_list = [
                 '"Not_A Brand";v="8", "Chromium";v="121", "Microsoft Edge";v="121"',

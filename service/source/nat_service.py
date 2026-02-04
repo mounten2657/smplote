@@ -1,4 +1,4 @@
-from tool.core import Http, Error, Logger, Str
+from tool.core import Http, Error, Logger, Str, Time
 from tool.db.cache.redis_client import RedisClient
 from service.vps.open_nat_service import OpenNatService
 
@@ -58,7 +58,7 @@ class NatService:
             proxy = ''
         return proxy[0] if isinstance(proxy, list) else proxy
 
-    def mixed_request(self, method: str, url: str, params=None, headers=None, retry_times=3):
+    def mixed_request(self, method: str, url: str, params=None, headers=None, retry_times=9):
         """
         发送HTTP请求
           - 请求失败默认重试三次
@@ -98,7 +98,8 @@ class NatService:
             except Exception as e:
                 err = Error.handle_exception_info(e)
                 if i < retry_times - 1:
-                    logger.warning(f"请求失败<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params} - {err}", 'MIXED_WAR')
+                    logger.warning(f"请求失败，重试中<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params} - {err}", 'MIXED_WAR')
+                    Time.sleep(5)  # 稍微等待一下
                 else:
                     logger.error(f"请求错误，已超过最大重试次数<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params} - {err}", 'MIXED_ERR')
                     return err, r_type, proxy
