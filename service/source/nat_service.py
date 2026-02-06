@@ -98,6 +98,7 @@ class NatService:
                 elif r_type == 'v':  # VPN - 10% --> 90%
                     port = Http.get_vpn_port()  # 随机端口
                     proxy = Http.get_vpn_url(port)
+                    redis.incr(total_key, [f'cnt_{port}'])
                     res = self.vpn_request(method, url, params, headers, port)
                 elif r_type == 'z':   # VPS - 5%
                     proxy = 'vps'
@@ -108,6 +109,7 @@ class NatService:
                 if proxy and r_type in ('x', 'x'):
                     logger.info(f"代理请求<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params}", 'MIXED_INF')
                 redis.incr(total_key, ['suc'])
+                redis.incr(total_key, [f'suc_{port}'])
                 return res, r_type, proxy
             except Exception as e:
                 err = Error.handle_exception_info(e)
@@ -115,12 +117,15 @@ class NatService:
                 if i < retry_times - 1:
                     logger.warning(f"请求失败，重试中<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params} - {err}", 'MIXED_WAR')
                     redis.incr(total_key, ['war'])
-                    redis.incr(failed_key, [f"{uuid}_w"])
-                    redis.set_nx(failed_key, par, [f"{uuid}_w_{i}"])
+                    redis.incr(total_key, [f'war_{port}'])
+                    if port:
+                        redis.incr(failed_key, [f"{uuid}_w"])
+                        redis.set_nx(failed_key, par, [f"{uuid}_w_{i}"])
                     Time.sleep(5 +  i * 4)  # 稍微等待一下，总计152秒，而节点刷新时间为2分钟
                 else:
                     logger.error(f"请求错误，已超过最大重试次数<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params} - {err}", 'MIXED_ERR')
                     redis.incr(total_key, ['fal'])
+                    redis.incr(total_key, [f'fal_{port}'])
                     redis.incr(failed_key, [f"{uuid}_e"])
                     redis.set_nx(failed_key, par, [f"{uuid}_e_{i}"])
                     return err, r_type, proxy

@@ -175,8 +175,9 @@ class RedisClient:
         :return: Redis操作结果
         """
         formatted_key, ttl = self._format_key(key_name, args)
+        res = self.client.incrby(formatted_key, amount)
         self.client.expire(formatted_key, int(ttl))
-        return self.client.incrby(formatted_key, amount)
+        return res
 
     def decr(self, key_name, args=None, amount=1):
         """
@@ -188,8 +189,9 @@ class RedisClient:
         :return: Redis操作结果
         """
         formatted_key, ttl = self._format_key(key_name, args)
+        res = self.client.decrby(formatted_key, amount)
         self.client.expire(formatted_key, int(ttl))
-        return self.client.decrby(formatted_key, amount)
+        return res
 
     def l_len(self, key_name, args=None):
         """
