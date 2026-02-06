@@ -89,6 +89,7 @@ class NatService:
         for i in range(0, retry_times):
             r_type = Http.get_mixed_rand() if i else r_type
             redis.incr(total_key, ['cnt'])
+            redis.incr(total_key, [f'cnt_{r_type}'])
             try:
                 if r_type == 'x':  # 代理池 - 80%  --> 0%   # 收费太贵且效果不佳，暂不考虑
                     proxy = self.get_proxy_cache()
