@@ -98,7 +98,7 @@ class NatService:
                 elif r_type == 'v':  # VPN - 10% --> 90%
                     port = Http.get_vpn_port()  # 随机端口
                     proxy = Http.get_vpn_url(port)
-                    res = Http.send_request(method, url, params, headers, proxy)
+                    res = self.vpn_request(method, url, params, headers, port)
                 elif r_type == 'z':   # VPS - 5%
                     proxy = 'vps'
                     res = self.vps_request(method, url, params, headers)
