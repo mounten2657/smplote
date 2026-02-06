@@ -5,6 +5,7 @@ import ast
 import json
 import types
 import importlib
+import itertools
 from collections import OrderedDict
 from tool.core.str import Str
 
@@ -94,6 +95,13 @@ class Attr:
             return current
         except (KeyError, IndexError, TypeError, ValueError):
             return default
+
+    @staticmethod
+    def nc_list(a_list):
+        """返回种类个数列表"""
+        return list(itertools.chain.from_iterable(
+            [num] * count for num, count in a_list.items()
+        ))
 
     @staticmethod
     def random_choice(a_list):

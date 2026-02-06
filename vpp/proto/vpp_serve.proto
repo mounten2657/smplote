@@ -26,10 +26,20 @@ message Cs7ShRequest {
   string p = 1;
 }
 
+message Cs7HttpRequest {
+  string m = 1;
+  string u = 2;
+  optional string p = 3;
+  optional string h = 4;
+  optional string x = 5;
+  optional int32 t = 6;
+}
+
 service VppServer {
   rpc vp_cdn_download (VpFileRequest) returns (CommonResponse);
   rpc wk_html_2_img (WkHtmlRequest) returns (CommonResponse);
   rpc wk_html_2_pdf (WkHtmlRequest) returns (CommonResponse);
   rpc cs7_rgu (Cs7ShRequest) returns (CommonResponse);
+  rpc cs7_http (Cs7HttpRequest) returns (CommonResponse);
 }
 

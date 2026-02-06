@@ -165,6 +165,32 @@ class RedisClient:
         self.client.expire(formatted_key, int(ttl))
         return res
 
+    def incr(self, key_name, args=None, amount=1):
+        """
+        Redis缓存值自增
+
+        :param: key_name: 缓存键名称（如"VP_USER_INFO"）
+        :param: amount: 自增步长，默认1
+        :param: args: 格式化键所需的参数列表（可为None或空列表）
+        :return: Redis操作结果
+        """
+        formatted_key, ttl = self._format_key(key_name, args)
+        self.client.expire(formatted_key, int(ttl))
+        return self.client.incrby(formatted_key, amount)
+
+    def decr(self, key_name, args=None, amount=1):
+        """
+        Redis缓存值自减
+
+        :param: key_name: 缓存键名称（如"VP_USER_INFO"）
+        :param: amount: 自减步长，默认1
+        :param: args: 格式化键所需的参数列表（可为None或空列表）
+        :return: Redis操作结果
+        """
+        formatted_key, ttl = self._format_key(key_name, args)
+        self.client.expire(formatted_key, int(ttl))
+        return self.client.decrby(formatted_key, amount)
+
     def l_len(self, key_name, args=None):
         """
         获取列表长度

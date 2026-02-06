@@ -22,9 +22,10 @@ class Nat(BaseApp):
         method = self.params.get('m', 'GET')
         url = self.params.get('u', '')
         params = self.params.get('p', '')
+        o = self.params.get('o', '0')
         if not url:
             return self.error('Invalid url')
-        return self.success(self.nat.vpn_request(method, url, params))
+        return self.success(self.nat.vpn_request(method, url, params, int(o)))
 
     def vps(self):
         """利用vps发起请求"""

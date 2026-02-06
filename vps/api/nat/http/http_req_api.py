@@ -1,4 +1,3 @@
-import json
 import requests
 from urllib.parse import urlencode
 from vps.base.func import Func
@@ -9,6 +8,7 @@ class HttpReqApi:
     def send_req(self, method, url, params=None, headers=None, timeout=None):
         """
         执行Http请求
+
         :param str method: 请求方式
         :param str url:  请求链接
         :param dict params: 请求参数
@@ -43,7 +43,5 @@ class HttpReqApi:
                 return rep.json()
             return Func.str_to_json(rep.text)
         except Exception as e:
-            msg = f"HTTP request failed: {str(e)}"
-            print(msg)
-            return msg
+            return f"HTTP request failed: {str(e)}"
 

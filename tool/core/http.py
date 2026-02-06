@@ -24,12 +24,11 @@ class Http:
     _XQ_KEY = Env.get('PROXY_API_KEY_XQ')
 
     # VPN 代理 - 多种合并
-    _VPN_URL = Env.get('PROXY_VPN_URL')
-    _VPN_PORT = Env.get('PROXY_VPN_PORT')
-    _VPN_RAND = Env.get('PROXY_VPN_RAND')
+    _VPN_HOST = Env.get('PROXY_VPN_HOST')
+    _VPN_PORT = Env.get('PROXY_VPN_PORT', '')
 
     # 混合模式下各种请求的概率
-    _PROXY_RAND = Env.get('PROXY_RAND')
+    _PROXY_RAND = Env.get('PROXY_RAND', '')
 
     @staticmethod
     def get_random_headers():
@@ -80,12 +79,12 @@ class Http:
             "https://quote.eastmoney.com/",
             "https://www.eastmoney.com/",
             "https://finance.eastmoney.com/",
-            "https://www.baidu.com/",
+            "https://www.sina.com.cn/",
+            "https://www.163.com/",
             "https://www.google.com/",
             "https://www.bing.com/",
             "https://www.zhihu.com/",
-            "https://www.sina.com.cn/",
-            "https://www.163.com/",
+            "https://www.baidu.com/",
             None, None, None, None, None, None,  # 随机无Referer
         ]
         headers = {
@@ -122,40 +121,6 @@ class Http:
             headers["X-Requested-With"] = "XMLHttpRequest"
         if random.random() < 0.2:
             headers["X-Timestamp"] = str(int(time.time()))
-        # sec 谨慎添加 - 超低概率
-        if random.random() < 0.001:
-            # 随机Sec-CH-UA
-            sec_ch_ua_list = [
-                '"Not_A Brand";v="8", "Chromium";v="121", "Microsoft Edge";v="121"',
-                '"Google Chrome";v="121", "Not:A-Brand";v="8", "Chromium";v="121"',
-                '"Microsoft Edge";v="120", "Chromium";v="120", "Not.A/Brand";v="24"',
-                '"Firefox";v="122", "Not=A?Brand";v="99"'
-            ]
-            # 随机Sec-CH-UA-Platform
-            sec_ch_ua_platform = [
-                '"Windows"',
-                '"macOS"',
-                '"Linux"'
-            ]
-            # 可选的额外头
-            optional_headers = {
-                "X-Requested-With": ["XMLHttpRequest", "com.android.browser"],
-                "Sec-Fetch-Site": ["none", "same-origin", "cross-site"],
-                "Sec-Fetch-Mode": ["navigate", "no-cors", "cors"],
-                "Sec-Fetch-Dest": ["document", "empty", "iframe"],
-                "Sec-Fetch-User": ["?1", None],  # 随机有无
-                "Priority": ["u=0, i", "u=1, i", None],  # 优先级头
-                "Sec-CH-UA-Mobile": ["?0", "?1"],  # 移动端/桌面端
-                "If-Modified-Since": [time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime()), None]  # 缓存头
-            }
-            headers = headers | {
-                "Sec-CH-UA": random.choice(sec_ch_ua_list),
-                "Sec-CH-UA-Platform": random.choice(sec_ch_ua_platform),
-                "Sec-CH-UA-Mobile": random.choice(optional_headers["Sec-CH-UA-Mobile"]),
-                "Sec-Fetch-Dest": random.choice(optional_headers["Sec-Fetch-Dest"]),
-                "Sec-Fetch-Mode": random.choice(optional_headers["Sec-Fetch-Mode"]),
-                "Sec-Fetch-Site": random.choice(optional_headers["Sec-Fetch-Site"])
-            }
         # 随机Referer（可能为空）
         referer = random.choice(referer)
         if referer:
@@ -300,9 +265,7 @@ class Http:
             62: 50,  # X池
             76: 10  # X池 （三分钟版）
         }
-        number_list = list(itertools.chain.from_iterable(
-            [num] * count for num, count in number_counts.items()
-        ))
+        number_list = Attr.nc_list(number_counts)
         return Attr.random_choice(Attr.random_list(number_list))
 
     @staticmethod
@@ -346,70 +309,22 @@ class Http:
         return ip_list[0] if num == 1 else ip_list
 
     @staticmethod
-    def send_request_x(
-            method: str,
-            url: str,
-            params: Union[Dict, str, None] = None,
-            headers: Optional[Dict] = None,
-    ) -> Union[Dict, str]:
-        """
-        发送HTTP请求并自动处理JSON响应
-          - 代理模式，确保每次请求的ip都不同
-
-        :param method: HTTP方法 (GET/POST/PUT/DELETE等)
-        :param url: 请求URL
-        :param params: 查询参数，可以是字典或"a=1&b=2"格式字符串
-        :param headers: 请求头字典
-        :return: 如果响应是JSON则返回字典，否则返回原始文本
-        """
-        proxy= Http.get_proxy(1)
-        if not proxy:
-            return Api.error(f"Get http proxy failed: {proxy}")
-        return Http.send_request(method, url, params, headers, proxy)
+    def get_vpn_port():
+        """获取vpn端口 - 随机值"""
+        nc_list = Attr.nc_list(Attr.parse_json_ignore(Http._VPN_PORT))
+        return Attr.random_choice(nc_list)  # 781 ~ 789
 
     @staticmethod
-    def get_vpn_count():
-        """获取vpn总数"""
-        return len(Http._VPN_PORT.split(','))
-
-    @staticmethod
-    def get_vpn_url(i=0):
-        """获取vpn链接 - 对外提供的方法"""
-        port_list = Http._VPN_PORT.split(',')
-        rand_list = Http._VPN_RAND.split(',')
-        rand_list = rand_list if len(rand_list) > 0 else list(range(1, len(port_list) + 1))  # 优先以自己指定的概率为准
-        i = int(i if i else Attr.random_choice(rand_list))  # 没有指定就随机选一个
-        if i > len(port_list):
-            return ''
-        return Http._VPN_URL + ':' + port_list[i - 1]
-
-    @staticmethod
-    def send_request_v(
-            method: str,
-            url: str,
-            params: Union[Dict, str, None] = None,
-            headers: Optional[Dict] = None,
-            i = 0
-    ) -> Union[Dict, str]:
-        """
-        发送HTTP请求并自动处理JSON响应
-          - VPN模式，使用VPN - 可翻墙
-
-        :param method: HTTP方法 (GET/POST/PUT/DELETE等)
-        :param url: 请求URL
-        :param params: 查询参数，可以是字典或"a=1&b=2"格式字符串
-        :param headers: 请求头字典
-        :param i: VPN 序号，不给就随机选一个
-        :return: 如果响应是JSON则返回字典，否则返回原始文本
-        """
-        proxy = Http.get_vpn_url(i)
-        return Http.send_request(method, url, params, headers, proxy)
+    def get_vpn_url(port=0):
+        """获取vpn链接"""
+        port = port if port else Attr.random_choice(Http.get_vpn_port_rand())  # 没有指定端口就按概率随机选一个端口
+        return f"{Http._VPN_HOST}:{port}"
 
     @staticmethod
     def get_mixed_rand():
         """获取混合模式下的随机值"""
-        rand_list = Http._PROXY_RAND.split(',')
-        return Attr.random_choice(rand_list)  # l, z, v, x
+        nc_list = Attr.nc_list(Attr.parse_json_ignore(Http._PROXY_RAND))
+        return Attr.random_choice(nc_list)  # l, z, v, x
 
     @staticmethod
     def is_http_request():

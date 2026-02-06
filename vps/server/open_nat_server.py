@@ -8,6 +8,16 @@ from vps.api.nat.http.http_req_api import HttpReqApi
 
 
 class OpenNatServer(OpenNatServerServicer):
+    """
+    Vps 服务类
+      - pip install mypy-protobuf
+      - pip install --upgrade protobuf
+      - rm -rf ./vps/proto/generated/*
+      - python -m grpc_tools.protoc -I./vps/proto --python_out=./vps/proto/generated --grpc_python_out=./vps/proto/generated --mypy_out=./vps/proto/generated ./vps/proto/open_nat.proto
+      - vps/proto/generated/open_nat_pb2_grpc.py:6
+      - import vps.proto.generated.open_nat_pb2 as open__nat__pb2
+      - python -m vps.server.app &
+    """
 
     def __init__(self):
         self.msg_api = QYMsgApi(os.getenv('APP_CONFIG_MASTER_KEY'))

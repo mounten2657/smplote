@@ -51,7 +51,7 @@ class OpenNatClient:
         except Exception as e:
             return {"code": 799, "msg": f"grpc error - {e}", "data": None}
 
-    def nat_http_send(self, method, url, params=None, headers=None, timeout=None):
+    def open_nat_http(self, method, url, params=None, headers=None, timeout=None):
         """从vps节点中发起http请求并返回结果"""
         try:
             params = Str.parse_json_string_ignore(params) if params else ''

@@ -11,6 +11,16 @@ from vpp.api.lib.sys.cs7_sh_api import Cs7ShApi
 
 
 class VppServer:
+    """
+    Vpp 服务类
+      - pip install mypy-protobuf
+      - pip install --upgrade protobuf
+      - rm -rf ./vpp/proto/generated/*
+      - python -m grpc_tools.protoc -I./vpp/proto --python_out=./vpp/proto/generated --grpc_python_out=./vpp/proto/generated --mypy_out=./vpp/proto/generated ./vpp/proto/vpp_serve.proto
+      - vpp/proto/generated/vpp_serve_pb2_grpc.py:6
+      - import vpp.proto.generated.vpp_serve_pb2 as vpp__serve__pb2
+      - python -m vpp.server.app &
+    """
 
     def __init__(self):
         self.file_api = VpFileApi()
@@ -39,6 +49,10 @@ class VppServer:
     def cs7_rgu(self, request, context):
         """重启gunicorn"""
         return self._exec_api(context, lambda: self.cs7_api.restart_gunicorn(p=request.p))
+
+    def cs7_http(self, r, context):
+        """发送http请求"""
+        return self._exec_api(context, lambda: self.cs7_api.send_cs7_http(r.m, r.u, r.p, r.h, r.x, r.t))
 
     @staticmethod
     def _exec_api(context, func: Callable, *args, **kwargs):

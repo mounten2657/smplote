@@ -1,6 +1,7 @@
-from tool.core import Http, Error, Logger, Str, Time
+from tool.core import Http, Error, Logger, Str, Time, Api
 from tool.db.cache.redis_client import RedisClient
 from service.vps.open_nat_service import OpenNatService
+from service.vpp.vpp_serve_service import VppServeService
 
 logger = Logger()
 
@@ -13,11 +14,15 @@ class NatService:
 
     def proxy_pool_request(self, method, url, params, headers=None):
         """利用代理池发起请求"""
-        return Http.send_request_x(method, url, params, headers)
+        proxy= Http.get_proxy(1)
+        if not proxy:
+            return Api.error(f"Get http proxy failed: {proxy}")
+        return Http.send_request(method, url, params, headers, proxy)
 
-    def vpn_request(self, method, url, params, headers=None):
+    def vpn_request(self, method, url, params, headers=None, port=None, timeout=None):
         """利用vpn发起请求"""
-        return Http.send_request_v(method, url, params, headers)
+        proxy = Http.get_vpn_url(port)
+        return VppServeService.send_http_request(method, url, params, headers, proxy, timeout)
 
     def vps_request(self, method, url, params, headers=None):
         """利用vps发起请求"""
@@ -26,9 +31,9 @@ class NatService:
     def get_proxy_cache(self, n=200):
         """从代理池缓存中获取一个代理"""
         redis = self.redis
-        min_threshold = 8  # 列表长度小于该值时触发刷新
         proxy_key = "PROXY_POOL_LIST"  # 列表键，过期时间两分钟
         lock_key = "PROXY_POOL_LOCK"  # 列表锁键
+        min_threshold = 8  # 列表长度小于该值时触发刷新
         try:
             # 检查当前代理列表长度，不足则加锁刷新
             current_len = redis.l_len(proxy_key)
@@ -73,11 +78,17 @@ class NatService:
         :return: json | str | err , r_type, proxy
         """
         res = {}
+        port = 0
         proxy = ''
-        r_type = Http.get_mixed_rand()
         uuid = Str.uuid()
+        r_type = Http.get_mixed_rand()
+        redis = self.redis
+        total_key = "PROXY_STAT_TOL"  # 总数统计
+        failed_key = "PROXY_STAT_FAL"  # 失败统计
+        redis.incr(total_key, ['sig'])
         for i in range(0, retry_times):
             r_type = Http.get_mixed_rand() if i else r_type
+            redis.incr(total_key, ['cnt'])
             try:
                 if r_type == 'x':  # 代理池 - 80%  --> 0%   # 收费太贵且效果不佳，暂不考虑
                     proxy = self.get_proxy_cache()
@@ -85,7 +96,8 @@ class NatService:
                         Error.throw_exception('获取代理池失败，请检查缓存或代理商白名单')
                     res = Http.send_request(method, url, params, headers, proxy)
                 elif r_type == 'v':  # VPN - 10% --> 90%
-                    proxy = Http.get_vpn_url()
+                    port = Http.get_vpn_port()  # 随机端口
+                    proxy = Http.get_vpn_url(port)
                     res = Http.send_request(method, url, params, headers, proxy)
                 elif r_type == 'z':   # VPS - 5%
                     proxy = 'vps'
@@ -95,13 +107,22 @@ class NatService:
                     res = Http.send_request(method, url, params, headers)
                 if proxy and r_type in ('x', 'x'):
                     logger.info(f"代理请求<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params}", 'MIXED_INF')
+                redis.incr(total_key, ['suc'])
+                return res, r_type, proxy
             except Exception as e:
                 err = Error.handle_exception_info(e)
+                par = {"r": r_type, "i": i, "o": port, "x": proxy, "m": method,  "u": url, "p": params, "h": headers, "e": err}
                 if i < retry_times - 1:
                     logger.warning(f"请求失败，重试中<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params} - {err}", 'MIXED_WAR')
+                    redis.incr(total_key, ['war'])
+                    redis.incr(failed_key, [f"{uuid}_w"])
+                    redis.set_nx(failed_key, par, [f"{uuid}_w_{i}"])
                     Time.sleep(5 +  i * 4)  # 稍微等待一下，总计152秒，而节点刷新时间为2分钟
                 else:
                     logger.error(f"请求错误，已超过最大重试次数<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params} - {err}", 'MIXED_ERR')
+                    redis.incr(total_key, ['fal'])
+                    redis.incr(failed_key, [f"{uuid}_e"])
+                    redis.set_nx(failed_key, par, [f"{uuid}_e_{i}"])
                     return err, r_type, proxy
         return res, r_type, proxy
 

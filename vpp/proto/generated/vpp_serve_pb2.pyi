@@ -3,95 +3,157 @@
 isort:skip_file
 """
 
-import builtins
-import google.protobuf.descriptor
-import google.protobuf.message
-import typing
+from google.protobuf import descriptor as _descriptor
+from google.protobuf import message as _message
+import builtins as _builtins
+import sys
+import typing as _typing
 
-DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
+if sys.version_info >= (3, 10):
+    from typing import TypeAlias as _TypeAlias
+else:
+    from typing_extensions import TypeAlias as _TypeAlias
 
-@typing.final
-class CommonResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+DESCRIPTOR: _descriptor.FileDescriptor
 
-    CODE_FIELD_NUMBER: builtins.int
-    MSG_FIELD_NUMBER: builtins.int
-    DATA_FIELD_NUMBER: builtins.int
-    code: builtins.int
-    msg: builtins.str
-    data: builtins.str
+@_typing.final
+class CommonResponse(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    CODE_FIELD_NUMBER: _builtins.int
+    MSG_FIELD_NUMBER: _builtins.int
+    DATA_FIELD_NUMBER: _builtins.int
+    code: _builtins.int
+    msg: _builtins.str
+    data: _builtins.str
     def __init__(
         self,
         *,
-        code: builtins.int = ...,
-        msg: builtins.str = ...,
-        data: builtins.str = ...,
+        code: _builtins.int = ...,
+        msg: _builtins.str = ...,
+        data: _builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["code", b"code", "data", b"data", "msg", b"msg"]) -> None: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["code", b"code", "data", b"data", "msg", b"msg"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
 
-global___CommonResponse = CommonResponse
+Global___CommonResponse: _TypeAlias = CommonResponse  # noqa: Y015
 
-@typing.final
-class VpFileRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+@_typing.final
+class VpFileRequest(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
 
-    FTY_FIELD_NUMBER: builtins.int
-    KEY_FIELD_NUMBER: builtins.int
-    URL_FIELD_NUMBER: builtins.int
-    FP_FIELD_NUMBER: builtins.int
-    FK_FIELD_NUMBER: builtins.int
-    FD_FIELD_NUMBER: builtins.int
-    fty: builtins.int
-    key: builtins.str
-    url: builtins.str
-    fp: builtins.str
-    fk: builtins.str
-    fd: builtins.int
+    FTY_FIELD_NUMBER: _builtins.int
+    KEY_FIELD_NUMBER: _builtins.int
+    URL_FIELD_NUMBER: _builtins.int
+    FP_FIELD_NUMBER: _builtins.int
+    FK_FIELD_NUMBER: _builtins.int
+    FD_FIELD_NUMBER: _builtins.int
+    fty: _builtins.int
+    key: _builtins.str
+    url: _builtins.str
+    fp: _builtins.str
+    fk: _builtins.str
+    fd: _builtins.int
     def __init__(
         self,
         *,
-        fty: builtins.int = ...,
-        key: builtins.str = ...,
-        url: builtins.str = ...,
-        fp: builtins.str = ...,
-        fk: builtins.str = ...,
-        fd: builtins.int | None = ...,
+        fty: _builtins.int = ...,
+        key: _builtins.str = ...,
+        url: _builtins.str = ...,
+        fp: _builtins.str = ...,
+        fk: _builtins.str = ...,
+        fd: _builtins.int | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing.Literal["_fd", b"_fd", "fd", b"fd"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["_fd", b"_fd", "fd", b"fd", "fk", b"fk", "fp", b"fp", "fty", b"fty", "key", b"key", "url", b"url"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing.Literal["_fd", b"_fd"]) -> typing.Literal["fd"] | None: ...
+    _HasFieldArgType: _TypeAlias = _typing.Literal["_fd", b"_fd", "fd", b"fd"]  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["_fd", b"_fd", "fd", b"fd", "fk", b"fk", "fp", b"fp", "fty", b"fty", "key", b"key", "url", b"url"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    _WhichOneofReturnType__fd: _TypeAlias = _typing.Literal["fd"]  # noqa: Y015
+    _WhichOneofArgType__fd: _TypeAlias = _typing.Literal["_fd", b"_fd"]  # noqa: Y015
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__fd) -> _WhichOneofReturnType__fd | None: ...
 
-global___VpFileRequest = VpFileRequest
+Global___VpFileRequest: _TypeAlias = VpFileRequest  # noqa: Y015
 
-@typing.final
-class WkHtmlRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+@_typing.final
+class WkHtmlRequest(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
 
-    FP_FIELD_NUMBER: builtins.int
-    FO_FIELD_NUMBER: builtins.int
-    fp: builtins.str
-    fo: builtins.str
+    FP_FIELD_NUMBER: _builtins.int
+    FO_FIELD_NUMBER: _builtins.int
+    fp: _builtins.str
+    fo: _builtins.str
     def __init__(
         self,
         *,
-        fp: builtins.str = ...,
-        fo: builtins.str = ...,
+        fp: _builtins.str = ...,
+        fo: _builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["fo", b"fo", "fp", b"fp"]) -> None: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["fo", b"fo", "fp", b"fp"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
 
-global___WkHtmlRequest = WkHtmlRequest
+Global___WkHtmlRequest: _TypeAlias = WkHtmlRequest  # noqa: Y015
 
-@typing.final
-class Cs7ShRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+@_typing.final
+class Cs7ShRequest(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
 
-    P_FIELD_NUMBER: builtins.int
-    p: builtins.str
+    P_FIELD_NUMBER: _builtins.int
+    p: _builtins.str
     def __init__(
         self,
         *,
-        p: builtins.str = ...,
+        p: _builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["p", b"p"]) -> None: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["p", b"p"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
 
-global___Cs7ShRequest = Cs7ShRequest
+Global___Cs7ShRequest: _TypeAlias = Cs7ShRequest  # noqa: Y015
+
+@_typing.final
+class Cs7HttpRequest(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    M_FIELD_NUMBER: _builtins.int
+    U_FIELD_NUMBER: _builtins.int
+    P_FIELD_NUMBER: _builtins.int
+    H_FIELD_NUMBER: _builtins.int
+    X_FIELD_NUMBER: _builtins.int
+    T_FIELD_NUMBER: _builtins.int
+    m: _builtins.str
+    u: _builtins.str
+    p: _builtins.str
+    h: _builtins.str
+    x: _builtins.str
+    t: _builtins.int
+    def __init__(
+        self,
+        *,
+        m: _builtins.str = ...,
+        u: _builtins.str = ...,
+        p: _builtins.str | None = ...,
+        h: _builtins.str | None = ...,
+        x: _builtins.str | None = ...,
+        t: _builtins.int | None = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _typing.Literal["_h", b"_h", "_p", b"_p", "_t", b"_t", "_x", b"_x", "h", b"h", "p", b"p", "t", b"t", "x", b"x"]  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["_h", b"_h", "_p", b"_p", "_t", b"_t", "_x", b"_x", "h", b"h", "m", b"m", "p", b"p", "t", b"t", "u", b"u", "x", b"x"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    _WhichOneofReturnType__h: _TypeAlias = _typing.Literal["h"]  # noqa: Y015
+    _WhichOneofArgType__h: _TypeAlias = _typing.Literal["_h", b"_h"]  # noqa: Y015
+    _WhichOneofReturnType__p: _TypeAlias = _typing.Literal["p"]  # noqa: Y015
+    _WhichOneofArgType__p: _TypeAlias = _typing.Literal["_p", b"_p"]  # noqa: Y015
+    _WhichOneofReturnType__t: _TypeAlias = _typing.Literal["t"]  # noqa: Y015
+    _WhichOneofArgType__t: _TypeAlias = _typing.Literal["_t", b"_t"]  # noqa: Y015
+    _WhichOneofReturnType__x: _TypeAlias = _typing.Literal["x"]  # noqa: Y015
+    _WhichOneofArgType__x: _TypeAlias = _typing.Literal["_x", b"_x"]  # noqa: Y015
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__h) -> _WhichOneofReturnType__h | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__p) -> _WhichOneofReturnType__p | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__t) -> _WhichOneofReturnType__t | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__x) -> _WhichOneofReturnType__x | None: ...
+
+Global___Cs7HttpRequest: _TypeAlias = Cs7HttpRequest  # noqa: Y015

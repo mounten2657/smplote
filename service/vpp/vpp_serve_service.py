@@ -51,3 +51,9 @@ class VppServeService:
             "biz_code": biz_code,
         })
         return data
+
+    @staticmethod
+    def send_http_request(method, url, params=None, headers=None, proxy=None, timeout=None):
+        """发起http请求并返回结果"""
+        return VppServeClient().cs7_http_req(method, url, params, headers, proxy, timeout)
+

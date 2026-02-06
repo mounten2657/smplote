@@ -15,4 +15,4 @@ class OpenNatService:
     @staticmethod
     def send_http_request(method, url, params=None, headers=None, timeout=None):
         """发起http请求并返回结果"""
-        return OpenNatClient().nat_http_send(method, url, params, headers, timeout)
+        return OpenNatClient().open_nat_http(method, url, params, headers, timeout)

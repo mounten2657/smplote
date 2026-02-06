@@ -41,8 +41,10 @@ class RedisKeys:
         "GPL_STOCK_INFO_XQ": {"key": "gpl:stock:xq:%s", "ttl": 'today'},
         "GPL_STOCK_INFO_EM": {"key": "gpl:stock:em:%s", "ttl": 'today'},
         # 代理池缓存
-        "PROXY_POOL_LIST": {"key": "proxy_pool:list", "ttl": 120},
-        "PROXY_POOL_LOCK": {"key": "proxy_pool:lock", "ttl": 30},
+        "PROXY_POOL_LIST": {"key": "proxy:pool_list", "ttl": 120},
+        "PROXY_POOL_LOCK": {"key": "proxy:pool_lock", "ttl": 30},
+        "PROXY_STAT_TOL": {"key": "proxy:stat:total:%s", "ttl": 86400},
+        "PROXY_STAT_FAL": {"key": "proxy:stat:failed:%s", "ttl": 86400},
     }
 
 
