@@ -1,6 +1,7 @@
 import os
 import json
 from concurrent import futures
+from typing import Callable
 from vps.proto.generated.open_nat_pb2 import *
 from vps.proto.generated.open_nat_pb2_grpc import *
 from vps.api.wechat.qy.qy_msg_api import QYMsgApi
@@ -23,36 +24,33 @@ class OpenNatServer(OpenNatServerServicer):
         self.msg_api = QYMsgApi(os.getenv('APP_CONFIG_MASTER_KEY'))
 
     def SendWeChatText(self, request, context):
-        try:
-            result = self.msg_api.send_text_message(
+        return self._exec_api(lambda: self.msg_api.send_text_message(
                 content=request.content,
                 app_key=request.app_key,
                 user_list=request.user_list or None
-            )
-            result = result if result else {}
-            return CommonResponse(
-                code=int(result.get('errcode', 0)),
-                msg=result.get('errormsg', 'success'),
-                data=json.dumps(result)
-            )
-        except Exception as e:
-            context.set_code(grpc.StatusCode.INTERNAL)
-            return CommonResponse(code=9999, msg=str(e), data='Null')
+        ), 'errcode', 'errormsg')
 
     def NatHttpSend(self, request, context):
-        try:
-            result = HttpReqApi().send_req(
+        return self._exec_api(lambda: HttpReqApi().send_req(
                 method=request.method,
                 url=request.url,
                 params=request.params or None,
                 headers=request.headers or None,
                 timeout=request.timeout or None
+        ))
+
+    @staticmethod
+    def _exec_api(func: Callable, code_key='code', msg_key='msg'):
+        """执行api方法"""
+        try:
+            result = func()
+            code = result.get(code_key, 0) if isinstance(result, dict) else 998
+            msg = result.get(msg_key, 'success') if isinstance(result, dict) else 'error'
+            return CommonResponse(
+                code=int(code),msg=msg,data=json.dumps(result)
             )
-            result = result if result else {}
-            return CommonResponse(code=0, msg='success', data=json.dumps(result))
         except Exception as e:
-            context.set_code(grpc.StatusCode.INTERNAL)
-            return CommonResponse(code=9998, msg=str(e), data='Null')
+            return CommonResponse(code=9998,msg=str(e),data='Null')
 
     @staticmethod
     def run():

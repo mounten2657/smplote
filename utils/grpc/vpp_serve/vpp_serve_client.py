@@ -63,4 +63,5 @@ class VppServeClient:
         p = Str.parse_json_string_ignore(p) if p else ''
         h = Str.parse_json_string_ignore(h) if h else ''
         t = int(t) if t else 0
-        return self._exec_api(lambda: self.stub.cs7_http(Cs7HttpRequest(m=m, u=u, p=p, h=h, x=x, t=t)))
+        res = self._exec_api(lambda: self.stub.cs7_http(Cs7HttpRequest(m=m, u=u, p=p, h=h, x=x, t=t)))
+        return res['data']

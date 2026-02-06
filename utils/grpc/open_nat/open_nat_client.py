@@ -1,3 +1,4 @@
+from typing import Callable
 from vps.base.desc import ConfigCrypto
 from vps.proto.generated.open_nat_pb2 import *
 from vps.proto.generated.open_nat_pb2_grpc import *
@@ -25,6 +26,14 @@ class OpenNatClient:
         self.channel.close()
 
     @staticmethod
+    def _exec_api(func: Callable, *args, **kwargs):
+        """调用api接口"""
+        response = func(*args, **kwargs)
+        return {
+            "code": response.code,"msg": response.msg,"data": Attr.parse_json_ignore(response.data)
+        }
+
+    @staticmethod
     def get_vps_config():
         """获取默认配置"""
         host = Env.get('GRPC_HOST_ZGY')
@@ -41,29 +50,22 @@ class OpenNatClient:
 
     def send_wechat_text(self, content, app_key, user_list=None):
         """发送企业微信文本消息"""
-        try:
-            response = self.stub.SendWeChatText(WeChatTextRequest(
+        return self._exec_api(lambda: self.stub.SendWeChatText(WeChatTextRequest(
                 content=content,
                 app_key=app_key,
                 user_list=user_list or ""
-            ))
-            return {"code": response.code, "msg": response.msg, "data": Attr.parse_json_ignore(response.data)}
-        except Exception as e:
-            return {"code": 799, "msg": f"grpc error - {e}", "data": None}
+        )))
 
     def open_nat_http(self, method, url, params=None, headers=None, timeout=None):
         """从vps节点中发起http请求并返回结果"""
-        try:
-            params = Str.parse_json_string_ignore(params) if params else ''
-            headers = Str.parse_json_string_ignore(headers) if headers else ''
-            timeout = int(timeout) if timeout else 0
-            response = self.stub.NatHttpSend(NatHttpRequest(
+        params = Str.parse_json_string_ignore(params) if params else ''
+        headers = Str.parse_json_string_ignore(headers) if headers else ''
+        timeout = int(timeout) if timeout else 0
+        res = self._exec_api(lambda: self.stub.NatHttpSend(NatHttpRequest(
                 method=method,
                 url=url,
                 params=params,
                 headers=headers,
                 timeout=timeout
-            ))
-            return Attr.parse_json_ignore(response.data)
-        except Exception as e:
-            return f"grpc error - {e}"
+        )))
+        return res['data']

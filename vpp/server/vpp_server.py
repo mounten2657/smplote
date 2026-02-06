@@ -29,42 +29,42 @@ class VppServer:
 
     def vp_cdn_download(self, request, context):
         """下载文件"""
-        return self._exec_api(context, lambda: self.file_api.download_file(
+        return self._exec_api(lambda: self.file_api.download_file(
                 fty=request.fty, key=request.key, url=request.url,
                 fp=request.fp, fk=request.fk, fd=request.fd,
         ))
 
     def wk_html_2_img(self, request, context):
         """转图片"""
-        return self._exec_api(context, lambda: self.wk_api.wk_html_to_img(
+        return self._exec_api(lambda: self.wk_api.wk_html_to_img(
                 fp=request.fp, fo=request.fo
         ))
 
     def wk_html_2_pdf(self, request, context):
         """转PDF"""
-        return self._exec_api(context, lambda: self.wk_api.wk_html_to_pdf(
+        return self._exec_api(lambda: self.wk_api.wk_html_to_pdf(
                 fp=request.fp, fo=request.fo
         ))
 
     def cs7_rgu(self, request, context):
         """重启gunicorn"""
-        return self._exec_api(context, lambda: self.cs7_api.restart_gunicorn(p=request.p))
+        return self._exec_api(lambda: self.cs7_api.restart_gunicorn(p=request.p))
 
     def cs7_http(self, r, context):
         """发送http请求"""
-        return self._exec_api(context, lambda: self.cs7_api.send_cs7_http(r.m, r.u, r.p, r.h, r.x, r.t))
+        return self._exec_api(lambda: self.cs7_api.send_cs7_http(r.m, r.u, r.p, r.h, r.x, r.t))
 
     @staticmethod
-    def _exec_api(context, func: Callable, *args, **kwargs):
+    def _exec_api(func: Callable, code_key='code', msg_key='msg'):
         """执行api方法"""
         try:
-            result = func(*args, **kwargs)
-            result = result if result else {}
+            result = func()
+            code = result.get(code_key, 0) if isinstance(result, dict) else 999
+            msg = result.get(msg_key, 'success') if isinstance(result, dict) else 'error'
             return CommonResponse(
-                code=int(result.get('code', 0)),msg=result.get('msg', 'success'),data=json.dumps(result)
+                code=int(code),msg=msg,data=json.dumps(result)
             )
         except Exception as e:
-            context.set_code(grpc.StatusCode.INTERNAL)
             return CommonResponse(code=9999,msg=str(e),data='Null')
 
     @staticmethod
