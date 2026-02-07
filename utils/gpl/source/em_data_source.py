@@ -62,8 +62,8 @@ class EmDataSource:
                 else:
                     info = pid
                     pid = pid['id']
-        # 非常重要业务才使用混合模式
-        if any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 概率分配和重试机制在里面实现了
+        if any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用混合模式
+            # 概率分配和重试机制在里面实现了
             data, r_type, proxy = self.nat.mixed_request(method, url, params, headers)
         else:  # 本地请求
             data = Http.send_request(method, url, params, headers)

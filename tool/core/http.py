@@ -317,7 +317,8 @@ class Http:
     @staticmethod
     def get_vpn_url(port=0):
         """获取vpn链接"""
-        port = port if port else Attr.random_choice(Http.get_vpn_port_rand())  # 没有指定端口就按概率随机选一个端口
+        if port == 0:
+            return ''  # 兼容无代理情况
         return f"{Http._VPN_HOST}:{port}"
 
     @staticmethod
