@@ -109,6 +109,8 @@ class NatService:
                     res = Http.send_request(method, url, params, headers)
                 if proxy and r_type in ('x', 'x'):
                     logger.info(f"代理请求<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params}", 'MIXED_INF')
+                if str(res).startswith('HTTP request failed'):
+                    Error.throw_exception(res)
                 redis.incr(total_key, ['suc'])
                 redis.incr(total_key, [f'suc_{port}'])
                 return res, r_type, proxy
