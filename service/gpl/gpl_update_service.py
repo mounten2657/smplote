@@ -73,8 +73,8 @@ class GPLUpdateService:
         if not code_list:
             return False
         all_code_list = self.formatter.get_stock_code_all()
-        code_list = [Str.remove_stock_prefix(c) for c in code_list]
-        symbol_list = [Str.add_stock_prefix(c) for c in code_list]
+        code_list = [self.formatter.sft.remove_stock_prefix(c) for c in code_list]
+        symbol_list = [self.formatter.sft.add_stock_prefix(c) for c in code_list]
         s_list = sdb.get_symbol_list(symbol_list)
         s_list = {f"{d['symbol']}": d for d in s_list}
 
@@ -82,7 +82,7 @@ class GPLUpdateService:
         def _up_sym_exec(code):
             res = {'td': current_date, 'ul': []}
             Time.sleep(Str.randint(1, 10) / 100)
-            symbol = Str.add_stock_prefix(code)
+            symbol = self.formatter.sft.add_stock_prefix(code)
             try:
                 info = Attr.get(s_list, symbol)
                 org_name = info.get('org_name') if info else 'None'
@@ -137,8 +137,8 @@ class GPLUpdateService:
         if not code_list:
             return False
         all_code_list = self.formatter.get_stock_code_all()
-        code_list = [Str.remove_stock_prefix(c) for c in code_list]
-        symbol_list = [Str.add_stock_prefix(c) for c in code_list]
+        code_list = [self.formatter.sft.remove_stock_prefix(c) for c in code_list]
+        symbol_list = [self.formatter.sft.add_stock_prefix(c) for c in code_list]
 
         n = 5 if is_force == 0 else is_force - 10
         et = current_date if current_date else Time.date('%Y-%m-%d')
@@ -167,7 +167,7 @@ class GPLUpdateService:
         @Ins.multiple_executor(3)
         def _up_day_exec(code):
             res = []
-            symbol = Str.add_stock_prefix(code)
+            symbol = self.formatter.sft.add_stock_prefix(code)
             is_special = int(symbol in GPLUpdateService._S_ZD_LIST)
             percent = self.formatter.get_percent(code, code_list, all_code_list)
             insert_list = {}
@@ -251,7 +251,7 @@ class GPLUpdateService:
         if mid <= save_count or count <= save_count or not code_list:
             return r
         for i, code in enumerate(code_list):
-            symbol = Str.add_stock_prefix(code)
+            symbol = self.formatter.sft.add_stock_prefix(code)
             percent = self.formatter.get_percent(code, code_list, code_list)
             r += ldb.delete({'id': {'opt': '<=', 'val': mid - save_count}, 'h_event': symbol})
             logger.info(f"删除接口日志数据[{i}/{r}]<{symbol}>{percent}", 'DEL_API_LOG')

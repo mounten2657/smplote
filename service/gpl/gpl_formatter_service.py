@@ -2,6 +2,7 @@ from model.gpl.gpl_symbol_model import GPLSymbolModel
 from utils.gpl.source.ak_data_source import AkDataSource
 from utils.gpl.source.bs_data_source import BsDataSource
 from utils.gpl.source.em_data_sub_source import EmDataSubSource
+from utils.gpl.formatter.stock_str_formatter import StockStrFormatterService
 from tool.core import Ins, Logger, Str, Time, Attr, Error
 
 logger = Logger()
@@ -18,12 +19,13 @@ class GplFormatterService:
         self.ak = AkDataSource()
         self.bs = BsDataSource()
         self.em = EmDataSubSource()
+        self.sft = StockStrFormatterService()
         self.sdb = GPLSymbolModel()
 
     def get_stock(self, code):
         """从数据库中获取股票信息"""
-        code = Str.remove_stock_prefix(code)
-        symbol = Str.add_stock_prefix(code)
+        code = self.sft.remove_stock_prefix(code)
+        symbol = self.sft.add_stock_prefix(code)
         return self.sdb.get_symbol(symbol)
 
     def get_stock_info(self, code, is_merge=0):
@@ -72,8 +74,8 @@ class GplFormatterService:
         :param code: 股票代码，不带市场前缀，如 603777
         :return: 标准股票数据
         """
-        code = Str.remove_stock_prefix(code)
-        symbol = Str.add_stock_prefix(code)
+        code = self.sf.remove_stock_prefix(code)
+        symbol = self.sft.add_stock_prefix(code)
         try:
             stock = self.em.get_basic_info(symbol)
             issue = self.em.get_issue_info(symbol)
@@ -81,7 +83,7 @@ class GplFormatterService:
                 logger.warning(f"获取股票数据失败[EM]<{symbol}> - {stock}", 'GET_STOCK_WAR')
                 return {}
             market = Str.replace_multiple(symbol, [code, '.'])
-            province, city = Str.extract_province_city(Attr.get(stock, 'ADDRESS', ''))
+            province, city = self.sft.extract_province_city(Attr.get(stock, 'ADDRESS', ''))
             default_date = '1970-01-01 00:00:00'
             reg_date = Attr.get(stock, 'FOUND_DATE', default_date)[:10]
             list_date = Attr.get(stock, 'LISTING_DATE', default_date)[:10]
@@ -149,8 +151,8 @@ class GplFormatterService:
         :param code: 股票代码，不带市场前缀，如 603777
         :return: 标准股票数据
         """
-        code = Str.remove_stock_prefix(code)
-        symbol = Str.add_stock_prefix(code)
+        code = self.sf.remove_stock_prefix(code)
+        symbol = self.sft.add_stock_prefix(code)
         try:
             stock = self.ak.stock_individual_basic_info_xq(symbol)
             stock = {d['item']: d['value'] for d in stock}
@@ -158,7 +160,7 @@ class GplFormatterService:
                 logger.warning(f"获取股票数据失败[AK]<{symbol}> - {stock}", 'GET_STOCK_WAR')
                 return {}
             market = Str.replace_multiple(symbol, [code, '.'])
-            province, city = Str.extract_province_city(Attr.get(stock, 'office_address_cn', ''))
+            province, city = self.sft.extract_province_city(Attr.get(stock, 'office_address_cn', ''))
             reg_time = round(int(Attr.get(stock, 'established_date', 0.0)) / 1000)
             list_time = round(int(Attr.get(stock, 'listed_date', 0.0)) / 1000)
             stock_info = {

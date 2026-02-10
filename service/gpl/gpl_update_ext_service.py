@@ -36,7 +36,7 @@ class GPLUpdateExtService:
 
     def update_symbol_ext(self, code_str, is_force=0, current_date=None):
         """更新股票额外数据 - 多线程"""
-        code_list = [Str.remove_stock_prefix(c) for c in code_str.split(',') if c.strip()]
+        code_list = [self.formatter.sft.remove_stock_prefix(c) for c in code_str.split(',') if c.strip()]
         if not code_list:
             return False
 
@@ -49,7 +49,7 @@ class GPLUpdateExtService:
 
         # 获取基础数据
         all_code_list = self.formatter.get_stock_code_all()
-        symbol_list = [Str.add_stock_prefix(c) for c in code_list]
+        symbol_list = [self.formatter.sft.add_stock_prefix(c) for c in code_list]
         s_list = {d["symbol"]: d for d in sdb.get_symbol_list(symbol_list)}
 
         # 计算通用时间参数
@@ -113,7 +113,7 @@ class GPLUpdateExtService:
         def _up_ext_exec(code):
             Time.sleep(Str.randint(1, 10) / 100)
             ret = {}
-            symbol = Str.add_stock_prefix(code)
+            symbol = self.formatter.sft.add_stock_prefix(code)
             info = s_list.get(symbol)
             percent = self.formatter.get_percent(code, code_list, all_code_list)
 

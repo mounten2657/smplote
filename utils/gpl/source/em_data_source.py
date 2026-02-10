@@ -1,4 +1,5 @@
 from typing import Dict, List
+from utils.gpl.formatter.stock_str_formatter import StockStrFormatterService
 from tool.core import Logger, Attr, Str, Time, Http, Env
 from model.gpl.gpl_api_log_model import GplApiLogModel
 from service.source.nat_service import NatService
@@ -87,8 +88,8 @@ class EmDataSource:
 
     def _format_stock_code(self, stock_code):
         """格式化股票代码"""
-        stock_code = Str.remove_stock_prefix(stock_code)
-        prefix = Str.get_stock_prefix(stock_code)
+        stock_code = StockStrFormatterService.remove_stock_prefix(stock_code)
+        prefix = StockStrFormatterService.get_stock_prefix(stock_code)
         prefix_int = 1 if 'SH' == prefix else 0
         return stock_code, prefix, prefix_int
 

@@ -1,5 +1,6 @@
 import baostock as bs
 import pandas as pd
+from utils.gpl.formatter.stock_str_formatter import StockStrFormatterService
 from tool.core import Logger, Error, Str, Attr, Time
 
 logger = Logger()
@@ -74,7 +75,7 @@ class BsDataSource:
         adjust_dict = {"hfq": "1", "qfq": "2", "": "3"}  # 1=后复权，2=前复权，3=不复权
         period_dict = {"daily": "d", "weekly": "w", "monthly": "m"}
         # 请求BS接口
-        prefix = Str.get_stock_prefix(stock_code)
+        prefix = StockStrFormatterService.get_stock_prefix(stock_code)
         code = f"{prefix}.{stock_code}".lower()
         rs = bs.query_history_k_data_plus(
             code, fields, start_date=sd, end_date=ed,

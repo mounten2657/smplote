@@ -1,8 +1,9 @@
 from service.wechat.callback.vp_command_service import VpCommandService
 from service.wechat.callback.vp_callback_service import VpCallbackService
 from service.gpl.gpl_update_service import GPLUpdateService
+from service.source.nat_service import NatService
 from tool.router.base_app_vp import BaseAppVp
-from tool.core import Time, Sys, Http
+from tool.core import Time, Sys
 
 
 class Task(BaseAppVp):
@@ -65,7 +66,7 @@ class Task(BaseAppVp):
 
     def rf_proxy(self):
         """刷新代理服务 - 每小时的第11分钟"""
-        res = Http.init_proxy()
+        res = NatService.init_proxy()
         return self.success(res)
 
     def gpl_info(self):

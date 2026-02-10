@@ -1,3 +1,4 @@
+import re
 from service.wechat.callback.vp_command_service import VpCommandService
 from service.wechat.reply.vp_msg_service import VpMsgService
 from service.wechat.sync.vp_room_service import VpRoomService
@@ -154,7 +155,7 @@ class VpCallbackService:
             if Time.now() - Time.tfd(msg_time) > 900:
                 return False
             commands = ",".join([config['command_list'], config['command_list_tj'], config['command_list_yl'], config['command_list_sky']]).split(',')
-            content = Str.remove_at_user(content).strip()
+            content = VpCallbackService._remove_at_user(content).strip()
             #先去掉#号再加上#号，这样不管带不带#号都能兼容
             n_list = ['提问', '点歌', '身高查询', '今日任务', '今日红石', '礼包查询', '光翼查询']  # 可省略 # 号的命令
             content = f"#{content.replace('#', '')}" if content.startswith(tuple(n_list)) else content
@@ -432,3 +433,8 @@ class VpCallbackService:
                 res[pid] = VpCallbackService.insert_handler(process)
             Time.sleep(0.1)
         return res
+
+    @staticmethod
+    def _remove_at_user(content):
+        """去除前面艾特的用户"""
+        return re.sub(r'^(@[^\s@]+[\s]*)*', '', content)

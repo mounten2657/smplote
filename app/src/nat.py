@@ -15,7 +15,7 @@ class Nat(BaseApp):
         params = self.params.get('p', '')
         if not url:
             return self.error('Invalid url')
-        return self.success(self.nat.proxy_pool_request(method, url, params))
+        return self.success(self.nat.ppr_request(method, url, params))
 
     def vpn(self):
         """利用vpn发起请求"""

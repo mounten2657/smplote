@@ -1,3 +1,4 @@
+import re
 from xml.etree import ElementTree
 from service.wechat.reply.vp_msg_service import VpMsgService
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
@@ -106,7 +107,7 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, f"{content_str}{send_str}"]
         elif 'transfer_invalid' == content_type:  # 转账到期提醒
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, self.is_my_protect, client)
-            title_str = Str.extract_xml_attr(content_text, 'content').split('有', 1)
+            title_str = self.extract_xml_attr(content_text, 'content').split('有', 1)
             content_link['title'] = Str.remove_html_tags(f"{t_name} 有{title_str[1]}")
             send_wxid, content = [s_wxid, f"[转账到期消息] {content_link['title']}"]
         elif 'transfer_back' == content_type:  # 转账退回提醒
@@ -154,7 +155,7 @@ class VpMsgFormatter(VpBaseFactory):
             client.refresh_room(self.g_wxid)
         elif 'revoke' == content_type:  # 撤回
             s_name, t_name, f_name = self.extract_user_name(self.g_wxid, s_wxid, t_wxid, self.is_my_protect, client)
-            title_str = Str.extract_xml_attr(content_text, 'replacemsg').split('撤回', 1)
+            title_str = self.extract_xml_attr(content_text, 'replacemsg').split('撤回', 1)
             content_link['title'] = f"{s_name} 撤回{title_str[1]}"
             send_wxid, content = [s_wxid, f"[撤回消息] {content_link['title']}"]
         elif 'song' == content_type:  # 点歌
@@ -217,206 +218,206 @@ class VpMsgFormatter(VpBaseFactory):
             # 引用消息优先 - 因为它可能包含所有类型的消息
             content_type = 'quote'
             content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "p_new_msg_id": Str.extract_xml_attr(content_text, 'svrid'),  # 源消息的 new_msg_id
-                "u_wxid": Str.extract_xml_attr(content_text, 'chatusr'),
-                "u_name": Str.extract_xml_attr(content_text, 'displayname'),
-                "u_content": Str.extract_xml_attr(content_text, 'content'),
+                "title": self.extract_xml_attr(content_text, 'title'),
+                "p_new_msg_id": self.extract_xml_attr(content_text, 'svrid'),  # 源消息的 new_msg_id
+                "u_wxid": self.extract_xml_attr(content_text, 'chatusr'),
+                "u_name": self.extract_xml_attr(content_text, 'displayname'),
+                "u_content": self.extract_xml_attr(content_text, 'content'),
             }
         elif all(key in content_text for key in ('sysmsg', '加入', '群聊')):  # 邀请 - "{g_wxid}:\n{<invited_xml>}"
             # "$username$"邀请"$names$"加入了群聊
             # "$adder$"通过扫描"$from$"分享的二维码加入群聊
             content_type = 'invited'
             content_link = {
-                "template": Str.extract_xml_attr(content_text, 'template'),
-                "u_wxid": Str.extract_xml_attr(content_text, 'username', 1),
-                "u_name": Str.extract_xml_attr(content_text, 'nickname', 1).replace('\\', ''),
-                "i_wxid": Str.extract_xml_attr(content_text, 'username', 2),
-                "i_name": Str.extract_xml_attr(content_text, 'nickname', 2).replace('\\', ''),
+                "template": self.extract_xml_attr(content_text, 'template'),
+                "u_wxid": self.extract_xml_attr(content_text, 'username', 1),
+                "u_name": self.extract_xml_attr(content_text, 'nickname', 1).replace('\\', ''),
+                "i_wxid": self.extract_xml_attr(content_text, 'username', 2),
+                "i_name": self.extract_xml_attr(content_text, 'nickname', 2).replace('\\', ''),
             }
             if '二维码' in content_text:
                 content_link = {
-                    "template": Str.extract_xml_attr(content_text, 'template'),
-                    "u_wxid": Str.extract_xml_attr(content_text, 'username', 2),
-                    "u_name": Str.extract_xml_attr(content_text, 'nickname', 2).replace('\\', ''),
-                    "i_wxid": Str.extract_xml_attr(content_text, 'username', 1),
-                    "i_name": Str.extract_xml_attr(content_text, 'nickname', 1).replace('\\', ''),
+                    "template": self.extract_xml_attr(content_text, 'template'),
+                    "u_wxid": self.extract_xml_attr(content_text, 'username', 2),
+                    "u_name": self.extract_xml_attr(content_text, 'nickname', 2).replace('\\', ''),
+                    "i_wxid": self.extract_xml_attr(content_text, 'username', 1),
+                    "i_name": self.extract_xml_attr(content_text, 'nickname', 1).replace('\\', ''),
                 }
         elif all(key in content_text for key in ('msg', 'emoji', 'cdnurl')):  # 表情 - "{s_wxid}:\n{<emoji_xml>}"
             content_type = 'gif'
             # 仅保存下载链接，先不进行下载
             content_link = {
                 "type": 3001,
-                "url": Str.extract_attr(content_text, 'cdnurl').replace('&amp;', '&'),
-                "md5": Str.extract_attr(content_text, 'md5'),
+                "url": self.extract_attr(content_text, 'cdnurl').replace('&amp;', '&'),
+                "md5": self.extract_attr(content_text, 'md5'),
             }
         elif all(key in content_text for key in ('msg', 'emojiinfo', 'cdnthumbaeskey', 'cdnthumburl')):  # 表情 - "{s_wxid}:\n{<emoji_xml>}"
             content_type = 'gif'
             # 仅保存下载链接，先不进行下载
             content_link = {
                 "type": 3,
-                "aes_key": Str.extract_xml_attr(content_text, 'cdnthumbaeskey'),
-                "url": Str.extract_xml_attr(content_text, 'cdnthumburl'),
-                "md5": Str.extract_xml_attr(content_text, 'emoticonmd5'),
+                "aes_key": self.extract_xml_attr(content_text, 'cdnthumbaeskey'),
+                "url": self.extract_xml_attr(content_text, 'cdnthumburl'),
+                "md5": self.extract_xml_attr(content_text, 'emoticonmd5'),
             }
         elif all(key in content_text for key in ('msg', 'img', 'aeskey', 'cdnmidimgurl')):  # 图片 - "{s_wxid}:\n{<image_xml>}"
             content_type = 'png'
             # 仅保存md5，先不进行下载
             content_link = {
-                "aes_key": Str.extract_attr(content_text, 'aeskey'),
-                "url": Str.extract_attr(content_text, 'cdnmidimgurl'),
-                "md5": Str.extract_attr(content_text, 'md5'),
+                "aes_key": self.extract_attr(content_text, 'aeskey'),
+                "url": self.extract_attr(content_text, 'cdnmidimgurl'),
+                "md5": self.extract_attr(content_text, 'md5'),
             }
         elif all(key in content_text for key in ('xml', 'videomsg', 'aeskey', 'cdnvideourl')):  # 视频 - "{s_wxid}:\n<video_xml>}"
             content_type = 'mp4'
             # 仅保存md5，先不进行下载
             content_link = {
-                "aes_key": Str.extract_attr(content_text, 'aeskey'),
-                "url": Str.extract_attr(content_text, 'cdnvideourl'),
-                "md5": Str.extract_attr(content_text, 'md5'),
+                "aes_key": self.extract_attr(content_text, 'aeskey'),
+                "url": self.extract_attr(content_text, 'cdnvideourl'),
+                "md5": self.extract_attr(content_text, 'md5'),
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'fileuploadtoken', 'fileext')):  # 文件 - "{s_wxid}:\n{<file_xml>}"
             content_type = 'file'
             # 仅保存md5，先不进行下载
             content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "file_ext": Str.extract_xml_attr(content_text, 'fileext'),
-                "md5": Str.extract_xml_attr(content_text, 'md5'),
+                "title": self.extract_xml_attr(content_text, 'title'),
+                "file_ext": self.extract_xml_attr(content_text, 'fileext'),
+                "md5": self.extract_xml_attr(content_text, 'md5'),
                 "tag": "FILE_START",
             }
             # 文件传输有两条信息（开始和结束），现在只接收文件传输完成的消息
             if all(key in content_text for key in ('cdnattachurl', 'aeskey')):
                 # 下载链接暂时还没有研究出来，先贴上  aeskey 和 cdnattachurl
                 content_link.update({
-                    "aes_key": Str.extract_xml_attr(content_text, 'aeskey'),
-                    "url": Str.extract_xml_attr(content_text, 'cdnattachurl'),
+                    "aes_key": self.extract_xml_attr(content_text, 'aeskey'),
+                    "url": self.extract_xml_attr(content_text, 'cdnattachurl'),
                     "tag": "FILE_END",
                 })
         elif all(key in content_text for key in ('voicemsg', 'aeskey', 'voiceurl', 'clientmsgid')):  # 语音 - "{s_wxid}:\n{<voice_xml>}"
             content_type = 'voice'
             # 仅保存c_msg_id，先不进行下载
             content_link = {
-                "aes_key": Str.extract_attr(content_text, 'aeskey'),
-                "url": Str.extract_attr(content_text, 'voiceurl'),
-                "md5": Str.extract_attr(content_text, 'voicemd5'),
-                "client_msg_id": Str.extract_attr(content_text, 'clientmsgid'),
+                "aes_key": self.extract_attr(content_text, 'aeskey'),
+                "url": self.extract_attr(content_text, 'voiceurl'),
+                "md5": self.extract_attr(content_text, 'voicemd5'),
+                "client_msg_id": self.extract_attr(content_text, 'clientmsgid'),
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'sendertitle', 'nativeurl', 'templateid', 'iconurl')):  # 红包 - "{s_wxid}:\n{<red_xml>}"
             content_type = 'red'
             content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "sender_title": Str.extract_xml_attr(content_text, 'sendertitle'),
-                "native_url": Str.extract_xml_attr(content_text, 'nativeurl'),
-                "icon_url": Str.extract_xml_attr(content_text, 'iconurl'),
-                "template_id": Str.extract_xml_attr(content_text, 'templateid'),
-                "invalid_time": Str.extract_xml_attr(content_text, 'invalidtime'),
+                "title": self.extract_xml_attr(content_text, 'title'),
+                "sender_title": self.extract_xml_attr(content_text, 'sendertitle'),
+                "native_url": self.extract_xml_attr(content_text, 'nativeurl'),
+                "icon_url": self.extract_xml_attr(content_text, 'iconurl'),
+                "template_id": self.extract_xml_attr(content_text, 'templateid'),
+                "invalid_time": self.extract_xml_attr(content_text, 'invalidtime'),
             }
             content_link['invalid_date'] = Time.dft(int(content_link['invalid_time']) if content_link['invalid_time'] else 0)
         elif all(key in content_text for key in ('appmsg', 'title', 'feedesc', 'pay_memo',
                                                  'receiver_username', 'payer_username')):  # 转账 - "{s_wxid}:\n{<transfer_xml>}" || "{<transfer_xml>"
             content_type = 'transfer'
             content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "pay_memo": Str.extract_xml_attr(content_text, 'pay_memo'),
-                "fee_desc": Str.extract_xml_attr(content_text, 'feedesc'),
-                "payer_username": Str.extract_xml_attr(content_text, 'payer_username'),
-                "receiver_username": Str.extract_xml_attr(content_text, 'receiver_username'),
-                "tc_id": Str.extract_xml_attr(content_text, 'transcationid'),
-                "tid": Str.extract_xml_attr(content_text, 'transferid'),
-                "invalid_time": Str.extract_xml_attr(content_text, 'invalidtime'),
+                "title": self.extract_xml_attr(content_text, 'title'),
+                "pay_memo": self.extract_xml_attr(content_text, 'pay_memo'),
+                "fee_desc": self.extract_xml_attr(content_text, 'feedesc'),
+                "payer_username": self.extract_xml_attr(content_text, 'payer_username'),
+                "receiver_username": self.extract_xml_attr(content_text, 'receiver_username'),
+                "tc_id": self.extract_xml_attr(content_text, 'transcationid'),
+                "tid": self.extract_xml_attr(content_text, 'transferid'),
+                "invalid_time": self.extract_xml_attr(content_text, 'invalidtime'),
             }
             content_link['invalid_date'] = Time.dft(int(content_link['invalid_time']) if content_link['invalid_time'] else 0)
         elif all(key in content_text for key in ('sysmsg', '待', '转账', '过期')):  # 转账到期提醒 - "{g_wxid}:\n{<transfer_invalid_xml>}"
             content_type = 'transfer_invalid'
             content_link = {
                 "title": '',
-                "url": Str.extract_attr(content_text, 'href'),
-                "tid": Str.extract_xml_attr(content_text, 'transferid'),
+                "url": self.extract_attr(content_text, 'href'),
+                "tid": self.extract_xml_attr(content_text, 'transferid'),
             }
         elif all(key in content_text for key in ('sysmsg', 'PayMsgType', 'paymsgid', 'transferid')):  # 转账退回提醒 - "{s_wxid}:\n{<transfer_back_xml>}"
             content_type = 'transfer_back'
             content_link = {
-                "PayMsgType": Str.extract_xml_attr(content_text, 'PayMsgType'),  # 25 退回
-                "from_username": Str.extract_xml_attr(content_text, 'fromusername'),
-                "to_username": Str.extract_xml_attr(content_text, 'tousername'),
-                "pay_msg_id": Str.extract_xml_attr(content_text, 'paymsgid'),
-                "tid": Str.extract_xml_attr(content_text, 'transferid'),
+                "PayMsgType": self.extract_xml_attr(content_text, 'PayMsgType'),  # 25 退回
+                "from_username": self.extract_xml_attr(content_text, 'fromusername'),
+                "to_username": self.extract_xml_attr(content_text, 'tousername'),
+                "pay_msg_id": self.extract_xml_attr(content_text, 'paymsgid'),
+                "tid": self.extract_xml_attr(content_text, 'transferid'),
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'url', 'sourceusername', 'sourcedisplayname',
                                                  'weappiconurl', 'weapppagethumbrawurl')):  # 小程序 - "{s_wxid}:\n{<mini_xml>}"
             content_type = 'mini'
             content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "url": Str.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
-                "source_wxid": Str.extract_xml_attr(content_text, 'sourceusername'),
-                "source_nickname": Str.extract_xml_attr(content_text, 'sourcedisplayname'),
-                "icon_url": Str.extract_xml_attr(content_text, 'weappiconurl'),
-                "cover_url": Str.extract_xml_attr(content_text, 'weapppagethumbrawurl'),
+                "title": self.extract_xml_attr(content_text, 'title'),
+                "url": self.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
+                "source_wxid": self.extract_xml_attr(content_text, 'sourceusername'),
+                "source_nickname": self.extract_xml_attr(content_text, 'sourcedisplayname'),
+                "icon_url": self.extract_xml_attr(content_text, 'weappiconurl'),
+                "cover_url": self.extract_xml_attr(content_text, 'weapppagethumbrawurl'),
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'solitaire_info')):  # 接龙 - "{s_wxid}:\n{<join_xml>}"
             content_type = 'join'
             content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "join_info": Str.extract_xml_attr(content_text, 'solitaire_info'),
+                "title": self.extract_xml_attr(content_text, 'title'),
+                "join_info": self.extract_xml_attr(content_text, 'solitaire_info'),
             }
         elif all(key in content_text for key in ('sysmsg', 'fromusername', 'pattedusername',
                                                  'patsuffix', 'template')):  # 拍一拍 - "{g_wxid}:\n{<pat_xml>}" || "{<pat_xml>}"
             content_type = 'pat'
             content_link = {
-                "from_username": Str.extract_xml_attr(content_text, 'fromusername'),
-                "patted_username": Str.extract_xml_attr(content_text, 'pattedusername'),
-                "pat_suffix": Str.extract_xml_attr(content_text, 'patsuffix'),
-                "template": Str.extract_xml_attr(content_text, 'template'),
+                "from_username": self.extract_xml_attr(content_text, 'fromusername'),
+                "patted_username": self.extract_xml_attr(content_text, 'pattedusername'),
+                "pat_suffix": self.extract_xml_attr(content_text, 'patsuffix'),
+                "template": self.extract_xml_attr(content_text, 'template'),
             }
         elif all(key in content_text for key in ('sysmsg', 'newmsgid', 'revokemsg', 'replacemsg')):  # 撤回 - "{s_wxid}:\n{<revoke_xml>}"
             content_type = 'revoke'
             content_link = {
-                "msg_id": Str.extract_xml_attr(content_text, 'msgid'),
-                "p_new_msg_id": Str.extract_xml_attr(content_text, 'newmsgid'),
+                "msg_id": self.extract_xml_attr(content_text, 'msgid'),
+                "p_new_msg_id": self.extract_xml_attr(content_text, 'newmsgid'),
                 "title": '',
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'des', 'dataurl', 'img_url', 'songalbumurl','songlyric', 'appname')):  # 点歌 - "{s_wxid}:\n{<song_xml>}"
             content_type = 'song'
             content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "des": Str.extract_xml_attr(content_text, 'des'),
-                "data_url": Str.extract_xml_attr(content_text, 'dataurl').replace('&amp;', '&'),
-                "img_url": Str.extract_xml_attr(content_text, 'songalbumurl'),
-                "song_lyric": Str.extract_xml_attr(content_text, 'songlyric'),
-                "appname": Str.extract_xml_attr(content_text, 'appname'),
+                "title": self.extract_xml_attr(content_text, 'title'),
+                "des": self.extract_xml_attr(content_text, 'des'),
+                "data_url": self.extract_xml_attr(content_text, 'dataurl').replace('&amp;', '&'),
+                "img_url": self.extract_xml_attr(content_text, 'songalbumurl'),
+                "song_lyric": self.extract_xml_attr(content_text, 'songlyric'),
+                "appname": self.extract_xml_attr(content_text, 'appname'),
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'url', 'webviewshared')):  # 分享 - "{s_wxid}:\n{<share_xml>}"
             content_type = 'share'
             content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "des": Str.extract_xml_attr(content_text, 'des'),
-                "url": Str.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
-                "publisher_id": Str.extract_xml_attr(content_text, 'publisherId'),
-                "publisher_req_id": Str.extract_xml_attr(content_text, 'publisherReqId'),
+                "title": self.extract_xml_attr(content_text, 'title'),
+                "des": self.extract_xml_attr(content_text, 'des'),
+                "url": self.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
+                "publisher_id": self.extract_xml_attr(content_text, 'publisherId'),
+                "publisher_req_id": self.extract_xml_attr(content_text, 'publisherReqId'),
             }
         elif all(key in content_text for key in ('appmsg', 'title', 'url', 'gift', '微信礼物')):  # 礼物 - "{s_wxid}:\n{<gift_xml>}"
             content_type = 'gift'
             content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "des": Str.extract_xml_attr(content_text, 'des'),
-                "url": Str.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
-                "skutitle": Str.extract_xml_attr(content_text, 'skutitle'),
-                "presentcntwording": Str.extract_xml_attr(content_text, 'presentcntwording'),
-                "fromusername": Str.extract_xml_attr(content_text, 'fromusername'),
+                "title": self.extract_xml_attr(content_text, 'title'),
+                "des": self.extract_xml_attr(content_text, 'des'),
+                "url": self.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
+                "skutitle": self.extract_xml_attr(content_text, 'skutitle'),
+                "presentcntwording": self.extract_xml_attr(content_text, 'presentcntwording'),
+                "fromusername": self.extract_xml_attr(content_text, 'fromusername'),
             }
         elif all(key in content_text for key in ('sysmsg', 'voipmt')):  # 通话 - "{s_wxid}:\n{<call_xml>}"
             content_type = 'call'
             content_link = {
-                "banner": Str.extract_xml_attr(content_text, 'banner'),
-                "invite": Str.extract_xml_attr(content_text, 'invite'),
+                "banner": self.extract_xml_attr(content_text, 'banner'),
+                "invite": self.extract_xml_attr(content_text, 'invite'),
             }
         elif all(key in content_text for key in ('msg', 'location', 'label')):  # 位置 - "{s_wxid}:\n{<location_xml>}"
             content_type = 'location'
             content_link = {
-                "label": Str.extract_attr(content_text, 'label'),
-                "x": Str.extract_attr(content_text, 'x'),
-                "y": Str.extract_attr(content_text, 'y'),
-                "poiname": Str.extract_attr(content_text, 'poiname'),
+                "label": self.extract_attr(content_text, 'label'),
+                "x": self.extract_attr(content_text, 'x'),
+                "y": self.extract_attr(content_text, 'y'),
+                "poiname": self.extract_attr(content_text, 'poiname'),
             }
         elif '位置共享' in content_text:
             if '结束' in content_text:
@@ -436,18 +437,18 @@ class VpMsgFormatter(VpBaseFactory):
             # 基本都是未识别的 xml
             content_type = 'wx_app'
             content_link = {
-                "title": Str.extract_xml_attr(content_text, 'title'),
-                "des": Str.extract_xml_attr(content_text, 'des'),
-                "url": Str.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
-                "fromusername": Str.extract_xml_attr(content_text, 'fromusername'),
+                "title": self.extract_xml_attr(content_text, 'title'),
+                "des": self.extract_xml_attr(content_text, 'des'),
+                "url": self.extract_xml_attr(content_text, 'url').replace('&amp;', '&'),
+                "fromusername": self.extract_xml_attr(content_text, 'fromusername'),
             }
-            nickname = Str.extract_xml_attr(content_text, 'nickname')
-            desc = Str.extract_xml_attr(content_text, 'desc')
-            url = Str.extract_xml_attr(content_text, 'url', 2).replace('&amp;', '&')
+            nickname = self.extract_xml_attr(content_text, 'nickname')
+            desc = self.extract_xml_attr(content_text, 'desc')
+            url = self.extract_xml_attr(content_text, 'url', 2).replace('&amp;', '&')
             if nickname and desc:
                 content_link['title'], content_link['des'], content_link['url'] = nickname, desc, url
             if not content_link['url']:
-                content_link['url'] = Str.extract_xml_attr(content_text, 'tpurl').replace('&amp;', '&')
+                content_link['url'] = self.extract_xml_attr(content_text, 'tpurl').replace('&amp;', '&')
         else:  # 未识别 - 不放行
             content_type = 'unknown'
             content_link = {}
@@ -505,3 +506,51 @@ class VpMsgFormatter(VpBaseFactory):
             return at_user if at_user else ''
         except ElementTree.ParseError:
             return ''
+
+
+    @staticmethod
+    def extract_attr(contents, key_name, position=1):
+        """
+        从普通文本中提取特定的属性
+          - \\s*=\\s*：匹配等号=，允许等号前后有任意数量的空白字符（如空格、制表符）。
+          - ["\']：匹配单引号或双引号。
+          - ([^"\']+)：捕获组，匹配除单引号和双引号之外的任意字符（至少一个）。
+          - ["\']：再次匹配单引号或双引号，与前面的引号类型对应。
+
+        :param contents:  普通文本 - 'xxx k1="v1" xxx k2=\'v2\' xxx'
+        :param key_name:  匹配的标签名
+        :param position:  匹配第几个标签
+        :return: 匹配结果
+        """
+        pattern = re.compile(fr'{key_name}\s*=\s*["\']([^"\']+)["\']')
+        matches = pattern.finditer(contents)
+        results = [match.group(1) for match in matches]
+        if 1 <= position <= len(results):
+            return results[position - 1]
+        return ''
+
+    @staticmethod
+    def extract_xml_attr(contents, key_name, position=1):
+        """
+        从xml文本中提取特定的属性
+          - 使用非贪婪匹配 ([^<]+?) 确保只匹配到下一个闭合标签
+          - 添加 CDATA 处理：(?:<!\\[CDATA\\[)?` 和 `(?:\\]\\]>)? 分别匹配 CDATA 的开始和结束标记
+          - 使用 (.*?) 非贪婪匹配捕获标签内的所有内容，包括嵌套标签和 CDATA 标记
+          - 使用 \\s* 处理标签内可能的空白字符
+
+        :param contents:  xml 文本 - "xxx<k1>v1</k1> xxx <k2><![CDATA[v2]]></k2> xxx"
+        :param key_name:  匹配的标签名
+        :param position:  匹配第几个标签
+        :return: 匹配结果
+        """
+        """"""
+        pattern = re.compile(
+            fr'<{key_name}>\s*(?:<!\[CDATA\[)?(.*?)(?:]]>)?\s*</{key_name}>',
+            re.DOTALL  # 使 . 匹配包括换行符在内的所有字符
+        )
+        matches = pattern.finditer(contents)
+        results = [match.group(1) for match in matches]
+        if 1 <= position <= len(results):
+            return results[position - 1]
+        return ''
+
