@@ -127,54 +127,42 @@ class Http:
         :param headers: 请求头字典
         :param proxy: 代理
         :return: 如果响应是JSON则返回字典，否则返回原始文本
-        :raises:
-            ValueError: 方法不支持或参数无效
-            requests.exceptions.RequestException: 请求失败
         """
-        # 参数校验
         method = method.upper()
         if method not in ('GET', 'POST', 'JSON', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'):
             raise ValueError(f"Unsupported HTTP method: {method}")
         if not url:
             raise ValueError("URL cannot be None")
-
-        # 初始化请求参数
         request_kwargs = {
             'method': method,
             'url': url,
             'headers': headers or {},
             'timeout': 120,
         }
-        # 新增代理
-        if proxy is not None:
+        if proxy is not None:  # 新增代理
             request_kwargs['proxies'] = {'http': proxy, 'https': proxy}
-
         # 处理params参数
         params_str = None
         if isinstance(params, dict):
             params_str = urlencode(params)
         elif isinstance(params, str):
             params_str = params if '=' in params else None
-
         if 'GET' == method:
             request_kwargs.update({'params': params_str})
         elif 'JSON' == method:
             request_kwargs.update({'method': 'POST', 'json': params})
         else:
             request_kwargs.update({'data': params_str})
-
-        # 发送请求
         try:
             rep = requests.request(**request_kwargs)
             rep.raise_for_status()  # 检查HTTP错误
-            # 自动处理JSON响应
-            if 'application/json' in rep.headers.get('Content-Type', ''):
+            if 'application/json' in rep.headers.get('Content-Type', ''): # 自动处理JSON响应
                 return rep.json()
             return Attr.parse_json_ignore(rep.text)
         except (json.JSONDecodeError,requests.exceptions.RequestException) as e:
-            raise requests.exceptions.RequestException(
-                f"HTTP request failed: {str(e)}"
-            ) from e
+            # raise requests.exceptions.RequestException( f"HTTP request failed: {str(e)}") from e
+            # 直接返回，没必要抛异常了
+            return f"HTTP request failed: {str(e)}"
 
     @staticmethod
     def is_http_request():

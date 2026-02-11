@@ -32,7 +32,7 @@ class ParseHandler:
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS', 'LOCK_SQL_CNT', 'LOCK_WSS_CNT']
         list(map(lambda key: redis.delete(key, ['*']), key_list))
         app_config = Config.app_config()
-        not Config.is_prod() and bs.logout()  # bs 登录
+        not Config.is_prod() and 0 and bs.logout()  # bs 登录 - 停用
         # 延迟启动
         res['clean_log'] = clean_old_logs(30 if Config.is_prod() else 7)
         res['delay_task'] = Sys.delayed_task(hot_load, delay_seconds=1)
@@ -52,7 +52,7 @@ class ParseHandler:
             Time.sleep(3)
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS']
         list(map(lambda key: redis.delete(key, ['*']), key_list))
-        not Config.is_prod() and bs.logout()  # bs 登出
+        not Config.is_prod() and 0 and bs.logout()  # bs 登出 - 停用
         # 清理系统任务
         Sys.shutdown()
         print(f"PID[{pid}]: 清理完成，主程序结束")
