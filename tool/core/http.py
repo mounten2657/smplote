@@ -149,6 +149,8 @@ class Http:
             params_str = params if '=' in params else None
         if 'GET' == method:
             request_kwargs.update({'params': params_str})
+        elif 'PUT' == method:
+            request_kwargs.update({'method': 'PUT', 'json': params})
         elif 'JSON' == method:
             request_kwargs.update({'method': 'POST', 'json': params})
         else:
