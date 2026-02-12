@@ -168,7 +168,7 @@ class GPLUpdateService:
         def _up_day_exec(code):
             res = []
             symbol = self.formatter.sft.add_stock_prefix(code)
-            is_special = int(symbol in GPLUpdateService._S_ZD_LIST)
+            is_special = int(symbol in GPLUpdateService._S_ZD_LIST)  # 走快速通道的股票列表 - 队列后进先出
             percent = self.formatter.get_percent(code, code_list, all_code_list)
             insert_list = {}
             fq_list = {"": "0", "qfq": "1", "hfq": "2"}
@@ -182,13 +182,7 @@ class GPLUpdateService:
                 if log_info and is_force != 99:
                     day_list = log_info['process_params']
                 else:
-                    day_list = self.formatter.em.get_daily_quote(code, st, et, k)  # 里面有nat分流，如果不行再用下面这种方式
-                    # if k == 'hfq' or is_special:
-                    #     # 东方财富的接口很珍贵，以后非重点股票只跑后复权数据了，以防被封IP
-                    #     day_list = self.formatter.em.get_daily_quote(code, st, et, k)
-                    # else:
-                    #     # 日常任务用 bs 去请求
-                    #     day_list = self.formatter.bs.get_daily_quote_bs(code, st, et, k)
+                    day_list = self.formatter.em.get_daily_quote(code, st, et, k)  # 内含Nat自动分流
                 res.append(len(day_list))
                 logger.debug(f"接口请求日线数据[{v}]<{symbol}><{tds}>{percent} - {k}"
                              f" - [{len(day_list)}]", 'UP_DAY_SKP')
