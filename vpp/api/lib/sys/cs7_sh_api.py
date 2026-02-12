@@ -41,12 +41,10 @@ class Cs7ShApi:
             request_kwargs['proxies'] = {'http': x, 'https': x}
 
         params_str = urlencode(p) if isinstance(p, dict) else p
-        if 'GET' == m:
-            request_kwargs.update({'params': params_str})
-        elif 'JSON' == m:
-            request_kwargs.update({'method': 'POST', 'json': p})
-        else:
-            request_kwargs.update({'data': params_str})
+        if 'JSON' == m: request_kwargs.update({'method': 'POST', 'json': p})
+        elif 'PUT' == m: request_kwargs.update({'method': 'PUT', 'json': p})
+        elif 'GET' == m: request_kwargs.update({'params': params_str})
+        else: request_kwargs.update({'data': params_str})
 
         try:
             rep = requests.request(**request_kwargs)

@@ -25,7 +25,7 @@ class NatService:
     # 混合模式下各种请求的概率
     _PROXY_RAND = Env.get('PROXY_RAND', '')
 
-    def ppr_request(self, method, url, params, headers=None, proxy=None):
+    def ppr_request(self, method, url, params=None, headers=None, proxy=None):
         """利用代理池发起请求"""
         if not proxy:
             proxy = self.get_proxy_cache()
@@ -33,12 +33,12 @@ class NatService:
                 Error.throw_exception('获取代理池失败，请检查缓存或代理商白名单')
         return Http.send_request(method, url, params, headers, proxy)
 
-    def vpn_request(self, method, url, params, headers=None, port=None, timeout=None):
+    def vpn_request(self, method, url, params=None, headers=None, port=None, timeout=None):
         """利用vpn发起请求"""
         proxy = self.get_vpn_url(port)
         return VppServeService.send_http_request(method, url, params, headers, proxy, timeout)
 
-    def vps_request(self, method, url, params, headers=None):
+    def vps_request(self, method, url, params=None, headers=None):
         """利用vps发起请求"""
         return OpenNatService.send_http_request(method, url, params, headers)
 
@@ -252,6 +252,11 @@ class NatService:
         return ip_list[0] if num == 1 else ip_list
 
     @staticmethod
+    def get_vpn_host():
+        """获取vpn主机地址"""
+        return NatService._VPN_HOST
+
+    @staticmethod
     def get_vpn_port():
         """获取vpn端口 - 随机值"""
         nc_list = Attr.nc_list(Attr.parse_json_ignore(NatService._VPN_PORT))
@@ -260,9 +265,9 @@ class NatService:
     @staticmethod
     def get_vpn_url(port=0):
         """获取vpn链接"""
-        if port == 0:
+        if not port:
             return ''  # 兼容无代理情况
-        return f"{NatService._VPN_HOST}:{port}"
+        return f"{NatService.get_vpn_host()}:{port}"
 
     @staticmethod
     def get_mixed_rand():

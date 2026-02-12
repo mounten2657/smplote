@@ -13,13 +13,13 @@ class HttpReqApi:
         :param str url:  请求链接
         :param dict params: 请求参数
         :param dict headers: 请求头
-        :param int timeout: 超时时间，默认30秒
+        :param int timeout: 超时时间，默认31秒
         :return: 返回json或文本
         """
         method = method.upper()
         params = Func.str_to_json(params) if params else {}
         headers = Func.str_to_json(headers) if headers else {}
-        timeout = int(timeout) if timeout else 30
+        timeout = int(timeout) if timeout else 31
 
         request_kwargs = {
             'method': method,
@@ -29,12 +29,10 @@ class HttpReqApi:
         }
 
         params_str = urlencode(params) if isinstance(params, dict) else params
-        if 'GET' == method:
-            request_kwargs.update({'params': params_str})
-        elif 'JSON' == method:
-            request_kwargs.update({'method': 'POST', 'json': params})
-        else:
-            request_kwargs.update({'data': params_str})
+        if 'GET' == method: request_kwargs.update({'params': params_str})
+        elif 'JSON' == method: request_kwargs.update({'method': 'POST', 'json': params})
+        elif 'PUT' == method: request_kwargs.update({'method': 'PUT', 'json': params})
+        else: request_kwargs.update({'data': params_str})
 
         try:
             rep = requests.request(**request_kwargs)
