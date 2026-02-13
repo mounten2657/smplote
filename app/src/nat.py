@@ -19,8 +19,8 @@ class Nat(BaseApp):
             return self.error('Invalid url')
         return self.success(self.nat.ppr_request(method, url, params, headers))
 
-    def vpn(self):
-        """利用vpn发起请求"""
+    def vpp(self):
+        """利用vpp发起请求"""
         method = self.params.get('m', 'GET')
         url = self.params.get('u', '')
         params = Attr.parse_json_ignore(self.params.get('p', ''))
@@ -28,7 +28,7 @@ class Nat(BaseApp):
         o = self.params.get('o', '0')
         if not url:
             return self.error('Invalid url')
-        return self.success(self.nat.vpn_request(method, url, params, headers, int(o)))
+        return self.success(self.nat.vpp_request(method, url, params, headers, int(o)))
 
     def vps(self):
         """利用vps发起请求"""

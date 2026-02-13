@@ -33,8 +33,8 @@ class NatService:
                 Error.throw_exception('获取代理池失败，请检查缓存或代理商白名单')
         return Http.send_request(method, url, params, headers, proxy)
 
-    def vpn_request(self, method, url, params=None, headers=None, port=None, timeout=None):
-        """利用vpn发起请求"""
+    def vpp_request(self, method, url, params=None, headers=None, port=None, timeout=None):
+        """利用vpp发起请求"""
         proxy = self.get_vpn_url(port)
         return VppServeService.send_http_request(method, url, params, headers, proxy, timeout)
 
@@ -76,7 +76,7 @@ class NatService:
                     port = self.get_vpn_port()  # 随机端口
                     proxy = self.get_vpn_url(port)
                     redis.incr(total_key, [f'{data}:cnt_{port}'])
-                    res = self.vpn_request(method, url, params, headers, port)
+                    res = self.vpp_request(method, url, params, headers, port)
                 elif r_type == 'z':   # VPS - 5%
                     proxy = 'vps'
                     res = self.vps_request(method, url, params, headers)
