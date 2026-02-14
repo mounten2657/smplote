@@ -31,14 +31,8 @@ class Cs7ShApi:
         h = Func.str_to_json(h) if h else {}
         t = int(t) if t else 30
 
-        request_kwargs = {
-            'method': m,
-            'url': u,
-            'headers': h,
-            'timeout': t,
-        }
-        if x is not None:
-            request_kwargs['proxies'] = {'http': x, 'https': x}
+        request_kwargs = {'method': m, 'url': u, 'headers': h, 'timeout': t}
+        if x: request_kwargs['proxies'] = {'http': x, 'https': x}
 
         params_str = urlencode(p) if isinstance(p, dict) else p
         if 'JSON' == m: request_kwargs.update({'method': 'POST', 'json': p})

@@ -1,7 +1,8 @@
 from service.wechat.callback.vp_command_service import VpCommandService
 from service.wechat.callback.vp_callback_service import VpCallbackService
 from service.gpl.gpl_update_service import GPLUpdateService
-from service.source.nat_service import NatService
+from service.vpp.vpp_pxq_service import VppPxqService
+from service.vpp.vpp_clash_service import VppClashService
 from tool.router.base_app_vp import BaseAppVp
 from tool.core import Time, Sys
 
@@ -66,7 +67,14 @@ class Task(BaseAppVp):
 
     def rf_proxy(self):
         """刷新代理服务 - 每小时的第11分钟"""
-        res = NatService.init_proxy()
+        res = VppPxqService.init_proxy()
+        return self.success(res)
+
+    def rf_node(self):
+        """刷新vpn节点 - 每天凌晨的00点15分"""
+        ports = self.params.get('p', '')  # 是代理端口不是api端口
+        p_list = [int(p) + 10 for p in ports.split(',')] if ports else []  # 转为api端口
+        res = Sys.delayed_task(VppClashService().init_vpn_node, p_list, timeout=3600)
         return self.success(res)
 
     def gpl_info(self):

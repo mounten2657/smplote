@@ -139,7 +139,7 @@ class Http:
             'headers': headers or {},
             'timeout': 120,
         }
-        if proxy is not None:  # 新增代理
+        if proxy:  # 新增代理
             request_kwargs['proxies'] = {'http': proxy, 'https': proxy}
         # 处理params参数
         params_str = None

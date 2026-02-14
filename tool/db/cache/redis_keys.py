@@ -45,6 +45,7 @@ class RedisKeys:
         "PROXY_POOL_LOCK": {"key": "proxy:pool_lock", "ttl": 30},
         "PROXY_STAT_TOL": {"key": "proxy:stat:total:%s", "ttl": 86400},
         "PROXY_STAT_FAL": {"key": "proxy:stat:failed:%s", "ttl": 86400},
+        "PROXY_VPN_NODE": {"key": "proxy:vpn:node:%s", "ttl": 7 * 86400},
     }
 
 
