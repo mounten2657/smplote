@@ -23,9 +23,8 @@ class LogErrorMd:
         app_name = Env.get('APP_NAME', 'SMP')
         if isinstance(error_message, str):
             error_message = [error_message]
-        error_message = [str(item) for item in error_message]
-        http_url = http_method = http_data = 'None'
-        user_agent = ip = 'None'
+        error_message = [str(item) for item in error_message if item]  # 过滤 None
+        http_err = ''
         if Http.is_http_request():
             http_url = Http.get_request_route()
             http_method = Http.get_request_method()
@@ -33,20 +32,22 @@ class LogErrorMd:
             headers = Http.get_request_headers()
             user_agent = Attr.get(headers, 'User-Agent')
             ip = Http.get_client_ip()
+            http_err += f"HTTP/2.0 - {http_method} - {http_url}\r\n"
+            http_err += f"    └─ IP: {ip}\r\n"
+            http_err += f"    └─ UA: {user_agent}\r\n"
+            http_err += f"    └─ RAW: {http_data[:768]}"
 
         # 生成 Markdown 内容 ⚡🔥✈️💣⚠️❌
         markdown = f"""🔥 **{str(app_name).capitalize()} 系统异常告警**  
 
     ⚠️ **错误描述**  
-    {"\r\n".join(error_message)}
+    {" - ".join(error_message)}
 
     ⛔ **错误溯源**  
     ```
-    {result.get('err_cause', ['', ''])[0]} (触发异常)  
-    └─ {result.get('err_cause', ['', ''])[1]} (原始异常)  
-    HTTP/2.0 - {http_method} - {http_url}
-    └─ {user_agent} - {ip}
-    └─ {http_data[:768]}
+    {result.get('err_cause', ['', ''])[0]}
+    └─ {result.get('err_cause', ['', ''])[1]}
+    {http_err}
     ```
 
     🗂️ **代码位置**  
