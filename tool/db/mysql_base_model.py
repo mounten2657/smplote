@@ -122,7 +122,7 @@ class MysqlBaseModel:
         """获取数据库连接（每个greenlet独立连接）"""
         try:
             conn = self.get_pool().connection()
-            cursor = conn.cursor()
+            cursor = conn.cursor(buffered=True)
             cursor.execute("SELECT 1")
             return conn
         except mysql.connector.Error as e:
@@ -272,7 +272,7 @@ class MysqlBaseModel:
     def get(self, conn) -> List[Dict]:
         """执行查询并返回所有结果"""
         sql, params = self._build_query()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         try:
             cursor.execute(sql, params)
             return Attr.convert_to_json_dict(cursor.fetchall())
@@ -284,7 +284,7 @@ class MysqlBaseModel:
         """获取第一条记录"""
         self.limit(0, 1)
         sql, params = self._build_query()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         try:
             cursor.execute(sql, params)
             results = Attr.convert_to_json_dict(cursor.fetchall())
@@ -295,7 +295,7 @@ class MysqlBaseModel:
     @with_connection
     def query_sql(self, conn, sql: str) -> List[Dict]:
         """执行原生查询SQL"""
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         try:
             self.logger.debug({"sql": sql.strip(), "params": {}}, 'DB_SQL_QUERY', 'mysql')
             cursor.execute(sql)
@@ -312,7 +312,7 @@ class MysqlBaseModel:
     @with_connection
     def exec_sql(self, conn, sql: str) -> bool:
         """执行非查询SQL"""
-        cursor = conn.cursor()
+        cursor = conn.cursor(buffered=True)
         try:
             self.logger.info({"sql": sql.strip(), "params": {}}, 'DB_SQL_EXEC', 'mysql')
             cursor.execute(sql)
@@ -409,7 +409,7 @@ class MysqlBaseModel:
         if not self._table:
             raise ValueError("No table specified")
 
-        cursor = conn.cursor()
+        cursor = conn.cursor(buffered=True)
         insert_data = Attr.convert_to_json_string(insert_data)
 
         try:
@@ -467,7 +467,7 @@ class MysqlBaseModel:
         if not self._table:
             raise ValueError("No table specified")
 
-        cursor = conn.cursor()
+        cursor = conn.cursor(buffered=True)
         try:
             # 构建WHERE条件
             where_parts = []
