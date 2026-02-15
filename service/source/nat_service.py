@@ -91,7 +91,7 @@ class NatService:
                 err = Error.handle_exception_info(e)
                 par = {"r": r_type, "i": i, "o": port, "n": node, "x": proxy, "m": method,  "u": url, "p": params, "h": headers, "e": err}
                 if i < retry_times - 1:
-                    logger.warning(f"请求失败，重试中<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params} - {err}", 'MIXED_WAR')
+                    logger.warning(f"请求失败，重试中<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}][{node}]: {url} - {params} - {err}", 'MIXED_WAR')
                     redis.incr(total_key, [f'{data}:war'])
                     redis.incr(total_key, [f'{data}:war_{port}'])
                     if port:
@@ -99,7 +99,7 @@ class NatService:
                         redis.set_nx(failed_key, par, [f"{data}:{uuid}_w_{i}"])
                     Time.sleep(5 +  i * 12)  # 稍微等待一下，总计145秒，而节点刷新时间为2分钟
                 else:
-                    logger.error(f"请求错误，已超过最大重试次数<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params} - {err}", 'MIXED_ERR')
+                    logger.error(f"请求错误，已超过最大重试次数<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}][{node}]: {url} - {params} - {err}", 'MIXED_ERR')
                     redis.incr(total_key, [f'{data}:fal'])
                     redis.incr(total_key, [f'{data}:fal_{port}'])
                     redis.incr(failed_key, [f"{data}:{uuid}_e"])
