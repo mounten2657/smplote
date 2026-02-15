@@ -60,10 +60,10 @@ class LogErrorMd:
         # 添加时间和操作建议
         markdown += f"""
     ⏰ **发生时间**  
-      - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
+     {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
 
     📊 **错误自检**  
-      - 完整日志追踪ID: <{log_id[:24] if log_id else 'None'}>
+     完整日志追踪ID: <{log_id[:24] if log_id else 'None'}>
      """
 
         return markdown
