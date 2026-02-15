@@ -60,16 +60,11 @@ class LogErrorMd:
         # 添加时间和操作建议
         markdown += f"""
     ⏰ **发生时间**  
-     {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
+      - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
 
-    📊 **操作建议**  
-     1. 检查 `{result.get('err_cause', ['', ''])[-1]}` 相关逻辑  
-     2. 验证 {result.get('err_file_list', [''])[0] if result.get('err_file_list') else 'N/A'} 行代码逻辑  
+    📊 **错误自检**  
+      - 完整日志追踪ID: <{log_id[:24] if log_id else 'None'}>
      """
-
-        # 可选日志ID
-        if log_id:
-            markdown += f"3. 查看完整日志追踪ID: <{log_id[:24]}>\r\n"
 
         return markdown
 
