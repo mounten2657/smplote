@@ -74,7 +74,7 @@ class GplFormatterService:
         :param code: 股票代码，不带市场前缀，如 603777
         :return: 标准股票数据
         """
-        code = self.sf.remove_stock_prefix(code)
+        code = self.sft.remove_stock_prefix(code)
         symbol = self.sft.add_stock_prefix(code)
         try:
             stock = self.em.get_basic_info(symbol)
@@ -151,7 +151,7 @@ class GplFormatterService:
         :param code: 股票代码，不带市场前缀，如 603777
         :return: 标准股票数据
         """
-        code = self.sf.remove_stock_prefix(code)
+        code = self.sft.remove_stock_prefix(code)
         symbol = self.sft.add_stock_prefix(code)
         try:
             stock = self.ak.stock_individual_basic_info_xq(symbol)
