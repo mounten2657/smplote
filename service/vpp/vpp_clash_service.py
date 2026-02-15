@@ -43,7 +43,7 @@ class VppClashService:
         if not rand_list or is_refresh:
             rand_list = {}
             for port in p_list:
-                num = redis.get(self.cache_key, [f'{port}_len'])
+                num = redis.get(self.cache_key, [f'{port}:len'])
                 num = int(num) if isinstance(num, int) else 0
                 if num:  # 有节点才分配
                     rand_list[port] = num
@@ -79,7 +79,7 @@ class VppClashService:
 
     def get_vpn_node(self, port, ctype='em'):
         """获取vpn节点 - 随机值"""
-        n_list = redis.get(self.cache_key, [f'{port}_{ctype}'])  # 从缓存中读取
+        n_list = redis.get(self.cache_key, [f'{port}:{ctype}'])  # 从缓存中读取
         if not n_list:
             return ''
         return Attr.random_choice(n_list)
@@ -104,7 +104,7 @@ class VppClashService:
         for e_port in p_list:
             port = e_port - 10
             Time.sleep(Str.randint(1, 9) / 10)
-            cache = redis.get(self.cache_key, [f'{port}_all'])
+            cache = redis.get(self.cache_key, [f'{port}:all'])
             if cache and not is_refresh:
                 logger.warning(f"全节点缓存已存在<{port}>", "CVA_WAR")
                 continue
@@ -116,8 +116,8 @@ class VppClashService:
             if not n_list:
                 logger.warning(f"全节点列表获取失败<{url}>", "CVA_WAR")
                 continue
-            redis.set(self.cache_key, n_list, [f'{port}_all'])
-            redis.set(self.cache_key, len(n_list), [f'{port}_tol'])
+            redis.set(self.cache_key, n_list, [f'{port}:all'])
+            redis.set(self.cache_key, len(n_list), [f'{port}:tol'])
             logger.info(f"全节点缓存成功<{port}> - {len(n_list)}", "CVA_INF")
             i += 1
         return i
@@ -139,11 +139,11 @@ class VppClashService:
         for e_port in p_list:
             port = e_port - 10
             Time.sleep(Str.randint(1, 9) / 10)
-            cache = redis.get(self.cache_key, [f'{port}_em'])
+            cache = redis.get(self.cache_key, [f'{port}:em'])
             if cache and not is_refresh:
                 logger.warning(f"东财节点缓存已存在<{port}>", "CVE_WAR")
                 continue
-            cache = redis.get(self.cache_key, [f'{port}_all'])
+            cache = redis.get(self.cache_key, [f'{port}:all'])
             if not cache or not isinstance(cache, list):
                 logger.warning(f"请先刷新全节点缓存<{port}><{len(cache)}>", "CVE_WAR")
                 continue
@@ -164,8 +164,8 @@ class VppClashService:
                 logger.debug(f"该节点成功获取东财数据<{port}><{node}> - {res}", "CVE_DEG")
                 node_list.append(node)
                 Time.sleep(Str.randint(1, 9) / 10)
-            redis.set(self.cache_key, node_list, [f'{port}_em'])
-            redis.set(self.cache_key, len(node_list), [f'{port}_len'])
+            redis.set(self.cache_key, node_list, [f'{port}:em'])
+            redis.set(self.cache_key, len(node_list), [f'{port}:len'])
             logger.info(f"东财节点缓存成功<{port}> - {len(node_list)}", "CVE_INF")
             i += 1
         self.get_vpn_port(1)  # 刷新一下端口概率缓存
