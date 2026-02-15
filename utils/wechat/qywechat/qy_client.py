@@ -32,7 +32,7 @@ class QyClient:
         if Config.is_prod():
             # 同一个地方报错，限流15分钟一次
             cache_key = 'LOCK_QY_ERR'
-            match_list= ["err_file_list", "err_msg"]  # 匹配列表
+            match_list= ["err_msg", "err_file_list"]  # 匹配列表
             for key in match_list:
                 val= result.get(key)
                 ms = str(val)

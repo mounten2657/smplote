@@ -14,7 +14,7 @@ class RedisKeys:
         "LOCK_SKY_API_SG": {"key": "lock_sky_api_sg:%s", "ttl": 60},
         "LOCK_SKY_API_GY": {"key": "lock_sky_api_gy:%s", "ttl": 60},
         "LOCK_QY_MSG": {"key": "lock_qy_msg:%s", "ttl": 60},
-        "LOCK_QY_CAL": {"key": "lock_qy_msg:%s", "ttl": 60},
+        "LOCK_QY_CAL": {"key": "lock_qy_cal:%s", "ttl": 60},
         "LOCK_QY_ERR": {"key": "lock_qy_err:%s", "ttl": 900},
         "LOCK_WS_ON_ERR": {"key": "lock_ws_on_err", "ttl": 60},
         # 微信用户相关
