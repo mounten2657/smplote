@@ -4,7 +4,6 @@ import threading
 from flask import Flask, request, send_from_directory
 from tool.router.parse_handler import ParseHandler
 from tool.core import Logger, Attr, Api, Dir, Config, Error, Http, Env
-from utils.wechat.qywechat.qy_client import QyClient
 from service.source.preview.file_preview_service import FilePreviewService
 
 logger = Logger()
@@ -83,7 +82,7 @@ class RouterHandler:
                 if not (Env.get('APP_AUTH_KEY') == authcode
                         or any(str(method_path).startswith(ol) for ol in self.OPEN_MODULE_LIST)
                         or method_path in self.IGNORE_ROUTE_LIST):
-                    return Api.error('Permission denied', None, 99)
+                    Error.throw_exception('Permission denied', 99)  # 抛出异常以告警
                 module_name, method_name = method_path.rsplit('/', 1)
                 module_path = f'{module_name.replace("/", ".")}'
                 params = RouterHandler.get_http_params()
@@ -98,9 +97,8 @@ class RouterHandler:
                     return Api.success(result)
             except Exception as e:
                 err = Error.handle_exception_info(e)
-                logger.error(err, 'APP_PARSE_ROUTE_ERR')
-                QyClient().send_error_msg(err, logger.uuid)   # 发送告警消息
-                return Api.error(f"Method Not Found!", None, 500)
+                logger.error(err, 'APP_PARSE_ROUTE_ERR')  # 记录错误的同时发送告警消息
+                return Api.error(f"Method Not Allow", None, 405)
 
         # 请求完成后的动作
         @self.app.after_request

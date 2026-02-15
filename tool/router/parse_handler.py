@@ -7,7 +7,6 @@ import baostock as bs
 from tool.core import Logger, Time, Http, Error, Attr, Config, Sys
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
-from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
 from log_clean import clean_old_logs
 
@@ -103,8 +102,7 @@ class ParseHandler:
         except (ImportError, AttributeError, RuntimeError, Exception) as e:
             run_time = Time.now(0) - start_time
             err = Error.handle_exception_info(e)
-            logger.error(data=err, msg=f"ERROR[RT.{run_time}]")
-            QyClient().send_error_msg(err, logger.uuid)  # 发送告警消息
+            logger.error(err,f"ERROR[RT.{run_time}]")  # 记录错误的同时发送告警消息
             return err
 
     @staticmethod
