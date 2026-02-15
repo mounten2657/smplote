@@ -37,11 +37,8 @@ class QyClient:
                 val= result.get(key)
                 ms = str(val)
                 md5 = Str.md5(ms)
-                logger.info(f"缓存参数 - {key}:{md5} - {ms}", "SEM_INF")
                 if redis.get(cache_key, [f"{key}:{md5}"]):
-                    logger.info(f"找到缓存 - {key}:{md5} - {ms}", "SEM_INF")
                     return False
-                logger.info(f"保存缓存 - {key}:{md5} - {ms}", "SEM_INF")
                 redis.set(cache_key, f"{log_id} - {ms}", [f"{key}:{md5}"])
             md = LogErrorMd.get_error_markdown(result, log_id)
             return self.send_msg(md)
