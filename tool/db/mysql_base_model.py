@@ -337,7 +337,7 @@ class MysqlBaseModel:
         if not self._table:
             raise ValueError("No table specified")
 
-        cursor = conn.cursor()
+        cursor = conn.cursor(buffered=True)
         try:
             update_data_converted = Attr.convert_to_json_string(update_data)
             affected_rows = 0

@@ -122,7 +122,7 @@ class VpCallbackService:
         logger.debug(res['rev_handler'], 'VP_CALL_HD_RES')
         data['pid'] = pid
         # 消息数据入库 - 异步
-        res['ins_handler'] = Sys.delayed_task(VpCallbackService.insert_handler, data)
+        res['ins_handler'] = Sys.delayed_task(VpCallbackService.insert_handler, data, timeout=300)
         # 消息指令处理 - 异步
         res['cmd_handler'] = Sys.delayed_task(VpCallbackService.command_handler, data, timeout=300)
         update_data = {"process_result": res, "process_params": data}
