@@ -1,8 +1,10 @@
-from tool.core import *
+from tool.core import Logger, Config, Ins, Str
+from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.sender.qy_msg_sender import QyMsgSender
 from tool.unit.md.log_error_md import LogErrorMd
 
 logger = Logger()
+redis = RedisClient()
 
 
 @Ins.singleton
@@ -28,6 +30,16 @@ class QyClient:
     def send_error_msg(self, result, log_id=None):
         """发送错误日志告警消息 - 仅生产环境"""
         if Config.is_prod():
+            # 同一个地方报错，限流15分钟一次
+            cache_key = 'LOCK_QY_ERR'
+            match_list= ["err_file_list", "err_msg"]  # 匹配列表
+            for key in match_list:
+                val= result.get(key)
+                ms = str(val)
+                md5 = Str.md5(ms)
+                if redis.get(cache_key, [f"{key}:{md5}"]):
+                    return False
+                redis.set(cache_key, f"{log_id} - {ms}", [f"{key}:{md5}"])
             md = LogErrorMd.get_error_markdown(result, log_id)
             return self.send_msg(md)
         return False

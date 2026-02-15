@@ -1,7 +1,7 @@
 import base64, hashlib
 from flask.globals import request
 from Crypto.Cipher import AES
-from tool.core import *
+from tool.core import Logger, Config
 
 logger = Logger()
 
