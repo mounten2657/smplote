@@ -97,6 +97,8 @@ class RouterHandler:
                     return Api.success(result)
             except Exception as e:
                 err = Error.handle_exception_info(e)
+                if Attr.get_by_point(err, 'err_msg.0'):
+                    err['err_msg'][0] += f' - {method_path}'
                 logger.error(err, 'APP_PARSE_ROUTE_ERR')  # 记录错误的同时发送告警消息
                 return Api.error(f"Method Not Allow", None, 405)
 

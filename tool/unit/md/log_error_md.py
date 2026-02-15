@@ -41,7 +41,7 @@ class LogErrorMd:
         markdown = f"""🔥 **{str(app_name).capitalize()} 系统异常告警**  
 
     ⚠️ **错误描述**  
-    {" - ".join(error_message)}
+    {" | ".join(error_message)}
 
     ⛔ **错误溯源**  
     ```
