@@ -3,6 +3,7 @@ from service.wechat.callback.vp_callback_service import VpCallbackService
 from service.gpl.gpl_update_service import GPLUpdateService
 from service.vpp.vpp_pxq_service import VppPxqService
 from service.vpp.vpp_clash_service import VppClashService
+from service.vpp.vpp_note_service import VppNoteService
 from tool.router.base_app_vp import BaseAppVp
 from tool.core import Time, Sys
 
@@ -77,6 +78,11 @@ class Task(BaseAppVp):
             return self.error('周末不执行')
         p_list = [int(p) + 10 for p in ports.split(',')] if ports else []  # 转为api端口
         res = Sys.delayed_task(VppClashService().init_vpn_node, p_list, timeout=3600)
+        return self.success(res)
+
+    def rf_note(self):
+        """刷新笔记html - 每天凌晨的00点16分"""
+        res = VppNoteService.gen_note_html()
         return self.success(res)
 
     def gpl_info(self):

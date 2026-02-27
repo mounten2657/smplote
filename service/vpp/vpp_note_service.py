@@ -29,6 +29,8 @@ class VppNoteService:
                 return res | {'e': "File list not found"}
         else:
             return res | {'e': "Invalid path"}
+        # 先清除旧文件夹
+        Dir.delete_dir(output_dir)
         for f in f_list:
             ext = File.get_file_ext(f)
             # 路径转换 - 同级文件夹
