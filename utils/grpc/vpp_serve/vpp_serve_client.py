@@ -48,13 +48,13 @@ class VppServeClient:
 
     def wk_html_2_img(self, fp, fo=''):
         """html转图片"""
-        return self._exec_api(lambda: self.stub.wk_html_2_img(WkHtmlRequest(
+        return self._exec_api(lambda: self.stub.wk_html_2_img(TransferRequest(
             fp=fp, fo=fo
         )))
 
     def wk_html_2_pdf(self, fp, fo=''):
         """html转PDF"""
-        return self._exec_api(lambda: self.stub.wk_html_2_pdf(WkHtmlRequest(
+        return self._exec_api(lambda: self.stub.wk_html_2_pdf(TransferRequest(
             fp=fp, fo=fo
         )))
 
@@ -65,3 +65,9 @@ class VppServeClient:
         t = int(t) if t else 0
         res = self._exec_api(lambda: self.stub.cs7_http(Cs7HttpRequest(m=m, u=u, p=p, h=h, x=x, t=t)))
         return res['data']
+
+    def mdit_md_2_html(self, fp, fo=''):
+        """md转html"""
+        return self._exec_api(lambda: self.stub.md_2_html(TransferRequest(
+            fp=fp, fo=fo
+        )))

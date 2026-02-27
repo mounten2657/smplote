@@ -167,7 +167,7 @@ class VpClientFactory:
         """
         if not mp3_path or not to_wxid:
             return False
-        silk_path = File.mp3_to_silk(mp3_path)
+        silk_path = VppServeService.mp3_to_silk(mp3_path)
         if not silk_path:
             return False
         silk_base64 = File.get_base64(silk_path)

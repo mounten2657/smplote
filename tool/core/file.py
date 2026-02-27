@@ -1,9 +1,7 @@
-import os
 import json
 import base64
 from pathlib import Path
-from typing import Union, Any, Optional
-from spire.pdf.common import *
+from typing import Any
 from spire.pdf import *
 from tool.core.attr import Attr
 from tool.core.dir import Dir
@@ -85,9 +83,17 @@ class File:
             return False
 
     @staticmethod
-    def exists(fp):
+    def exists(fp)->bool:
         """判断文件或路径是否存在"""
         return os.path.exists(fp)
+
+    @staticmethod
+    def delete_file(path: str | Path) -> bool:
+        """删除文件"""
+        if not File.exists(path):
+            return False
+        Path(path).unlink()
+        return True
 
     @staticmethod
     def deduplicate_json_file(input_file, key):
@@ -119,11 +125,11 @@ class File:
         return data
 
     @staticmethod
-    def is_safe_path(basedir, path):
+    def is_safe_path(basedir, allow_path):
         """检查路径是否在允许的目录内"""
-        basedir = os.path.abspath(basedir)
-        request_path = os.path.abspath(os.path.join(basedir, path))
-        return os.path.commonpath([basedir, request_path]) == basedir
+        base = Path(basedir).resolve()
+        target = (base / allow_path).resolve()
+        return base in target.parents or base == target
 
     @staticmethod
     def get_file_mtime(file_path):
@@ -132,6 +138,35 @@ class File:
         if not file_path.exists():
             return 0
         return int(file_path.stat().st_mtime)
+
+    @staticmethod
+    def get_file_name(path: str | Path) -> str:
+        """获取文件名（含后缀）"""
+        return Path(path).name
+
+    @staticmethod
+    def get_file_ext(path: str | Path) -> str:
+        """获取文件后缀（带点，例如 .txt）"""
+        return Path(path).suffix
+
+    @staticmethod
+    def get_file_dir(path: str | Path) -> str:
+        """获取文件所在目录路径"""
+        return str(Path(path).parent)
+
+    @staticmethod
+    def get_base64(file_path: str) -> str:
+        """将本地文件转换为 Base64 编码字符串"""
+        try:
+            with open(file_path, "rb") as fp:
+                # 读取文件内容并进行 Base64 编码
+                encoded_bytes = base64.b64encode(fp.read())
+                # 转换为 UTF-8 字符串
+                return encoded_bytes.decode("utf-8")
+        except FileNotFoundError:
+            raise ValueError(f"文件不存在: {file_path}")
+        except Exception as e:
+            raise RuntimeError(f"转Base64失败: {str(e)}")
 
     @staticmethod
     def get_pdf_txt(f):
@@ -158,44 +193,3 @@ class File:
         # 减少无意义的空行
         text = Str.remove_mult_lines(text, 5)
         return text
-
-    @staticmethod
-    def get_base64(file_path: str) -> str:
-        """
-        将本地文件转换为 Base64 编码字符串
-
-        参数:
-        file_path (str): 本地文件路径
-
-        返回:
-        str: 图片的 Base64 编码字符串（不含前缀）
-
-        示例:
-         get_base64("path/to/image.jpg")
-        'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA...'
-        """
-        try:
-            with open(file_path, "rb") as fp:
-                # 读取文件内容并进行 Base64 编码
-                encoded_bytes = base64.b64encode(fp.read())
-                # 转换为 UTF-8 字符串
-                return encoded_bytes.decode("utf-8")
-        except FileNotFoundError:
-            raise ValueError(f"文件不存在: {file_path}")
-        except Exception as e:
-            raise RuntimeError(f"转Base64失败: {str(e)}")
-
-    @staticmethod
-    def mp3_to_silk(mp3_path: str):
-        """将 mp3 转为 silk"""
-        try:
-            pcm_path = Path(mp3_path).with_suffix('.pcm')
-            silk_path = Path(mp3_path).with_suffix('.silk')
-            if not os.path.exists(pcm_path):
-                if 0 != os.system(f'/usr/bin/ffmpeg -y -i {mp3_path} -f s16le -ar 24000 -ac 1 {pcm_path}'):
-                    return ''
-            if 0 == os.system(f'/opt/shell/tool/silk-v3-decoder/silk/encoder {pcm_path} {silk_path} -tencent'):
-                return silk_path
-            return ''
-        except Exception as e:
-            raise RuntimeError(f"转silk文件失败: {str(e)}")

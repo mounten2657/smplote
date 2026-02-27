@@ -135,7 +135,7 @@ class Sys:
     @staticmethod
     def delay_reload_gu(is_force=0):
         """重载gu """
-        command = f'sudo /opt/shell/init/init_flask.sh >>/dev/null 2>&1{' 1' if is_force else ' '}'
+        command = f'sudo /opt/shell/init/init_flask.sh{' 1' if is_force else ' '} >>/dev/null 2>&1'
         return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
 
     @staticmethod

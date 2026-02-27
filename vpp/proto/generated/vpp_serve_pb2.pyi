@@ -75,7 +75,7 @@ class VpFileRequest(_message.Message):
 Global___VpFileRequest: _TypeAlias = VpFileRequest  # noqa: Y015
 
 @_typing.final
-class WkHtmlRequest(_message.Message):
+class TransferRequest(_message.Message):
     DESCRIPTOR: _descriptor.Descriptor
 
     FP_FIELD_NUMBER: _builtins.int
@@ -91,7 +91,7 @@ class WkHtmlRequest(_message.Message):
     _ClearFieldArgType: _TypeAlias = _typing.Literal["fo", b"fo", "fp", b"fp"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
 
-Global___WkHtmlRequest: _TypeAlias = WkHtmlRequest  # noqa: Y015
+Global___TransferRequest: _TypeAlias = TransferRequest  # noqa: Y015
 
 @_typing.final
 class Cs7ShRequest(_message.Message):

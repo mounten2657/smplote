@@ -41,12 +41,12 @@ class VppServerStub(object):
                 _registered_method=True)
         self.wk_html_2_img = channel.unary_unary(
                 '/vpp_serve.VppServer/wk_html_2_img',
-                request_serializer=vpp__serve__pb2.WkHtmlRequest.SerializeToString,
+                request_serializer=vpp__serve__pb2.TransferRequest.SerializeToString,
                 response_deserializer=vpp__serve__pb2.CommonResponse.FromString,
                 _registered_method=True)
         self.wk_html_2_pdf = channel.unary_unary(
                 '/vpp_serve.VppServer/wk_html_2_pdf',
-                request_serializer=vpp__serve__pb2.WkHtmlRequest.SerializeToString,
+                request_serializer=vpp__serve__pb2.TransferRequest.SerializeToString,
                 response_deserializer=vpp__serve__pb2.CommonResponse.FromString,
                 _registered_method=True)
         self.cs7_rgu = channel.unary_unary(
@@ -57,6 +57,11 @@ class VppServerStub(object):
         self.cs7_http = channel.unary_unary(
                 '/vpp_serve.VppServer/cs7_http',
                 request_serializer=vpp__serve__pb2.Cs7HttpRequest.SerializeToString,
+                response_deserializer=vpp__serve__pb2.CommonResponse.FromString,
+                _registered_method=True)
+        self.md_2_html = channel.unary_unary(
+                '/vpp_serve.VppServer/md_2_html',
+                request_serializer=vpp__serve__pb2.TransferRequest.SerializeToString,
                 response_deserializer=vpp__serve__pb2.CommonResponse.FromString,
                 _registered_method=True)
 
@@ -94,6 +99,12 @@ class VppServerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def md_2_html(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_VppServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -104,12 +115,12 @@ def add_VppServerServicer_to_server(servicer, server):
             ),
             'wk_html_2_img': grpc.unary_unary_rpc_method_handler(
                     servicer.wk_html_2_img,
-                    request_deserializer=vpp__serve__pb2.WkHtmlRequest.FromString,
+                    request_deserializer=vpp__serve__pb2.TransferRequest.FromString,
                     response_serializer=vpp__serve__pb2.CommonResponse.SerializeToString,
             ),
             'wk_html_2_pdf': grpc.unary_unary_rpc_method_handler(
                     servicer.wk_html_2_pdf,
-                    request_deserializer=vpp__serve__pb2.WkHtmlRequest.FromString,
+                    request_deserializer=vpp__serve__pb2.TransferRequest.FromString,
                     response_serializer=vpp__serve__pb2.CommonResponse.SerializeToString,
             ),
             'cs7_rgu': grpc.unary_unary_rpc_method_handler(
@@ -120,6 +131,11 @@ def add_VppServerServicer_to_server(servicer, server):
             'cs7_http': grpc.unary_unary_rpc_method_handler(
                     servicer.cs7_http,
                     request_deserializer=vpp__serve__pb2.Cs7HttpRequest.FromString,
+                    response_serializer=vpp__serve__pb2.CommonResponse.SerializeToString,
+            ),
+            'md_2_html': grpc.unary_unary_rpc_method_handler(
+                    servicer.md_2_html,
+                    request_deserializer=vpp__serve__pb2.TransferRequest.FromString,
                     response_serializer=vpp__serve__pb2.CommonResponse.SerializeToString,
             ),
     }
@@ -175,7 +191,7 @@ class VppServer(object):
             request,
             target,
             '/vpp_serve.VppServer/wk_html_2_img',
-            vpp__serve__pb2.WkHtmlRequest.SerializeToString,
+            vpp__serve__pb2.TransferRequest.SerializeToString,
             vpp__serve__pb2.CommonResponse.FromString,
             options,
             channel_credentials,
@@ -202,7 +218,7 @@ class VppServer(object):
             request,
             target,
             '/vpp_serve.VppServer/wk_html_2_pdf',
-            vpp__serve__pb2.WkHtmlRequest.SerializeToString,
+            vpp__serve__pb2.TransferRequest.SerializeToString,
             vpp__serve__pb2.CommonResponse.FromString,
             options,
             channel_credentials,
@@ -257,6 +273,33 @@ class VppServer(object):
             target,
             '/vpp_serve.VppServer/cs7_http',
             vpp__serve__pb2.Cs7HttpRequest.SerializeToString,
+            vpp__serve__pb2.CommonResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def md_2_html(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/vpp_serve.VppServer/md_2_html',
+            vpp__serve__pb2.TransferRequest.SerializeToString,
             vpp__serve__pb2.CommonResponse.FromString,
             options,
             channel_credentials,

@@ -8,6 +8,8 @@ from vpp.proto.generated.vpp_serve_pb2_grpc import *
 from vpp.api.wechat.pad.vp_file_api import VpFileApi
 from vpp.api.lib.wk.wk_html_api import WkHtmlApi
 from vpp.api.lib.sys.cs7_sh_api import Cs7ShApi
+from vpp.api.lib.sys.cs7_nat_api import Cs7NatApi
+from vpp.api.lib.md.mdit_html_api import MditHtmlApi
 
 
 class VppServer:
@@ -26,6 +28,8 @@ class VppServer:
         self.file_api = VpFileApi()
         self.wk_api = WkHtmlApi()
         self.cs7_api = Cs7ShApi()
+        self.cs7_nat = Cs7NatApi()
+        self.mdit = MditHtmlApi()
 
     def vp_cdn_download(self, request, context):
         """下载文件"""
@@ -52,7 +56,11 @@ class VppServer:
 
     def cs7_http(self, r, context):
         """发送http请求"""
-        return self._exec_api(lambda: self.cs7_api.send_cs7_http(r.m, r.u, r.p, r.h, r.x, r.t))
+        return self._exec_api(lambda: self.cs7_nat.send_cs7_http(r.m, r.u, r.p, r.h, r.x, r.t))
+
+    def md_2_html(self, r, context):
+        """md转html"""
+        return self._exec_api(lambda: self.mdit.md2html(r.fp, r.fo))
 
     @staticmethod
     def _exec_api(func: Callable, code_key='code', msg_key='msg'):
