@@ -24,7 +24,8 @@ class VppNoteService:
             # 目录必须包含 note
             if '/note/' not in note_path:
                 return res | {'e': "Note path not found"}
-            f_list = Dir.get_files_recursive(note_path)
+            exc_list = ['.git', '.obsidian', 'note.git']  # 排除非笔记目录
+            f_list = Dir.get_files_recursive(note_path, 1, exc_list)
             if not f_list:
                 return res | {'e': "File list not found"}
         else:

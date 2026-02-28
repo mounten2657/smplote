@@ -82,7 +82,9 @@ class Task(BaseAppVp):
 
     def rf_note(self):
         """刷新笔记html - 每天凌晨的00点16分"""
-        res = VppNoteService.gen_note_html()
+        md_path = self.params.get('md_path', '/www/appdata/note/')
+        out_path = self.params.get('out_path', '/www/wwwroot/note_html/app/')
+        res = VppNoteService.gen_note_html(md_path, out_path)
         return self.success(res)
 
     def gpl_info(self):

@@ -62,10 +62,11 @@ class Dir:
         return [f.name for f in path.iterdir() if f.is_file()]
 
     @staticmethod
-    def get_files_recursive(dir_path: str | Path, file_only=1) -> list[str]:
+    def get_files_recursive(dir_path: str | Path, file_only=1, exclude_dirs=None) -> list[str]:
         """返回目录下的文件列表 - 递归所有子目录 - 绝对目录"""
         path = Dir.get_path_object(dir_path)
-        return [str(p) for p in path.rglob("*") if not file_only or p.is_file()]
+        exclude_dirs = exclude_dirs or []  # 要排除的目录列表，如 ['.git', '.idea']
+        return [str(p) for p in path.rglob("*") if not any(ex in p.parts for ex in exclude_dirs) and (not file_only or p.is_file())]
 
     @staticmethod
     def join_path(p1, p2)-> str:
