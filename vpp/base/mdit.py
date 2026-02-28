@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 from typing import List, Dict
@@ -117,9 +118,16 @@ class Mdit:
 
     def _extract_headings(self) -> None:
         """提取Markdown中的标题，生成目录数据"""
+        # 先移除代码块，防止里面的注释解析成标题
+        md_content_without_code = re.sub(
+            r'```[\s\S]*?```|`[^`]*`',  # 正则匹配：多行代码块 + 行内代码
+            '',  # 替换为空字符串
+            self.raw_md_content,
+            flags=re.MULTILINE
+        )
         # 逐行解析标题，兼容markdown-it-py的解析规则
         heading_pattern = re.compile(r'^(#{1,5})\s+(.*)$', re.MULTILINE)
-        matches = heading_pattern.findall(self.raw_md_content)  # 使用原始内容解析标题
+        matches = heading_pattern.findall(md_content_without_code)  # 使用原始内容解析标题
 
         self.headings = []
         # 记录重复ID，避免冲突
@@ -186,7 +194,7 @@ class Mdit:
 
         return html_content
 
-    def convert(self) -> str:
+    def convert(self) -> int:
         """执行转换，返回HTML内容并保存文件"""
         # 提取标题（使用原始MD内容）
         self._extract_headings()
@@ -217,9 +225,10 @@ class Mdit:
         )
 
         # 保存文件
-        output_file = self.output_dir / f"{self.md_path.stem}.html"
+        os.makedirs(os.path.dirname(self.output_dir), exist_ok=True)
+        output_file = f"{self.output_dir}/{self.md_path.stem}.html"
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(final_html)
 
         #print(f"转换完成！HTML文件已保存到: {output_file}")
-        return final_html
+        return len(final_html)

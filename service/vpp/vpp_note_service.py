@@ -32,6 +32,7 @@ class VppNoteService:
             return res | {'e': "Invalid path"}
         # 先清除旧文件夹
         Dir.delete_dir(output_dir)
+        logger.info(res, 'NOTE_DIR_DEL')
         for f in f_list:
             ext = File.get_file_ext(f)
             # 路径转换 - 同级文件夹
@@ -39,7 +40,9 @@ class VppNoteService:
             base_dir = Dir.join_path(output_dir, file_dir.split('/note/')[-1])
             if ext == '.md': # md 转 html
                 res[f] = vpp_client.mdit_md_2_html(f, base_dir)
+                logger.debug(f"{f} - {res[f]}", 'NOTE_GEN_MD')
             elif '/zim/' in f:  # 图片直接复制过去
                 if not Dir.exists(base_dir):
                     Dir.copy_dir(file_dir, base_dir)
-        return res
+        logger.info(res, 'NOTE_GEN_RES')
+        return len(res)
