@@ -127,9 +127,9 @@ class File:
     @staticmethod
     def is_safe_path(basedir, allow_path):
         """检查路径是否在允许的目录内"""
-        base = Path(basedir).resolve()
-        target = (base / allow_path).resolve()
-        return base in target.parents or base == target
+        basedir = os.path.abspath(basedir)
+        request_path = os.path.abspath(str(os.path.join(basedir, path)))
+        return os.path.commonpath([basedir, request_path]) == basedir
 
     @staticmethod
     def get_file_mtime(file_path):
