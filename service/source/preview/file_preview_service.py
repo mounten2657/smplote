@@ -58,8 +58,8 @@ class FilePreviewService:
             abort(400, description="Resource permission denied")
 
         # 安全检查
-        if not File.is_safe_path(FilePreviewService.BASE_STORAGE_DIR, file_path):
-            abort(403, description="Access denied")
+        # if not File.is_safe_path(FilePreviewService.BASE_STORAGE_DIR, file_path):
+        #     abort(403, description="Access denied")
 
         # 检查文件是否存在
         full_path = os.path.join(FilePreviewService.BASE_STORAGE_DIR, file_path)
