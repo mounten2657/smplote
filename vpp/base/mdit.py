@@ -58,7 +58,6 @@ class Mdit:
         self.is_share = '/share/' in md_path
         self.md_path = Path(md_path)
         self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(exist_ok=True)
 
         # 读取MD内容
         with open(self.md_path, 'r', encoding='utf-8') as f:
@@ -225,7 +224,7 @@ class Mdit:
         )
 
         # 保存文件
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.output_dir.mkdir(exist_ok=True)
         output_file = f"{self.output_dir}/{self.md_path.stem}.html"
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(final_html)
