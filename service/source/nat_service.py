@@ -55,15 +55,15 @@ class NatService:
         node = ''
         proxy = ''
         uuid = Str.uuid()
-        data = Time.date('%Y-%m-%d')
+        date = Time.date('%Y-%m-%d')
         r_type = self.get_mixed_rand()
         total_key = "PROXY_STAT_TOL"  # 总数统计
         failed_key = "PROXY_STAT_FAL"  # 失败统计
-        redis.incr(total_key, ['sig'])
+        redis.incr(total_key, [f'{date}:sig'])
         for i in range(0, retry_times):
             r_type = self.get_mixed_rand() if i else r_type
-            redis.incr(total_key, [f'{data}:cnt'])
-            redis.incr(total_key, [f'{data}:cnt_{r_type}'])
+            redis.incr(total_key, [f'{date}:cnt'])
+            redis.incr(total_key, [f'{date}:cnt_{r_type}'])
             try:
                 if r_type == 'x':  # 代理池 - 80%  --> 0%   # 收费太贵且效果不佳，暂不考虑
                     proxy = self.ppr.get_proxy_cache()
@@ -72,7 +72,7 @@ class NatService:
                     port = self.vpn.get_vpn_port()  # 随机端口
                     node = self.vpn.get_vpn_node(port)  # 随机节点
                     proxy = self.vpn.get_vpn_url(port)
-                    redis.incr(total_key, [f'{data}:cnt_{port}'])
+                    redis.incr(total_key, [f'{date}:cnt_{port}'])
                     res = self.vpn.send_http_request_pro(method, url, params, headers, port, node)  # 使用进阶版，节点最大化利用
                 elif r_type == 'z':   # VPS - 5%
                     proxy = 'vps'
@@ -84,26 +84,26 @@ class NatService:
                     logger.info(f"代理请求<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}]: {url} - {params}", 'MIXED_INF')
                 if str(res).startswith('HTTP request failed'):
                     Error.throw_exception(res)
-                redis.incr(total_key, [f'{data}:suc'])
-                redis.incr(total_key, [f'{data}:suc_{port}'])
+                redis.incr(total_key, [f'{date}:suc'])
+                redis.incr(total_key, [f'{date}:suc_{port}'])
                 return res, r_type, proxy
             except Exception as e:
                 err = Error.handle_exception_info(e)
                 par = {"r": r_type, "i": i, "o": port, "n": node, "x": proxy, "m": method,  "u": url, "p": params, "h": headers, "e": err}
                 if i < retry_times - 1:
                     logger.warning(f"请求失败，重试中<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}][{node}]: {url} - {params} - {err}", 'MIXED_WAR')
-                    redis.incr(total_key, [f'{data}:war'])
-                    redis.incr(total_key, [f'{data}:war_{port}'])
+                    redis.incr(total_key, [f'{date}:war'])
+                    redis.incr(total_key, [f'{date}:war_{port}'])
                     if port:
-                        redis.incr(failed_key, [f"{data}:{uuid}_w"])
-                        redis.set_nx(failed_key, par, [f"{data}:{uuid}_w_{i}"])
+                        redis.incr(failed_key, [f"{date}:{uuid}_w"])
+                        redis.set_nx(failed_key, par, [f"{date}:{uuid}_w_{i}"])
                     Time.sleep(5 +  i * 12)  # 稍微等待一下，总计145秒，而节点刷新时间为2分钟
                 else:
                     logger.error(f"请求错误，已超过最大重试次数<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}][{node}]: {url} - {params} - {err}", 'MIXED_ERR')
-                    redis.incr(total_key, [f'{data}:fal'])
-                    redis.incr(total_key, [f'{data}:fal_{port}'])
-                    redis.incr(failed_key, [f"{data}:{uuid}_e"])
-                    redis.set_nx(failed_key, par, [f"{data}:{uuid}_e_{i}"])
+                    redis.incr(total_key, [f'{date}:fal'])
+                    redis.incr(total_key, [f'{date}:fal_{port}'])
+                    redis.incr(failed_key, [f"{date}:{uuid}_e"])
+                    redis.set_nx(failed_key, par, [f"{date}:{uuid}_e_{i}"])
                     return err, r_type, proxy
         return res, r_type, proxy
 
