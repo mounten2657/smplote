@@ -39,8 +39,8 @@ class VppNoteService:
             # 路径转换 - 同级文件夹
             file_dir = File.get_file_dir(f)
             base_dir = Dir.join_path(output_dir, file_dir.split('/note/')[-1])
-            Dir.mkdir(base_dir)
             if ext == '.md': # md 转 html
+                Dir.mkdir(base_dir)
                 res[f] = vpp_client.mdit_md_2_html(f, base_dir)
                 logger.debug(f"{f} - {res[f]}", 'NOTE_GEN_MD')
             elif '/zim/' in f:  # 图片直接复制过去
