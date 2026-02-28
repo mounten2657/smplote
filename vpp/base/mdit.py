@@ -225,7 +225,7 @@ class Mdit:
         )
 
         # 保存文件
-        os.makedirs(os.path.dirname(self.output_dir), exist_ok=True)
+        os.makedirs(self.output_dir, exist_ok=True)
         output_file = f"{self.output_dir}/{self.md_path.stem}.html"
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(final_html)

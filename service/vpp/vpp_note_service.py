@@ -1,4 +1,4 @@
-from tool.core import Logger, Dir, File
+from tool.core import Logger, Dir, File, Sys
 from utils.grpc.vpp_serve.vpp_serve_client import VppServeClient
 
 logger = Logger()
@@ -31,6 +31,7 @@ class VppNoteService:
         else:
             return res | {'e': "Invalid path"}
         # 先清除旧文件夹
+        Sys.chmod(output_dir)
         Dir.delete_dir(output_dir)
         logger.info(res, 'NOTE_DIR_DEL')
         for f in f_list:

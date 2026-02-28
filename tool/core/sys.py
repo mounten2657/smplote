@@ -121,6 +121,11 @@ class Sys:
         return result.stdout.strip()
 
     @staticmethod
+    def chmod(dir_path, mod=777):
+        """将目录设为完全访问"""
+        return Sys.run_command(f'sudo chmod -R {mod} {dir_path}')
+
+    @staticmethod
     def delay_git_pull():
         """延迟三秒后，拉取最新代码，并重启 flask """
         command = 'sudo /opt/shell/init/reload_flask.sh >>/dev/null 2>&1'
