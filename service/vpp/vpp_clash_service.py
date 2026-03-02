@@ -187,7 +187,7 @@ class VppClashService:
         headers = self.get_vpn_auth_header()
         res = self.send_http_request("PUT", url, params, headers)
         if res:
-            logger.warning(f"策略组节点切换失败<{url}> - {params}", "GSN_WAR")
+            logger.warning(f"策略组节点切换失败<{url}> - {params} - {res}", "GSN_WAR")
             return False
         logger.debug(f"策略组节点切换成功<{url}> - {params}", "GSN_DEG")
         if sleep_time:
