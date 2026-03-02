@@ -36,7 +36,7 @@ class GPLUpdateService:
         :return:
         """
         # 周末不更新
-        if not is_force and 6 <= Time.week():
+        if not is_force and Time.is_week():
             return False
         current_date = td if td else Time.date('%Y-%m-%d')
         code_list = code_str.split(',') if code_str else self.formatter.get_stock_code_all()

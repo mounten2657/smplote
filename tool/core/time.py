@@ -53,6 +53,14 @@ class Time:
         return start <= h <= end
 
     @staticmethod
+    def is_week(d=None):
+        """判断是否为周末"""
+        date_format = "%Y-%m-%d"
+        d = d or Time.date(date_format)
+        dt = datetime.strptime(d, date_format)
+        return dt.isoweekday() >= 6
+
+    @staticmethod
     def is_holiday(d=None):
         """判断是否为节假日"""
         d = d or Time.date('%Y-%m-%d')
