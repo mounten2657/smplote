@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+import chinese_calendar as calendar
 from typing import Tuple, Union, Optional
 
 
@@ -50,6 +51,22 @@ class Time:
         """判断当前时间是否为晚上"""
         h = int(datetime.now().strftime('%H'))
         return start <= h <= end
+
+    @staticmethod
+    def is_holiday(d=None):
+        """判断是否为节假日"""
+        d = d or Time.date('%Y-%m-%d')
+        year = d[:4]
+        holiday_list = Time.get_holiday_list(year)
+        return d in holiday_list
+
+    @staticmethod
+    def get_holiday_list(year=None, has_week=True):
+        """获取节假日列表"""
+        year = year or datetime.now().year
+        l = calendar.get_holidays(datetime(int(year), 1, 1), datetime(int(year), 12, 31), has_week)
+        return [str(ld) for ld in l]
+
 
     @staticmethod
     def tfd(date_str, date_format="%Y-%m-%d %H:%M:%S"):
