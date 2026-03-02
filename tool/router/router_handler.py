@@ -11,16 +11,26 @@ logger = Logger()
 
 class RouterHandler:
 
-    # 免鉴权的开放模块 - 具体到二级即可
-    OPEN_MODULE_LIST = [
-        'bot/index',
-        'bot/task',
-        'gpl/symbol',
-        'callback/gitee_callback',
+    # 免鉴权的开放接口 - 比如定时任务和直接访问的接口
+    OPEN_API_LIST = [
+        'bot/index/index',
+        'bot/task/sky_rw',
+        'bot/task/vp_msg',
+        'bot/task/vp_room',
+        'bot/task/vp_log',
+        'bot/task/rf_proxy',
+        'bot/task/note_html',
+        'bot/task/rf_node',
+        'bot/task/gpl_info',
+        'bot/task/gpl_ext',
+        'bot/task/gpl_daily',
+        'gpl/symbol/info',
+        'gpl/symbol/daily',
+        'callback/gitee_callback/smplote',
     ]
 
-    # 路由忽略列表，适合回调和文件预览等 - 需要具体到三级
-    IGNORE_ROUTE_LIST = [
+    # 路由忽略列表 - 比如第三方回调和文件预览等
+    IGNORE_API_LIST = [
         'callback/qy_callback/collect_wts',
         'callback/qy_callback/collect_gpl',
         'src/static/image',
@@ -28,7 +38,7 @@ class RouterHandler:
         'src/terminal/output',
     ]
 
-    # 日志忽略列表，屏蔽高频率且无用的接口
+    # 日志忽略列表，比如日志监听本身
     IGNORE_LOG_LIST = [
         'src/terminal/output',
     ]
@@ -80,8 +90,8 @@ class RouterHandler:
                 headers = Http.get_request_headers()
                 authcode = Attr.get(headers, 'Authcode')
                 if not (Env.get('APP_AUTH_KEY') == authcode
-                        or any(str(method_path).startswith(ol) for ol in self.OPEN_MODULE_LIST)
-                        or method_path in self.IGNORE_ROUTE_LIST):
+                        or method_path in self.OPEN_API_LIST
+                        or method_path in self.IGNORE_API_LIST):
                     Error.throw_exception('Api Permission denied', 99)  # 抛出异常以告警
                 module_name, method_name = method_path.rsplit('/', 1)
                 module_path = f'{module_name.replace("/", ".")}'
@@ -91,7 +101,7 @@ class RouterHandler:
                 if Error.has_exception(result):
                     return Api.error(f"{result['err_msg'][0]}", Attr.remove_keys(result, ['err_msg', 'err_file_list']))
                 # 特定路由直接放行
-                if method_path in self.IGNORE_ROUTE_LIST:
+                if method_path in self.IGNORE_API_LIST:
                     return result
                 else:
                     return Api.success(result)
