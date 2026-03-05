@@ -7,6 +7,7 @@ import random
 from flask import request
 from urllib.parse import urlencode, urlparse
 from typing import Union, Dict, Optional
+from bs4 import BeautifulSoup
 from tool.core.attr import Attr
 
 
@@ -241,6 +242,37 @@ class Http:
             # 如果仍然没有获取到客户端 IP 地址，使用 request.remote_addr
             client_ip = request.remote_addr
         return client_ip
+
+    @staticmethod
+    def get_ip138_info(ip: str) -> dict:
+        """从 ip138.com 查询 IP 的归属地等信息
+
+        :param ip: 要查询的 IP 地址，例如 101.198.0.142
+        :return: 包含查询结果的字典，失败时返回带有 error 键的字典
+        """
+        if not ip:
+            return {}
+        url = f"https://www.ip138.com/iplookup.php?action=2&ip={ip}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        try:
+            resp = requests.get(url, headers=headers, timeout=10)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, "html.parser")
+            rows = soup.select(".table-box tr")
+            result = {}
+            for row in rows:
+                td = row.find_all("td")
+                if len(td) < 2:
+                    continue
+                key = td[0].get_text(strip=True)
+                value = (td[1].span or td[1]).get_text(strip=True)
+                result[key] = value
+            return result
+        except Exception as e:
+            return {"error": str(e)}
 
     @staticmethod
     def replace_host(url: str, new_host: str) -> str:

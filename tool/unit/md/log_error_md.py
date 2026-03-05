@@ -32,8 +32,9 @@ class LogErrorMd:
             headers = Http.get_request_headers()
             user_agent = Attr.get(headers, 'User-Agent')
             ip = Http.get_client_ip()
+            ip_info = Http.get_ip138_info(ip)
             http_err += f"HTTP/2.0 - {http_method} - {http_url}\r\n"
-            http_err += f"    └─ IP: {ip}\r\n"
+            http_err += f"    └─ IP: {ip} - {ip_info}\r\n"
             http_err += f"    └─ UA: {user_agent}\r\n"
             http_err += f"    └─ RAW: {http_data[:768]}"
 
