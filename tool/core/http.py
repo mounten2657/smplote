@@ -250,7 +250,7 @@ class Http:
         :param ip: 要查询的 IP 地址，例如 101.198.0.142
         :return: 包含查询结果的字典，失败时返回带有 error 键的字典
         """
-        if not ip:
+        if not ip or ip in ['0.0.0.0', '127.0.0.1']:
             return {}
         url = f"https://www.ip138.com/iplookup.php?action=2&ip={ip}"
         headers = {
