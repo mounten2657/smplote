@@ -84,7 +84,7 @@ class Task(BaseAppVp):
         if not ports and Time.is_week():
             return self.error('周末不执行')
         p_list = [int(p) + 10 for p in ports.split(',')] if ports else []  # 转为api端口
-        res = Sys.delayed_task(VppClashService().init_vpn_node, p_list, timeout=3600)
+        res = Sys.delayed_task(VppClashService().init_vpn_node, p_list, timeout=10800)
         return self.success(res)
 
     def gpl_info(self):
