@@ -198,7 +198,7 @@ class GPLUpdateService:
             for i, day in enumerate(day_list):
                 td = day['date']
                 info = Attr.get(d_list, f"{symbol}_{td}")
-                e_info = ddb.get_daily(symbol, td)  # 再次查询，辅以佐证
+                # e_info = ddb.get_daily(symbol, td)  # 再次查询，辅以佐证
                 day_data = {
                     f"f{v}_open": day['open'],
                     f"f{v}_close": day['close'],
@@ -211,7 +211,7 @@ class GPLUpdateService:
                     f"f{v}_price_change": day['price_change'],
                     f"f{v}_turnover_rate": day['turnover_rate'],
                 }
-                if info or e_info:
+                if info:
                     if float(info[f"f{v}_close"]) <= 0:
                         if float(day['close']) <= 0:
                             logger.debug(f"接口日线数据为空[{v}]<{symbol}><{td}>{percent} - {day_data}", 'UP_DAY_SKP')
