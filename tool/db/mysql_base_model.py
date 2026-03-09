@@ -133,7 +133,6 @@ class MysqlBaseModel:
             self.logger.error(f"Connection failed - {err}", 'DB_CONN_ERR', 'mysql')
             raise
 
-    @_with_retry
     def _release_connection(self, conn):
         """安全释放数据库连接"""
         try:
@@ -142,7 +141,6 @@ class MysqlBaseModel:
         except Exception as e:
             err = Error.handle_exception_info(e)
             self.logger.warning(f"Error releasing connection - {err}", 'DB_CONN_REL', 'mysql')
-            raise
 
     def table(self, table_name: str) -> 'MysqlBaseModel':
         """设置表名"""
