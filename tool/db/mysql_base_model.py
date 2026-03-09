@@ -233,6 +233,7 @@ class MysqlBaseModel:
             return []
         finally:
             conn.close()
+            self._state.reset()
 
     def first(self) -> Optional[Dict]:
         """获取第一条记录"""
@@ -249,6 +250,7 @@ class MysqlBaseModel:
             return {}
         finally:
             conn.close()
+            self._state.reset()
 
     def query_sql(self, sql: str) -> List[Dict]:
         """执行原生查询SQL"""
@@ -265,6 +267,7 @@ class MysqlBaseModel:
             return []
         finally:
             conn.close()
+            self._state.reset()
 
     def exec_sql(self, sql: str) -> bool:
         """执行非查询SQL"""
@@ -281,6 +284,7 @@ class MysqlBaseModel:
             return False
         finally:
             conn.close()
+            self._state.reset()
 
     def update(self, conditions: Union[Dict, List[Dict]], update_data: Union[Dict, List[Dict]]) -> int:
         """
@@ -320,6 +324,7 @@ class MysqlBaseModel:
         finally:
             cursor.close()
             conn.close()
+            self._state.reset()
 
     def _build_update_query(self, conditions: Dict, update_data: Dict) -> tuple:
         """构建UPDATE语句"""
@@ -389,6 +394,7 @@ class MysqlBaseModel:
         finally:
             cursor.close()
             conn.close()
+            self._state.reset()
 
     def delete(self, conditions: Dict) -> int:
         """
@@ -433,6 +439,7 @@ class MysqlBaseModel:
         finally:
             cursor.close()
             conn.close()
+            self._state.reset()
 
     def get_info(self, pid):
         """根据主键获取第一条记录"""
