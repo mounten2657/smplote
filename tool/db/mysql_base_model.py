@@ -106,7 +106,8 @@ class MysqlBaseModel:
                 cursor.execute("SELECT 1")
             return conn
         except pymysql.Error as e:
-            self.logger.error(f"连接数据库失败: {e}", 'DB_CONN', 'mysql')
+            err = Error.handle_exception_info(e)
+            self.logger.error(f"连接数据库失败 - {err}", 'DB_CONN_ERR', 'mysql')
             raise
 
     def table(self, table_name: str) -> 'MysqlBaseModel':
