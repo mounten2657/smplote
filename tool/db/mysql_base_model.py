@@ -88,7 +88,8 @@ class MysqlBaseModel:
         self._table = self.prefix + self._table if self._table else None
         self._state = QueryState(self._table)
 
-    def _with_retry(self, max_retries=3):
+    @staticmethod
+    def _with_retry(max_retries=3):
         """重试装饰器"""
         def decorator(func):
             @wraps(func)
@@ -98,7 +99,7 @@ class MysqlBaseModel:
                         return func(*args, **kwargs)
                     except pymysql.err.OperationalError as e:
                         if "Packet sequence number wrong" in str(e):
-                            self.logger.warning(f"序号错乱，重试 {attempt + 1}/{max_retries}")
+                            logger.warning(f"序号错乱，重试 {attempt + 1}/{max_retries}")
                             Time.sleep(0.1 * (attempt + 1))
                             continue
                         raise
@@ -108,7 +109,7 @@ class MysqlBaseModel:
             return wrapper
         return decorator
 
-    @_with_retry()
+    @_with_retry
     def _get_connection(self):
         """获取gevent兼容的数据库连接（每个协程独立连接）"""
         try:
