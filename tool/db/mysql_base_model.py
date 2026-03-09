@@ -88,31 +88,27 @@ class MysqlBaseModel:
         self._table = self.prefix + self._table if self._table else None
         self._state = QueryState(self._table)
 
-    @staticmethod
-    def _with_retry(max_retries=3):
+    def _with_retry(self, max_retries=3):
         """重试装饰器"""
         def decorator(func):
             @wraps(func)
-            def wrapper(self, *args, **kwargs):
-                last_exc = None
-                for retry in range(max_retries + 1):
+            def wrapper(*args, **kwargs):
+                for attempt in range(max_retries):
                     try:
-                        return func(self, *args, **kwargs)
-                    except pymysql.OperationalError as e:
-                        if "Packet sequence number wrong" in str(e) or "Lost connection" in str(e):
-                            last_exc = e
-                            self.logger.warning(f"序号错乱({retry + 1}/{max_retries})，即将重试 - {e}", 'DB_RETRY', 'mysql')
-                            self._close_coroutine_conn()
-                            Time.sleep(0.1 * (retry + 1))
+                        return func(*args, **kwargs)
+                    except pymysql.err.OperationalError as e:
+                        if "Packet sequence number wrong" in str(e):
+                            self.logger.warning(f"序号错乱，重试 {attempt + 1}/{max_retries}")
+                            Time.sleep(0.1 * (attempt + 1))
                             continue
                         raise
-                    except Exception as e:
+                    except pymysql.Error as e:
                         raise
-                raise last_exc
+                raise RuntimeError(f"数据库连接重试{max_retries}次失败")
             return wrapper
         return decorator
 
-    @_with_retry
+    @_with_retry()
     def _get_connection(self):
         """获取gevent兼容的数据库连接（每个协程独立连接）"""
         try:
