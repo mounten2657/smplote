@@ -1,7 +1,8 @@
 import pymysql
 import threading
+from functools import wraps
 from typing import Union, List, Dict, Optional, Any
-from tool.core import Logger, Error, Config, Attr
+from tool.core import Logger, Error, Config, Attr, Time
 
 logger = Logger()
 
@@ -87,6 +88,28 @@ class MysqlBaseModel:
         self._table = self.prefix + self._table if self._table else None
         self._state = QueryState(self._table)
 
+    @staticmethod
+    def _with_retry(max_retries=3):
+        """重试装饰器"""
+        def decorator(func):
+            @wraps(func)
+            def wrapper(self, *args, **kwargs):
+                for attempt in range(max_retries):
+                    try:
+                        return func(self, *args, **kwargs)
+                    except pymysql.err.InternalError as e:
+                        if "Packet sequence number wrong" in str(e):
+                            self.logger.warning(f"序号错乱，重试中 {attempt + 1}/{max_retries}")
+                            Time.sleep(0.1 * (attempt + 1))
+                            continue
+                        raise
+                    except pymysql.Error as e:
+                        raise
+                raise RuntimeError("数据库操作重试失败")
+            return wrapper
+        return decorator
+
+    @_with_retry
     def _get_connection(self):
         """获取gevent兼容的数据库连接（每个协程独立连接）"""
         try:
@@ -110,6 +133,7 @@ class MysqlBaseModel:
             self.logger.error(f"Connection failed - {err}", 'DB_CONN_ERR', 'mysql')
             raise
 
+    @_with_retry
     def _release_connection(self, conn):
         """安全释放数据库连接"""
         try:
@@ -118,6 +142,7 @@ class MysqlBaseModel:
         except Exception as e:
             err = Error.handle_exception_info(e)
             self.logger.warning(f"Error releasing connection - {err}", 'DB_CONN_REL', 'mysql')
+            raise
 
     def table(self, table_name: str) -> 'MysqlBaseModel':
         """设置表名"""
