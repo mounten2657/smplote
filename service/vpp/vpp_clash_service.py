@@ -200,11 +200,11 @@ class VppClashService:
         if not port:  # 代理端口必传
             Error.throw_exception(f'empty port - {url} - {params}')
         # 使用 Semaphore 确保同一端口的请求串行
-        with self.port_semaphores[port]:
-            proxy = self.get_vpn_url(port)
+        #with self.port_semaphores[port]:
+        proxy = self.get_vpn_url(port)
+        if not node:
+            node = self.get_vpn_node(port, ctype) # 随机选出一个可用节点并切换过去
             if not node:
-                node = self.get_vpn_node(port, ctype) # 随机选出一个可用节点并切换过去
-                if not node:
-                    Error.throw_exception(f'empty node cache - {url} - {proxy} - {params}')
-            self.switch_vpn_node(port, node, 0.1)  # 给切换节点一点反应时间
-            return self.send_http_request(method, url, params, headers, proxy, timeout)
+                Error.throw_exception(f'empty node cache - {url} - {proxy} - {params}')
+        self.switch_vpn_node(port, node, 0.1)  # 给切换节点一点反应时间
+        return self.send_http_request(method, url, params, headers, proxy, timeout)
