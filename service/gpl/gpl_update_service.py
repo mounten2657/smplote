@@ -225,13 +225,19 @@ class GPLUpdateService:
                     "symbol": symbol,
                     "trade_date": td,
                 } | day_data)
-            if insert_list:
-                ik = insert_list.keys()
-                insert_list = insert_list.values()
-                iid = ddb.add_daily(insert_list)
+                # 这里改为了单挑插入
+                iid = ddb.add_daily([insert_list[td]])
                 res.append(iid)
                 logger.debug(f"新增股票日线数据<{symbol}><{next(iter(ik))}~{next(reversed(ik))}>{percent}"
                              f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
+            # 批量插入容易出现  Duplicate entry 错误，已改为单条插入
+            # if insert_list:
+            #     ik = insert_list.keys()
+            #     insert_list = insert_list.values()
+            #     iid = ddb.add_daily(insert_list)
+            #     res.append(iid)
+            #     logger.debug(f"新增股票日线数据<{symbol}><{next(iter(ik))}~{next(reversed(ik))}>{percent}"
+            #                  f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
         return _up_day_exec(fq_code_list)
