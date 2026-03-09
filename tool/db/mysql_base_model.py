@@ -125,10 +125,10 @@ class MysqlBaseModel:
         """重试装饰器"""
         def decorator(func):
             @wraps(func)
-            def wrapper(*args, **kwargs):
+            def wrapper(self, *args, **kwargs):
                 for attempt in range(max_retries):
                     try:
-                        return func(*args, **kwargs)
+                        return func(self, *args, **kwargs)
                     except pymysql.err.OperationalError as e:
                         if "Packet sequence number wrong" in str(e):
                             logger.warning(f"序号错乱，重试 {attempt + 1}/{max_retries}")
