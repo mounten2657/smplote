@@ -94,18 +94,21 @@ class MysqlBaseModel:
         def decorator(func):
             @wraps(func)
             def wrapper(self, *args, **kwargs):
-                for attempt in range(max_retries):
+                last_exc = None
+                for retry in range(max_retries + 1):
                     try:
                         return func(self, *args, **kwargs)
-                    except pymysql.err.InternalError as e:
-                        if "Packet sequence number wrong" in str(e):
-                            self.logger.warning(f"序号错乱，重试中 {attempt + 1}/{max_retries}")
-                            Time.sleep(0.1 * (attempt + 1))
+                    except pymysql.OperationalError as e:
+                        if "Packet sequence number wrong" in str(e) or "Lost connection" in str(e):
+                            last_exc = e
+                            self.logger.warning(f"序号错乱({retry + 1}/{max_retries})，即将重试 - {e}", 'DB_RETRY', 'mysql')
+                            self._close_coroutine_conn()
+                            Time.sleep(0.1 * (retry + 1))
                             continue
                         raise
-                    except pymysql.Error as e:
+                    except Exception as e:
                         raise
-                raise RuntimeError("数据库操作重试失败")
+                raise last_exc
             return wrapper
         return decorator
 
