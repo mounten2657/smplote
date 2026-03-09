@@ -106,7 +106,8 @@ class MysqlBaseModel:
                 cursor.execute("SELECT 1")
             return conn
         except pymysql.Error as e:
-            self.logger.error(f"Connection failed: {e}", 'DB_CONN_ERR', 'mysql')
+            err = Error.handle_exception_info(e)
+            self.logger.error(f"Connection failed - {err}", 'DB_CONN_ERR', 'mysql')
             raise
 
     def _release_connection(self, conn):
@@ -115,7 +116,8 @@ class MysqlBaseModel:
             if conn.open:
                 conn.close()
         except Exception as e:
-            self.logger.warning(f"Error releasing connection: {str(e)}", 'DB_CONN_REL', 'mysql')
+            err = Error.handle_exception_info(e)
+            self.logger.warning(f"Error releasing connection - {err}", 'DB_CONN_REL', 'mysql')
 
     def table(self, table_name: str) -> 'MysqlBaseModel':
         """设置表名"""
