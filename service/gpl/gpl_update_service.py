@@ -228,7 +228,7 @@ class GPLUpdateService:
                 # 这里改为了单条插入
                 iid = ddb.add_daily([insert_list[td]])
                 res.append(iid)
-                logger.info(f"新增股票日线数据<{symbol}><{td}>{percent} - {iid}", 'UP_DAY_SIG')
+                logger.info(f"新增股票日线数据[{v}]<{symbol}><{td}>{percent} - {iid}", 'UP_DAY_SIG')
             # 批量插入容易出现  Duplicate entry 错误，已改为单条插入
             # if insert_list:
             #     ik = insert_list.keys()
