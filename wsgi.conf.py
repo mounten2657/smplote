@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import gevent.monkey
+gevent.monkey.patch_all()
 """
 Gunicorn 生产环境配置
 https://docs.gunicorn.org/en/stable/configure.html
