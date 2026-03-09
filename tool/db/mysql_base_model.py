@@ -88,28 +88,6 @@ class MysqlBaseModel:
         self._table = self.prefix + self._table if self._table else None
         self._state = QueryState(self._table)
 
-    @staticmethod
-    def _with_retry(max_retries=3):
-        """重试装饰器"""
-        def decorator(func):
-            @wraps(func)
-            def wrapper(self, *args, **kwargs):
-                for attempt in range(max_retries):
-                    try:
-                        return func(self)
-                    except pymysql.err.OperationalError as e:
-                        if "Packet sequence number wrong" in str(e):
-                            logger.warning(f"序号错乱，重试 {attempt + 1}/{max_retries}")
-                            Time.sleep(0.1 * (attempt + 1))
-                            continue
-                        raise
-                    except pymysql.Error as e:
-                        raise
-                raise RuntimeError(f"数据库连接重试{max_retries}次失败")
-            return wrapper
-        return decorator
-
-    @_with_retry
     def _get_connection(self):
         """获取gevent兼容的数据库连接（每个协程独立连接）"""
         try:
@@ -141,6 +119,27 @@ class MysqlBaseModel:
         except Exception as e:
             err = Error.handle_exception_info(e)
             self.logger.warning(f"Error releasing connection - {err}", 'DB_CONN_REL', 'mysql')
+
+    @staticmethod
+    def _with_conn_retry(max_retries=3):
+        """重试装饰器"""
+        def decorator(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                for attempt in range(max_retries):
+                    try:
+                        return func(*args, **kwargs)
+                    except pymysql.err.OperationalError as e:
+                        if "Packet sequence number wrong" in str(e):
+                            logger.warning(f"序号错乱，重试 {attempt + 1}/{max_retries}")
+                            Time.sleep(0.1 * (attempt + 1))
+                            continue
+                        raise
+                    except pymysql.Error as e:
+                        raise
+                raise RuntimeError(f"数据库连接重试{max_retries}次失败")
+            return wrapper
+        return decorator
 
     def table(self, table_name: str) -> 'MysqlBaseModel':
         """设置表名"""
@@ -260,6 +259,7 @@ class MysqlBaseModel:
             self.logger.debug({"sql": sql.strip(), "params": params}, 'DB_SQL_SELECT', 'mysql')
             return sql.strip(), params
 
+    @_with_conn_retry
     def get(self) -> List[Dict]:
         """执行查询并返回所有结果"""
         conn = None
@@ -274,6 +274,7 @@ class MysqlBaseModel:
             self._release_connection(conn)
             self._state.reset()
 
+    @_with_conn_retry
     def first(self) -> Optional[Dict]:
         """获取第一条记录"""
         conn = None
@@ -289,6 +290,7 @@ class MysqlBaseModel:
             self._release_connection(conn)
             self._state.reset()
 
+    @_with_conn_retry
     def query_sql(self, sql: str) -> List[Dict]:
         """执行原生查询SQL"""
         conn = None
@@ -308,6 +310,7 @@ class MysqlBaseModel:
             self._release_connection(conn)
             self._state.reset()
 
+    @_with_conn_retry
     def exec_sql(self, sql: str) -> bool:
         """执行非查询SQL"""
         conn = None
@@ -328,6 +331,7 @@ class MysqlBaseModel:
             self._release_connection(conn)
             self._state.reset()
 
+    @_with_conn_retry
     def update(self, conditions: Union[Dict, List[Dict]], update_data: Union[Dict, List[Dict]]) -> int:
         """
         更新记录（支持单条和批量更新）
@@ -405,6 +409,7 @@ class MysqlBaseModel:
             self.logger.info({"sql": sql.strip(), "params": set_params + where_params}, 'DB_SQL_UPDATE', 'mysql')
             return sql, set_params + where_params
 
+    @_with_conn_retry
     def insert(self, insert_data: Union[Dict, List[Dict]]) -> int:
         """
         插入单条或多条数据
@@ -468,6 +473,7 @@ class MysqlBaseModel:
             self._release_connection(conn)
             self._state.reset()
 
+    @_with_conn_retry
     def delete(self, conditions: Dict) -> int:
         """
         删除记录
