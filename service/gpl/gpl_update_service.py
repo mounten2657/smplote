@@ -198,7 +198,6 @@ class GPLUpdateService:
             for i, day in enumerate(day_list):
                 td = day['date']
                 info = Attr.get(d_list, f"{symbol}_{td}")
-                # e_info = ddb.get_daily(symbol, td)  # 再次查询，辅以佐证
                 day_data = {
                     f"f{v}_open": day['open'],
                     f"f{v}_close": day['close'],
