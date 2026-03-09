@@ -198,6 +198,7 @@ class GPLUpdateService:
             for i, day in enumerate(day_list):
                 td = day['date']
                 info = Attr.get(d_list, f"{symbol}_{td}")
+                e_info = ddb.get_daily(symbol, td)  # 再次查询，辅以佐证
                 day_data = {
                     f"f{v}_open": day['open'],
                     f"f{v}_close": day['close'],
@@ -210,7 +211,7 @@ class GPLUpdateService:
                     f"f{v}_price_change": day['price_change'],
                     f"f{v}_turnover_rate": day['turnover_rate'],
                 }
-                if info:
+                if info or e_info:
                     if float(info[f"f{v}_close"]) <= 0:
                         if float(day['close']) <= 0:
                             logger.debug(f"接口日线数据为空[{v}]<{symbol}><{td}>{percent} - {day_data}", 'UP_DAY_SKP')
@@ -225,11 +226,10 @@ class GPLUpdateService:
                     "symbol": symbol,
                     "trade_date": td,
                 } | day_data)
-                # 这里改为了单挑插入
+                # 这里改为了单条插入
                 iid = ddb.add_daily([insert_list[td]])
                 res.append(iid)
-                logger.debug(f"新增股票日线数据<{symbol}><{next(iter(ik))}~{next(reversed(ik))}>{percent}"
-                             f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
+                logger.debug(f"新增股票日线数据<{symbol}><{td}>{percent} - {iid}", 'UP_DAY_SIG')
             # 批量插入容易出现  Duplicate entry 错误，已改为单条插入
             # if insert_list:
             #     ik = insert_list.keys()
