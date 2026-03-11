@@ -78,7 +78,7 @@ class Task(BaseAppVp):
         res = VppNoteService.gen_note_html(md_path, out_path)
         return self.success(res)
 
-    def rf_node(self):
+    def rf_vpn(self):
         """刷新vpn节点 - 每天凌晨的00点16分"""
         ports = self.params.get('p', '')  # 是代理端口不是api端口
         if not ports and Time.is_week():
