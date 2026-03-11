@@ -216,7 +216,8 @@ class VppClashService:
 
     def get_traffic_stat(self, sn=None):
         """获取订阅流量统计 - md文本"""
-        md = "🌐 付费机场流量使用统计\r\n"
+        date = Time.date('%Y-%m-%d')
+        md = f"🚀VPN节点流量统计🌐 <{date}>\r\n"
         sub_list = self.get_vpn_sub_list()
         if sn:
             if not sub_list.get(sn):
