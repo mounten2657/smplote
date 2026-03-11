@@ -225,7 +225,7 @@ class VppClashService:
         for sub, url in sub_list.items():
             stat = Http.get_subscription_traffic(url)
             if isinstance(stat, dict):
-                stat = f"{str(stat['upload'] + stat['download'])}M / {stat['total']}G / {stat['expire'] if stat['expire'] else 9999}天"
+                stat = f"{(stat['upload'] + stat['download']):.2f}M / {stat['total']}G / {stat['expire'] if stat['expire'] else 99999}天"
             md += f"   - {sub}: {stat}\r\n"
         return md
 
