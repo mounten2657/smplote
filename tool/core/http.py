@@ -244,8 +244,30 @@ class Http:
         return client_ip
 
     @staticmethod
+    def replace_host(url: str, new_host: str) -> str:
+        """
+        替换URL中的域名部分
+
+        :param url: 原始URL (e.g. "http://aa.bb.com:1011/bot/index.html?q=1")
+        :param new_host: 新域名 (e.g. "cc.dd.cn")
+        :return url: 替换后的URL (e.g. "http://cc.dd.cn:1011/bot/index.html?q=1")
+        """
+        # 使用正则表达式匹配并替换域名部分
+        return re.sub(
+            r'(https?://)[^/:]+(:[0-9]+)?(/|$)',
+            lambda m: m.group(1) + new_host + (m.group(2) or '') + m.group(3),
+            url,
+            count=1  # 只替换第一个匹配项
+        )
+
+    @staticmethod
+    def get_docker_inner_url(url):
+        return Http.replace_host(url, 'host.docker.internal')
+
+    @staticmethod
     def get_ip138_info(ip: str) -> dict:
-        """从 ip138.com 查询 IP 的归属地等信息
+        """
+        从 ip138.com 查询 IP 的归属地等信息
 
         :param ip: 要查询的 IP 地址，例如 101.198.0.142
         :return: 包含查询结果的字典，失败时返回带有 error 键的字典
@@ -275,24 +297,39 @@ class Http:
             return {"error": str(e)}
 
     @staticmethod
-    def replace_host(url: str, new_host: str) -> str:
+    def get_subscription_traffic(sub_url: str) -> Optional[Dict[str, float]] | str:
         """
-        替换URL中的域名部分
+        获取订阅链接的流量使用信息
 
-        :param url: 原始URL (e.g. "http://aa.bb.com:1011/bot/index.html?q=1")
-        :param new_host: 新域名 (e.g. "cc.dd.cn")
-        :return url: 替换后的URL (e.g. "http://cc.dd.cn:1011/bot/index.html?q=1")
+        :param sub_url: 订阅链接
+        :return: 包含流量信息的字典 | 失败提示字符串
+        {'upload': 10.63, 'download': 52.39, 'total': 1000.0, 'expire': 0.0}
         """
-        # 使用正则表达式匹配并替换域名部分
-        return re.sub(
-            r'(https?://)[^/:]+(:[0-9]+)?(/|$)',
-            lambda m: m.group(1) + new_host + (m.group(2) or '') + m.group(3),
-            url,
-            count=1  # 只替换第一个匹配项
-        )
-
-    @staticmethod
-    def get_docker_inner_url(url):
-        return Http.replace_host(url, 'host.docker.internal')
-
+        headers = {"User-Agent": "clash.meta/1.18.0"}
+        try:
+            response = requests.get(
+                sub_url,
+                headers=headers,
+                timeout=30,
+                allow_redirects=True,
+                stream=True  # 先不下载body，节省流量
+            )
+            response.raise_for_status()
+            traffic_header = response.headers.get("subscription-userinfo")
+            if not traffic_header:
+                return f"订阅链接 {sub_url} 未返回流量信息头"
+            traffic_dict = {}
+            for item in traffic_header.split(";"):
+                if "=" in item:
+                    key, value = item.strip().split("=", 1)
+                    traffic_dict[key] = value
+            result = {
+                "upload": round(int(traffic_dict.get("upload", "0")) / (1024 * 1024) , 2),  # 上传流量，单位 MB
+                "download": round(int(traffic_dict.get("download", "0")) / (1024 * 1024) , 2),  # 下载流量，单位 MB
+                "total": round(int(traffic_dict.get("total", "0")) / (1024 * 1024 * 1024)),  # 总流量，单位 GB
+                "expire": round(int(traffic_dict.get("expire") if traffic_dict.get('expire') else 0) / 86400),  # 剩余天数，单位 天
+            }
+            return result
+        except Exception as e:
+            return f"订阅链接 {sub_url} 解析失败：{str(e)}"
 

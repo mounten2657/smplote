@@ -40,6 +40,7 @@ class Task(BaseAppVp):
             # res[g_wxid]['vp_sky_hs'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 2, delay_seconds=100 + i) # > 30  # 0: 图片(每天发) | 1: 图片(仅周末发) | 2: 文字版(仅周末发)
             res[g_wxid]['vp_ov_wa'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_ov_wa', delay_seconds=130 + i) if ad else 0  # > 15
             res[g_wxid]['vp_ov_bz'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_ov_bz', '', 2, delay_seconds=145 + i) if ad else 0  # > 20  # # 壁纸类型：1:二次元 | 2:必应 | 3:cosplay
+            res[g_wxid]['vp_sub_stat'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sub_stat', '',delay_seconds=175 + i) if ad else 0  # vpn 节点流量统计 - 只有管理群发
             i += 120
         return self.success(res)
 

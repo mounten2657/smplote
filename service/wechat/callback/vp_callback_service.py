@@ -216,6 +216,7 @@ class VpCallbackService:
                     '#半年榜': lambda: commander.vp_rank(content) if is_admin else False,
                     '#年榜': lambda: commander.vp_rank(content) if is_admin else False,
                     '#设置': lambda: commander.vp_setting(content) if is_admin else only_admin_str(),
+                    '#流量': lambda: commander.vp_sub_stat(content) if is_admin else only_admin_str(),
                     '#总结': lambda: commander.vp_report(content) if is_admin else False,
                 }
                 # 检查数字开头的命令

@@ -1,5 +1,5 @@
 from threading import Semaphore
-from tool.core import Logger, Env, Attr, Error, Time, Str
+from tool.core import Logger, Env, Attr, Error, Time, Str, Http
 from tool.db.cache.redis_client import RedisClient
 from utils.grpc.vpp_serve.vpp_serve_client import VppServeClient
 
@@ -14,6 +14,7 @@ class VppClashService:
     _VPN_HOST = Env.get('PROXY_VPN_HOST')
     _VPN_AUTH = Env.get('PROXY_VPN_AUTH', '')
     _VPN_GROUP = Env.get('PROXY_VPN_GROUP', '')
+    _VPN_SUB_LIST = Env.get('PROXY_VPN_SUB_LIST', '')
 
     def __init__(self):
         self.client = VppServeClient()
@@ -66,6 +67,10 @@ class VppClashService:
     def get_vpn_group_list(self):
         """获取vpn分组列表"""
         return Attr.parse_json_ignore(self._VPN_GROUP)
+
+    def get_vpn_sub_list(self):
+        """获取vpn订阅列表"""
+        return Attr.parse_json_ignore(self._VPN_SUB_LIST)
 
     def get_vpn_group_name(self, e_port):
         """获取vpn分组名"""
@@ -208,3 +213,19 @@ class VppClashService:
                     Error.throw_exception(f'empty node cache - {url} - {proxy} - {params}')
             self.switch_vpn_node(port, node, 0.1)  # 给切换节点一点反应时间
             return self.send_http_request(method, url, params, headers, proxy, timeout)
+
+    def get_traffic_stat(self, sn=None):
+        """获取订阅流量统计 - md文本"""
+        md = "🌐 付费机场流量使用统计\r\n"
+        sub_list = self.get_vpn_sub_list()
+        if sn:
+            if not sub_list.get(sn):
+                return f"无效的订阅名 - {sn}"
+            sub_list = {sn: sub_list[sn]}
+        for sub, url in sub_list.items():
+            stat = Http.get_subscription_traffic(url)
+            if isinstance(stat, dict):
+                stat = f"{str(stat['upload'] + stat['download'])}M / {stat['total']}G / {stat['expire'] if stat['expire'] else 9999}天"
+            md += f"   - {sub}: {stat}\r\n"
+        return md
+

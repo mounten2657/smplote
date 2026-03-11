@@ -4,6 +4,7 @@ from service.sky.sky_data_service import SkyDataService
 from service.wechat.reply.vp_msg_service import VpMsgService
 from service.ai.command.ai_command_service import AiCommandService
 from service.ai.report.ai_report_gen_service import AIReportGenService
+from service.vpp.vpp_clash_service import VppClashService
 from tool.unit.song.music_search_client import MusicSearchClient
 from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.qy_client import QyClient
@@ -76,6 +77,7 @@ class VpCommandService:
 
     【管理员专用】
     #设置 - 系统设置
+    #流量 - 节点流量统计
     #总结 - 群聊总结报告
 
     💡 提示：直接发送对应指令即可使用功能
@@ -406,6 +408,11 @@ class VpCommandService:
             is_all and  self.vp_th()
             return res
         return False
+
+    def vp_sub_stat(self, content=''):
+        """vpn 流量统计"""
+        s_res = VppClashService().get_traffic_stat()
+        return self.client.send_msg(s_res, self.g_wxid, [], self.extra)
 
     def vp_xw_img(self, content=''):
         """每日新闻 - 图片版"""
