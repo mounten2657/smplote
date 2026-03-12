@@ -216,6 +216,7 @@ class GPLUpdateService:
                             logger.debug(f"接口日线数据为空[{v}]<{symbol}><{td}>{percent} - {day_data}", 'UP_DAY_SKP')
                         # 更新接口日线数据 - 之前的请求中可能没有正确得到数据
                         ddb.update_daily(info['id'], day_data)
+                        logger.info(f"更新股票日线数据[{v}]<{symbol}><{td}>{percent} - {info['id']}", 'UP_DAY_FIX')
                     else:
                         if not i % 25 or is_force < 90:
                             logger.debug(f"已存在日线数据[{v}]<{symbol}><{td}>{percent}", 'UP_DAY_SKP')
@@ -225,18 +226,14 @@ class GPLUpdateService:
                     "symbol": symbol,
                     "trade_date": td,
                 } | day_data)
-                # 这里改为了单条插入
-                iid = ddb.add_daily([insert_list[td]])
+            # 批量插入
+            if insert_list:
+                ik = insert_list.keys()
+                insert_list = insert_list.values()
+                iid = ddb.add_daily(insert_list)
                 res.append(iid)
-                logger.info(f"新增股票日线数据[{v}]<{symbol}><{td}>{percent} - {iid}", 'UP_DAY_SIG')
-            # 批量插入容易出现  Duplicate entry 错误，已改为单条插入
-            # if insert_list:
-            #     ik = insert_list.keys()
-            #     insert_list = insert_list.values()
-            #     iid = ddb.add_daily(insert_list)
-            #     res.append(iid)
-            #     logger.debug(f"新增股票日线数据<{symbol}><{next(iter(ik))}~{next(reversed(ik))}>{percent}"
-            #                  f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
+                logger.debug(f"新增股票日线数据<{symbol}><{next(iter(ik))}~{next(reversed(ik))}>{percent}"
+                             f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
         return _up_day_exec(fq_code_list)
