@@ -163,6 +163,7 @@ class Ins:
                             break
                         for attempt in range(retries):
                             try:
+                                time.sleep(Str.randint(90, 190) / 100)
                                 result = func(task, *args[1:], **kwargs)
                                 result_queue.put((task, result))
                                 break
@@ -179,6 +180,7 @@ class Ins:
                 # 创建有限的工作线程
                 threads = []
                 for i in range(min(max_workers, len(task_list))):
+                    time.sleep(Str.randint(90, 190) / 100)
                     if time_sleep > 0:
                         time.sleep(Str.randint(10, 99) / 100 + time_sleep)
                     t = threading.Thread(target=worker)
@@ -189,6 +191,7 @@ class Ins:
                 task_queue.join()
                 results = {}
                 while not result_queue.empty():
+                    time.sleep(Str.randint(90, 190) / 100)
                     task, result = result_queue.get()
                     tk = Str.md5(str(task)) if not isinstance(task, (str, int)) else task
                     results[tk] = result
