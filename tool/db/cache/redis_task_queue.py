@@ -215,6 +215,7 @@ class RedisTaskQueue:
 
                     task = json.loads(task_data)
                     try:
+                        time.sleep(Str.randint(60, 150) / 100)
                         if self._execute_task(task):
                             # Remove from processing queue on success
                             self.redis.lrem(self.processing_queue, 0, task_data)

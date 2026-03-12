@@ -154,7 +154,7 @@ class VppClashService:
             node_list = []
             for node in cache:  # 轮询所有节点去请求东财
                 # 过滤无效的节点
-                if any(c in node for c in ['自动', '剩余', '到期', '故障', '直连', '文档', '客户端', '随机', '放假', '丢失', '频道', '订阅', '套餐', '网址', '请', 'Auto', 'auto']):
+                if any(c in node for c in ['自动', '剩余', '到期', '故障', '直连', '文档', '客户端', '随机', '放假', '丢失', '频道', '订阅', '套餐', '网址', '邮箱', '请', 'Auto', 'auto']):
                     logger.warning(f"过滤无效节点<{port}><{node}>", "CVE_WAR")
                     continue
                 if not self.switch_vpn_node(port, node, 1):
