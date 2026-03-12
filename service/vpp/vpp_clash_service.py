@@ -218,8 +218,9 @@ class VppClashService:
         date = Time.date('%Y-%m-%d')
         md = f"🚀VPN节点流量统计🌐 <{date}>\r\n"
         rand_list = redis.get(self.cache_key, [f'rand_list'])
-        rv_list = iter(rand_list.values()) if isinstance(rand_list, dict) else iter([])
+        rv_list = list(rand_list.values()) if isinstance(rand_list, dict) else []
         rv_sum = sum(int(r) for r in rv_list)
+        rv_list = iter(rv_list)
         sub_list = self.get_vpn_sub_list()
         if sn:
             if not sub_list.get(sn):
