@@ -215,6 +215,7 @@ class RedisTaskQueue:
 
                     task = json.loads(task_data)
                     try:
+                        time.sleep(Str.randint(90, 190) / 100)
                         if self._execute_task(task):
                             # Remove from processing queue on success
                             self.redis.lrem(self.processing_queue, 0, task_data)
@@ -284,4 +285,5 @@ class RedisTaskQueue:
                 logger.debug(f'redis task queue loading - {qn}', 'RTQ_LOD')
                 thread = threading.Thread(target=run, args=(qn,), daemon=True)
                 thread.start()
+                time.sleep(Str.randint(90, 190) / 100)
         return True
