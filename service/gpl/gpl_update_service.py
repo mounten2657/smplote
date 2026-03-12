@@ -168,7 +168,7 @@ class GPLUpdateService:
         fq_list = {"": "0", "qfq": "1", "hfq": "2"}
         fq_code_list = [f"{c}_{f}" for f in fq_list for c in code_list]
 
-        @Ins.multiple_executor(4)
+        @Ins.multiple_executor(8)
         def _up_day_exec(code):
             res = []
             code, k = code.split('_')  # 复权索引解析
