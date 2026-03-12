@@ -20,7 +20,7 @@ class RouterHandler:
         'bot/task/vp_log',
         'bot/task/rf_proxy',
         'bot/task/note_html',
-        'bot/task/rf_node',
+        'bot/task/rf_vpn',
         'bot/task/gpl_info',
         'bot/task/gpl_ext',
         'bot/task/gpl_daily',

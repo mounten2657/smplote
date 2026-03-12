@@ -46,8 +46,7 @@ class VppClashService:
             for port in p_list:
                 num = redis.get(self.cache_key, [f'{port}:len'])
                 num = int(num) if isinstance(num, int) else 0
-                if num:  # 有节点才分配
-                    rand_list[port] = num
+                rand_list[port] = num  # 不管有没有节点都记录
             if not rand_list:  # 一个可用节点都没有
                 Error.throw_exception('暂无缓存，请先初始化vpn节点')
             redis.set(self.cache_key, rand_list, [f'rand_list'])
@@ -218,6 +217,9 @@ class VppClashService:
         """获取订阅流量统计 - md文本"""
         date = Time.date('%Y-%m-%d')
         md = f"🚀VPN节点流量统计🌐 <{date}>\r\n"
+        rand_list = redis.get(self.cache_key, [f'rand_list'])
+        rv_list = iter(rand_list.values()) if isinstance(rand_list, dict) else iter([])
+        rv_sum = sum(int(r) for r in rv_list)
         sub_list = self.get_vpn_sub_list()
         if sn:
             if not sub_list.get(sn):
@@ -226,7 +228,11 @@ class VppClashService:
         for sub, url in sub_list.items():
             stat = Http.get_subscription_traffic(url)
             if isinstance(stat, dict):
-                stat = f"{(stat['upload'] + stat['download']):.2f}M / {stat['total']}G / {stat['expire'] if stat['expire'] else 99999}天"
-            md += f"   - {sub}: {stat}\r\n"
+                np = next(rv_list)
+                percent = round(np / rv_sum * 100, 2)
+                used = stat['upload'] + stat['download']
+                used = f"{round(used / 1024, 6):.2f}G" if used >= 1024 else f"{used:.2f}M"
+                stat = f"{used}/{stat['total']}G,{stat['expire'] if stat['expire'] else 9999}天,{np}/{percent:.2f}%"
+            md += f" - {sub}: {stat}\r\n"
         return md
 
