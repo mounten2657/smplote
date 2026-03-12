@@ -164,69 +164,64 @@ class GPLUpdateService:
         l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
         l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
-        # 建立复权索引
-        fq_list = {"": "0", "qfq": "1", "hfq": "2"}
-        fq_code_list = [f"{c}_{f}" for f in fq_list for c in code_list]
-
         @Ins.multiple_executor(8)
         def _up_day_exec(code):
             res = []
-            code, k = code.split('_')  # 复权索引解析
-            v = fq_list[k]
             symbol = self.formatter.sft.add_stock_prefix(code)
             is_special = int(symbol in GPLUpdateService._S_ZD_LIST)  # 走快速通道的股票列表 - 队列后进先出
             percent = self.formatter.get_percent(code, code_list, all_code_list)
             insert_list = {}
-            # 先判断是否已入库
-            log_info = Attr.get(l_list[f'f{v}'], f"{symbol}_{tds}")
-            if is_force == 99 and log_info:
-                logger.debug(f"日线数据已入库[{v}]<{symbol}><{tds}>{percent}", 'UP_DAY_SKP')
-                return res
-            Time.sleep(Str.randint(5, 9) / 10)
-            if log_info and is_force != 99:
-                day_list = log_info['process_params']
-            else:
-                day_list = self.formatter.em.get_daily_quote(code, st, et, k)  # 内含Nat自动分流
-            res.append(len(day_list))
-            logger.debug(f"接口请求日线数据[{v}]<{symbol}><{tds}>{percent} - {k}"
-                         f" - [{len(day_list)}]", 'UP_DAY_SKP')
-            if not day_list:
-                logger.warning(f"暂无日线数据[{v}]<{symbol}><{tds}>{percent}", 'UP_DAY_WAR')
-                return res
-            if 99 == is_force:
-                return res
-            for i, day in enumerate(day_list):
-                td = day['date']
-                info = Attr.get(d_list, f"{symbol}_{td}")
-                day_data = {
-                    f"f{v}_open": day['open'],
-                    f"f{v}_close": day['close'],
-                    f"f{v}_high": day['high'],
-                    f"f{v}_low": day['low'],
-                    f"f{v}_volume": day['volume'],
-                    f"f{v}_amount": day['amount'],
-                    f"f{v}_amplitude": day['amplitude'],
-                    f"f{v}_pct_change": day['pct_change'],
-                    f"f{v}_price_change": day['price_change'],
-                    f"f{v}_turnover_rate": day['turnover_rate'],
-                }
-                if info:
-                    if float(info[f"f{v}_close"]) <= 0:
-                        if float(day['close']) <= 0:
-                            logger.debug(f"接口日线数据为空[{v}]<{symbol}><{td}>{percent} - {day_data}", 'UP_DAY_SKP')
-                        # 更新接口日线数据 - 之前的请求中可能没有正确得到数据
-                        ddb.update_daily(info['id'], day_data)
-                        logger.info(f"更新股票日线数据[{v}]<{symbol}><{td}>{percent} - {info['id']}", 'UP_DAY_FIX')
-                    else:
-                        if not i % 25 or is_force < 90:
-                            logger.debug(f"已存在日线数据[{v}]<{symbol}><{td}>{percent}", 'UP_DAY_SKP')
+            fq_list = {"": "0", "qfq": "1", "hfq": "2"}
+            for k, v in fq_list.items():
+                # 先判断是否已入库
+                log_info = Attr.get(l_list[f'f{v}'], f"{symbol}_{tds}")
+                if is_force == 99 and log_info:
+                    logger.debug(f"日线数据已入库[{v}]<{symbol}><{tds}>{percent}", 'UP_DAY_SKP')
                     continue
-                insert_list[td] = insert_list[td] if Attr.has_keys(insert_list, td) else {}
-                insert_list[td].update({
-                    "symbol": symbol,
-                    "trade_date": td,
-                } | day_data)
-            # 批量插入
+                Time.sleep(Str.randint(5, 9) / 10)
+                if log_info and is_force != 99:
+                    day_list = log_info['process_params']
+                else:
+                    day_list = self.formatter.em.get_daily_quote(code, st, et, k)  # 内含Nat自动分流
+                res.append(len(day_list))
+                logger.debug(f"接口请求日线数据[{v}]<{symbol}><{tds}>{percent} - {k}"
+                             f" - [{len(day_list)}]", 'UP_DAY_SKP')
+                if not day_list:
+                    logger.warning(f"暂无日线数据[{v}]<{symbol}><{tds}>{percent}", 'UP_DAY_WAR')
+                    continue
+                if 99 == is_force:
+                    continue
+                for i, day in enumerate(day_list):
+                    td = day['date']
+                    info = Attr.get(d_list, f"{symbol}_{td}")
+                    day_data = {
+                        f"f{v}_open": day['open'],
+                        f"f{v}_close": day['close'],
+                        f"f{v}_high": day['high'],
+                        f"f{v}_low": day['low'],
+                        f"f{v}_volume": day['volume'],
+                        f"f{v}_amount": day['amount'],
+                        f"f{v}_amplitude": day['amplitude'],
+                        f"f{v}_pct_change": day['pct_change'],
+                        f"f{v}_price_change": day['price_change'],
+                        f"f{v}_turnover_rate": day['turnover_rate'],
+                    }
+                    if info:
+                        if float(info[f"f{v}_close"]) <= 0:
+                            if float(day['close']) <= 0:
+                                logger.debug(f"接口日线数据为空[{v}]<{symbol}><{td}>{percent} - {day_data}", 'UP_DAY_SKP')
+                            # 更新接口日线数据 - 之前的请求中可能没有正确得到数据
+                            ddb.update_daily(info['id'], day_data)
+                            logger.info(f"更新股票日线数据[{v}]<{symbol}><{td}>{percent} - {info['id']}", 'UP_DAY_FIX')
+                        else:
+                            if not i % 25 or is_force < 90:
+                                logger.debug(f"已存在日线数据[{v}]<{symbol}><{td}>{percent}", 'UP_DAY_SKP')
+                        continue
+                    insert_list[td] = insert_list[td] if Attr.has_keys(insert_list, td) else {}
+                    insert_list[td].update({
+                        "symbol": symbol,
+                        "trade_date": td,
+                    } | day_data)
             if insert_list:
                 ik = insert_list.keys()
                 insert_list = insert_list.values()
@@ -236,7 +231,7 @@ class GPLUpdateService:
                              f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
-        return _up_day_exec(fq_code_list)
+        return _up_day_exec(code_list)
 
     def clear_api_log(self):
         """清理api日志 - 保留10万条记录"""
