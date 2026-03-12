@@ -284,4 +284,5 @@ class RedisTaskQueue:
                 logger.debug(f'redis task queue loading - {qn}', 'RTQ_LOD')
                 thread = threading.Thread(target=run, args=(qn,), daemon=True)
                 thread.start()
+                time.sleep(Str.randint(90, 190) / 100)
         return True
