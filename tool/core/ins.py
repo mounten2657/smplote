@@ -157,6 +157,7 @@ class Ins:
                     task_queue.put(task)
                 def worker():
                     while True:
+                        time.sleep(Str.randint(60, 150) / 100)
                         try:
                             task = task_queue.get_nowait()
                         except queue.Empty:
