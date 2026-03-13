@@ -75,7 +75,6 @@ class Time:
         l = calendar.get_holidays(datetime(int(year), 1, 1), datetime(int(year), 12, 31), has_week)
         return [str(ld) for ld in l]
 
-
     @staticmethod
     def tfd(date_str, date_format="%Y-%m-%d %H:%M:%S"):
         """
