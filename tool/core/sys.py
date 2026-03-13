@@ -13,7 +13,7 @@ from tool.db.cache.redis_client import RedisClient
 from tool.core.error import Error
 from tool.core.logger import Logger
 
-_timeout = 120  # 超时时间，默认120秒
+_timeout = 180  # 超时时间，默认180秒
 _executor = ThreadPoolExecutor(max_workers=100, thread_name_prefix="SysTaskExecutor")  # 线程池：控制并发（默认100）
 _lock_key = "LOCK_SYS_CNS"  # 并发去重锁
 _redis = RedisClient()
