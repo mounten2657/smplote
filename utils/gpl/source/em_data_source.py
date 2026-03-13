@@ -57,8 +57,9 @@ class EmDataSource:
         if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
             pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
             if isinstance(pid, dict):
-                #if pid['response_result'] and isinstance(pid['response_result'], dict):  # 有结果就返回老数据
-                if pid.get('is_succeed'):  # 只有成功才返回老数据
+                if Attr.get_by_point(pid, 'response_result.svr') and 'EM_DAILY' in biz_code:  # 日线有结果就返回老数据
+                    return pid['response_result'], 0
+                elif pid.get('is_succeed'):  # 其他业务只有成功才返回老数据
                     return pid['response_result'], 0
                 else:
                     info = pid
