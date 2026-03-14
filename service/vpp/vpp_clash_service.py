@@ -233,7 +233,7 @@ class VppClashService:
                 percent = round(np / rv_sum * 100, 2)
                 used = stat['upload'] + stat['download']
                 used = f"{round(used / 1024, 3):.3f}G" if used >= 1024 else f"{used:.2f}M"
-                stat = f"{used}/{stat['total']}G,{stat['expire'] if stat['expire'] else 9999}天,{np}/{percent:.2f}%"
+                stat = f"{used}/{stat['total']}G | {stat['expire'] if stat['expire'] else 9999}天 | {np}/{percent:.2f}%"
             md += f"   - {sub}: {stat}\r\n"
         return md.strip()
 
