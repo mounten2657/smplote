@@ -142,7 +142,7 @@ class GPLUpdateService:
 
         n = 5 if is_force == 0 else is_force - 10
         et = current_date if current_date else Time.date('%Y-%m-%d')
-        st = Time.dnd(et, 0 - n)
+        st = Time.dnd(0 - n, et)
         if is_force > 90:  # 初始化
             st = self._INIT_ST
             et = self._INIT_ET

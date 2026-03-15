@@ -114,7 +114,7 @@ class GPLUpdateEfnService:
         biz_code = 'EM_FN_NF'
         if symbol:  # 直接覆原始原日期，强制变成一个月
             td = Time.date('%Y-%m-%d')
-            sd = Time.dnd(td, -30)
+            sd = Time.dnd(-30, td)
         date_list = Time.generate_date_list(sd, td)
 
         for d in date_list:

@@ -137,7 +137,7 @@ class VppClashService:
         i = 0
         p_list = p_list or self.get_vpn_e_port_list()
         ed = Time.date('%Y%m%d')
-        sd = Time.dnd(ed, -30, '%Y%m%d')  # 向前推一个月必有数据
+        sd = Time.dnd(-30, ed, '%Y%m%d')  # 向前推一个月必有数据
         em_url = f"https://push2his.eastmoney.com/api/qt/stock/kline/get"
         em_par = f"fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=101&fqt=1&beg={sd}&end={ed}&secid=0.300126"
         for e_port in p_list:
@@ -215,13 +215,16 @@ class VppClashService:
 
     def get_traffic_stat(self, sn=None):
         """获取订阅流量统计 - md文本"""
-        date = Time.date('%Y-%m-%d')
+        date = Time.dnd()
         md = f"🚀VPN节点流量统计🌐 <{date}>\r\n"
         rand_list = redis.get(self.cache_key, [f'rand_list'])
         rv_list = [v for k, v in rand_list.items() if k != '784'] if isinstance(rand_list, dict) else []  # 去除免费节点
         rv_sum = sum(int(r) for r in rv_list)
-        rv_list = iter(rv_list)
+        rv_list.reverse()  # 倒序以方便弹出r
         sub_list = self.get_vpn_sub_list()
+        # 从缓存中加载昨日统计数据
+        yesterday = Time.dnd(-1)
+        traffic_stat = redis.get(self.cache_key, [f'traffic_stat:{yesterday}'])
         if sn:
             if not sub_list.get(sn):
                 return f"无效的订阅名 - {sn}"
@@ -229,7 +232,7 @@ class VppClashService:
         for sub, url in sub_list.items():
             stat = Http.get_subscription_traffic(url)
             if isinstance(stat, dict):
-                np = next(rv_list)
+                np = rv_list.pop() if rv_list else 0
                 percent = round(np / rv_sum * 100, 2)
                 used = stat['upload'] + stat['download']
                 used = f"{round(used / 1024, 3):.3f}G" if used >= 1024 else f"{used:.2f}M"

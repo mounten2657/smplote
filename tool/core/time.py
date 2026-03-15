@@ -132,14 +132,16 @@ class Time:
         raise ValueError(f"无法解析时间字符串 '{date_str}'，请检查格式")
 
     @staticmethod
-    def dnd(sd, n, date_format="%Y-%m-%d"):
+    def dnd(n=0, sd='', date_format="%Y-%m-%d"):
         """
         相对日期快捷计算
-        :param str sd:  源日期
         :param int n:  相对源日期加减多少天
+        :param str sd:  源日期字符串，格式必须和 date_format 保持一致
         :param date_format:  日期格式（如 "%Y-%m-%d %H:%M:%S"）
         :return:  相对后的日期
         """
+        n = n or 0
+        sd = sd or Time.date(date_format)
         return Time.dft(Time.tfd(sd, date_format) + n * 86400, date_format)
 
     @staticmethod
