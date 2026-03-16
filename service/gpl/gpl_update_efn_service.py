@@ -207,7 +207,7 @@ class GPLUpdateEfnService:
                         try:
                             content = File.get_pdf_txt(Dir.wechat_dir(f'{file_path[1:]}'))
                         except Exception as e:
-                            logger.error(f"财务公告文件识别失败<{symbol}><{day}><{dd['tid']}> - {art_code} - {file_path} - {str(e)}", 'UP_SNF_ERR')
+                            logger.error(f"财务公告文件识别失败<{symbol}><{day}> - {art_code} - {file_path} - {str(e)}", 'UP_SNF_ERR')
                             content = ''
                 else:
                     # 网络请求获取文本
