@@ -197,6 +197,7 @@ class GPLUpdateEfnService:
                 art_code = Attr.get(dd, 'art_code', '')
                 title = Attr.get(dd, 'title', '')
                 file_path = Attr.get(dd, 'file_path', '')
+                content = ''
                 # 这里改为直接识别下载好的pdf文件，而非从网络接口获取（一是不全，二是占带宽）
                 if is_ocr:
                     #本地识别获取文本
@@ -208,8 +209,9 @@ class GPLUpdateEfnService:
                             content = File.get_pdf_txt(Dir.wechat_dir(f'{file_path[1:]}'))
                         except Exception as e:
                             logger.error(f"财务公告文件识别失败<{symbol}><{day}> - {art_code} - {file_path} - {str(e)}", 'UP_SNF_ERR')
+                            # @todo 尝试重新下载文件(替换链接): https://pdf.dfcfw.com/pdf/H2_{art_code}_1.pdf  替换规则  H2_ --> H22_
                             content = ''
-                else:
+                if not content:  # 兜底方案 - 识别失败才会进入这里
                     # 网络请求获取文本
                     fn_txt = self.formatter.em.get_fn_notice_txt(symbol, art_code)
                     ps = fn_txt['page_size']
