@@ -105,7 +105,7 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def gpl_daily(self):
-        """更新股票日线信息 - 每天下午的15点31分和21点01分"""
+        """更新股票日线信息 - 每周六的00点31分和23点31分 - 重点股每个工作日都会更新"""
         code_str = self.params.get('code_str', '')
         is_force = self.params.get('is_force', 0)
         td = self.params.get('td', '')

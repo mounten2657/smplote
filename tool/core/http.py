@@ -319,15 +319,17 @@ class Http:
             if not traffic_header:
                 return f"订阅链接 {sub_url} 未返回流量信息头"
             traffic_dict = {}
+            ts =  int(time.time())
             for item in traffic_header.split(";"):
                 if "=" in item:
                     key, value = item.strip().split("=", 1)
                     traffic_dict[key] = value
+            expire = int(traffic_dict.get("expire") if traffic_dict.get('expire') else 0)
             result = {
                 "upload": round(int(traffic_dict.get("upload", "0")) / (1024 * 1024) , 2),  # 上传流量，单位 MB
                 "download": round(int(traffic_dict.get("download", "0")) / (1024 * 1024) , 2),  # 下载流量，单位 MB
                 "total": round(int(traffic_dict.get("total", "0")) / (1024 * 1024 * 1024)),  # 总流量，单位 GB
-                "expire": round(int(traffic_dict.get("expire") if traffic_dict.get('expire') else 0) / (86400 * 1000)),  # 剩余天数，单位 天
+                "expire": round(((expire - ts) if expire else 0) / 86400, 1),  # 剩余天数，单位 天
             }
             return result
         except Exception as e:
