@@ -38,9 +38,10 @@ class VppClashService:
 
     def get_vpn_port(self,  is_refresh=0):
         """获取vpn端口 - [781 ~ 789]随机值"""
+        today = Time.dnd()
         p_list = self.get_vpn_port_list()
         # 从缓存中加载数据
-        rand_list = redis.get(self.cache_key, [f'rand_list'])
+        rand_list = redis.get(self.cache_key, [f'rand_list:{today}'])
         if not rand_list or is_refresh:
             rand_list = {}
             for port in p_list:
@@ -49,7 +50,7 @@ class VppClashService:
                 rand_list[port] = num  # 不管有没有节点都记录
             if not rand_list:  # 一个可用节点都没有
                 Error.throw_exception('暂无缓存，请先初始化vpn节点')
-            redis.set(self.cache_key, rand_list, [f'rand_list'])
+            redis.set(self.cache_key, rand_list, [f'rand_list:{today}'])
         nc_list = Attr.nc_list(rand_list)
         return Attr.random_choice(nc_list)
 
@@ -185,8 +186,8 @@ class VppClashService:
         :return: 操作结果
         """
         e_port = port + 10  # 转换为 api 端口
-        autoname = self.get_vpn_group_name(e_port)
-        url = f"{self.get_vpn_host()}:{e_port}/proxies/{autoname}"
+        auto_name = self.get_vpn_group_name(e_port)
+        url = f"{self.get_vpn_host()}:{e_port}/proxies/{auto_name}"
         params = {"name": node_name}
         headers = self.get_vpn_auth_header()
         res = self.send_http_request("PUT", url, params, headers)
@@ -215,16 +216,17 @@ class VppClashService:
 
     def get_traffic_stat(self, sn=None):
         """获取订阅流量统计 - md文本"""
-        date = Time.dnd()
-        md = f"🚀VPN节点流量统计🌐 <{date}>\r\n"
-        rand_list = redis.get(self.cache_key, [f'rand_list'])
+        t_stat = {}
+        today = Time.dnd()
+        yesterday = Time.dnd(-1)
+        # 加载昨日统计缓存
+        y_stat = redis.get(self.cache_key, [f'traffic_stat:{yesterday}'])
+        md = f"🚀VPN节点流量统计🌐 <{today}>\r\n"
+        rand_list = redis.get(self.cache_key, [f'rand_list:{today}'])
         rv_list = [v for k, v in rand_list.items() if k != '784'] if isinstance(rand_list, dict) else []  # 去除免费节点
         rv_sum = sum(int(r) for r in rv_list)
         rv_list.reverse()  # 倒序以方便弹出r
         sub_list = self.get_vpn_sub_list()
-        # 从缓存中加载昨日统计数据
-        yesterday = Time.dnd(-1)
-        traffic_stat = redis.get(self.cache_key, [f'traffic_stat:{yesterday}'])
         if sn:
             if not sub_list.get(sn):
                 return f"无效的订阅名 - {sn}"
@@ -232,11 +234,17 @@ class VppClashService:
         for sub, url in sub_list.items():
             stat = Http.get_subscription_traffic(url)
             if isinstance(stat, dict):
+                t_stat[sub] = stat
                 np = rv_list.pop() if rv_list else 0
                 percent = round(np / rv_sum * 100, 2)
                 used = stat['upload'] + stat['download']
+                t_stat[sub]['used'] = used
+                y_used = Attr.get_by_point(y_stat, f'{sub}.used', 0)
+                change = used - y_used
                 used = f"{round(used / 1024, 3):.3f}G" if used >= 1024 else f"{used:.2f}M"
-                stat = f"{used}/{stat['total']}G | {stat['expire'] if stat['expire'] else 9999}天 | {np}/{percent:.2f}% "
+                stat = f"{used}/{change}M/{stat['total']}G | {np}/{percent:.2f}%  | {stat['expire'] if stat['expire'] else 9999}天 "
             md += f"   - {sub}: {stat}\r\n"
+        # 更新今日统计缓存
+        redis.set(self.cache_key,  t_stat, [f'traffic_stat:{today}'])
         return md.strip()
 

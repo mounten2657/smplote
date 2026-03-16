@@ -203,7 +203,12 @@ class GPLUpdateEfnService:
                     if not file_path:
                         content = ''
                     else:
-                        content = File.get_pdf_txt(Dir.wechat_dir(f'{file_path[1:]}'))
+                        # 新增异常捕获，并输出错误的文件名以方便及时补救
+                        try:
+                            content = File.get_pdf_txt(Dir.wechat_dir(f'{file_path[1:]}'))
+                        except Exception as e:
+                            logger.error(f"财务公告文件识别失败<{symbol}><{day}><{dd['tid']}> - {art_code} - {file_path} - {str(e)}", 'UP_SNF_ERR')
+                            content = ''
                 else:
                     # 网络请求获取文本
                     fn_txt = self.formatter.em.get_fn_notice_txt(symbol, art_code)
