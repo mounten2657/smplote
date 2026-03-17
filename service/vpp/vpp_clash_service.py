@@ -241,7 +241,7 @@ class VppClashService:
                 y_used = Attr.get_by_point(y_stat, f'{sub}.used', 0)
                 change = used - y_used
                 used = f"{round(used / 1024, 3):.3f}G" if used >= 1024 else f"{used:.2f}M"
-                stat = f"{used}/{change}M/{stat['total']}G | {np}/{percent:.2f} | {stat['expire'] if stat['expire'] else 9999}天 "
+                stat = f"{used}/{change:.2f}M/{stat['total']}G | {np}/{percent:.2f} | {stat['expire'] if stat['expire'] else 9999}天 "
             md += f"   - {sub}: {stat}\r\n"
         # 更新今日统计缓存
         redis.set(self.cache_key,  t_stat, [f'traffic_stat:{today}'])
