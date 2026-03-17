@@ -7,7 +7,6 @@ import base64
 import hashlib
 import urllib.parse
 from urllib.parse import unquote, quote
-from decimal import Decimal, ROUND_HALF_UP
 from pypinyin import pinyin, Style
 from tool.core.env import Env
 
@@ -211,9 +210,10 @@ class Str:
             return False
 
     @staticmethod
-    def round(str_val, p=2):
-        """四舍五入保留两位小数 - 返回 Decimal 类型"""
-        return Decimal(str(str_val)).quantize(Decimal(f"0.{'0' * p}" if p >0 else '0'), rounding=ROUND_HALF_UP)
+    def round(v, p=2):
+        """四舍五入保留两位小数 - 一定是两位小数(无精度误差) - 返回 float 类型"""
+        # return Decimal(str(str_val)).quantize(Decimal(f"0.{'0' * p}" if p >0 else '0'), rounding=ROUND_HALF_UP)
+        return float(f"{float(v):.{p}f}")
 
     @staticmethod
     def randint(start=1, end=100):
