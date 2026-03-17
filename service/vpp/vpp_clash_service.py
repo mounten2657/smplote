@@ -5,6 +5,7 @@ from utils.grpc.vpp_serve.vpp_serve_client import VppServeClient
 
 logger = Logger()
 redis = RedisClient()
+today = Time.dnd()
 
 
 class VppClashService:
@@ -38,14 +39,13 @@ class VppClashService:
 
     def get_vpn_port(self,  is_refresh=0):
         """获取vpn端口 - [781 ~ 789]随机值"""
-        today = Time.dnd()
         p_list = self.get_vpn_port_list()
         # 从缓存中加载数据
         rand_list = redis.get(self.cache_key, [f'rand_list:{today}'])
         if not rand_list or is_refresh:
             rand_list = {}
             for port in p_list:
-                num = redis.get(self.cache_key, [f'{port}:len'])
+                num = redis.get(self.cache_key, [f'{port}:{today}:len'])
                 num = int(num) if isinstance(num, int) else 0
                 rand_list[port] = num  # 不管有没有节点都记录
             if not rand_list:  # 一个可用节点都没有
@@ -82,9 +82,9 @@ class VppClashService:
         gn_list = self.get_vpn_group_list()
         return list(gn_list.keys())
 
-    def get_vpn_node(self, port, ctype='em'):
+    def get_vpn_node(self, port, c_type='em'):
         """获取vpn节点 - 随机值"""
-        n_list = redis.get(self.cache_key, [f'{port}:{ctype}'])  # 从缓存中读取
+        n_list = redis.get(self.cache_key, [f'{port}:{today}:{c_type}'])  # 从缓存中读取
         if not n_list:
             return ''
         return Attr.random_choice(n_list)
@@ -109,20 +109,20 @@ class VppClashService:
         for e_port in p_list:
             port = e_port - 10
             Time.sleep(Str.randint(1, 9) / 10)
-            cache = redis.get(self.cache_key, [f'{port}:all'])
+            cache = redis.get(self.cache_key, [f'{port}:{today}:all'])
             if cache and not is_refresh:
                 logger.warning(f"全节点缓存已存在<{port}>", "CVA_WAR")
                 continue
-            autoname = self.get_vpn_group_name(e_port)
-            url = f"{self.get_vpn_host()}:{e_port}/proxies/{autoname}"
+            auto_name = self.get_vpn_group_name(e_port)
+            url = f"{self.get_vpn_host()}:{e_port}/proxies/{auto_name}"
             headers = self.get_vpn_auth_header()
             res = self.send_http_request("GET", url, headers=headers)
             n_list = Attr.get_by_point(res, 'all')
             if not n_list:
                 logger.warning(f"全节点列表获取失败<{url}>", "CVA_WAR")
                 continue
-            redis.set(self.cache_key, n_list, [f'{port}:all'])
-            redis.set(self.cache_key, len(n_list), [f'{port}:tol'])
+            redis.set(self.cache_key, n_list, [f'{port}:{today}:all'])
+            redis.set(self.cache_key, len(n_list), [f'{port}:{today}:tol'])
             logger.info(f"全节点缓存成功<{port}> - {len(n_list)}", "CVA_INF")
             i += 1
         return i
@@ -144,11 +144,11 @@ class VppClashService:
         for e_port in p_list:
             port = e_port - 10
             Time.sleep(Str.randint(1, 9) / 10)
-            cache = redis.get(self.cache_key, [f'{port}:em'])
+            cache = redis.get(self.cache_key, [f'{port}:{today}:em'])
             if cache and not is_refresh:
                 logger.warning(f"东财节点缓存已存在<{port}>", "CVE_WAR")
                 continue
-            cache = redis.get(self.cache_key, [f'{port}:all'])
+            cache = redis.get(self.cache_key, [f'{port}:{today}:all'])
             if not cache or not isinstance(cache, list):
                 logger.warning(f"请先刷新全节点缓存<{port}><{len(cache)}>", "CVE_WAR")
                 continue
@@ -169,8 +169,8 @@ class VppClashService:
                 logger.debug(f"该节点成功获取东财数据<{port}><{node}> - {res}", "CVE_DEG")
                 node_list.append(node)
                 Time.sleep(Str.randint(1, 9) / 10)
-            redis.set(self.cache_key, node_list, [f'{port}:em'])
-            redis.set(self.cache_key, len(node_list), [f'{port}:len'])
+            redis.set(self.cache_key, node_list, [f'{port}:{today}:em'])
+            redis.set(self.cache_key, len(node_list), [f'{port}:{today}:len'])
             logger.info(f"东财节点缓存成功<{port}> - {len(node_list)}", "CVE_INF")
             i += 1
         self.get_vpn_port(1)  # 刷新一下端口概率缓存
@@ -217,7 +217,6 @@ class VppClashService:
     def get_traffic_stat(self, sn=None):
         """获取订阅流量统计 - md文本"""
         t_stat = {}
-        today = Time.dnd()
         yesterday = Time.dnd(-1)
         # 加载昨日统计缓存
         y_stat = redis.get(self.cache_key, [f'traffic_stat:{yesterday}'])
