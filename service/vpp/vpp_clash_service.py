@@ -224,7 +224,7 @@ class VppClashService:
         md = f"🚀VPN节点流量统计🌐 <{today}>\r\n"
         rand_list = redis.get(self.cache_key, [f'rand_list:{today}'])
         rv_list = [v for k, v in rand_list.items() if k != '784'] if isinstance(rand_list, dict) else []  # 去除免费节点
-        rv_sum = sum(int(r) for r in rv_list)
+        rv_sum = sum(int(r) for r in rv_list) if rv_list else 10000  # 空值兼容
         rv_list.reverse()  # 倒序以方便弹出r
         sub_list = self.get_vpn_sub_list()
         if sn:
