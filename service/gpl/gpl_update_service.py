@@ -39,7 +39,12 @@ class GPLUpdateService:
         if not is_force and Time.is_week():
             return False
         current_date = td if td else Time.date('%Y-%m-%d')
-        code_list = code_str.split(',') if code_str else self.formatter.get_stock_code_all()
+        if code_str.upper() == 'ZD':
+            code_list = GPLUpdateService._S_ZD_LIST  # 走快速通道的股票列表
+            # 统一格式 - 去除前缀
+            code_list = [self.formatter.sft.remove_stock_prefix(c) for c in code_list]
+        else:
+            code_list = code_str.split(',') if code_str else self.formatter.get_stock_code_all()
         logger.warning(f"[{current_date}]总股票数据 - {len(code_list)}", 'UP_SYM_TOL')
         if not code_list:
             return False
@@ -134,8 +139,6 @@ class GPLUpdateService:
         :return:
         """
         code_list = code_str.split(',')
-        if not code_list:
-            return False
         all_code_list = self.formatter.get_stock_code_all()
         code_list = [self.formatter.sft.remove_stock_prefix(c) for c in code_list]
         symbol_list = [self.formatter.sft.add_stock_prefix(c) for c in code_list]
@@ -168,7 +171,6 @@ class GPLUpdateService:
         def _up_day_exec(code):
             res = []
             symbol = self.formatter.sft.add_stock_prefix(code)
-            is_special = int(symbol in GPLUpdateService._S_ZD_LIST)  # 走快速通道的股票列表 - 队列后进先出
             percent = self.formatter.get_percent(code, code_list, all_code_list)
             insert_list = {}
             fq_list = {"": "0", "qfq": "1", "hfq": "2"}
