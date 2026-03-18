@@ -92,7 +92,7 @@ class RouterHandler:
                 if not (Env.get('APP_AUTH_KEY') == authcode
                         or method_path in self.OPEN_API_LIST
                         or method_path in self.IGNORE_API_LIST):
-                    Error.throw_exception('Api Permission denied', 99)  # 抛出异常以告警
+                    Error.throw_exception('Permission denied', 99)  # 抛出异常以告警
                 module_name, method_name = method_path.rsplit('/', 1)
                 module_path = f'{module_name.replace("/", ".")}'
                 params = RouterHandler.get_http_params()
