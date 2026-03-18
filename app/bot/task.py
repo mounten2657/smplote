@@ -73,14 +73,14 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def note_html(self):
-        """刷新笔记html - 每天凌晨的00点15分"""
+        """刷新笔记html - 每天凌晨的00点25分"""
         md_path = self.params.get('md_path', '/www/appdata/note/')
         out_path = self.params.get('out_path', '/www/wwwroot/note_html/app/')
         res = VppNoteService.gen_note_html(md_path, out_path)
         return self.success(res)
 
     def rf_vpn(self):
-        """刷新vpn节点 - 每天凌晨的00点16分"""
+        """刷新vpn节点 - 每天凌晨的00点36分"""
         ports = self.params.get('p', '')  # 是代理端口不是api端口
         if not ports and Time.is_week():
             return self.error('周末不执行')

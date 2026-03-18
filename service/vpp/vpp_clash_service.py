@@ -216,16 +216,21 @@ class VppClashService:
 
     def get_traffic_stat(self, sn=None):
         """获取订阅流量统计 - md文本"""
+        def get_rvl_sum(d):
+            rand_list = redis.get(self.cache_key, [f'rand_list:{d}'])
+            rvl = [v for k, v in rand_list.items() if k != '784'] if isinstance(rand_list, dict) else []  # 去除免费节点
+            rvs = sum(int(r) for r in rvl) if rvl else 10000  # 空值兼容
+            rvl.reverse()  # 倒序以方便弹出r
+            return rvl, rvs
         t_stat = {}
         yesterday = Time.dnd(-1)
-        # 加载昨日统计缓存
+        # 加载今昨节点数
+        rv_list, rv_sum = get_rvl_sum(today)
+        rv_list_y, rv_sum_y = get_rvl_sum(yesterday)
+        # 加载昨日流量统计
         y_stat = redis.get(self.cache_key, [f'traffic_stat:{yesterday}'])
-        md = f"🚀VPN节点流量统计🌐 <{today}>\r\n"
-        rand_list = redis.get(self.cache_key, [f'rand_list:{today}'])
-        rv_list = [v for k, v in rand_list.items() if k != '784'] if isinstance(rand_list, dict) else []  # 去除免费节点
-        rv_sum = sum(int(r) for r in rv_list) if rv_list else 10000  # 空值兼容
-        rv_list.reverse()  # 倒序以方便弹出r
         sub_list = self.get_vpn_sub_list()
+        md = f"🚀VPN节点流量统计🌐 <{today}>\r\n"
         if sn:
             if not sub_list.get(sn):
                 return f"无效的订阅名 - {sn}"
@@ -235,6 +240,7 @@ class VppClashService:
             if isinstance(stat, dict):
                 t_stat[sub] = stat
                 np = rv_list.pop() if rv_list else 0
+                npy = rv_list_y.pop() if rv_list_y else 0
                 percent = Str.round(np / rv_sum * 100)
                 used = Str.round(stat['upload'] + stat['download'])
                 t_stat[sub]['used'] = used
@@ -242,7 +248,7 @@ class VppClashService:
                 changed = Str.round(used - y_used)
                 t_stat[sub]['changed'] = changed
                 used = f"{round(used / 1024, 3):.3f}G" if used >= 1024 else f"{used:.2f}M"
-                stat = f"{used}/{changed}M/{stat['total']}G | {np}/{percent} | {stat['expire'] if stat['expire'] else 9999}天 "
+                stat = f"{used}/{changed}M/{stat['total']}G | {np}/{npy}/{percent} | {stat['expire'] if stat['expire'] else 9999}天 "
             md += f"   - {sub}: {stat}\r\n"
         # 更新今日统计缓存
         redis.set(self.cache_key,  t_stat, [f'traffic_stat:{today}'])
