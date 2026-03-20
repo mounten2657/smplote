@@ -116,6 +116,7 @@ class Attr:
 
     @staticmethod
     def parse_json_ignore(data):
+        """试图将json字符串还原为字典"""
         try:
             return json.loads(data)
         except (json.JSONDecodeError, TypeError) as e:

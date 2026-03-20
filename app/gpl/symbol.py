@@ -10,13 +10,13 @@ class Symbol(BaseApp):
         self.formatter = GplFormatterService()
 
     def info(self):
-        """检查获取股票基本信息是否通畅"""
+        """检查数据库是否通畅"""
         code = self.params.get('code', '300126')
-        res = self.formatter.get_stock_info(code)
+        res = self.formatter.get_stock(code)
         return self.success(res)
 
     def daily(self):
-        """检查获取日线行情信息是否通畅"""
+        """检查日线行情接口是否通畅"""
         code = self.params.get('code', '300126')
         sd = self.params.get('sd', Time.dft(Time.now() - 5 * 86400, '%Y-%m-%d'))
         ed = self.params.get('ed', Time.date('%Y-%m-%d'))

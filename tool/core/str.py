@@ -211,7 +211,7 @@ class Str:
 
     @staticmethod
     def round(v, p=2):
-        """四舍五入保留两位小数 - 一定是两位小数(无精度误差) - 返回 float 类型"""
+        """四舍五入保留两位小数 - 返回一定是浮点数(无精度误差) - 如：2.0 | 2.01"""
         # return Decimal(str(str_val)).quantize(Decimal(f"0.{'0' * p}" if p >0 else '0'), rounding=ROUND_HALF_UP)
         return float(f"{float(v):.{p}f}")
 

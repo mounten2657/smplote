@@ -1,9 +1,9 @@
 import os
 import logging
 import threading
-from flask import Flask, request, send_from_directory
+from flask import Flask, request, g, send_from_directory
 from tool.router.parse_handler import ParseHandler
-from tool.core import Logger, Attr, Api, Dir, Config, Error, Http, Env
+from tool.core import Logger, Attr, Api, Dir, Config, Error, Http, Env, Time, Str
 from service.source.preview.file_preview_service import FilePreviewService
 
 logger = Logger()
@@ -50,13 +50,16 @@ class RouterHandler:
         self.setup_routes()
 
     def setup_routes(self):
+
         # 开始请求之前的动作
         @self.app.before_request
         def before_request():
+            g.uuid = Str.uuid()
+            g.start_time = Time.now(0)
             request_url = request.url
             request_params = self.get_http_params()
             if not any(route in request_url for route in self.IGNORE_LOG_LIST):
-                logger.info(data={"request": {"url": request_url, "request_params": request_params}}, msg="START")
+                logger.info(data={"request": {"url": request_url, "request_params": request_params}}, msg=f"START[RT.0]@{g.uuid}")
 
         # 定义首页默认路由
         @self.app.route('/', defaults={'path': ''})
@@ -79,8 +82,7 @@ class RouterHandler:
         # 定义图标路径
         @self.app.route('/favicon.ico')
         def favicon():
-            return send_from_directory(Dir.abs_dir('data/static/icon'), 'favicon.ico',
-                                       mimetype='image/vnd.microsoft.icon')
+            return send_from_directory(Dir.abs_dir('data/static/icon'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
         # 定义路由解析
         @self.app.route('/<path:method_path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
@@ -117,6 +119,8 @@ class RouterHandler:
         # 请求完成后的动作
         @self.app.after_request
         def after_request(response):
+            uuid = Attr.get(g, 'uuid', '000000')
+            run_time = (Str.round(Time.now(0) - g.start_time, 3)) if Attr.get(g, 'start_time') else 0.00
             status_code = response.status_code
             response_result = None
             request_url = request.url
@@ -125,7 +129,7 @@ class RouterHandler:
             except RuntimeError as e:
                 pass
             if not any(route in request_url for route in self.IGNORE_LOG_LIST):
-                logger.info(data={"response": {"status_code": status_code, "response_result": response_result}}, msg="END")
+                logger.info(data={"response": {"status_code": status_code, "response_result": response_result}}, msg=f"END[RT.{run_time}]@{uuid}")
             return response
 
     @staticmethod

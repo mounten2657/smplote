@@ -1,14 +1,13 @@
 import os
 import re
-import sys
 import json
 import logging
 from flask import request
 from queue import Queue
 from threading import Lock
 from datetime import datetime
-from tool.core.dir import Dir
 from tool.core.config import Config
+from tool.core.dir import Dir
 from tool.core.str import Str
 from tool.core.attr import Attr
 from tool.core.http import Http
@@ -82,7 +81,7 @@ class Logger:
         log_name = log_name if log_name else self.config.get('log_name_default', 'app')
         log_file = f'{log_dir}/{log_name}_{log_type}_{today}.log'
 
-        # 使用轮转规则，虽然可以自动清除超过七天的日志文件，但是跨天会生成冗余文件，故舍弃，改为普通 Handler
+        # 使用普通 Handler
         file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
         file_handler.setLevel(log_level)
 
@@ -102,73 +101,37 @@ class Logger:
         queue_handler.setLevel(log_level)
 
         class JsonFormatter(logging.Formatter):
-            @staticmethod
-            def extract_runtime(input_str: str):
-                """
-                提取 [RT.{run_time}] 中的 run_time，并移除该部分
-                :param input_str: 输入字符串，如 "END[RT.12.34]"
-                :return: (清理后的字符串, run_time 的值) 如 ("END", "12.34")
-                """
-                # 匹配 [RT.xxx] 并提取 xxx
-                pattern = r'\[RT\.([^\]]+)\]'  # 匹配 [RT.xxx]，并捕获 xxx
-                match = re.search(pattern, input_str)
-                if match:
-                    run_time = match.group(1)  # 提取 run_time
-                    cleaned_str = re.sub(pattern, '', input_str)  # 移除 [RT.xxx]
-                    return cleaned_str.strip(), run_time
-                else:
-                    return input_str, None  # 如果没有匹配到，返回原字符串和 None
-
             def format(self, record):
-                msg = getattr(record, 'msg', '')
-                msg, run_time = self.extract_runtime(msg)
+                # 完整日志结构
                 log_record = {
-                    'timestamp': self.formatTime(record, '%Y-%m-%d %H:%M:%S'),
+                    'time': self.formatTime(record, '%Y-%m-%d %H:%M:%S'),
                     'level': record.levelname,
                     'pid': os.getpid(),
-                    'uuid': getattr(record, 'uuid', None),
-                    'msg': msg
+                    'uuid': getattr(record, 'uuid', ''),
+                    'type': getattr(record, 'type', ''),
+                    'msg': getattr(record, 'msg', ''),
+                    'sys': getattr(record, 'sys', ''),
+                    'data': getattr(record, 'data', '')
                 }
-                if run_time:
-                    run_time = run_time if re.match(r"^-?\d+$",  run_time) else round(float(run_time), 13)
-                    log_record.update({"run_time": run_time})
-                if log_type == 'http':
-                    log_record.update({
-                        'ip': getattr(record, 'ip', None),
-                        'route': getattr(record, 'route', None),
-                        'method': getattr(record, 'method', None),
-                        'status_code': getattr(record, 'status_code', None),
-                        'user_agent': getattr(record, 'user_agent', None),
-                        'content_type': getattr(record, 'content_type', None),
-                        'authcode': getattr(record, 'authcode', None),
-                        'data': getattr(record, 'data', None),
-                        'request_params': getattr(record, 'request_params', None),
-                        'response_result': getattr(record, 'response_result', None)
-                    })
-                else:
-                    log_record.update({
-                        'command': getattr(record, 'command', None),
-                        'data': getattr(record, 'data', None)
-                    })
                 return json.dumps(log_record, ensure_ascii=False)
 
         class ColoredFormatter(logging.Formatter):
             def format(self, record):
-                log_record = {
-                    'timestamp': self.formatTime(record, '%Y-%m-%d %H:%M:%S'),
+                # 终端输出结构
+                console = {
+                    'time': self.formatTime(record, '%Y-%m-%d %H:%M:%S'),
                     'level': record.levelname,
-                    'ip': getattr(record, 'ip', ''),
-                    'method': getattr(record, 'method', None),
                     'pid': os.getpid(),
-                    'uuid': getattr(record, 'uuid', None),
+                    'uuid': getattr(record, 'uuid', ''),
+                    'type': getattr(record, 'type', ''),
                     'msg': getattr(record, 'msg', ''),
-                    'data': getattr(record, 'data', None)
+                    'data': getattr(record, 'data', '')
                 }
-                level_name = log_record['level']
-                log_ext = '' if not log_record['method'] else f"[{log_record['method']}|{log_record['ip']}]"
-                log_str = (f"[{log_record['timestamp']}] - {log_record['pid']} - {log_record['uuid'][-6:]} - {level_name} - "
-                           f"{log_type}{log_ext} {log_record['msg']} - {log_record['data']}")[:768]
-
+                level_name = console['level']
+                sys = Attr.parse_json_ignore(getattr(record, 'sys', ''))
+                log_ext = f"[{sys['method']}|{sys['ip']}]" if Attr.get(sys, 'ip') else ""
+                log_str = (f"[{console['time']}] - {console['pid']} - {console['uuid'][-6:]} - {level_name} - "
+                           f"{console['type']}{log_ext} - {console['msg']} - {console['data']}")[:768]
                 if level_name in display_colors:
                     log_str = display_colors[level_name] + log_str + Logger.RESET
                 return log_str
@@ -187,45 +150,41 @@ class Logger:
         self._loggers[logger_key] = logger
         return logger
 
-    def get_extra_data(self, data=None):
-        if Http.is_http_request():
-            # 尝试获取 HTTP 请求信息，如果能获取到说明是 HTTP 请求
-            ip = Http.get_client_ip()
-            route = request.path
+    def get_extra_data(self, data, msg, log_type):
+        """日志原始数据组装"""
+        sys = {}
+        # 解析 msg - "{msg}[RT.{run_time}]@{uuid}"
+        msg, run_time, uuid = self._extract_msg(msg)
+        if log_type == 'http':
             method = request.method
+            route = request.path
+            ip = Http.get_client_ip()
             headers = Http.get_request_headers()
-            user_agent = Attr.get(headers, 'User-Agent')
-            content_type = Attr.get(headers, 'Content-Type')
-            authcode = Attr.get(headers, 'Authcode', '')
+            user_agent = Attr.get(headers, 'User-Agent', '')
+            # content_type = Attr.get(headers, 'Content-Type', '')
+            # authcode = Attr.get(headers, 'Authcode', '')
             request_params = dict(request.args)
             response = Attr.get(data, 'response')
             status_code = Attr.get(response, 'status_code', 100)
-            response_result = Attr.get(response, 'response_result')
-            extra = {
-                'uuid': self.uuid,
-                'ip': ip,
-                'route': route,
+            data = Attr.get(response, 'response_result', {})  # 重塑data，避免重复记录
+            sys = {
                 'method': method,
+                'route': route,
                 'status_code': status_code,
+                'ip': ip,
                 'user_agent': user_agent,
-                'content_type': content_type,
-                'authcode': authcode,
-                'data': Attr.remove_keys(data, ['request', 'response']),
-                'request_params': request_params,
-                'response_result': response_result
+                # 'content_type': content_type,
+                # 'authcode': authcode,
+                'request_params': request_params
             }
-        else:
-            # 若获取不到 HTTP 请求信息，说明是命令行执行
-            # command_parts = [sys.executable] + sys.argv  # 这获取的是绝对路径
-            # command = " ".join(command_parts)                # 太长了， 直接写死成 python
-            # command = "python " + " ".join(sys.argv if hasattr(sys, 'argv') else 'null')
-            command = "wsgi:app"  # 太长了，这个参数的具体值意义不大，直接写死
-            extra = {
-                'uuid': self.uuid,
-                'command': command,
-                'data': data
-            }
-        return extra
+        sys['run_time'] = float(run_time)
+        return {
+            'uuid': self.uuid if not uuid else uuid,
+            'type': log_type,
+            'msg': msg,
+            'sys': sys,
+            'data': data
+        }
 
     def get_log_queue(self):
         return self.log_queue
@@ -247,10 +206,28 @@ class Logger:
         else:
             return str(data)
 
+    @staticmethod
+    def _extract_msg(log_str: str) -> tuple:
+        """
+        从指定格式的日志字符串中提取 msg、run_time、uuid
+
+        :param log_str: 日志字符串，格式如 "END[RT.12.34]@d34c33"
+        :return: 提取结果 - 元组
+        """
+        # 正则解析：匹配 [RT.xxx]@xxx 格式，精准分组提取
+        pattern = r'^(?P<msg>.+)\[RT\.(?P<run_time>[\d\.]+)\]@(?P<uuid>.+)$'
+        match = re.match(pattern, log_str.strip())
+        if match:
+            uuid = match.group('uuid')
+            uuid = uuid if len(uuid) > 1 else ''
+            return match.group('msg'), match.group('run_time'), uuid
+        return log_str, 0, ''
+
     def write(self, data=None, msg="", log_name="app", log_level='info'):
-        extra = self.get_extra_data(data)
+        log_type = 'http' if Http.is_http_request() else 'back'  # 区分 Http请求 和 后台运行
+        extra = self.get_extra_data(data, msg, log_type)
         extra = Logger._make_serializable(extra)
-        log_type = 'http' if Http.is_http_request() else 'command'
+        msg = extra.pop('msg')  # 这里必须弹出，否则会与 logging 内部的变量名冲突
         logger_handle = self.setup_logger(log_type, log_name)
         method = getattr(logger_handle, log_level.lower())
         method(msg, extra=extra)

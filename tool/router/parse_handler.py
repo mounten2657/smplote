@@ -4,7 +4,7 @@ import importlib
 import signal
 import logging
 import baostock as bs
-from tool.core import Logger, Time, Http, Error, Attr, Config, Sys
+from tool.core import Logger, Time, Http, Error, Attr, Config, Sys, Str
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.vpwechat.vp_client import VpClient
@@ -79,9 +79,10 @@ class ParseHandler:
 
     @staticmethod
     def execute_method(path, params):
+        uuid = Str.uuid()
         start_time = Time.now(0)
         try:
-            not Http.is_http_request() and logger.info(data={"path": path, "params": params}, msg=f"START[RT.{int(start_time)}]")
+            not Http.is_http_request() and logger.info(data={"path": path, "params": params}, msg=f"START[RT.0]@{uuid}")
             # 分割路径为模块路径和方法名
             module_path, method_name = path.rsplit('.', 1)
             # 将模块名转换为大驼峰形式的类名
@@ -96,11 +97,11 @@ class ParseHandler:
             method = getattr(instance, method_name)
             # 执行方法
             result = method()
-            run_time = Time.now(0) - start_time
-            not Http.is_http_request() and logger.info(data=Attr.parse_json_ignore(result), msg=f"END[RT.{run_time}]")
+            run_time = Str.round(Time.now(0) - start_time, 3)
+            not Http.is_http_request() and logger.info(data=Attr.parse_json_ignore(result), msg=f"END[RT.{run_time}]@{uuid}")
             return result
         except (ImportError, AttributeError, RuntimeError, Exception) as e:
-            run_time = Time.now(0) - start_time
+            run_time = Str.round(Time.now(0) - start_time, 3)
             err = Error.handle_exception_info(e)
             logger.error(err,f"ERROR[RT.{run_time}]")  # 记录错误的同时发送告警消息
             return err

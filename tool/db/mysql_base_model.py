@@ -1,8 +1,7 @@
 import pymysql
 import threading
-from functools import wraps
 from typing import Union, List, Dict, Optional, Any
-from tool.core import Logger, Error, Config, Attr, Time
+from tool.core import Logger, Error, Config, Attr, Time, Str
 
 logger = Logger()
 
@@ -240,18 +239,20 @@ class MysqlBaseModel:
             order_str = self._state._order_str if self._state._order_str else ''
 
             sql = f"SELECT {select_clause} FROM {self._table} WHERE {where_clause} {group_str} {order_str} {limit_clause}"
-            self.logger.debug({"sql": sql.strip(), "params": params}, 'DB_SQL_SELECT', 'mysql')
             return sql.strip(), params
 
     def get(self) -> List[Dict]:
         """执行查询并返回所有结果"""
         conn = None
         try:
+            start_time = Time.now(0)
             conn = self._get_connection()
             sql, params = self._build_query()
             with conn.cursor() as cursor:
                 cursor.execute(sql, params)
                 results = Attr.convert_to_json_dict(cursor.fetchall())
+                run_time = Str.round(Time.now(0) - start_time, 3)
+                self.logger.debug({"sql": sql, "params": params}, f'DB_SQL_SELECT[RT.{run_time}]@0', 'mysql')
             return results
         finally:
             self._release_connection(conn)
@@ -261,12 +262,15 @@ class MysqlBaseModel:
         """获取第一条记录"""
         conn = None
         try:
+            start_time = Time.now(0)
             self.limit(0, 1)
             conn = self._get_connection()
             sql, params = self._build_query()
             with conn.cursor() as cursor:
                 cursor.execute(sql, params)
                 results = Attr.convert_to_json_dict(cursor.fetchall())
+                run_time = Str.round(Time.now(0) - start_time, 3)
+                self.logger.debug({"sql": sql, "params": params}, f'DB_SQL_SELECT[RT.{run_time}]@0', 'mysql')
             return results[0] if results else {}
         finally:
             self._release_connection(conn)
@@ -275,17 +279,20 @@ class MysqlBaseModel:
     def query_sql(self, sql: str) -> List[Dict]:
         """执行原生查询SQL"""
         conn = None
+        start_time = Time.now(0)
         try:
             conn = self._get_connection()
-            self.logger.debug({"sql": sql.strip(), "params": {}}, 'DB_SQL_QUERY', 'mysql')
             with conn.cursor() as cursor:
                 cursor.execute(sql)
+                run_time = Str.round(Time.now(0) - start_time, 3)
+                self.logger.debug({"sql": sql.strip(), "params": {}}, f'DB_SQL_QUERY[RT.{run_time}]@0', 'mysql')
                 if sql.lstrip().upper().startswith('SELECT'):
                     return Attr.convert_to_json_dict(cursor.fetchall())
                 return []
         except Exception as e:
             err = Error.handle_exception_info(e)
-            self.logger.exception(err, 'DB_EXP_QUERY_SQL', 'mysql')
+            run_time = Str.round(Time.now(0) - start_time, 3)
+            self.logger.exception(err, f'DB_EXP_QUERY_SQL[RT.{run_time}]@0', 'mysql')
             return []
         finally:
             self._release_connection(conn)
@@ -294,18 +301,21 @@ class MysqlBaseModel:
     def exec_sql(self, sql: str) -> bool:
         """执行非查询SQL"""
         conn = None
+        start_time = Time.now(0)
         try:
             conn = self._get_connection()
-            self.logger.info({"sql": sql.strip(), "params": {}}, 'DB_SQL_EXEC', 'mysql')
             with conn.cursor() as cursor:
                 cursor.execute(sql)
             conn.commit()
+            run_time = Str.round(Time.now(0) - start_time, 3)
+            self.logger.info({"sql": sql.strip(), "params": {}}, f'DB_SQL_EXEC[RT.{run_time}]@0', 'mysql')
             return True
         except Exception as e:
             if conn:
                 conn.rollback()
             err = Error.handle_exception_info(e)
-            self.logger.exception(err, 'DB_EXP_EXEC_SQL', 'mysql')
+            run_time = Str.round(Time.now(0) - start_time, 3)
+            self.logger.exception(err, f'DB_EXP_EXEC_SQL[RT.{run_time}]@0', 'mysql')
             return False
         finally:
             self._release_connection(conn)
@@ -322,6 +332,7 @@ class MysqlBaseModel:
             raise ValueError("No table specified")
 
         conn = None
+        start_time = Time.now(0)
         try:
             conn = self._get_connection()
             update_data_converted = Attr.convert_to_json_string(update_data)
@@ -349,12 +360,15 @@ class MysqlBaseModel:
                     affected_rows = cursor.rowcount
 
             conn.commit()
+            run_time = Str.round(Time.now(0) - start_time, 3)
+            self.logger.info({"sql": sql.strip(), "params": params}, f'DB_SQL_UPDATE[RT.{run_time}]@0', 'mysql')
             return affected_rows
         except Exception as e:
             if conn:
                 conn.rollback()
             err = Error.handle_exception_info(e)
-            self.logger.exception(err, 'DB_EXP_UPDATE', 'mysql')
+            run_time = Str.round(Time.now(0) - start_time, 3)
+            self.logger.exception(err, f'DB_EXP_UPDATE[RT.{run_time}]@0', 'mysql')
             return 0
         finally:
             self._release_connection(conn)
@@ -385,7 +399,6 @@ class MysqlBaseModel:
 
             where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
             sql = f"UPDATE {self._table} SET {', '.join(set_parts)} WHERE {where_clause}"
-            self.logger.info({"sql": sql.strip(), "params": set_params + where_params}, 'DB_SQL_UPDATE', 'mysql')
             return sql, set_params + where_params
 
     def insert(self, insert_data: Union[Dict, List[Dict]]) -> int:
@@ -398,6 +411,7 @@ class MysqlBaseModel:
             raise ValueError("No table specified")
 
         conn = None
+        start_time = Time.now(0)
         try:
             conn = self._get_connection()
             insert_data = Attr.convert_to_json_string(insert_data)
@@ -410,7 +424,8 @@ class MysqlBaseModel:
                 values = list(insert_data.values())
 
                 sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
-                self.logger.info({"sql": sql.strip(), "params": values}, 'DB_SQL_INSERT', 'mysql')
+                run_time = Str.round(Time.now(0) - start_time, 3)
+                self.logger.info({"sql": sql.strip(), "params": values}, f'DB_SQL_INSERT[RT.{run_time}]@0', 'mysql')
                 with conn.cursor() as cursor:
                     cursor.execute(sql, values)
                     inserted_rows = cursor.lastrowid
@@ -431,7 +446,8 @@ class MysqlBaseModel:
                 value_groups = [tuple(item.values()) for item in insert_data]
 
                 sql = f"INSERT INTO {self._table} ({columns}) VALUES ({placeholders})"
-                self.logger.info({"sql": sql.strip(), "params": value_groups}, 'DB_SQL_INSERT', 'mysql')
+                run_time = Str.round(Time.now(0) - start_time, 3)
+                self.logger.info({"sql": sql.strip(), "params": value_groups}, f'DB_SQL_B_INSERT[RT.{run_time}]@0', 'mysql')
                 with conn.cursor() as cursor:
                     cursor.executemany(sql, value_groups)
                     inserted_rows = cursor.lastrowid
@@ -445,7 +461,8 @@ class MysqlBaseModel:
             if conn:
                 conn.rollback()
             err = Error.handle_exception_info(e)
-            self.logger.exception(err, 'DB_EXP_INSERT', 'mysql')
+            run_time = Str.round(Time.now(0) - start_time, 3)
+            self.logger.exception(err, f'DB_EXP_INSERT[RT.{run_time}]@0', 'mysql')
             return 0
         finally:
             self._release_connection(conn)
@@ -461,6 +478,7 @@ class MysqlBaseModel:
             raise ValueError("No table specified")
 
         conn = None
+        start_time = Time.now(0)
         try:
             conn = self._get_connection()
             # 构建WHERE条件
@@ -481,7 +499,8 @@ class MysqlBaseModel:
 
             where_clause = ' AND '.join(where_parts) if where_parts else '1=1'
             sql = f"DELETE FROM {self._table} WHERE {where_clause}"
-            self.logger.info({"sql": sql.strip(), "params": params}, 'DB_SQL_DELETE', 'mysql')
+            run_time = Str.round(Time.now(0) - start_time, 3)
+            self.logger.info({"sql": sql.strip(), "params": params}, f'DB_SQL_DELETE[RT.{run_time}]@0', 'mysql')
 
             with conn.cursor() as cursor:
                 cursor.execute(sql, params)
@@ -493,7 +512,8 @@ class MysqlBaseModel:
             if conn:
                 conn.rollback()
             err = Error.handle_exception_info(e)
-            self.logger.exception(err, 'DB_EXP_DELETE', 'mysql')
+            run_time = Str.round(Time.now(0) - start_time, 3)
+            self.logger.exception(err, f'DB_EXP_DELETE[RT.{run_time}]@0', 'mysql')
             return 0
         finally:
             self._release_connection(conn)
