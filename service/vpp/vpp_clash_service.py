@@ -48,7 +48,7 @@ class VppClashService:
                 num = redis.get(self.cache_key, [f'{port}:{today}:len'])
                 num = int(num) if isinstance(num, int) else 0
                 rand_list[port] = num  # 不管有没有节点都记录
-            if not rand_list:  # 一个可用节点都没有
+            if not sum(rand_list.values()):  # 一个可用节点都没有
                 Error.throw_exception('暂无缓存，请先初始化vpn节点')
             redis.set(self.cache_key, rand_list, [f'rand_list:{today}'])
         nc_list = Attr.nc_list(rand_list)
@@ -173,7 +173,7 @@ class VppClashService:
             redis.set(self.cache_key, len(node_list), [f'{port}:{today}:len'])
             logger.info(f"东财节点缓存成功<{port}> - {len(node_list)}", "CVE_INF")
             i += 1
-        self.get_vpn_port(1)  # 刷新一下端口概率缓存
+            self.get_vpn_port(1)  # 每次都刷新一下端口概率缓存 - 即使第一次报错也无所谓，有后面的兜底
         return i
 
     def switch_vpn_node(self, port, node_name, sleep_time=None):

@@ -38,7 +38,10 @@ class GPLUpdateService:
         # 周末不更新
         if not is_force and Time.is_week():
             return False
-        current_date = td if td else Time.date('%Y-%m-%d')
+        if Str.is_int(td):
+            current_date = Time.dnd(int(td))
+        else:
+            current_date = td if td else Time.date('%Y-%m-%d')
         if code_str.upper() == 'ZD':
             code_list = GPLUpdateService._S_ZD_LIST  # 走快速通道的股票列表
             # 统一格式 - 去除前缀

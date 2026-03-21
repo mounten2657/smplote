@@ -82,8 +82,8 @@ class Task(BaseAppVp):
     def rf_vpn(self):
         """刷新vpn节点 - 每天凌晨的00点36分"""
         ports = self.params.get('p', '')  # 是代理端口不是api端口
-        if not ports and Time.is_week():
-            return self.error('周末不执行')
+        # if not ports and Time.is_week():
+        #     return self.error('周末不执行')
         p_list = [int(p) + 10 for p in ports.split(',')] if ports else []  # 转为api端口
         res = Sys.delayed_task(VppClashService().init_vpn_node, p_list, timeout=10800)
         return self.success(res)
@@ -105,7 +105,13 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def gpl_daily(self):
-        """更新股票日线信息 - 每周六的00点31分和23点31分 - 重点股每个工作日都会更新"""
+        """
+        更新股票日线信息
+          - 每周六的04点31分 - 全股更新 - is_force=41
+          - 每周一的04点32分 - 全股复查 - is_force=41&td=-2
+          - 每天的15点31分 - 重股更新 - code_str=zd
+          - 每天的15点55分 - 重股复查 - code_str=zd
+        """
         code_str = self.params.get('code_str', '')
         is_force = self.params.get('is_force', 0)
         td = self.params.get('td', '')
