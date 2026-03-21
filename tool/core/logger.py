@@ -224,7 +224,7 @@ class Logger:
         return log_str, 0, ''
 
     def write(self, data=None, msg="", log_name="app", log_level='info'):
-        log_type = 'http' if Http.is_http_request() else 'back'  # 区分 Http请求 和 后台运行
+        log_type = 'http' if Http.is_http_request() else 'cmd'  # 区分 Http请求 和 后台运行
         extra = self.get_extra_data(data, msg, log_type)
         extra = Logger._make_serializable(extra)
         msg = extra.pop('msg')  # 这里必须弹出，否则会与 logging 内部的变量名冲突
