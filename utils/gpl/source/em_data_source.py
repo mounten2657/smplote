@@ -57,7 +57,7 @@ class EmDataSource:
         if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
             pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
             if isinstance(pid, dict):
-                if Attr.get_by_point(pid, 'response_result.svr') and 'EM_DAILY' in biz_code:  # 日线有结果就返回老数据
+                if Attr.get_by_point(pid, 'response_result.svr') and 'EM_DAILY' in biz_code:  # 日线有正确结构就返回老数据
                     return pid['response_result'], 0
                 elif pid.get('is_succeed'):  # 其他业务只有成功才返回老数据
                     return pid['response_result'], 0
@@ -66,12 +66,12 @@ class EmDataSource:
                     pid = pid['id']
         if any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用混合模式
             # 概率分配和重试机制在里面实现了
-            data, r_type, proxy = self.nat.mixed_request(method, url, params, headers)
+            data, r_type, proxy, node = self.nat.mixed_request(method, url, params, headers)
         else:  # 本地请求
             data = Http.send_request(method, url, params, headers)
-            r_type, proxy = 'l', '_'
+            r_type, proxy, node = 'l', '_', ''
         # 记录执行的参数
-        params = params | {"_cln": f"{len(headers)}-{len(headers.get('Cookie', ''))}", "_rty": r_type, "_proxy": proxy}
+        params = params | {"_cln": f"{len(headers)}-{len(headers.get('Cookie', ''))}", "_rty": r_type, "_proxy": proxy, '_node': node}
         if pid:
             if not info.get('is_succeed'):  # 第一次请求都会进入这里
                 self.ldb.update_gpl_api_log(pid, {'response_result': data if data else {}, 'request_params': params})

@@ -53,7 +53,7 @@ class NatService:
         :param params: 查询参数，可以是字典或"a=1&b=2"格式字符串
         :param headers: 请求头字典
         :param retry_times: 失败的重试次数
-        :return: json | str | err , r_type, proxy
+        :return: json | str | err , r_type, proxy, node
         """
         res = {}
         port = 0
@@ -91,7 +91,7 @@ class NatService:
                     Error.throw_exception(res)
                 redis.incr(total_key, [f'{date}:suc'])
                 redis.incr(total_key, [f'{date}:suc_{port}'])
-                return res, r_type, proxy
+                return res, r_type, proxy, node
             except Exception as e:
                 err = Error.handle_exception_info(e)
                 par = {"r": r_type, "i": i, "o": port, "n": node, "x": proxy, "m": method,  "u": url, "p": params, "h": headers, "e": err}
@@ -109,5 +109,5 @@ class NatService:
                     redis.incr(total_key, [f'{date}:fal_{port}'])
                     # redis.incr(failed_key, [f"{date}:{uuid}_e"])
                     redis.set_nx(failed_key, par, [f"{date}:{uuid}_e_{i}"])
-                    return err, r_type, proxy
-        return res, r_type, proxy
+                    return err, r_type, proxy, node
+        return res, r_type, proxy, node
