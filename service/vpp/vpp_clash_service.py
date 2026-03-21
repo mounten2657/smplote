@@ -158,17 +158,16 @@ class VppClashService:
                 if any(c in node for c in ['自动', '剩余', '到期', '故障', '直连', '文档', '客户端', '随机', '放假', '丢失', '频道', '订阅', '套餐', '网址', '邮箱', '请', 'Auto', 'auto']):
                     logger.warning(f"过滤无效节点<{port}><{node}>", "CVE_WAR")
                     continue
-                # 这里直接成功 - 因为测试过的节点也不一定全成功
                 # 测试是否能从东财那里获取数据，能获取数据的才为真
-                # if not self.switch_vpn_node(port, node, 1):
-                #     continue
-                # proxy = self.get_vpn_url(port)
-                # res = self.send_http_request("GET", em_url, em_par, None, proxy)
-                # if not Attr.get_by_point(res, 'data.klines'):
-                #     logger.warning(f"该节点无法获取东财数据<{port}><{node}> - {res}", "CVE_WAR")
-                #     continue
-                # logger.debug(f"该节点成功获取东财数据<{port}><{node}> - {res}", "CVE_DEG")
-                # Time.sleep(Str.randint(1, 9) / 10)
+                if not self.switch_vpn_node(port, node, 1):
+                    continue
+                proxy = self.get_vpn_url(port)
+                res = self.send_http_request("GET", em_url, em_par, None, proxy)
+                if not Attr.get_by_point(res, 'data.klines'):
+                    logger.warning(f"该节点无法获取东财数据<{port}><{node}> - {res}", "CVE_WAR")
+                    continue
+                logger.debug(f"该节点成功获取东财数据<{port}><{node}> - {res}", "CVE_DEG")
+                Time.sleep(Str.randint(1, 9) / 10)
                 node_list.append(node)
             redis.set(self.cache_key, node_list, [f'{port}:{today}:em'])
             redis.set(self.cache_key, len(node_list), [f'{port}:{today}:len'])
