@@ -41,7 +41,7 @@ class NatService:
         nc_list = Attr.nc_list(Attr.parse_json_ignore(self._PROXY_RAND))
         return Attr.random_choice(nc_list)
 
-    def mixed_request(self, method: str, url: str, params=None, headers=None, retry_times=9):
+    def mixed_request(self, method: str, url: str, params=None, headers=None, retry_times=5):
         """
         发送HTTP请求 - 混合模式
           - 各种模式随机请求，由配置文件决定概率
