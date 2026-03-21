@@ -219,7 +219,8 @@ class VppClashService:
         def get_rvl_sum(d):
             rand_list = redis.get(self.cache_key, [f'rand_list:{d}'])
             rvl = [v for k, v in rand_list.items() if k != '784'] if isinstance(rand_list, dict) else []  # 去除免费节点
-            rvs = sum(int(r) for r in rvl) if rvl else 10000  # 空值兼容
+            rvs = sum(int(r) for r in rvl) if rvl else 0
+            rvs = rvs if rvs else 10000  # 空值兼容
             rvl.reverse()  # 倒序以方便弹出r
             return rvl, rvs
         t_stat = {}
