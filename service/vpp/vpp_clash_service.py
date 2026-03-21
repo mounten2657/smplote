@@ -166,7 +166,7 @@ class VppClashService:
                 if not Attr.get_by_point(res, 'data.klines'):
                     logger.warning(f"该节点无法获取东财数据<{port}><{node}> - {res}", "CVE_WAR")
                     continue
-                logger.debug(f"该节点成功获取东财数据<{port}><{node}> - {res}", "CVE_DEG")
+                logger.info(f"该节点成功获取东财数据<{port}><{node}> - {res}", "CVE_DEG")
                 Time.sleep(Str.randint(1, 9) / 10)
                 node_list.append(node)
             redis.set(self.cache_key, node_list, [f'{port}:{today}:em'])
