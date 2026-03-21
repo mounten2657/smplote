@@ -129,7 +129,7 @@ class Logger:
                 }
                 level_name = console['level']
                 sys = Attr.parse_json_ignore(getattr(record, 'sys', ''))
-                if console['type'] == 'http' and console['msg'] == 'START':
+                if console['type'] == 'http' and console['msg'] == 'START' and not console['data']:
                     console['data'] = sys.get('request_params')
                 log_ext = f"[{sys['method']}|{sys['route']}|{sys['ip']}]" if Attr.get(sys, 'ip') else ""
                 log_str = (f"[{console['time']}] - {console['pid']} - {console['uuid'][-6:]} - {level_name} - "
@@ -155,6 +155,7 @@ class Logger:
     def get_extra_data(self, data, msg, log_type):
         """日志原始数据组装"""
         sys = {}
+        o_msg = msg
         # 解析 msg - "{msg}[RT.{run_time}]@{uuid}"
         msg, run_time, uuid = self._extract_msg(msg)
         if log_type == 'http':
@@ -168,7 +169,13 @@ class Logger:
             request_params = dict(request.args)
             response = Attr.get(data, 'response')
             status_code = Attr.get(response, 'status_code', 100)
-            data = Attr.get(response, 'response_result', {})  # 重塑data，避免重复记录
+            if o_msg != msg:  # 从解析过来的数据需要重塑
+                if msg == 'START':
+                    data = {}
+                elif msg == 'END':
+                    data = Attr.get(response, 'response_result', {})  # 重塑data，避免重复记录
+                else:
+                    pass  # 其他规则data不变
             sys = {
                 'method': method,
                 'route': route,
