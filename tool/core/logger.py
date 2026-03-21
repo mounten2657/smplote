@@ -129,7 +129,7 @@ class Logger:
                 }
                 level_name = console['level']
                 sys = Attr.parse_json_ignore(getattr(record, 'sys', ''))
-                log_ext = f"[{sys['method']}|{sys['ip']}]" if Attr.get(sys, 'ip') else ""
+                log_ext = f"[{sys['method']}|{sys['route']}|{sys['ip']}]" if Attr.get(sys, 'ip') else ""
                 log_str = (f"[{console['time']}] - {console['pid']} - {console['uuid'][-6:]} - {level_name} - "
                            f"{console['type']}{log_ext} - {console['msg']} - {console['data']}")[:768]
                 if level_name in display_colors:
