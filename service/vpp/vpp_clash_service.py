@@ -6,6 +6,7 @@ from utils.grpc.vpp_serve.vpp_serve_client import VppServeClient
 logger = Logger()
 redis = RedisClient()
 today = Time.dnd()
+tomorrow = Time.dnd(1)  # 节点缓存时复刻明日以兼容凌晨获取节点失败问题
 
 
 class VppClashService:
@@ -51,6 +52,7 @@ class VppClashService:
             if not sum(rand_list.values()):  # 一个可用节点都没有
                 Error.throw_exception('暂无缓存，请先初始化vpn节点')
             redis.set(self.cache_key, rand_list, [f'rand_list:{today}'])
+            redis.set(self.cache_key, rand_list, [f'rand_list:{tomorrow}'])
         nc_list = Attr.nc_list(rand_list)
         return Attr.random_choice(nc_list)
 
@@ -122,7 +124,9 @@ class VppClashService:
                 logger.warning(f"全节点列表获取失败<{url}>", "CVA_WAR")
                 continue
             redis.set(self.cache_key, n_list, [f'{port}:{today}:all'])
+            redis.set(self.cache_key, n_list, [f'{port}:{tomorrow}:all'])
             redis.set(self.cache_key, len(n_list), [f'{port}:{today}:tol'])
+            redis.set(self.cache_key, len(n_list), [f'{port}:{tomorrow}:tol'])
             logger.info(f"全节点缓存成功<{port}> - {len(n_list)}", "CVA_INF")
             i += 1
         return i
@@ -171,6 +175,8 @@ class VppClashService:
                 node_list.append(node)
             redis.set(self.cache_key, node_list, [f'{port}:{today}:em'])
             redis.set(self.cache_key, len(node_list), [f'{port}:{today}:len'])
+            redis.set(self.cache_key, node_list, [f'{port}:{tomorrow}:em'])
+            redis.set(self.cache_key, len(node_list), [f'{port}:{tomorrow}:len'])
             logger.info(f"东财节点缓存成功<{port}> - {len(node_list)}", "CVE_INF")
             i += 1
             self.get_vpn_port(1)  # 每次都刷新一下端口概率缓存 - 即使第一次报错也无所谓，有后面的兜底
