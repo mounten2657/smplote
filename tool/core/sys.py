@@ -50,7 +50,7 @@ class Sys:
                 # 获取Redis锁（原子操作）
                 acquired = _redis.set_nx(_lock_key, 1, [task_id])
                 if not acquired:
-                    logger.debug(f"任务[{task_id}]已在执行，跳过重复执行 - {fn}: {str(ag)[:768]}", 'SYS_TASK_LOCK')
+                    logger.debug(f"任务[{task_id}]已在执行，跳过重复执行 - {fn}: {str(ag)[:256]}", 'SYS_TASK_LOCK')
                     return None  # 其他进程已处理
                 try:
                     return func(*args, **kwargs)
