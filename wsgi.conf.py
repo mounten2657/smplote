@@ -71,9 +71,9 @@ limit_request_field_size = 8190  # 单个请求头最大字节
 # 日志配置
 # ---------------------------
 # 访问日志 (None表示不记录，'-' 代表标准输出)
-accesslog = f'/www/wwwlogs/gunicorn/app_access_{datetime.now().strftime("%Y-%m-%d")}.log'
+accesslog = f'-'
 # 错误日志 (必填，'-' 代表标准输出)
-errorlog = '/www/wwwlogs/gunicorn/app_error.log'
+errorlog = f'-'
 # 日志级别 (debug/info/warning/error/critical)
 loglevel = 'debug'
 # 日志格式
