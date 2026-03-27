@@ -179,12 +179,12 @@ class Logger:
             sys = {
                 'method': method,
                 'route': route,
-                'status_code': status_code,
+                'args': request_params,
+                'status': status_code,
                 'ip': ip,
-                'user_agent': user_agent,
+                'ua': user_agent,
                 # 'content_type': content_type,
                 # 'authcode': authcode,
-                'request_params': request_params
             }
         sys['run_time'] = float(run_time)
         return {
