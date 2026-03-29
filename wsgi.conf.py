@@ -75,7 +75,7 @@ limit_request_field_size = 8190  # 单个请求头最大字节
 # 错误日志 (必填，'-' 代表标准输出)
 errorlog = '-'
 # 日志级别 (debug/info/warning/error/critical)
-loglevel = 'debug'
+loglevel = 'info'
 # 日志格式
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s'
 
