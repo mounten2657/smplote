@@ -204,6 +204,10 @@ class Mdit:
         # 修复标题ID
         content_html = self._add_heading_ids(content_html)
 
+        # 修复 md 跳转链接
+        pattern = r'(<a\s+[^>]*href=")([^"]+)\.md(")'
+        content_html =  re.sub(pattern, r'\1\2.html\3', content_html)
+
         # 生成目录HTML
         toc_html = self._generate_toc_html()
 
