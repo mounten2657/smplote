@@ -21,7 +21,7 @@ class VpClient(VpBaseFactory):
 
     def start_websocket(self):
         """延迟启动 websocket"""
-        return True # vp升级中，暂时关闭
+        # return True # vp升级中，暂时关闭
         def ws_start():
             Time.sleep(Str.randint(1, 10))
             # 确保只能有一个 socket
