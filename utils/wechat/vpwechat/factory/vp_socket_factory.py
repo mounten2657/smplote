@@ -37,7 +37,9 @@ class VpSocketFactory(VpBaseFactory):
         if any(key in message for key in str(self.app_config['g_wxid_exc']).split(',')):
             return  # 无用的消息日志都不需要打印
         message = Attr.parse_json_ignore(message)  # 尝试转json
-        contents = str(message.get('content', {}).get('str', '')).replace('\n', ' ')[:32]
+        if message.get('type', '') == 'heartbeat':
+            return  # 屏蔽心跳
+        contents = str(message.get('content', {}).get('str', str(message))).replace('\n', ' ')[:32]
         m_type = message.get('msg_type', 0)
         logger.debug(f"[{self.app_key}]收到消息[T{m_type}]: {contents}", "VP_REV")
         self._handler_exec('on_message', {"message": message})
