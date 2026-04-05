@@ -6,6 +6,7 @@ import hashlib
 import pickle
 import inspect
 import dis
+import docker
 from typing import Callable
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
@@ -126,31 +127,35 @@ class Sys:
         return Sys.run_command(f'sudo chmod -R {mod} {dir_path}')
 
     @staticmethod
+    def get_docker_container(container_name):
+        """获取宿主机 docker 容器对象"""
+        try:
+            client = docker.DockerClient(base_url='unix:///var/run/docker.sock')
+            return client.containers.get(container_name)
+        except Exception:
+            Error.throw_exception(f"获取 docker 容器失败 - {container_name}")
+            return None
+
+    @staticmethod
     def delay_git_pull():
         """延迟三秒后，拉取最新代码，并重启 flask """
-        command = 'sudo /opt/shell/init/reload_flask.sh >>/dev/null 2>&1'
-        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
+        # 重启后会自动拉取最新代码
+        return Sys.delayed_task(Sys.delay_reload_gu, delay_seconds=3)
 
     @staticmethod
     def delay_kill_gu():
         """终止gu """
-        command = 'sudo pkill -9 -f gunicorn'
-        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
+        container = Sys.get_docker_container('www-python')
+        return container.stop()
 
     @staticmethod
     def delay_reload_gu(is_force=0):
         """重载gu """
-        command = f'sudo /opt/shell/init/init_flask.sh{' 1' if is_force else ' '} >>/dev/null 2>&1'
-        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
-
-    @staticmethod
-    def delay_kill_vp():
-        """终止vp """
-        command = 'sudo pkill -9 -f stay'
-        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3)
+        container = Sys.get_docker_container('www-python')
+        return container.restart()
 
     @staticmethod
     def delay_reload_vp():
         """重载vp """
-        command = 'sudo /opt/shell/init/init_wechatpad.sh >>/dev/null 2>&1'
-        return Sys.delayed_task(Sys.run_command, command, delay_seconds=3.5)
+        container = Sys.get_docker_container('wechatpad')
+        return container.restart()

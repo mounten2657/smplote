@@ -1,5 +1,4 @@
-import os
-
+import docker
 
 class Cs7ShApi:
     """centos7 shell """
@@ -7,5 +6,7 @@ class Cs7ShApi:
     @staticmethod
     def restart_gunicorn(p):
         """重启gunicorn"""
-        sh = os.system(f'sudo /opt/shell/init/init_flask.sh >>/tmp/init_flask.log 2>&1')
-        return {"p": p, "sh": sh}
+        client = docker.DockerClient(base_url='unix:///var/run/docker.sock')
+        container = client.containers.get('www-python')
+        res = container.restart()
+        return {"p": p, "res": res}
