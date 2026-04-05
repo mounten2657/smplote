@@ -6,7 +6,7 @@ from tool.core import Dir, File, Config
 
 class FilePreviewService:
 
-    BASE_STORAGE_DIR = Dir.abs_dir('storage/upload')
+    BASE_STORAGE_DIR = Dir.abs_dir('storage/upload/static')
     ALLOW_IMAGE_EXT = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'}
     ALLOW_FILE_EXT = {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv', '.mp4', '.mp3'} | ALLOW_IMAGE_EXT
 

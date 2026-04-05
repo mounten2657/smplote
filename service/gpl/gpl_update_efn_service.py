@@ -206,7 +206,7 @@ class GPLUpdateEfnService:
                     else:
                         # 新增异常捕获，并输出错误的文件名以方便及时补救
                         try:
-                            content = File.get_pdf_txt(Dir.wechat_dir(f'{file_path[1:]}'))
+                            content = File.get_pdf_txt(Dir.static_dir(f'{file_path[1:]}'))
                         except Exception as e:
                             logger.error(f"财务公告文件识别失败<{symbol}><{day}> - {art_code} - {file_path} - {str(e)}", 'UP_SNF_ERR')
                             # @todo 尝试重新下载文件(替换链接): https://pdf.dfcfw.com/pdf/H2_{art_code}_1.pdf  替换规则  H2_ --> H22_

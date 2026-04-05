@@ -134,7 +134,7 @@ class VpCommandService:
         file = self.service.get_sky_file('yj', {"r_num": r_num})
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             def self_voice_msg(f, g, e):
                 return self.client.send_voice_message(f, g, e)
@@ -155,14 +155,14 @@ class VpCommandService:
         file = self.service.get_sky_file('rw')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             self.client.send_img_msg(fp, self.g_wxid, self.extra)
             if is_all in [1, 21]:
                 # 其它相关信息也一并发送
                 jl = self.service.get_sky_file('jl')
                 self.extra.update({"file": jl})
-                jl.get('save_path') and self.client.send_img_msg(Dir.wechat_dir(f'{jl['save_path']}'), self.g_wxid, self.extra)
+                jl.get('save_path') and self.client.send_img_msg(Dir.static_dir(f'{jl['save_path']}'), self.g_wxid, self.extra)
                 # 大蜡和魔法不常用，先屏蔽
                 # dl = self.service.get_sky_file('dl')
                 # self.extra.update({"file": dl})
@@ -206,7 +206,7 @@ class VpCommandService:
             file = self.service.get_sky_file('hs')
             fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '获取sky红石失败'
@@ -276,7 +276,7 @@ class VpCommandService:
         file = self.service.get_sky_file('rl')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到日历'
@@ -287,7 +287,7 @@ class VpCommandService:
         file = self.service.get_sky_file('xz')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到先祖'
@@ -298,7 +298,7 @@ class VpCommandService:
         file = self.service.get_sky_file('db')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到代币'
@@ -309,7 +309,7 @@ class VpCommandService:
         file = self.service.get_sky_file('jl')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到季蜡'
@@ -320,7 +320,7 @@ class VpCommandService:
         file = self.service.get_sky_file('mf')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到魔法'
@@ -331,7 +331,7 @@ class VpCommandService:
         file = self.service.get_sky_file('dl')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         response = '暂未查询到大蜡'
@@ -347,7 +347,7 @@ class VpCommandService:
         file = self.service.get_sky_file(f_type)
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_img_msg(fp, self.g_wxid, self.extra)
         return False
@@ -385,7 +385,7 @@ class VpCommandService:
             file = self.service.get_sky_file('bz', {"r_num": r_num, "r_type": r_type})
             fp = file.get('save_path')
             if fp:
-                fp = Dir.wechat_dir(f'{fp}')
+                fp = Dir.static_dir(f'{fp}')
                 self.extra.update({"file": file})
                 return self.client.send_img_msg(fp, self.g_wxid, self.extra)
             Time.sleep(1)
@@ -419,7 +419,7 @@ class VpCommandService:
         file = self.service.get_sky_file('xw')
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             self.client.send_img_msg(fp, self.g_wxid, self.extra)
             return self.vp_th()
@@ -432,7 +432,7 @@ class VpCommandService:
         file = self.service.get_sky_file('ng', {"r_num": r_num})
         fp = file.get('save_path')
         if fp:
-            fp = Dir.wechat_dir(f'{fp}')
+            fp = Dir.static_dir(f'{fp}')
             self.extra.update({"file": file})
             return self.client.send_voice_message(fp, self.g_wxid, self.extra)
         response = '歌曲已失效'

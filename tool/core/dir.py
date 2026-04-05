@@ -33,9 +33,9 @@ class Dir:
         return full_path
 
     @staticmethod
-    def wechat_dir(relative_path):
-        """微信文件夹"""
-        return Dir.abs_dir(f'storage/upload/wechat/{relative_path}')
+    def static_dir(relative_path):
+        """静态资源文件夹"""
+        return Dir.abs_dir(f'storage/upload/static/{relative_path}')
 
     @staticmethod
     def exists(dir_path)->bool:
