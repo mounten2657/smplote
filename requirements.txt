@@ -28,7 +28,10 @@ akshare~=1.17.7
 pypinyin~=0.54.0
 pandas~=2.2.3
 pycryptodome==3.22.0
-spire-pdf>=10.12.1,<=11.12.1
+pdfplumber==0.11.9
+pypdfium2==5.6.0
+Pillow>=9.1
+cryptography==46.0.6
 baostock==0.8.9
 chinese-calendar>=0.0.0
 PyMySQL==1.1.2

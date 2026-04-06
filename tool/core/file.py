@@ -1,8 +1,9 @@
+import os
 import json
 import base64
 from pathlib import Path
 from typing import Any
-from spire.pdf import *
+import pdfplumber
 from tool.core.attr import Attr
 from tool.core.dir import Dir
 from tool.core.str import Str
@@ -128,7 +129,7 @@ class File:
     def is_safe_path(basedir, allow_path):
         """检查路径是否在允许的目录内"""
         basedir = os.path.abspath(basedir)
-        request_path = os.path.abspath(str(os.path.join(basedir, path)))
+        request_path = os.path.abspath(str(os.path.join(basedir, allow_path)))
         return os.path.commonpath([basedir, request_path]) == basedir
 
     @staticmethod
@@ -169,27 +170,23 @@ class File:
             raise RuntimeError(f"转Base64失败: {str(e)}")
 
     @staticmethod
-    def get_pdf_txt(f):
+    def get_pdf_txt(pdf_path):
         """获取 pdf 文件中的文字"""
-        text = ''
-        if not File.exists(f):
+        if not File.exists(pdf_path):
             return ''
-        # 创建 pdf 对象
-        pdf = PdfDocument()
-        pdf.LoadFromFile(f)
-        # 获取 pdf 文件的总页数
-        page_count = pdf.Pages.Count
-        # 创建 PdfTextExtractOptions 对象
-        options = PdfTextExtractOptions()
-        # 启用提取全部文本（包含空格）
-        options.IsExtractAllText = True
-        for page_num in range(page_count):
-            extractor = PdfTextExtractor(pdf.Pages.get_Item(page_num))
-            text += extractor.ExtractText(options)
-        # 关闭对象
-        pdf.Close()
-        # 去除水印
-        text = text.replace('Evaluation Warning : The document was created with Spire.PDF for Python.', "")
-        # 减少无意义的空行
-        text = Str.remove_mult_lines(text, 5)
-        return text
+        try:
+            text_content = []
+            with pdfplumber.open(pdf_path) as pdf:
+                for i, page in enumerate(pdf.pages, 1):
+                    text = page.extract_text()
+                    if text:
+                        # text_content.append(f"\t\t--- 第 {i} 页 ---\n")
+                        text_content.append(text)
+                        text_content.append("\n")
+            text_content =  ''.join(text_content)
+            # 减少无意义的空行
+            # text_content = Str.remove_mult_lines(text_content, 5)
+            return text_content
+        except Exception as e:
+            print(f"✗ pdf 转文字失败：{pdf_path} - 错误：{e}")
+            return ''
