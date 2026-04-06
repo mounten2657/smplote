@@ -96,7 +96,7 @@ class VppServer:
             ]
         )
         add_VppServerServicer_to_server(VppServer(), server)
-        with open('config/vp.json', 'r', encoding='utf-8') as f:
+        with open('vpp/config/vp.json', 'r', encoding='utf-8') as f:
             config = json.loads(f.read().strip())
         server.add_insecure_port(config['grpc_url'])
         server.start()
