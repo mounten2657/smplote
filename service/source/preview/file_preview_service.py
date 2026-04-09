@@ -64,7 +64,7 @@ class FilePreviewService:
         # 检查文件是否存在
         full_path = os.path.join(FilePreviewService.BASE_STORAGE_DIR, file_path)
         if not os.path.isfile(full_path):
-            abort(404, description=f"File not found")
+            abort(404, description=f"File not found - {full_path}")
 
         return file_path, full_path
 
