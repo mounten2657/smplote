@@ -27,7 +27,8 @@ class File:
         try:
             base_path = f"{base_path[:9]}{base_path[9:][::-1]}"
             des = Str.decrypt_str(str(base_path).replace('/', ''))
-            return f"{des[::-1]}.{file_ext}"
+            fp = f"{des[::-1]}.{file_ext}"
+            return fp if not str(fp).startswith('/') else fp[1:]
         except:
             # raise ValueError('不是有效的路径')
             return ''
