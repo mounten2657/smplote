@@ -56,8 +56,8 @@ preload_app = False
 # 安全配置
 # ---------------------------
 # 运行用户/组 (需要sudo权限)
-user = 'root'
-group = 'root'
+user = 'www'
+group = 'www'
 
 # 文件权限掩码
 umask = 0o007
