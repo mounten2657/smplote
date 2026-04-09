@@ -15,7 +15,7 @@ class VpFileApi:
         self.save_path = self.config.get('save_path')
 
     def _load_config(self):
-        file_path = 'config/vp.json'
+        file_path = 'vpp/config/vp.json'
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read().strip()
         return json.loads(content)
