@@ -82,7 +82,7 @@ class VpFileApi:
         """下载并保存文件"""
         try:
             # 发送 HTTP 请求，设置 stream=True 以流式方式下载
-            response = requests.get(url, stream=True, timeout=10)
+            response = requests.get(url, stream=True, timeout=60)
             response.raise_for_status()
             with open(file_path, 'wb') as file:
                 for chunk in response.iter_content(chunk_size=8192):
@@ -90,6 +90,7 @@ class VpFileApi:
                         file.write(chunk)
             return file_path
         except requests.exceptions.RequestException as e:
+            print(f"文件下载失败 - {str(e)}")
             return ''
 
     def download_url_file_curl(self, url, file_path):
