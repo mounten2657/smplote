@@ -32,7 +32,7 @@ class VppNoteService:
             return res | {'e': "Invalid path"}
         # 先清除旧文件夹
         Sys.chmod(output_dir)
-        Sys.rm_dir(output_dir)
+        Sys.rm_dir(output_dir+"*")  # 只删除目录下的文件，不删除目录本身
         logger.info(res, 'NOTE_DIR_DEL')
         for f in f_list:
             ext = File.get_file_ext(f)
