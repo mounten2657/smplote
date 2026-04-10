@@ -1,5 +1,5 @@
 from threading import Semaphore
-from tool.core import Logger, Env, Attr, Error, Time, Str, Http
+from tool.core import Logger, Env, Attr, Error, Time, Str, Http, File
 from tool.db.cache.redis_client import RedisClient
 from utils.grpc.vpp_serve.vpp_serve_client import VppServeClient
 
@@ -17,6 +17,7 @@ class VppClashService:
     _VPN_AUTH = Env.get('PROXY_VPN_AUTH', '')
     _VPN_GROUP = Env.get('PROXY_VPN_GROUP', '')
     _VPN_SUB_LIST = Env.get('PROXY_VPN_SUB_LIST', '')
+    _VPN_SUB_FILE = Env.get('PROXY_VPN_SUB_FILE', '')
 
     def __init__(self):
         self.client = VppServeClient()
@@ -72,7 +73,18 @@ class VppClashService:
 
     def get_vpn_sub_list(self):
         """获取vpn订阅列表"""
-        return Attr.parse_json_ignore(self._VPN_SUB_LIST)
+        sub_list = Attr.parse_json_ignore(self._VPN_SUB_LIST)
+        # 从YAML文件中读取真实的配置信息 - 保证配置来源的唯一性
+        url_list = Str.extract_url(File.read_file(self._VPN_SUB_FILE))
+        u_list = []
+        for i, url in enumerate(url_list):
+            if i in [0, 3, 10, 11]  or i > 11:
+                continue
+            u_list.append(url)
+        u_list.reverse()
+        for k, v in sub_list.items():
+            sub_list[k] = u_list.pop()
+        return sub_list
 
     def get_vpn_group_name(self, e_port):
         """获取vpn分组名"""

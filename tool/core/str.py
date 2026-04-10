@@ -366,6 +366,12 @@ class Str:
         return re.findall(ip_pattern, text)
 
     @staticmethod
+    def extract_url(text):
+        """从文本中提取url地址 - 列表"""
+        ip_pattern = r'\s*["\']?(https?://[^\s"\']+)["\']?'
+        return re.findall(ip_pattern, text)
+
+    @staticmethod
     def remove_html_tags(s):
         """去除字符串中的标签"""
         try:
