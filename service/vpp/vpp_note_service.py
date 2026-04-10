@@ -32,7 +32,7 @@ class VppNoteService:
             return res | {'e': "Invalid path"}
         # 先清除旧文件夹
         Sys.chmod(output_dir)
-        Dir.delete_dir(output_dir)
+        Sys.rm_dir(output_dir)
         logger.info(res, 'NOTE_DIR_DEL')
         for f in f_list:
             ext = File.get_file_ext(f)
@@ -40,11 +40,11 @@ class VppNoteService:
             file_dir = File.get_file_dir(f)
             base_dir = Dir.join_path(output_dir, file_dir.split('/note/')[-1])
             if ext == '.md': # md 转 html
-                Dir.mkdir(base_dir)
+                Sys.mkdir(base_dir)
                 res[f] = vpp_client.mdit_md_2_html(f, base_dir)
                 logger.debug(f"{f} - {res[f]}", 'NOTE_GEN_MD')
             elif '/zim/' in f:  # 图片直接复制过去
                 if not Dir.exists(base_dir):
-                    Dir.copy_dir(file_dir, base_dir)
+                    Sys.cp_dir(file_dir, base_dir)
         logger.info(res, 'NOTE_GEN_RES')
         return len(res)

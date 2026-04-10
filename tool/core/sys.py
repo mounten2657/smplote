@@ -122,9 +122,32 @@ class Sys:
         return result.stdout.strip()
 
     @staticmethod
-    def chmod(dir_path, mod=777):
-        """将目录设为完全访问"""
+    def chmod(dir_path, mod=755):
+        """更新目录权限"""
         return Sys.run_command(f'sudo chmod -R {mod} {dir_path}')
+
+    @staticmethod
+    def chown(dir_path, own='www:www'):
+        """更新目录所有者"""
+        return Sys.run_command(f'sudo chown -R {own} {dir_path}')
+
+    @staticmethod
+    def mkdir(dir_path, is_sudo=False):
+        """创建文件夹"""
+        sudo = "sudo" if is_sudo else ""
+        return Sys.run_command(f'{sudo} mkdir -p {dir_path}')
+
+    @staticmethod
+    def rm_dir(dir_path, is_sudo=False):
+        """删除目录或文件"""
+        sudo = "sudo" if is_sudo else ""
+        return Sys.run_command(f'{sudo} rm -rf {dir_path}') if len(dir_path) > 10 else False
+
+    @staticmethod
+    def cp_dir(src_dir, dst_dir, is_sudo=False):
+        """复制目录或文件"""
+        sudo = "sudo" if is_sudo else ""
+        return Sys.run_command(f'{sudo} cp -af {src_dir} {dst_dir}')
 
     @staticmethod
     def get_docker_container(container_name):

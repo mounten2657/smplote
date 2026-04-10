@@ -1,5 +1,4 @@
 import os
-import shutil
 from pathlib import Path
 
 
@@ -43,11 +42,6 @@ class Dir:
         return os.path.exists(dir_path)
 
     @staticmethod
-    def mkdir(dir_path)->None:
-        """创建文件夹"""
-        return os.makedirs(dir_path, exist_ok=True)
-
-    @staticmethod
     def get_path_object(dir_path: str) -> Path:
         """获取路径对象"""
         path = Path(dir_path)
@@ -72,41 +66,4 @@ class Dir:
     def join_path(p1, p2)-> str:
         """路径合并"""
         return str(os.path.join(p1, p2))
-
-    @staticmethod
-    def copy_dir(src: str | Path, dst: str | Path, ignore_patterns=None) -> None:
-        """
-        复制整个文件夹（包括所有子目录和文件）
-
-        :param src: 源文件夹路径
-        :param dst: 目标文件夹路径（如果不存在会自动创建）
-        :param ignore_patterns: 可选，忽略的文件模式列表，例如 ['*.tmp', '__pycache__']
-        :return: None
-        """
-        src = Path(src).resolve()
-        dst = Path(dst).resolve()
-        if not src.is_dir():
-            raise NotADirectoryError(f"源路径不是目录: {src}")
-        if dst.exists():  # 如果目标已存在，先删除
-            shutil.rmtree(dst)
-        if ignore_patterns:
-            shutil.copytree(src, dst, ignore=shutil.ignore_patterns(*ignore_patterns))
-        else:
-            shutil.copytree(src, dst)
-
-    @staticmethod
-    def delete_dir(path: str | Path, ignore_errors=False) -> None:
-        """
-        删除整个文件夹（包括所有内容）
-
-        :param path: 要删除的文件夹路径
-        :param ignore_errors: 是否忽略删除错误（默认False，建议生产环境设为True）
-        :return: None
-        """
-        path = Path(path).resolve()
-        if not path.exists():  # 已不存在，直接返回
-            return
-        if not path.is_dir():
-            raise NotADirectoryError(f"不是目录: {path}")
-        shutil.rmtree(path, ignore_errors=ignore_errors)
 
