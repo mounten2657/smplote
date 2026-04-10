@@ -27,7 +27,7 @@ class Mdit:
         <div class="sidebar">
             <h2>
                 <a href="/">目录</a>
-                <a href="../">↿↾ PRE</a>
+                <a href="./">↿↾ PRE</a>
                 <span class="right-group">
                     <a class="theme-toggle" href="#" id="themeToggle">☀️</a>
                     <a class="theme-toggle" href="$s_url" target="_self">$s_name</a>
