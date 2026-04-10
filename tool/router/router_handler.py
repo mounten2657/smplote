@@ -27,6 +27,7 @@ class RouterHandler:
         'gpl/symbol/info',
         'gpl/symbol/daily',
         'callback/gitee_callback/smplote',
+        'callback/vp_callback/start_ws',
     ]
 
     # 路由忽略列表 - 比如第三方回调和文件预览等

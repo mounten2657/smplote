@@ -2,7 +2,7 @@ from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.formatter.vp_msg_formatter import VpMsgFormatter
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.db.cache.redis_client import RedisClient
-from tool.core import Logger, Error, Time, Sys, Str
+from tool.core import Logger, Error, Time, Sys, Str, Http
 
 logger = Logger()
 redis = RedisClient()
@@ -16,8 +16,11 @@ class VpCallbackHandler(VpBaseFactory):
         cache_key = 'LOCK_WS_ON_ERR'
         if redis.get(cache_key) or not redis.set_nx(cache_key, 1):
             return False
-        # 重启 gu - 这里不要重启 vp ，静静等待就好
-        # res = {'rgu': Sys.delay_reload_gu(1), 'err': data}
+        # 延迟一小时后请求重连 - 仅白天
+        if not Time.is_night():
+            base_url = Http.get_base_url()
+            url = f"{base_url}/callback/vp_callback/start_ws"
+            Sys.delayed_task(Http.send_request, 'GET', url, delay_seconds=3600)
         return {'rgu': False, 'err': data}
 
     def on_message(self, data):

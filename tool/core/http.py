@@ -9,6 +9,7 @@ from urllib.parse import urlencode, urlparse
 from typing import Union, Dict, Optional
 from bs4 import BeautifulSoup
 from tool.core.attr import Attr
+from tool.core.config import Config
 
 
 class Http:
@@ -263,6 +264,10 @@ class Http:
     @staticmethod
     def get_docker_inner_url(url):
         return Http.replace_host(url, 'host.docker.internal')
+
+    @staticmethod
+    def get_base_url():
+        return Config.base_url()
 
     @staticmethod
     def get_ip138_info(ip: str) -> dict:

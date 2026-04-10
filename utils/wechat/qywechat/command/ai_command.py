@@ -24,7 +24,7 @@ class AiCommand(BaseCommand):
 
     def exec_0_4(self):
         """AI 状态"""
-        res = Http.send_request('GET', f"https://{Env.get('APP_SERVER_HOST')}")
+        res = Http.send_request('GET', Http.get_base_url())
         content = f"{res}"
         return self.send_content(content)
 
