@@ -353,7 +353,7 @@ class VpClientFactory:
         :param message: 标准消息结构体 - 来自队列表
         :param is_retry: 是否重试
         :return: json - 文件基本信息
-        {'code': 0, 'msg': 'success', 'data': {'url': 'https://static.xxx.com/src/static/file/wechat/36/39/33/aZmc21aZH1VOWRNA0TXaZSPEWBHaZDFP14HFUC0HIFSLT.mp4', 'md5': 'b8aaa43ffefe1f35a7e44aed72df6431', 'size': 954061}}
+        {'code': 0, 'msg': 'success', 'data': {'url': 'https://static.xxx.com/src/raw/file/wechat/36/39/33/aZmc21aZH1VOWRNA0TXaZSPEWBHaZDFP14HFUC0HIFSLT.mp4', 'md5': 'b8aaa43ffefe1f35a7e44aed72df6431', 'size': 954061}}
         """
         if not message.get('content_type') or not message.get('content_link'):
             return {}

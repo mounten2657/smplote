@@ -71,19 +71,19 @@ class RouterHandler:
             return http_execute_method(path)
 
         # 图片资源访问
-        @self.app.route('/src/static/image/<path:path>')
+        @self.app.route('/src/raw/image/<path:path>')
         def image_file(path):
             return FilePreviewService.image(path)
 
         # 文件资源访问
-        @self.app.route('/src/static/file/<path:path>')
+        @self.app.route('/src/raw/file/<path:path>')
         def office_file(path):
             return FilePreviewService.file(path)
 
         # 定义图标路径
         @self.app.route('/favicon.ico')
         def favicon():
-            return send_from_directory(Dir.abs_dir('data/static/icon'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+            return send_from_directory(Dir.abs_dir('data/raw/icon'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
         # 定义路由解析
         @self.app.route('/<path:method_path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
