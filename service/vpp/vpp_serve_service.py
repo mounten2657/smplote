@@ -57,12 +57,12 @@ class VppServeService:
     def mp3_to_silk(mp3_path: str):
         """将 mp3 转为 silk"""
         try:
-            pcm_path = Path(mp3_path).with_suffix('.pcm')
+            pcm_path = Path(mp3_path).with_suffix('.pcm')  # 暂不支持
             silk_path = Path(mp3_path).with_suffix('.silk')
             if not os.path.exists(pcm_path):
-                if 0 != os.system(f'/usr/bin/ffmpeg -y -i {mp3_path} -f s16le -ar 24000 -ac 1 {pcm_path}'):
+                if 0 != os.system(f'sudo /usr/bin/ffmpeg -y -i {mp3_path} -f s16le -ar 24000 -ac 1 {pcm_path}'):
                     return ''
-            if 0 == os.system(f'/opt/tool/silk-v3-decoder/silk/encoder {pcm_path} {silk_path} -tencent'):
+            if 0 == os.system(f'sudo /opt/tool/silk-v3-decoder/silk/encoder {pcm_path} {silk_path} -tencent'):
                 return silk_path
             return ''
         except Exception as e:
