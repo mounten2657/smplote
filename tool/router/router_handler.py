@@ -83,7 +83,7 @@ class RouterHandler:
         # 定义图标路径
         @self.app.route('/favicon.ico')
         def favicon():
-            return send_from_directory(Dir.abs_dir('data/raw/icon'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+            return send_from_directory(Dir.abs_dir('data/static/icon'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
         # 定义路由解析
         @self.app.route('/<path:method_path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
