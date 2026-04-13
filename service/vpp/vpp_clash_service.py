@@ -166,7 +166,7 @@ class VppClashService:
                 continue
             cache = redis.get(self.cache_key, [f'{port}:{today}:all'])
             if not cache or not isinstance(cache, list):
-                logger.warning(f"请先刷新全节点缓存<{port}><{len(cache)}>", "CVE_WAR")
+                logger.warning(f"请先刷新全节点缓存<{port}>", "CVE_WAR")
                 continue
             node_list = []
             for node in cache:  # 轮询所有节点去请求东财
