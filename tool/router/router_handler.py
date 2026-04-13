@@ -34,8 +34,8 @@ class RouterHandler:
     IGNORE_API_LIST = [
         'callback/qy_callback/collect_wts',
         'callback/qy_callback/collect_gpl',
-        'src/static/image',
-        'src/static/file',
+        'src/raw/image',
+        'src/raw/file',
         'src/terminal/output',
     ]
 

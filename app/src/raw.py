@@ -2,7 +2,7 @@ from tool.router.base_app import BaseApp
 from service.source.preview.file_preview_service import FilePreviewService
 
 
-class Static(BaseApp):
+class Raw(BaseApp):
 
     def enc(self):
         """encrypt file path"""
