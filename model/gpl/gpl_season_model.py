@@ -17,6 +17,7 @@ class GPLSeasonModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
+    _db = 'gpl'
     _table = 'gpl_season'
 
     def add_season(self, symbol, date, biz_code, biz_data, is_check=False):

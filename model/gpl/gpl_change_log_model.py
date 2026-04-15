@@ -18,6 +18,7 @@ class GPLChangeLogModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
+    _db = 'gpl'
     _table = 'gpl_change_log'
 
     def add_change_log(self, symbol, tab, after, before):

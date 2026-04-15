@@ -24,7 +24,6 @@ class WechatRoomModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
-    _db_name = 'gpl'
     _table = 'wechat_room'
 
     def add_room(self, room, app_key):

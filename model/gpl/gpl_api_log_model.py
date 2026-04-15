@@ -20,6 +20,7 @@ class GplApiLogModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
+    _db = 'gpl'
     _table = 'gpl_api_log'
 
     def add_gpl_api_log(self, url, body, biz_code, ext):

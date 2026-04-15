@@ -21,6 +21,7 @@ class GplFileModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
+    _db = 'gpl'
     _table = 'gpl_file'
 
     def add_gpl_file(self, file):

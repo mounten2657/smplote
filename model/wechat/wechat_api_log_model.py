@@ -22,7 +22,6 @@ class WechatApiLogModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
-    _db_name = 'gpl'
     _table = 'wechat_api_log'
 
     def add_log(self, app_key, method, uri, body, biz_code=''):

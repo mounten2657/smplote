@@ -36,7 +36,6 @@ class WechatMsgModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
-    _db_name = 'gpl'
     _table = 'wechat_msg'
 
     def add_msg(self, msg, app_key, pid=0):

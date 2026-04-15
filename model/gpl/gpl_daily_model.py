@@ -43,6 +43,7 @@ class GPLDailyModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
+    _db = 'gpl'
     _table = 'gpl_daily'
 
     def add_daily(self, data_list):

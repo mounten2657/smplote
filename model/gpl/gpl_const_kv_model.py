@@ -15,6 +15,7 @@ class GPLConstKvModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
+    _db = 'gpl'
     _table = 'gpl_const_kv'
 
     def add_const(self, data):

@@ -21,7 +21,6 @@ class WechatQueueModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
-    _db_name = 'gpl'
     _table = 'wechat_queue'
 
     def add_queue(self, app_key, params, callback_type='wechatpad', process_params=None):

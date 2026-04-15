@@ -78,23 +78,23 @@ class MysqlBaseModel:
     """
 
     _query_lock = threading.Lock()
-    _db_name = 'default'
-    _db_config = Config.mysql_db_config(_db_name)
+    _db = 'default'   # 库名，子类继承时指定
     _table = None   # 表名，子类继承时指定
 
     def __init__(self):
         self.conn_pool = {}
         self.logger = logger
+        self._db = self._db if self._db else 'default'
+        self._db_config = Config.mysql_db_config(self._db)
         self.prefix = self._db_config['prefix']
         self._table = self.prefix + self._table if self._table else None
-        self._state = QueryState(self._table)
+        self._state = QueryState(self._table, self._db)
 
     def _get_connection(self, max_retries=3):
         """获取gevent兼容的数据库连接（每个协程独立连接）"""
         for attempt in range(max_retries):
             try:
-                if self.conn_pool[self._db_name] is not None:
-                    return self.conn_pool[self._db_name]
+                print(self._db_config)
                 # 直接创建pymysql连接，gevent monkey patch后自动协程安全
                 conn = pymysql.connect(
                     host=self._db_config['host'],
@@ -109,8 +109,7 @@ class MysqlBaseModel:
                 # 测试连接有效性
                 with conn.cursor() as cursor:
                     cursor.execute("SELECT 1")
-                self.conn_pool[self._db_name] = conn
-                return self.conn_pool[self._db_name]
+                return conn
             except pymysql.Error as e:
                 if "Packet sequence number wrong" in str(e):
                     self.logger.warning(f"序号错乱，重试 {attempt + 1}/{max_retries}")
@@ -559,8 +558,9 @@ class QueryState(threading.local):
 
     _table = None
 
-    def __init__(self, table):
+    def __init__(self, table, db):
         super().__init__()
+        self._db = db
         self._table = table
         self.reset()
 

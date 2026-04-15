@@ -36,7 +36,6 @@ class WechatUserModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
-    _db_name = 'gpl'
     _table = 'wechat_user'
 
     def add_user(self, user, app_key):

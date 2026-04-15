@@ -16,6 +16,7 @@ class GPLSymbolTextModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
+    _db = 'gpl'
     _table = 'gpl_symbol_text'
 
     def add_text(self, data, check_exist=False):
