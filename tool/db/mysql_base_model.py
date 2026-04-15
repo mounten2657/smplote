@@ -83,6 +83,7 @@ class MysqlBaseModel:
     _table = None   # 表名，子类继承时指定
 
     def __init__(self):
+        self.conn_pool = {}
         self.logger = logger
         self.prefix = self._db_config['prefix']
         self._table = self.prefix + self._table if self._table else None
@@ -92,6 +93,8 @@ class MysqlBaseModel:
         """获取gevent兼容的数据库连接（每个协程独立连接）"""
         for attempt in range(max_retries):
             try:
+                if self.conn_pool[self._db_name] is not None:
+                    return self.conn_pool[self._db_name]
                 # 直接创建pymysql连接，gevent monkey patch后自动协程安全
                 conn = pymysql.connect(
                     host=self._db_config['host'],
@@ -106,7 +109,8 @@ class MysqlBaseModel:
                 # 测试连接有效性
                 with conn.cursor() as cursor:
                     cursor.execute("SELECT 1")
-                return conn
+                self.conn_pool[self._db_name] = conn
+                return self.conn_pool[self._db_name]
             except pymysql.Error as e:
                 if "Packet sequence number wrong" in str(e):
                     self.logger.warning(f"序号错乱，重试 {attempt + 1}/{max_retries}")
