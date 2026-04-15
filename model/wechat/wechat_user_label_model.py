@@ -14,6 +14,7 @@ class WechatUserLabelModel(MysqlBaseModel):
         - update_at - datetime - 记录更新时间
     """
 
+    _db_name = 'gpl'
     _table = 'wechat_user_label'
 
     def add_label(self, label, wxid):

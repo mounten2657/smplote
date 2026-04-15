@@ -16,6 +16,16 @@
             "prefix": "[ENV.DB_MYSQL_PREFIX_DEFAULT]",
             "pool_size": 32,
             "connect_timeout": 10
+        },
+        "gpl": {
+            "host": "[ENV.DB_MYSQL_HOST_GPL]",
+            "port": "[ENV.DB_MYSQL_PORT_GPL]",
+            "user": "[ENV.DB_MYSQL_USER_DEFAULT]",
+            "password": "[ENV.DB_MYSQL_PASSWORD_DEFAULT]",
+            "database": "[ENV.DB_MYSQL_DATABASE_GPL]",
+            "prefix": "[ENV.DB_MYSQL_PREFIX_DEFAULT]",
+            "pool_size": 32,
+            "connect_timeout": 20
         }
     }
 }

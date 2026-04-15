@@ -78,7 +78,8 @@ class MysqlBaseModel:
     """
 
     _query_lock = threading.Lock()
-    _db_config = Config.mysql_db_config()
+    _db_name = 'default'
+    _db_config = Config.mysql_db_config(_db_name)
     _table = None   # 表名，子类继承时指定
 
     def __init__(self):
