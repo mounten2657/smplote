@@ -94,7 +94,6 @@ class MysqlBaseModel:
         """获取gevent兼容的数据库连接（每个协程独立连接）"""
         for attempt in range(max_retries):
             try:
-                print(self._db_config)
                 # 直接创建pymysql连接，gevent monkey patch后自动协程安全
                 conn = pymysql.connect(
                     host=self._db_config['host'],
