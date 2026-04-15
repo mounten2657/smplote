@@ -78,7 +78,8 @@ class NatService:
                     node = self.vpn.get_vpn_node(port)  # 随机节点
                     proxy = self.vpn.get_vpn_url(port)
                     redis.incr(total_key, [f'{date}:cnt_{port}'])
-                    res = self.vpn.send_http_request_pro(method, url, params, headers, port, node)  # 使用进阶版，节点最大化利用
+                    c_type = 'em' if i in [0, retry_times - 1] else 'all' # 除了第一次和最后一次使用高效节点，其它重试次数从全部节点中抽取随机节点
+                    res = self.vpn.send_http_request_pro(method, url, params, headers, port, node, c_type)  # 使用进阶版，节点最大化利用
                 elif r_type == 'z':   # VPS - 1%
                     proxy = 'vps'
                     res = self.vps_request(method, url, params, headers)
