@@ -101,7 +101,19 @@ class VppClashService:
         n_list = redis.get(self.cache_key, [f'{port}:{today}:{c_type}'])  # 从缓存中读取
         if not n_list:
             return ''
+        n_list = self.filter_invalid_node(n_list, port)
         return Attr.random_choice(n_list)
+
+    def filter_invalid_node(self, node_list, port=None):
+        """过滤无效节点"""
+        n_list = []
+        filter_list = ['自动', '剩余', '到期', '故障', '直连', '文档', '客户端', '随机', '放假', '丢失', '频道', '订阅', '套餐', '网址', '邮箱', '请', 'Auto', 'auto']
+        for node in node_list:
+            if any(c in node for c in filter_list):
+                logger.warning(f"过滤无效节点<{port}><{node}>", "CVE_WAR")
+                continue
+            n_list.append(node)
+        return n_list
 
     def init_vpn_node(self, p_list=None, is_refresh=1):
         """初始化vpn节点缓存 - 由定时器触发"""
@@ -169,11 +181,10 @@ class VppClashService:
                 logger.warning(f"请先刷新全节点缓存<{port}>", "CVE_WAR")
                 continue
             node_list = []
+            cache = self.filter_invalid_node(cache, port)
+            if not cache:
+                continue
             for node in cache:  # 轮询所有节点去请求东财
-                # 过滤无效的节点
-                if any(c in node for c in ['自动', '剩余', '到期', '故障', '直连', '文档', '客户端', '随机', '放假', '丢失', '频道', '订阅', '套餐', '网址', '邮箱', '请', 'Auto', 'auto']):
-                    logger.warning(f"过滤无效节点<{port}><{node}>", "CVE_WAR")
-                    continue
                 # 测试是否能从东财那里获取数据，能获取数据的才为真
                 if not self.switch_vpn_node(port, node, 1):
                     continue
