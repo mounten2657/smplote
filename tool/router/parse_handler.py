@@ -35,7 +35,7 @@ class ParseHandler:
         not Config.is_prod() and 0 and bs.logout()  # bs 登录 - 停用
         # 延迟启动
         res['clean_log'] = clean_old_logs(30 if Config.is_prod() else 7)
-        res['delay_task'] = Sys.delayed_task(hot_load, delay_seconds=1)
+        res['delay_task'] = Sys.delayed_task(hot_load, delay_seconds=1, timeout=86400)
         return res
 
     @staticmethod
@@ -56,7 +56,7 @@ class ParseHandler:
         # gevent 子协程结束
         gevent.killall(RedisTaskQueue.GREENLETS, block=False, exception=gevent.GreenletExit, timeout=5)
         RedisTaskQueue.GREENLETS = []
-        print(f"PID[{pid}]: gevent killed")
+        print(f"PID[{pid}]: Gevent killed")
         # 清理系统任务
         Sys.shutdown()
         print(f"PID[{pid}]: 清理完成，主程序结束")

@@ -14,7 +14,6 @@ mdit-py-plugins==0.5.0
 linkify-it-py==2.0.3
 uc-micro-py==1.0.3
 pycryptodome==3.22.0
-redis~=6.0.0
 attrs~=25.3.0
 xmltodict~=0.14.2
 pilk~=0.2.4
@@ -36,3 +35,5 @@ baostock==0.8.9
 chinese-calendar>=0.0.0
 PyMySQL==1.1.2
 docker==7.1.0
+rq==2.7.0
+redis==7.4.0
