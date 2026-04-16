@@ -1,6 +1,7 @@
 import os
 import argparse
 import importlib
+import gevent
 import signal
 import logging
 import baostock as bs
@@ -52,6 +53,10 @@ class ParseHandler:
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS']
         list(map(lambda key: redis.delete(key, ['*']), key_list))
         not Config.is_prod() and 0 and bs.logout()  # bs 登出 - 停用
+        # gevent 子协程结束
+        gevent.killall(RedisTaskQueue.GREENLETS, block=False, exception=gevent.GreenletExit, timeout=5)
+        RedisTaskQueue.GREENLETS = []
+        print(f"PID[{pid}]: gevent killed")
         # 清理系统任务
         Sys.shutdown()
         print(f"PID[{pid}]: 清理完成，主程序结束")

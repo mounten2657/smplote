@@ -1,7 +1,7 @@
 import json
 import time
 import uuid
-import threading
+import gevent
 from retrying import retry
 from datetime import datetime
 from typing import Any, Dict
@@ -10,6 +10,7 @@ from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_keys import RedisTaskKeys
 
 logger = Logger()
+
 
 
 @Ins.singleton
@@ -32,6 +33,7 @@ class RedisTaskQueue:
     """
 
     ARGS_UNIQUE_KEY = True
+    GREENLETS = []
 
     def __init__(self, queue_name: str):
         """
@@ -151,7 +153,7 @@ class RedisTaskQueue:
             # Dynamic method invocation
             action = Attr.get_action_by_path(task_data['spec'])
             logger.debug(f"正在执行队列任务[{self.queue_name}]: {task_data['spec']}", 'RTQ_TASK_EXEC_PAR')
-            res = action(*task_data['args'], **task_data['kwargs'])
+            res = gevent.spawn(action, *task_data['args'], **task_data['kwargs']).get()
             logger.debug(f"队列任务执行结果[{self.queue_name}]: {res}", 'RTQ_TASK_EXEC_RET')
             # heartbeat recycle
             self.redis.hdel(f"{self.processing_queue}:heartbeats",task_id)
@@ -219,28 +221,23 @@ class RedisTaskQueue:
                             # Remove from processing queue on success
                             self.redis.lrem(self.processing_queue, 0, task_data)
                         processed += 1
+                        gevent.sleep(0)
                     finally:
                         # Cleanup worker tracking
-                        self.redis.hdel(
-                            f"{self.processing_queue}:workers",
-                            worker_id
-                        )
-                        self.redis.hdel(
-                            f"{self.processing_queue}:heartbeats",
-                            task['id']
-                        )
+                        self.redis.hdel(f"{self.processing_queue}:workers",worker_id)
+                        self.redis.hdel(f"{self.processing_queue}:heartbeats",task['id'])
 
                 # 3. Reclaim stalled tasks periodically
                 if int(time.time()) % 60 == 0:  # Every minute
-                    self._reclaim_stalled_tasks()
+                    gevent.spawn(self._reclaim_stalled_tasks)
 
                 # 4. Idle wait if no tasks
                 if processed == 0:
-                    time.sleep(idle_wait)
+                    gevent.sleep(idle_wait)
 
             except Exception as e:
                 logger.error(f"Consumer {worker_id} crashed: {e}", 'RTQ_CONSUMER_FATAL')
-                time.sleep(0.1)
+                gevent.sleep(0.1)
 
     def get_queue_stats(self) -> Dict[str, int]:
         """Get current queue status."""
@@ -274,7 +271,7 @@ class RedisTaskQueue:
             logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
             return RedisTaskQueue(queue_name).consume(uid)
         for sk, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
-            time.sleep(1)
+            gevent.sleep(1)
             qk = qs.get('t', str(sk).lower())
             qnl = [f"rtq_{qk}_queue"] if qs['n'] <=1 else [f"rtq_{qk}{i}_queue" for i in range(1, qs['n'] + 1)]
             for qn in qnl:
@@ -282,6 +279,9 @@ class RedisTaskQueue:
                     continue
                 queue_list.append(qn)
                 logger.debug(f'redis task queue loading - {qn}', 'RTQ_LOD')
-                thread = threading.Thread(target=run, args=(qn,), daemon=True)
-                thread.start()
+                g = gevent.spawn(run, qn)
+                RedisTaskQueue.GREENLETS.append(g)
+        # gevent.joinall(GREENLETS)
+        while len(RedisTaskQueue.GREENLETS) > 0:
+            gevent.sleep(3)  # 保持主协程存活
         return True
