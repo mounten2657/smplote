@@ -113,7 +113,8 @@ class RedisTaskQueue:
                 **kwargs,
                 ttl=7*86400,
                 timeout=3600,
-                retry_on_ttl=False
+                retry_on_ttl=False,
+                serializer='rq.serializers.json'
             )
             logger.debug(f"任务提交成功: {qn} - {job.id}","RQT_TASK_SUBMIT")
             return job.id
