@@ -125,9 +125,11 @@ class RedisTaskQueue:
                     name=f"worker-{queue_name}",
                     log_job_description=False
                 )
-                while True:
-                    gevent.sleep(0.01)
-                    worker.work(burst=False, with_scheduler=False)
+                g = gevent.spawn(Worker([queue], connection=redis_conn).work, burst=False, with_scheduler=False)
+                RedisTaskQueue.GREENLETS.append(g)
+                # while True:
+                #     gevent.sleep(0.01)
+                #     worker.work(burst=False, with_scheduler=False)
                 return True
         for sk, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
             qk = qs.get('t', str(sk).lower())
