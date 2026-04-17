@@ -115,16 +115,18 @@ class RedisTaskQueue:
             else:
                 # 生产 Linux 环境下使用 worker 消费
                 from rq import Worker
-                queue = RedisTaskQueue.QUEUE_LIST.get(queue_name)
-                if not redis_conn or not queue:
+                # queue = RedisTaskQueue.QUEUE_LIST.get(queue_name)
+                if not redis_conn:
                     logger.warning(f'redis connection is empty  - {queue_name}', 'RTQ_WAR')
                     return False
                 worker = Worker(
-                    queues=[queue],
-                    log_job_description=False
+                    queues=[queue_name],
+                    connection=redis_conn,
+                    log_job_description=True
                 )
-                g = gevent.spawn(worker.work)
-                RedisTaskQueue.GREENLETS.append(g)
+                worker.work(burst=False, with_scheduler=True, logging_level="INFO")
+                # g = gevent.spawn(worker.work)
+                # RedisTaskQueue.GREENLETS.append(g)
                 # while True:
                 #     gevent.sleep(0.01)
                 #     worker.work(burst=False, with_scheduler=False)
