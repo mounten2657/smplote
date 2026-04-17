@@ -127,7 +127,7 @@ class RedisTaskQueue:
             queue_list.extend(qnl)
         queue_list = list(set(queue_list))
         for qn in queue_list:
-            gevent.sleep(Str.randint(1, 10) / 10)
+            gevent.sleep(Str.randint(5, 10) / 10)
             if not redis.set_nx('LOCK_RTQ_CNS', 1, [qn]):
                 logger.debug(f'redis task queue repeat - skip - {qn}', 'RTQ_SKP')
                 return False
