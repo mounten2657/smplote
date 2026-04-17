@@ -107,7 +107,7 @@ class RedisTaskQueue:
                 process = multiprocessing.Process(
                     target=RedisTaskQueue.win_consumer,
                     args=(RedisTaskQueue, queue_name,),
-                    daemon=True,
+                    daemon=False,
                     name=f"process-{queue_name}"
                 )
                 process.start()
