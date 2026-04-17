@@ -115,6 +115,7 @@ class RedisTaskQueue:
     def run_consumer():
         """异步延迟启动消费"""
         queue_list = []
+        ctx = multiprocessing.get_context('spawn')
         for sk, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
             qk = qs.get('t', str(sk).lower())
             qnl = [f"rtq_{qk}_queue"] if qs['n'] <=1 else [f"rtq_{qk}{i}_queue" for i in range(1, qs['n'] + 1)]
@@ -126,7 +127,7 @@ class RedisTaskQueue:
                 logger.debug(f'redis task queue repeat - skip - {qn}', 'RTQ_SKP')
                 return False
             logger.debug(f'redis task queue loading - {qn}', 'RTQ_LOD')
-            process = multiprocessing.Process(
+            process = ctx.Process(
                 target=RedisTaskQueue._queue_worker,
                 args=(RedisTaskQueue, qn,),
                 daemon=False
