@@ -94,11 +94,12 @@ class VpFileApi:
             return ''
 
     def download_url_file_curl(self, url, file_path):
-        """下载并保存文件 - wget"""
+        """下载并保存文件 - curl"""
         try:
-            # 通过curl下载 - 忽略证书验证 - 改为 alpine 容器自带的 wget
-            # if 0 == os.system(f'curl "{url}" -k --output {file_path}'):
-            if 0 == os.system(f'wget --no-check-certificate -q -O "{file_path}" "{url}"'):
+            # 通过curl下载 - 忽略证书验证
+            if 0 == os.system(f'curl "{url}" -k --output {file_path}'):
+            # 改为 alpine 容器自带的 wget - 文件名较长时会下载失败
+            # if 0 == os.system(f'wget --no-check-certificate -q -O "{file_path}" "{url}"'):
                 return file_path
             return ''
         except requests.exceptions.RequestException as e:
