@@ -28,12 +28,12 @@ class RedisTaskQueue:
         i = Str.randint(1, queue_num)
         qk = service.get('t', str(sk).lower())
         qn = f'rtq_{qk}_queue' if queue_num <=1 else f'rtq_{qk}{i}_queue'
-        if not Config.is_prod():
+        if Config.is_prod():
             # 本地 Windows 环境下推送到 Redis 队列
             uuid = Str.uuid()
             task_data = {
                 'id': uuid,
-                'task_spec': service_name,
+                'spec': service_name,
                 'args': args,
                 'kwargs': kwargs,
                 'ttl': 7 * 86400,
@@ -73,7 +73,7 @@ class RedisTaskQueue:
                 continue
             _, task_str = res
             task_data = Attr.parse_json_ignore(task_str)
-            task_spec = task_data['task_spec']
+            task_spec = task_data['spec']
             args = task_data['args']
             kwargs = task_data['kwargs']
             RedisTaskQueue._execute_task(task_spec, *args, **kwargs)
@@ -101,7 +101,7 @@ class RedisTaskQueue:
         def queue_worker(queue_name):
             print(f'heartbeat - {queue_name}')
             logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
-            if not Config.is_prod():
+            if Config.is_prod():
                 # 本地 Windows 环境下使用 process 消费
                 import multiprocessing
                 process = multiprocessing.Process(
