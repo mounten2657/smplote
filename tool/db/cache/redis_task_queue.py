@@ -107,8 +107,6 @@ class RedisTaskQueue:
                 RedisTaskQueue.QUEUE_LIST[qn] = queue
             job: Job = queue.enqueue(
                 RedisTaskQueue._execute_task,
-                RedisTaskQueue,
-                service_name,
                 args=(RedisTaskQueue, service_name, *args,),
                 kwargs=kwargs,
                 ttl=7*86400,
