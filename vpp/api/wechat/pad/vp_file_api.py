@@ -89,7 +89,7 @@ class VpFileApi:
                     if chunk:
                         file.write(chunk)
             return file_path
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             print(f"文件下载失败 - {str(e)}")
             return ''
 
@@ -102,7 +102,8 @@ class VpFileApi:
             # if 0 == os.system(f'wget --no-check-certificate -q -O "{file_path}" "{url}"'):
                 return file_path
             return ''
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
+        # except requests.exceptions.RequestException as e:
             print(f"文件下载失败 - {str(e)}")
             return ''
 
