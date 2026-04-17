@@ -1,4 +1,3 @@
-import gevent
 import multiprocessing
 from tool.core import Logger, Ins, Config, Str, Time, Attr, Error
 from tool.db.cache.redis_client import RedisClient
@@ -15,7 +14,6 @@ class RedisTaskQueue:
 
     ARGS_UNIQUE_KEY = True
     QUEUE_LIST = {}
-    GREENLETS = []
     PROCESS = []
 
     def _queue_worker(self, queue_name):
@@ -50,8 +48,7 @@ class RedisTaskQueue:
                 connection=redis_conn,
                 log_job_description=False
             )
-            while True:
-                worker.work(burst=False, with_scheduler=False)
+            worker.work(burst=False, with_scheduler=False)
             return True
 
     def _execute_task(self, task_spec: str, *args, **kwargs) -> bool:
@@ -144,8 +141,5 @@ class RedisTaskQueue:
         # process 子协程结束
         [p.terminate() for p in RedisTaskQueue.PROCESS]
         RedisTaskQueue.PROCESS = []
-        # gevent 子协程结束
-        gevent.killall(RedisTaskQueue.GREENLETS, block=False)
-        RedisTaskQueue.GREENLETS = []
         return True
 

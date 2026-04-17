@@ -84,20 +84,12 @@ class Sys:
         task_id = Sys._generate_task_id(func, *args, **kwargs)
         delay_seconds = kwargs.pop('delay_seconds', 0.1)
         timeout = kwargs.pop('timeout', _timeout)
-
-        # 1. 延迟逻辑：在子线程中先sleep，再提交到线程池
         def _delay_wrapper():
-            # 延迟执行
             if delay_seconds > 0:
                 time.sleep(delay_seconds)
-
-            # 2. 带锁和超时的任务执行逻辑
             @Sys._task_lock(task_id, str(func), str(args))
             def _run_task():
-                # logger.warning(f"任务[{task_id}]正在执行 - {func}: {args}", 'SYS_TASK_RUNNING')
                 return func(*args, **kwargs)
-
-            # 3. 提交到线程池并设置超时
             try:
                 future = _executor.submit(_run_task)
                 future.result(timeout=timeout)  # 超时控制
@@ -106,9 +98,9 @@ class Sys:
             except Exception as e:
                 err = Error.handle_exception_info(e)
                 logger.error(f"任务[{task_id}]执行失败: {func}: {args} - {err}", 'SYS_TASK_ERROR')
-
         # 启动延迟线程（立即返回）
         g = gevent.spawn(_delay_wrapper)
+        g.join()
         Sys.GREENLETS.append(g)
         return task_id
 

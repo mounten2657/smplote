@@ -49,6 +49,7 @@ class Que:
                 with self._queue_lock:
                     self.message_queue.task_done()
         g = gevent.spawn(consumer)
+        g.join()
         Que.GREENLETS.append(g)
 
     @staticmethod
