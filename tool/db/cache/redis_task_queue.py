@@ -51,7 +51,7 @@ class RedisTaskQueue:
                 connection=redis_conn,
                 name=f"worker-{queue_name}",
                 log_job_description=False,
-                serializer='json',
+                serializer='rq.serializers.json',
             )
             worker.work(burst=False, with_scheduler=False)
             return True
@@ -103,7 +103,7 @@ class RedisTaskQueue:
             # 生产 Linux 环境下推送到 RQ 队列
             from rq import Queue
             from rq.job import Job
-            queue = Queue(qn, connection=redis_conn, serializer='json')
+            queue = Queue(qn, connection=redis_conn, serializer='rq.serializers.json')
             if not RedisTaskQueue.QUEUE_LIST.get(qn):
                 RedisTaskQueue.QUEUE_LIST[qn] = queue
             job: Job = queue.enqueue(
