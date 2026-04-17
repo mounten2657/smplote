@@ -30,13 +30,13 @@ class RedisTaskQueue:
             task_spec = task_data['spec']
             args = task_data['args']
             kwargs = task_data['kwargs']
-            RedisTaskQueue._execute_task(task_spec, *args, **kwargs)
+            RedisTaskQueue._execute_task(self, task_spec, *args, **kwargs)
 
-    @staticmethod
     @retry(stop_max_attempt_number=2, wait_exponential_multiplier=1000)
-    def _execute_task(task_spec: str, *args, **kwargs) -> bool:
+    def _execute_task(self, task_spec: str, *args, **kwargs) -> bool:
         """队列消费执行"""
         try:
+            print(task_spec)
             action = Attr.get_action_by_path(task_spec)
             logger.debug(f"正在执行队列任务: {task_spec}", 'RTQ_TASK_EXEC_PAR')
             res = action(*args, **kwargs)
@@ -85,9 +85,8 @@ class RedisTaskQueue:
                 RedisTaskQueue.QUEUE_LIST[qn] = queue
             job: Job = queue.enqueue(
                 RedisTaskQueue._execute_task,
-                service_name,
-                *args,
-                **kwargs,
+                args=(RedisTaskQueue, service_name, *args,),
+                kwargs=kwargs,
                 ttl=7*86400,
                 timeout=3600,
                 retry_on_ttl=False
