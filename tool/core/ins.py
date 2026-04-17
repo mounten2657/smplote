@@ -1,7 +1,7 @@
 import time
 import random
 import hashlib
-import threading
+import gevent
 import queue
 import concurrent.futures
 from functools import wraps
@@ -18,6 +18,15 @@ redis = RedisClient()
 
 
 class Ins:
+
+    GREENLETS = []
+
+    @staticmethod
+    def close_ins():
+        """关闭本例协程"""
+        gevent.killall(Ins.GREENLETS, block=False)
+        Ins.GREENLETS = []
+        return True
 
     @staticmethod
     def singleton(cls: Type[T]) -> Type[T]:
@@ -66,16 +75,12 @@ class Ins:
             @wraps(func)
             def wrapper(self, *args, **kwargs):
                 result = None
-
                 def worker():
                     nonlocal result
                     result = func(self, *args, **kwargs)
-
-                t = threading.Thread(target=worker)
-                t.start()
-                t.join(timeout=seconds)
-                if t.is_alive():
-                    raise TimeoutError(f"Timeout after {seconds} seconds")
+                g = gevent.spawn(worker)
+                Ins.GREENLETS.append(g)
+                g.join(timeout=seconds)
                 self.last_exec_time = time.time()
                 return result
             return wrapper
@@ -177,14 +182,11 @@ class Ins:
                         task_queue.task_done()
                         time.sleep(0.001)  # 1ms休息减少CPU竞争
                 # 创建有限的工作线程
-                threads = []
                 for i in range(min(max_workers, len(task_list))):
                     if time_sleep > 0:
                         time.sleep(Str.randint(10, 99) / 100 + time_sleep)
-                    t = threading.Thread(target=worker)
-                    t.daemon = True
-                    t.start()
-                    threads.append(t)
+                    g = gevent.spawn(worker)
+                    Ins.GREENLETS.append(g)
                 # 等待所有任务完成
                 task_queue.join()
                 results = {}

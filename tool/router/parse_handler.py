@@ -4,7 +4,7 @@ import importlib
 import signal
 import logging
 import baostock as bs
-from tool.core import Logger, Time, Http, Error, Attr, Config, Sys, Str
+from tool.core import Logger, Time, Http, Error, Attr, Config, Sys, Str, Ins
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.vpwechat.vp_client import VpClient
@@ -52,9 +52,10 @@ class ParseHandler:
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS']
         list(map(lambda key: redis.delete(key, ['*']), key_list))
         not Config.is_prod() and 0 and bs.logout()  # bs 登出 - 停用
-        # 队列消费释放
+        # Gevent 子协程释放
+        Ins.close_ins()
         RedisTaskQueue.stop_consumer()
-        print(f"PID[{pid}]: 队列消费已释放")
+        print(f"PID[{pid}]: 子程序协程已释放")
         # 清理系统任务
         Sys.shutdown()
         print(f"PID[{pid}]: 清理完成，主程序结束")

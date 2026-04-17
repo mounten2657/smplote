@@ -1,6 +1,5 @@
 import gevent
 import multiprocessing
-from retrying import retry
 from tool.core import Logger, Ins, Config, Str, Time, Attr, Error
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_keys import RedisTaskKeys
@@ -20,7 +19,7 @@ class RedisTaskQueue:
     PROCESS = []
 
     def _queue_worker(self, queue_name):
-        """队列消费启动器"""
+        """队列消费工作"""
         print(f'heartbeat - {queue_name}')
         logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
         if not Config.is_prod():
@@ -55,7 +54,6 @@ class RedisTaskQueue:
             worker.work(burst=False, with_scheduler=False)
             return True
 
-    @retry(stop_max_attempt_number=2, wait_exponential_multiplier=1000)
     def _execute_task(self, task_spec: str, *args, **kwargs) -> bool:
         """队列消费执行"""
         try:
@@ -138,8 +136,6 @@ class RedisTaskQueue:
             )
             process.start()
             RedisTaskQueue.PROCESS.append(process)
-        # while len(RedisTaskQueue.PROCESS) > 0:
-        #     gevent.sleep(3)  # 保持主协程存活
         return True
 
     @staticmethod

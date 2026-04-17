@@ -26,10 +26,8 @@ class VpClient(VpBaseFactory):
         def ws_start():
             Time.sleep(Str.randint(5, 10))
             # 确保只能有一个 socket
-            cache_key = 'LOCK_WSS_CNT'
-            if redis.get(cache_key):
+            if not redis.set_nx('LOCK_WSS_CNT', 1):
                 return False
-            redis.set(cache_key, 1)
             logger.debug('websocket starting', 'WS_STA')
             not Config.is_prod() and 0 and bs.logout()  # bs 登录 - 停用
             ws = VpSocketFactory(self.app_key)
