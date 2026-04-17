@@ -1,7 +1,7 @@
 import time
 import websocket
 from threading import Thread
-from tool.core import Logger, Attr, Ins
+from tool.core import Logger, Attr, Ins, Error
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 
 logger = Logger()
@@ -30,7 +30,8 @@ class VpSocketFactory(VpBaseFactory):
                 res and logger.info(f"[{self.app_key}]回调处理结果: {res}", "VP_HD_RES")
                 return True
             except Exception as e:
-                logger.error(f"[{self.app_key}]回调处理失败: {e}", "VP_HD_ERR")
+                err = Error.handle_exception_info(e)
+                logger.error(f"[{self.app_key}]回调处理失败[{method}] - {err}", "VP_HD_ERR")
         return False
 
     def _on_message(self, ws, message):
