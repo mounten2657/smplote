@@ -4,7 +4,7 @@ from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.factory.vp_socket_factory import VpSocketFactory
 from utils.wechat.vpwechat.factory.vp_client_factory import VpClientFactory
 from tool.db.cache.redis_client import RedisClient
-from tool.core import Logger, Sys, Ins, Attr, Str, Time
+from tool.core import Logger, Sys, Ins, Attr, Str, Time, Config
 
 logger = Logger()
 redis = RedisClient()
@@ -31,7 +31,7 @@ class VpClient(VpBaseFactory):
                 return False
             redis.set(cache_key, 1)
             logger.debug('websocket starting', 'WS_STA')
-            bs.login() # bs 登录
+            not Config.is_prod() and 0 and bs.logout()  # bs 登录 - 停用
             ws = VpSocketFactory(self.app_key)
             return ws.start()
         g = gevent.spawn(ws_start)

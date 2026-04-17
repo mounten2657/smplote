@@ -124,9 +124,9 @@ class RedisTaskQueue:
                     queues=[queue_name],
                     connection=redis_conn,
                     name=f"worker-{queue_name}",
-                    log_job_description=True
+                    log_job_description=False,
                 )
-                worker.work(burst=False, with_scheduler=True, logging_level="INFO")
+                worker.work(burst=False, with_scheduler=False, logging_level="INFO")
                 # g = gevent.spawn(worker.work)
                 # RedisTaskQueue.GREENLETS.append(g)
                 # while True:
