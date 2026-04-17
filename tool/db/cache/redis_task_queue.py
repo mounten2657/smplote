@@ -48,7 +48,7 @@ class RedisTaskQueue:
                 connection=redis_conn,
                 log_job_description=False
             )
-            worker.work(burst=False, with_scheduler=False, logging_level='WARNING')
+            worker.work(burst=False, with_scheduler=False, logging_level='INFO')
             return True
 
     def _execute_task(self, task_spec: str, *args, **kwargs) -> bool:
