@@ -50,8 +50,7 @@ class RedisTaskQueue:
                 queues=[queue_name],
                 connection=redis_conn,
                 name=f"worker-{queue_name}",
-                log_job_description=False,
-                serializer='rq.serializers.json',
+                log_job_description=False
             )
             worker.work(burst=False, with_scheduler=False)
             return True
@@ -128,7 +127,7 @@ class RedisTaskQueue:
             queue_list.extend(qnl)
         queue_list = list(set(queue_list))
         for qn in queue_list:
-            gevent.sleep(Str.randint(5, 10) / 10)
+            Time.sleep(Str.randint(5, 10) / 10)
             if not redis.set_nx('LOCK_RTQ_CNS', 1, [qn]):
                 logger.debug(f'redis task queue repeat - skip - {qn}', 'RTQ_SKP')
                 return False
