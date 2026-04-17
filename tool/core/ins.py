@@ -186,6 +186,7 @@ class Ins:
                     if time_sleep > 0:
                         time.sleep(Str.randint(10, 99) / 100 + time_sleep)
                     g = gevent.spawn(worker)
+                    g.join()
                     Ins.GREENLETS.append(g)
                 # 等待所有任务完成
                 task_queue.join()
