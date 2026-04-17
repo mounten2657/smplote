@@ -1,5 +1,6 @@
 import pymysql
-import threading
+from gevent.lock import Semaphore
+from gevent.local import local
 from typing import Union, List, Dict, Optional, Any
 from tool.core import Logger, Error, Config, Attr, Time, Str
 
@@ -77,7 +78,7 @@ class MysqlBaseModel:
           print(f"Deleted {deleted} old records")
     """
 
-    _query_lock = threading.Lock()
+    _query_lock = Semaphore(1)  # 互斥锁，等价 Lock()
     _db = 'default'   # 库名，子类继承时指定
     _table = None   # 表名，子类继承时指定
 
@@ -552,7 +553,7 @@ class MysqlBaseModel:
         return self.delete({'id': {'opt': '<=', 'val': mid - save_count}})
 
 
-class QueryState(threading.local):
+class QueryState(local):
     """线程/协局局部存储的查询状态"""
 
     _table = None

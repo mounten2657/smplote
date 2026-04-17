@@ -1,4 +1,4 @@
-import threading
+from gevent.lock import Semaphore
 from typing import Dict, Any, Optional
 from tool.core import *
 from tool.router import *
@@ -7,7 +7,7 @@ from tool.router import *
 class BaseApp:
 
     _instance: Optional['BaseApp'] = None  # 单例模式，避免重复实例化
-    _instance_lock = threading.Lock()           # 保证多线程环境下单例的唯一性，避免竞态条件
+    _instance_lock = Semaphore(1)           # 互斥锁 - 保证多线程环境下单例的唯一性，避免竞态条件
     _http_method = None
     _method_name = None
     _rule_list = None

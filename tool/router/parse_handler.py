@@ -4,7 +4,7 @@ import importlib
 import signal
 import logging
 import baostock as bs
-from tool.core import Logger, Time, Http, Error, Attr, Config, Sys, Str, Ins
+from tool.core import Logger, Time, Http, Error, Attr, Config, Sys, Str, Ins, Que
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.vpwechat.vp_client import VpClient
@@ -54,6 +54,7 @@ class ParseHandler:
         not Config.is_prod() and 0 and bs.logout()  # bs 登出 - 停用
         # Gevent 子协程释放
         Ins.close_ins()
+        Que.close_que()
         RedisTaskQueue.stop_consumer()
         print(f"PID[{pid}]: 子程序协程已释放")
         # 清理系统任务

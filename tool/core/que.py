@@ -1,6 +1,6 @@
 import time
 import queue
-import threading
+import gevent
 from multiprocessing import Lock
 from tool.core.http import Http
 from tool.core.ins import Ins
@@ -12,6 +12,7 @@ logger = Logger()
 class Que:
 
     MAX_QUEUE_SIZE = 9999      # 队列最大长度，超过会直接丢弃
+    GREENLETS = []
 
     _lock_name = None          # 使用类名作为线程同步锁名
 
@@ -47,9 +48,15 @@ class Que:
                     logger.error(f"[{self.__class__.__name__}] Error: {e}", 'QUE_ERR')
                 with self._queue_lock:
                     self.message_queue.task_done()
+        g = gevent.spawn(consumer)
+        Que.GREENLETS.append(g)
 
-        thread = threading.Thread(target=consumer, daemon=True)
-        thread.start()
+    @staticmethod
+    def close_que():
+        """关闭本例协程"""
+        gevent.killall(Que.GREENLETS, block=False)
+        Que.GREENLETS = []
+        return True
 
     @Ins.timeout(30)
     def _execute_with_timeout(self, task):

@@ -1,5 +1,5 @@
 import subprocess
-import threading
+import gevent
 import time
 import uuid
 import hashlib
@@ -23,6 +23,15 @@ logger = Logger()
 
 class Sys:
     """异步任务执行器"""
+
+    GREENLETS = []
+
+    @staticmethod
+    def close_sys():
+        """关闭本例协程"""
+        gevent.killall(Sys.GREENLETS, block=False)
+        Sys.GREENLETS = []
+        return True
 
     @staticmethod
     def _generate_task_id(func: Callable, *args, **kwargs) -> str:
@@ -99,13 +108,15 @@ class Sys:
                 logger.error(f"任务[{task_id}]执行失败: {func}: {args} - {err}", 'SYS_TASK_ERROR')
 
         # 启动延迟线程（立即返回）
-        threading.Thread(target=_delay_wrapper, daemon=True).start()
+        g = gevent.spawn(_delay_wrapper)
+        Sys.GREENLETS.append(g)
         return task_id
 
     @staticmethod
     def shutdown():
         """程序退出时关闭线程池"""
         _executor.shutdown(wait=False)
+        Sys.close_sys()
 
     @staticmethod
     def run_command(command):

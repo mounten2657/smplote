@@ -1,6 +1,5 @@
 import os
 import logging
-import threading
 from flask import Flask, request, g, send_from_directory
 from tool.router.parse_handler import ParseHandler
 from tool.core import Logger, Attr, Api, Dir, Config, Error, Http, Env, Time, Str
@@ -179,6 +178,6 @@ class RouterHandler:
             host_name = self.config.get("SERVER_HOST")
             host_name = 'localhost' if host_name == '0.0.0.0' else host_name
             url = f'http://{host_name}:{self.config.get("SERVER_PORT")}/{self.config.get("APP_OPEN_URL")}'
-            threading.Timer(1, lambda: self.open_browser(url)).start()
+            Time.sleep(1) and self.open_browser(url)
         self.app.run(host=self.config.get("SERVER_HOST"), port=self.config.get("SERVER_PORT"),
                      debug=self.config.get("DEBUG"), threaded=True)

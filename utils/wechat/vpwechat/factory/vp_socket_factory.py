@@ -1,6 +1,5 @@
 import time
 import websocket
-from threading import Thread
 from tool.core import Logger, Attr, Ins, Error
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 
@@ -82,10 +81,9 @@ class VpSocketFactory(VpBaseFactory):
 
     def start(self):
         """启动 WebSocket 连接"""
-        if not self.thread or not self.thread.is_alive():
+        if not self.is_running:
             self._stop_event = False
-            self.thread = Thread(target=self._connect, daemon=True)
-            self.thread.start()
+            self._connect()
             logger.info(f"[{self.app_key}]正在启动 WebSocket ...", "VP_STA")
         else:
             logger.warning(f"[{self.app_key}]WebSocket 已启动，无需重复操作", "VP_STA")
@@ -98,8 +96,6 @@ class VpSocketFactory(VpBaseFactory):
             self._stop_event = True
             self.is_running = False
             self.ws.close()
-            if self.thread and self.thread.is_alive():
-                self.thread.join(timeout=2.0)
             self.ws = None
             logger.info(f"[{self.app_key}]WebSocket 连接已关闭", "VP_CED")
         else:
