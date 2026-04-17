@@ -83,8 +83,8 @@ class VpSocketFactory(VpBaseFactory):
         """启动 WebSocket 连接"""
         if not self.is_running:
             self._stop_event = False
-            self._connect()
             logger.info(f"[{self.app_key}]正在启动 WebSocket ...", "VP_STA")
+            self._connect()
         else:
             logger.warning(f"[{self.app_key}]WebSocket 已启动，无需重复操作", "VP_STA")
         return True

@@ -132,6 +132,7 @@ class RedisTaskQueue:
                 daemon=False
             )
             process.start()
+            process.join()
             RedisTaskQueue.PROCESS.append(process)
         return True
 
