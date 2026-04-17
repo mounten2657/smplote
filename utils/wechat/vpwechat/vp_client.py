@@ -51,9 +51,8 @@ class VpClient(VpBaseFactory):
             ws = VpSocketFactory(self.app_key)
             return ws.close()
         res = Sys.delayed_task(ws_close, delay_seconds=1)
-        if VpClient.GREENLETS:
-            gevent.killall(VpClient.GREENLETS, block=False, exception=gevent.GreenletExit, timeout=5)
-            VpClient.GREENLETS = []
+        gevent.killall(VpClient.GREENLETS, block=False, exception=gevent.GreenletExit, timeout=5)
+        VpClient.GREENLETS = []
         logger.debug(f'websocket close done {is_all} - {res}', 'WS_END')
         return res
 
