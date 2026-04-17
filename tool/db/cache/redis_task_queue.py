@@ -14,6 +14,7 @@ class RedisTaskQueue:
     """基于 RQ 的分布式任务队列. - LIFO"""
 
     ARGS_UNIQUE_KEY = True
+    QUEUE_LIST = {}
     GREENLETS = []
     PROCESS = []
 
@@ -79,8 +80,10 @@ class RedisTaskQueue:
             # 生产 Linux 环境下推送到 RQ 队列
             from rq import Queue
             from rq.job import Job
-            rq = Queue(qn, connection=redis_conn)
-            job: Job = rq.enqueue(
+            queue = Queue(qn, connection=redis_conn)
+            if not RedisTaskQueue.QUEUE_LIST.get(qn):
+                RedisTaskQueue.QUEUE_LIST[qn] = queue
+            job: Job = queue.enqueue(
                 RedisTaskQueue._execute_task,
                 service_name,
                 *args,
@@ -114,11 +117,12 @@ class RedisTaskQueue:
             else:
                 # 生产 Linux 环境下使用 worker 消费
                 from rq import Worker
-                if not redis_conn:
+                queue = RedisTaskQueue.QUEUE_LIST.get(queue_name)
+                if not redis_conn or not queue:
                     logger.warning(f'redis connection is empty  - {queue_name}', 'RTQ_WAR')
                     return False
                 worker = Worker(
-                    queues=[queue_name],
+                    queues=[queue],
                     name=f"worker-{queue_name}",
                     log_job_description=False
                 )
