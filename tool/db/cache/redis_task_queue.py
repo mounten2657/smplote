@@ -120,13 +120,13 @@ class RedisTaskQueue:
                 if not redis_conn or not queue:
                     logger.warning(f'redis connection is empty  - {queue_name}', 'RTQ_WAR')
                     return False
-                worker = Worker(
-                    queues=[queue],
-                    name=f"worker-{queue_name}",
-                    log_job_description=False
-                )
                 while len(RedisTaskQueue.GREENLETS) > 0:
-                    gevent.sleep(0.1)
+                    gevent.sleep(0.01)
+                    worker = Worker(
+                        queues=[queue],
+                        name=f"worker-{queue_name}",
+                        log_job_description=False
+                    )
                     worker.work(burst=False, with_scheduler=False)
                 return True
         for sk, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
