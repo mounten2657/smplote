@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import annotations
 import gevent.monkey
 gevent.monkey.patch_all()
 """
@@ -89,7 +88,7 @@ Path(errorlog).touch(exist_ok=True)
 # ---------------------------
 # 环境变量
 raw_env = [
-    'SMPLOTE_VERSION=v1.0.1',
+    'APP_VERSION=1.0.1',
 ]
 
 # 代理模式 (当运行在Nginx后时需要)

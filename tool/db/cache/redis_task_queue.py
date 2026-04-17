@@ -50,7 +50,8 @@ class RedisTaskQueue:
                 connection=redis_conn,
                 log_job_description=False
             )
-            worker.work(burst=False, with_scheduler=False)
+            while True:
+                worker.work(burst=False, with_scheduler=False)
             return True
 
     def _execute_task(self, task_spec: str, *args, **kwargs) -> bool:
