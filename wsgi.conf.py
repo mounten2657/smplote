@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
-import os
-os.environ["GEVENT_DISABLE_THREADING"] = "1"
-os.environ["GEVENT_THREADING_ASSERT"] = "0"
-os.environ["GEVENT_NOCLOSE_FD_SOCKET"] = "1"
+from __future__ import annotations
 import gevent.monkey
-gevent.monkey.patch_all(thread=False)
+gevent.monkey.patch_all()
 """
 Gunicorn 生产环境配置
 https://docs.gunicorn.org/en/stable/configure.html
