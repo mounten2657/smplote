@@ -15,6 +15,21 @@ class RedisTaskQueue:
 
     ARGS_UNIQUE_KEY = True
     GREENLETS = []
+    PROCESS = []
+
+    def win_consumer(self, qn):
+        """windows 环境下的队列消费"""
+        while True:
+            gevent.sleep(0.1)
+            res = redis_conn.blpop(qn, timeout=3)
+            if not res:
+                continue
+            _, task_str = res
+            task_data = Attr.parse_json_ignore(task_str)
+            task_spec = task_data['task_spec']
+            args = task_data['args']
+            kwargs = task_data['kwargs']
+            RedisTaskQueue._execute_task(task_spec, *args, **kwargs)
 
     @staticmethod
     @retry(stop_max_attempt_number=2, wait_exponential_multiplier=1000)
@@ -85,22 +100,16 @@ class RedisTaskQueue:
             print(f'heartbeat - {queue_name}')
             logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
             if not Config.is_prod():
-                # 本地 Windows 环境下使用 threading 消费
-                import threading
-                def win_consumer(q):
-                    while len(RedisTaskQueue.GREENLETS) > 0:
-                        gevent.sleep(0.1)
-                        res = redis_conn.blpop(q, timeout=3)
-                        if not res:
-                            continue
-                        _, task_str = res
-                        task_data = Attr.parse_json_ignore(task_str)
-                        task_spec = task_data['task_spec']
-                        args = task_data['args']
-                        kwargs = task_data['kwargs']
-                        RedisTaskQueue._execute_task(task_spec, *args, **kwargs)
-                thread = threading.Thread(target=win_consumer, args=(qn,), daemon=True)
-                thread.start()
+                # 本地 Windows 环境下使用 process 消费
+                import multiprocessing
+                process = multiprocessing.Process(
+                    target=RedisTaskQueue.win_consumer,
+                    args=(RedisTaskQueue, queue_name,),
+                    daemon=True,
+                    name=f"process-{queue_name}"
+                )
+                process.start()
+                RedisTaskQueue.PROCESS.append(process)
                 return True
             else:
                 # 生产 Linux 环境下使用 worker 消费
@@ -128,3 +137,14 @@ class RedisTaskQueue:
         while len(RedisTaskQueue.GREENLETS) > 0:
             gevent.sleep(3)  # 保持主协程存活
         return True
+
+    @staticmethod
+    def stop_consumer():
+        """停止队列消费"""
+        # process 子协程结束
+        [p.terminate() for p in RedisTaskQueue.PROCESS]
+        # gevent 子协程结束
+        gevent.killall(RedisTaskQueue.GREENLETS, block=False, exception=gevent.GreenletExit, timeout=5)
+        RedisTaskQueue.GREENLETS = []
+        return True
+
