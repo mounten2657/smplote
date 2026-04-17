@@ -51,7 +51,6 @@ class RedisTaskQueue:
                 connection=redis_conn,
                 name=f"worker-{queue_name}",
                 log_job_description=False,
-                serializer='rq.serializers.json',
             )
             worker.work(burst=False, with_scheduler=False)
             return True
