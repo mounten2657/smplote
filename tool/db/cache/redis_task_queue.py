@@ -85,8 +85,9 @@ class RedisTaskQueue:
                 RedisTaskQueue.QUEUE_LIST[qn] = queue
             job: Job = queue.enqueue(
                 RedisTaskQueue._execute_task,
-                args=(RedisTaskQueue, service_name, *args,),
-                kwargs=kwargs,
+                service_name,
+                *args,
+                **kwargs,
                 ttl=7*86400,
                 timeout=3600,
                 retry_on_ttl=False
@@ -107,6 +108,7 @@ class RedisTaskQueue:
                 process = multiprocessing.Process(
                     target=RedisTaskQueue.win_consumer,
                     args=(RedisTaskQueue, queue_name,),
+                    name=f"process-{queue_name}",
                     daemon=False,
                 )
                 process.start()
@@ -115,13 +117,13 @@ class RedisTaskQueue:
             else:
                 # 生产 Linux 环境下使用 worker 消费
                 from rq import Worker
-                # queue = RedisTaskQueue.QUEUE_LIST.get(queue_name)
                 if not redis_conn:
                     logger.warning(f'redis connection is empty  - {queue_name}', 'RTQ_WAR')
                     return False
                 worker = Worker(
                     queues=[queue_name],
                     connection=redis_conn,
+                    name=f"worker-{queue_name}",
                     log_job_description=True
                 )
                 worker.work(burst=False, with_scheduler=True, logging_level="INFO")
