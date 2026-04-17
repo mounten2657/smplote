@@ -18,7 +18,38 @@ class RedisTaskQueue:
     GREENLETS = []
     PROCESS = []
 
-    def add_task(self, sk, *args, **kwargs):
+    def win_consumer(self, qn):
+        """windows 环境下的队列消费"""
+        while True:
+            gevent.sleep(0.1)
+            res = redis_conn.blpop(qn, timeout=3)
+            if not res:
+                continue
+            _, task_str = res
+            task_data = Attr.parse_json_ignore(task_str)
+            task_spec = task_data['spec']
+            args = task_data['args']
+            kwargs = task_data['kwargs']
+            RedisTaskQueue._execute_task(task_spec, *args, **kwargs)
+
+    @staticmethod
+    @retry(stop_max_attempt_number=2, wait_exponential_multiplier=1000)
+    def _execute_task(task_spec: str, *args, **kwargs) -> bool:
+        """队列消费执行"""
+        try:
+            action = Attr.get_action_by_path(task_spec)
+            logger.debug(f"正在执行队列任务: {task_spec}", 'RTQ_TASK_EXEC_PAR')
+            res = action(*args, **kwargs)
+            logger.debug(f"队列任务执行结果[: {res}", 'RTQ_TASK_EXEC_RET')
+            return True
+        except Exception as e:
+            err = Error.handle_exception_info(e)
+            logger.error(
+                f"Task[{task_spec}] failed  - {err}",'RTQ_TASK_RETRY')
+            raise
+
+    @staticmethod
+    def add_task(sk, *args, **kwargs):
         """往队列中添加任务"""
         service = RedisTaskKeys.RTQ_QUEUE_LIST.get(sk)
         service_name = service.get('s')
@@ -28,7 +59,7 @@ class RedisTaskQueue:
         i = Str.randint(1, queue_num)
         qk = service.get('t', str(sk).lower())
         qn = f'rtq_{qk}_queue' if queue_num <=1 else f'rtq_{qk}{i}_queue'
-        if Config.is_prod():
+        if not Config.is_prod():
             # 本地 Windows 环境下推送到 Redis 队列
             uuid = Str.uuid()
             task_data = {
@@ -64,36 +95,6 @@ class RedisTaskQueue:
             logger.debug(f"任务提交成功: {qn} - {job.id}","RQT_TASK_SUBMIT")
             return job.id
 
-    def win_consumer(self, qn):
-        """windows 环境下的队列消费"""
-        while True:
-            gevent.sleep(0.1)
-            res = redis_conn.blpop(qn, timeout=3)
-            if not res:
-                continue
-            _, task_str = res
-            task_data = Attr.parse_json_ignore(task_str)
-            task_spec = task_data['spec']
-            args = task_data['args']
-            kwargs = task_data['kwargs']
-            RedisTaskQueue._execute_task(task_spec, *args, **kwargs)
-
-    @staticmethod
-    @retry(stop_max_attempt_number=2, wait_exponential_multiplier=1000)
-    def _execute_task(task_spec: str, *args, **kwargs) -> bool:
-        """队列消费执行"""
-        try:
-            action = Attr.get_action_by_path(task_spec)
-            logger.debug(f"正在执行队列任务: {task_spec}", 'RTQ_TASK_EXEC_PAR')
-            res = action(*args, **kwargs)
-            logger.debug(f"队列任务执行结果[: {res}", 'RTQ_TASK_EXEC_RET')
-            return True
-        except Exception as e:
-            err = Error.handle_exception_info(e)
-            logger.error(
-                f"Task[{task_spec}] failed  - {err}",'RTQ_TASK_RETRY')
-            raise
-
     @staticmethod
     def run_consumer():
         """异步延迟启动消费"""
@@ -101,7 +102,7 @@ class RedisTaskQueue:
         def queue_worker(queue_name):
             print(f'heartbeat - {queue_name}')
             logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
-            if Config.is_prod():
+            if not Config.is_prod():
                 # 本地 Windows 环境下使用 process 消费
                 import multiprocessing
                 process = multiprocessing.Process(

@@ -64,7 +64,7 @@ class GPLUpdateService:
             logger.warning(f"重置计数缓存 - {r1} - {r2}", 'UP_DAY_CDL')
         # 快速转入批量队列中执行
         for c_list in chunk_list:
-            RedisTaskQueue().add_task(sk, ','.join(c_list), is_force, current_date)
+            RedisTaskQueue.add_task(sk, ','.join(c_list), is_force, current_date)
         return True
 
     def update_symbol(self, code_str, is_force=0, current_date=None):
