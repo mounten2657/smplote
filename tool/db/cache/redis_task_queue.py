@@ -108,7 +108,6 @@ class RedisTaskQueue:
                     target=RedisTaskQueue.win_consumer,
                     args=(RedisTaskQueue, queue_name,),
                     daemon=False,
-                    name=f"{queue_name}"
                 )
                 process.start()
                 RedisTaskQueue.PROCESS.append(process)
@@ -122,10 +121,9 @@ class RedisTaskQueue:
                     return False
                 worker = Worker(
                     queues=[queue],
-                    name=f"{queue_name}",
                     log_job_description=False
                 )
-                g = gevent.spawn(worker.work, burst=False, with_scheduler=False)
+                g = gevent.spawn(worker.work)
                 RedisTaskQueue.GREENLETS.append(g)
                 # while True:
                 #     gevent.sleep(0.01)
