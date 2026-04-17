@@ -1,4 +1,5 @@
 import gevent
+import multiprocessing
 from retrying import retry
 from tool.core import Logger, Ins, Config, Str, Time, Attr, Error
 from tool.db.cache.redis_client import RedisClient
@@ -90,7 +91,8 @@ class RedisTaskQueue:
                 **kwargs,
                 ttl=7*86400,
                 timeout=3600,
-                retry_on_ttl=False
+                retry_on_ttl=False,
+                serializer='rq.serializers.json'
             )
             logger.debug(f"任务提交成功: {qn} - {job.id}","RQT_TASK_SUBMIT")
             return job.id
@@ -104,7 +106,6 @@ class RedisTaskQueue:
             logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
             if not Config.is_prod():
                 # 本地 Windows 环境下使用 process 消费
-                import multiprocessing
                 process = multiprocessing.Process(
                     target=RedisTaskQueue.win_consumer,
                     args=(RedisTaskQueue, queue_name,),
@@ -127,11 +128,6 @@ class RedisTaskQueue:
                     log_job_description=False,
                 )
                 worker.work(burst=False, with_scheduler=False, logging_level="INFO")
-                # g = gevent.spawn(worker.work)
-                # RedisTaskQueue.GREENLETS.append(g)
-                # while True:
-                #     gevent.sleep(0.01)
-                #     worker.work(burst=False, with_scheduler=False)
                 return True
         for sk, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
             qk = qs.get('t', str(sk).lower())
@@ -141,8 +137,11 @@ class RedisTaskQueue:
         for qn in queue_list:
             gevent.sleep(0.1)
             logger.debug(f'redis task queue loading - {qn}', 'RTQ_LOD')
-            g = gevent.spawn(queue_worker, qn)  # 为每个队列启动独立 gevent 协程
-            RedisTaskQueue.GREENLETS.append(g)
+            process = multiprocessing.Process(target=queue_worker, args=(qn,))
+            process.start()
+            RedisTaskQueue.PROCESS.append(process)
+            # g = gevent.spawn(queue_worker, qn)  # 为每个队列启动独立 gevent 协程
+            # RedisTaskQueue.GREENLETS.append(g)
         while len(RedisTaskQueue.GREENLETS) > 0:
             gevent.sleep(3)  # 保持主协程存活
         return True
@@ -153,7 +152,8 @@ class RedisTaskQueue:
         # process 子协程结束
         [p.terminate() for p in RedisTaskQueue.PROCESS]
         # gevent 子协程结束
-        gevent.killall(RedisTaskQueue.GREENLETS, block=False, exception=gevent.GreenletExit, timeout=5)
-        RedisTaskQueue.GREENLETS = []
+        if RedisTaskQueue.GREENLETS:
+            gevent.killall(RedisTaskQueue.GREENLETS, block=False, exception=gevent.GreenletExit, timeout=5)
+            RedisTaskQueue.GREENLETS = []
         return True
 
