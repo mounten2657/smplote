@@ -24,7 +24,7 @@ class VpClient(VpBaseFactory):
         """延迟启动 websocket"""
         # return True # vp升级中，暂时关闭
         def ws_start():
-            Time.sleep(Str.randint(1, 10))
+            gevent.sleep(Str.randint(5, 10))
             # 确保只能有一个 socket
             cache_key = 'LOCK_WSS_CNT'
             if redis.get(cache_key):
