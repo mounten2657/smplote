@@ -48,7 +48,6 @@ class RedisTaskQueue:
                 return False
             worker = Worker(
                 queues=[queue_name],
-                connection=redis_conn,
                 name=f"worker-{queue_name}",
                 log_job_description=False,
             )
@@ -112,8 +111,7 @@ class RedisTaskQueue:
                 **kwargs,
                 ttl=7*86400,
                 timeout=3600,
-                retry_on_ttl=False,
-                serializer='rq.serializers.json'
+                retry_on_ttl=False
             )
             logger.debug(f"任务提交成功: {qn} - {job.id}","RQT_TASK_SUBMIT")
             return job.id
