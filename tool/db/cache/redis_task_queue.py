@@ -33,6 +33,47 @@ class RedisTaskQueue:
             kwargs = task_data['kwargs']
             RedisTaskQueue._execute_task(self, task_spec, *args, **kwargs)
 
+    def queue_worker(self, queue_name):
+        """队列消费启动器"""
+        print(f'heartbeat - {queue_name}')
+        if self._is_repeat(queue_name):
+            logger.debug(f'redis task queue repeat - skip - {queue_name}', 'RTQ_SKP')
+            return False
+        logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
+        if not Config.is_prod():
+            # 本地 Windows 环境下使用 process 消费
+            process = multiprocessing.Process(
+                target=RedisTaskQueue.win_consumer,
+                args=(RedisTaskQueue, queue_name,),
+                name=f"process-{queue_name}",
+                daemon=False,
+            )
+            process.start()
+            RedisTaskQueue.PROCESS.append(process)
+            return True
+        else:
+            # 生产 Linux 环境下使用 worker 消费
+            from rq import Worker
+            if not redis_conn:
+                logger.warning(f'redis connection is empty  - {queue_name}', 'RTQ_WAR')
+                return False
+            worker = Worker(
+                queues=[queue_name],
+                connection=redis_conn,
+                name=f"worker-{queue_name}",
+                log_job_description=False,
+            )
+            worker.work(burst=False, with_scheduler=False)
+            return True
+
+    @staticmethod
+    def _is_repeat(qn):
+        """检查队列启动是否重复"""
+        if not redis.set_nx('LOCK_RTQ_CNS', 1, [qn]):
+            logger.debug(f'redis task queue repeat - skip - {qn}', 'RTQ_SKP')
+            return True
+        return False
+
     @retry(stop_max_attempt_number=2, wait_exponential_multiplier=1000)
     def _execute_task(self, task_spec: str, *args, **kwargs) -> bool:
         """队列消费执行"""
@@ -101,47 +142,24 @@ class RedisTaskQueue:
     def run_consumer():
         """异步延迟启动消费"""
         queue_list = []
-        def queue_worker(queue_name):
-            print(f'heartbeat - {queue_name}')
-            logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
-            if not Config.is_prod():
-                # 本地 Windows 环境下使用 process 消费
-                process = multiprocessing.Process(
-                    target=RedisTaskQueue.win_consumer,
-                    args=(RedisTaskQueue, queue_name,),
-                    name=f"process-{queue_name}",
-                    daemon=False,
-                )
-                process.start()
-                RedisTaskQueue.PROCESS.append(process)
-                return True
-            else:
-                # 生产 Linux 环境下使用 worker 消费
-                from rq import Worker
-                if not redis_conn:
-                    logger.warning(f'redis connection is empty  - {queue_name}', 'RTQ_WAR')
-                    return False
-                worker = Worker(
-                    queues=[queue_name],
-                    connection=redis_conn,
-                    name=f"worker-{queue_name}",
-                    log_job_description=False,
-                )
-                worker.work(burst=False, with_scheduler=False, logging_level="INFO")
-                return True
         for sk, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
             qk = qs.get('t', str(sk).lower())
             qnl = [f"rtq_{qk}_queue"] if qs['n'] <=1 else [f"rtq_{qk}{i}_queue" for i in range(1, qs['n'] + 1)]
             queue_list.extend(qnl)
         queue_list = list(set(queue_list))
         for qn in queue_list:
-            gevent.sleep(0.1)
+            gevent.sleep(Str.randint(1, 10) / 10)
+            if RedisTaskQueue._is_repeat(qn):
+                logger.debug(f'redis task queue repeat - skip - {qn}', 'RTQ_SKP')
+                return False
             logger.debug(f'redis task queue loading - {qn}', 'RTQ_LOD')
-            process = multiprocessing.Process(target=queue_worker, args=(qn,))
+            process = multiprocessing.Process(
+                target=RedisTaskQueue.queue_worker,
+                args=(RedisTaskQueue, qn,),
+                daemon=False
+            )
             process.start()
             RedisTaskQueue.PROCESS.append(process)
-            # g = gevent.spawn(queue_worker, qn)  # 为每个队列启动独立 gevent 协程
-            # RedisTaskQueue.GREENLETS.append(g)
         while len(RedisTaskQueue.GREENLETS) > 0:
             gevent.sleep(3)  # 保持主协程存活
         return True
@@ -153,7 +171,12 @@ class RedisTaskQueue:
         [p.terminate() for p in RedisTaskQueue.PROCESS]
         # gevent 子协程结束
         if RedisTaskQueue.GREENLETS:
-            gevent.killall(RedisTaskQueue.GREENLETS, block=False, exception=gevent.GreenletExit, timeout=5)
+            gevent.killall(
+                RedisTaskQueue.GREENLETS,
+                block=False,
+                exception=gevent.GreenletExit,
+                timeout=5
+            )
             RedisTaskQueue.GREENLETS = []
         return True
 
