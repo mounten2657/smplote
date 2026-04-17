@@ -39,7 +39,6 @@ class RedisTaskQueue:
             return True
         else:
             # 生产 Linux 环境下使用 worker 消费
-            import logging
             from rq import Worker
             if not redis_conn:
                 logger.warning(f'redis connection is empty  - {queue_name}', 'RTQ_WAR')
@@ -49,12 +48,7 @@ class RedisTaskQueue:
                 connection=redis_conn,
                 log_job_description=False
             )
-            # 屏蔽无用日志
-            logging.getLogger("rq.worker").setLevel(logging.WARNING)
-            logging.getLogger("rq.queue").setLevel(logging.WARNING)
-            logging.getLogger("rq.job").setLevel(logging.WARNING)
-            logging.getLogger("rq.scheduler").setLevel(logging.WARNING)
-            worker.work(burst=False, with_scheduler=False)
+            worker.work(burst=False, with_scheduler=False, logging_level='WARNING')
             return True
 
     def _execute_task(self, task_spec: str, *args, **kwargs) -> bool:
