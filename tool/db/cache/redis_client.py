@@ -47,7 +47,7 @@ class RedisClient:
             password=config['password'],
             db=config['db'],
             max_connections=config['max_connections'],
-            decode_responses=True,  # 自动解码返回字符串
+            decode_responses=False,  # 自动解码返回字符串
             socket_keepalive=True,  # 保持长连接
             health_check_interval=30,  # 健康检查间隔
             # ssl=False,  # 如需SSL请设置为True
