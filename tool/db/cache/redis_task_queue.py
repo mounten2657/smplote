@@ -109,8 +109,8 @@ class RedisTaskQueue:
                 RedisTaskQueue._execute_task,
                 RedisTaskQueue,
                 service_name,
-                *args,
-                **kwargs,
+                args=(RedisTaskQueue, service_name, *args,),
+                kwargs=kwargs,
                 ttl=7*86400,
                 timeout=3600,
                 retry_on_ttl=False
