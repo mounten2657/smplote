@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import gevent.monkey
-gevent.monkey.patch_all()
+gevent.monkey.patch_all(thread=False)
 """
 Gunicorn 生产环境配置
 https://docs.gunicorn.org/en/stable/configure.html
