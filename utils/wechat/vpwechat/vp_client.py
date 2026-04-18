@@ -34,6 +34,7 @@ class VpClient(VpBaseFactory):
             return ws.start()
         g = gevent.spawn(ws_start)
         VpClient.GREENLETS.append(g)
+        gevent.sleep(0.1)
         logger.debug(f'websocket start done', 'WS_END')
         return True
 
