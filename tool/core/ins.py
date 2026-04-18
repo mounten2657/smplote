@@ -121,10 +121,10 @@ class Ins:
                 for i in range(min(max_workers, len(task_list))):
                     g = gevent.spawn(worker)
                     cors.append(g)
+                    gevent.sleep(0.1)
                 Ins.GREENLETS.extend(cors)
                 # 等待所有任务完成
                 task_queue.join()
-                gevent.joinall(cors)
                 results = {}
                 while not result_queue.empty():
                     task, result = result_queue.get()
