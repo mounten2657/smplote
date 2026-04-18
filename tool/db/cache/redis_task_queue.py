@@ -121,6 +121,7 @@ class RedisTaskQueue:
             qnl = [f"rtq_{qk}_queue"] if qs['n'] <=1 else [f"rtq_{qk}{i}_queue" for i in range(1, qs['n'] + 1)]
             queue_list.extend(qnl)
         queue_list = list(set(queue_list))
+        cors = []  # multiprocessing 会生成多个进程 - 每个进程独立内存且不共享 - 真正的并发
         for qn in queue_list:
             Time.sleep(Str.randint(5, 10) / 10)
             if not redis.set_nx('LOCK_RTQ_CNS', 1, [qn]):
@@ -133,7 +134,9 @@ class RedisTaskQueue:
                 daemon=False
             )
             process.start()
-            RedisTaskQueue.PROCESS.append(process)
+            cors.append(process)
+        RedisTaskQueue.PROCESS.extend(cors)
+        # [c.join() for c in cors]
         return True
 
     @staticmethod

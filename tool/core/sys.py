@@ -100,8 +100,8 @@ class Sys:
                 logger.error(f"任务[{task_id}]执行失败: {func}: {args} - {err}", 'SYS_TASK_ERROR')
         # 启动延迟线程（立即返回）
         g = gevent.spawn(_delay_wrapper)
-        g.join()
         Sys.GREENLETS.append(g)
+        gevent.sleep(0.1)
         return task_id
 
     @staticmethod

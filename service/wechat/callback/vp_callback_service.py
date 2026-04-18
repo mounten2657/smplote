@@ -82,7 +82,7 @@ class VpCallbackService:
         """清理api日志"""
         return WechatApiLogModel().clear_history()
 
-    def callback_handler(self, params):
+    def vp_callback_handler(self, params):
         """推送事件预处理"""
         res = {}
         logger.debug(params['message'], 'VP_CALL_PAR')

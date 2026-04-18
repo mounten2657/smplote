@@ -3,7 +3,6 @@ import random
 import hashlib
 import gevent
 import queue
-import concurrent.futures
 from functools import wraps
 from typing import TypeVar, Type, Any
 from tool.core.attr import Attr
@@ -55,38 +54,6 @@ class Ins:
         return get_instance
 
     @staticmethod
-    def synchronized(lock_name):
-        """线程同步装饰器"""
-        def decorator(func):
-            @wraps(func)
-            def wrapper(self, *args, **kwargs):
-                # 使用 redis 分布式锁
-                lock_key = f'sync_lock_{self._lock_name}{lock_name}'.lower()
-                lock = redis.client.lock(lock_key, timeout=35)
-                with lock:
-                    return func(self, *args, **kwargs)
-            return wrapper
-        return decorator
-
-    @staticmethod
-    def timeout(seconds):
-        """线程超时装饰器"""
-        def decorator(func):
-            @wraps(func)
-            def wrapper(self, *args, **kwargs):
-                result = None
-                def worker():
-                    nonlocal result
-                    result = func(self, *args, **kwargs)
-                g = gevent.spawn(worker)
-                Ins.GREENLETS.append(g)
-                g.join(timeout=seconds)
-                self.last_exec_time = time.time()
-                return result
-            return wrapper
-        return decorator
-
-    @staticmethod
     def cached(cache_key: str):
         """缓存装饰器"""
         def decorator(method):
@@ -117,39 +84,7 @@ class Ins:
         return decorator
 
     @staticmethod
-    def multiple_executor_thread(max_workers=4, retries=2):
-        """并行执行装饰器 - 线程池"""
-        def decorator(func):
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                if not args:
-                    raise ValueError("被装饰的函数必须至少有一个位置参数作为任务列表")
-                task_list = args[0]
-                res = {}
-                with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-                    future_to_task = {executor.submit(func, task, *args[1:], **kwargs): task for task in task_list}
-                    for future in concurrent.futures.as_completed(future_to_task):
-                        task = future_to_task[future]
-                        for attempt in range(retries):
-                            try:
-                                res[task] = future.result()
-                                break
-                            except Exception as e:
-                                err = Error.handle_exception_info(e)
-                                err['ext'] = args[1:]
-                                if attempt < retries - 1:
-                                    time.sleep(random.uniform(1, 5))
-                                    future = executor.submit(func, task, *args[1:], **kwargs)
-                                    # logger.error(f"任务出错重试中[{attempt + 1}/{retries}] - {err}", 'MULT_EXEC_ERR', 'system')
-                                else:
-                                    logger.error(err, 'MULT_EXEC_ERR', 'system')
-                                    res[task] = err
-                return res
-            return wrapper
-        return decorator
-
-    @staticmethod
-    def multiple_executor(max_workers=4, retries=2, time_sleep=0):
+    def multiple_executor(max_workers=4, retries=2):
         """并行执行装饰器 - 队列"""
         def decorator(func):
             @wraps(func)
@@ -182,14 +117,14 @@ class Ins:
                         task_queue.task_done()
                         time.sleep(0.001)  # 1ms休息减少CPU竞争
                 # 创建有限的工作线程
+                cors = []  # gevent 只有一个进程 - 会生成多个协程 - 所有协程共享内存 - 伪并发
                 for i in range(min(max_workers, len(task_list))):
-                    if time_sleep > 0:
-                        time.sleep(Str.randint(10, 99) / 100 + time_sleep)
                     g = gevent.spawn(worker)
-                    g.join()
-                    Ins.GREENLETS.append(g)
+                    cors.append(g)
+                Ins.GREENLETS.extend(cors)
                 # 等待所有任务完成
                 task_queue.join()
+                gevent.joinall(cors)
                 results = {}
                 while not result_queue.empty():
                     task, result = result_queue.get()

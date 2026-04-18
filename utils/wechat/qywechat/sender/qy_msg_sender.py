@@ -1,18 +1,17 @@
 from service.vps.open_nat_service import OpenNatService
 from utils.wechat.qywechat.factory.qy_client_factory import QyClientFactory
 from tool.db.cache.redis_client import RedisClient
-from tool.core import Que, Ins, Time, Str
+from tool.core import Ins, Time, Str
 
 redis = RedisClient()
 
 
 @Ins.singleton
-class QyMsgSender(QyClientFactory, Que):
+class QyMsgSender(QyClientFactory):
 
     _QY_API_MSG_SEND = '/cgi-bin/message/send'  # https://developer.work.weixin.qq.com/document/path/94677
 
     def __init__(self, app_key):
-        Que.__init__(self)
         QyClientFactory.__init__(self, app_key)
 
     def send_message(self, content, msg_type, app_key):
@@ -22,7 +21,7 @@ class QyMsgSender(QyClientFactory, Que):
         # 短时间内重复的消息不要重复发
         if not redis.set_nx('LOCK_QY_MSG', 1, [md5]):
             return False
-        return self.que_submit(content=content, msg_type=msg_type, app_key=app_key)
+        return self._que_exec(content=content, msg_type=msg_type, app_key=app_key)
 
     def _que_exec(self, **kwargs):
         """队列执行入口"""

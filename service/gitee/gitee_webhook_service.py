@@ -1,4 +1,5 @@
 from tool.core import *
+from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.unit.md.gitee_webhook_md import GiteeWebhookMd
 from utils.wechat.qywechat.qy_client import QyClient
 from model.callback.callback_queue_model import CallbackQueueModel
@@ -6,7 +7,7 @@ from model.callback.callback_queue_model import CallbackQueueModel
 logger = Logger()
 
 
-class GiteeWebhookService(Que):
+class GiteeWebhookService():
 
     def push_handler(self, params):
         """推送事件入队列"""
@@ -23,20 +24,13 @@ class GiteeWebhookService(Que):
         update_data = {"process_params": {"status": status, "data": data}}
         res['update_db'] = db.update_process(int(pid), update_data)
         # 入队列
-        res['que_sub'] = self.que_submit(pid=pid, status=status, data=data)
+        res['que_sub'] = RedisTaskQueue.add_task('QY_GIT', pid, status, data)
         return res
 
-    def _que_exec(self, **kwargs):
-        """队列执行入口"""
-        pid = kwargs.get('pid')
-        status = kwargs.get('status')
-        data = kwargs.get('data')
-        return self._push_handler(pid, status, data)
-
     @staticmethod
-    def _push_handler(pid, status, data):
+    def gitee_push_handler(pid, status, data):
         """推送事件处理"""
-        res = {}
+        res = update_data = {}
         db = CallbackQueueModel()
         db.set_processed(pid)
         if status == 200 and 'markdown' in data:
@@ -46,11 +40,8 @@ class GiteeWebhookService(Que):
                 # 延迟拉取最新代码并重启 flask
                 res['git_pull'] = Sys.delay_git_pull()
             # 更新处理结果
-            update_data = {"process_result": res}
+            update_data['process_params'] = res
             if res['send_msg']:
-                update_data.update({"is_succeed": 1})
+                update_data['is_succeed'] = 1
             res['update_db'] = db.update_process(int(pid), update_data)
         return res
-
-
-
