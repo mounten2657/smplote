@@ -108,7 +108,7 @@ class VpCallbackService:
         update_data = {"process_params": {"params": "[PAR]", "app_key": app_key}}
         res['update_db'] = db.update_process(int(pid), update_data)
         # 实际处理逻辑
-        res['que_sub'] = Sys.delayed_task(VpCallbackService.callback_handler_deal, pid, params)
+        res['que_sub'] = VpCallbackService.callback_handler_deal(pid, params)
         return 'success' if res['que_sub'] else 'error'
 
     @staticmethod
