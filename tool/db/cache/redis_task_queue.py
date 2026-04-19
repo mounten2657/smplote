@@ -66,16 +66,27 @@ class RedisTaskQueue:
             raise
 
     @staticmethod
+    def get_queue_list(sk: str='') -> str | list[str]:
+        """获取队列名列表 - 支持单个"""
+        queue_list = []
+        for sn, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
+            sn = str(sn).lower()
+            qk = qs.get('t', sn)
+            qnl = [f"rtq_{qk}_queue"] if qs['n'] <=1 else [f"rtq_{qk}{i}_queue" for i in range(1, qs['n'] + 1)]
+            if sk.lower() == sn:  # 单个获取
+                if not RedisTaskKeys.RTQ_QUEUE_LIST.get(sk):
+                    raise ValueError(f'Not register service - {sk}')
+                return Attr.random_choice(qnl)
+            queue_list.extend(qnl)
+        queue_list = list(set(queue_list))
+        return queue_list
+
+    @staticmethod
     def add_task(sk, *args, **kwargs):
         """往队列中添加任务"""
         service = RedisTaskKeys.RTQ_QUEUE_LIST.get(sk)
         service_name = service.get('s')
-        queue_num = service.get('n')
-        if not service_name:
-            raise ValueError(f'Not register service - {sk}')
-        i = Str.randint(1, queue_num)
-        qk = service.get('t', str(sk).lower())
-        qn = f'rtq_{qk}_queue' if queue_num <=1 else f'rtq_{qk}{i}_queue'
+        qn = RedisTaskQueue.get_queue_list(sk)
         if not Config.is_prod():
             # 本地 Windows 环境下推送到 Redis 队列
             uuid = Str.uuid()
@@ -98,6 +109,9 @@ class RedisTaskQueue:
             from rq import Queue
             from rq.job import Job
             queue = Queue(qn, connection=redis_conn)
+            job_id = queue.failed_job_registry.get_job_ids()
+            job = queue.fetch_job(job_id)
+            job.latest_result()
             if not RedisTaskQueue.QUEUE_LIST.get(qn):
                 RedisTaskQueue.QUEUE_LIST[qn] = queue
             job: Job = queue.enqueue(
@@ -112,15 +126,25 @@ class RedisTaskQueue:
             return job.id
 
     @staticmethod
+    def get_failed_job():
+        """获取失败任务"""
+        from rq import Queue
+        failed_job_list = []
+        queue_list = RedisTaskQueue.get_queue_list()
+        for qn in queue_list:
+            queue = Queue(qn, connection=redis_conn)
+            job_id_list = queue.failed_job_registry.get_job_ids()
+            for job_id in job_id_list:
+                job = queue.fetch_job(job_id)
+                fail = {"id": job_id, "des": job.description, "res": job.latest_result()}
+                failed_job_list.append(fail)
+        return failed_job_list
+
+    @staticmethod
     def run_consumer():
         """异步延迟启动消费"""
-        queue_list = []
         ctx = multiprocessing.get_context('spawn')
-        for sk, qs in RedisTaskKeys.RTQ_QUEUE_LIST.items():
-            qk = qs.get('t', str(sk).lower())
-            qnl = [f"rtq_{qk}_queue"] if qs['n'] <=1 else [f"rtq_{qk}{i}_queue" for i in range(1, qs['n'] + 1)]
-            queue_list.extend(qnl)
-        queue_list = list(set(queue_list))
+        queue_list = RedisTaskQueue.get_queue_list()
         cors = []  # multiprocessing 会生成多个进程 - 每个进程独立内存且不共享 - 真正的并发
         for qn in queue_list:
             Time.sleep(Str.randint(5, 10) / 10)

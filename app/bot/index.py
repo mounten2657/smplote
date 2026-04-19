@@ -1,21 +1,26 @@
 from tool.router.base_app_wx import BaseAppWx
 from tool.core import Config, Time
 from service.vps.open_nat_service import OpenNatService
+from tool.db.cache.redis_task_queue import RedisTaskQueue
 
 
 class Index(BaseAppWx):
 
     def index(self):
         """首页入口"""
-        current_timestamp = Time.now()
         response = {
-            "timestamp": current_timestamp,
+            "timestamp": Time.now(),
             "version": Config.app_config().get('SYS_VERSION'),
-            "params": self.params,
             "is_prod": Config.is_prod(),
             "app_key": self.app_key,
+            "params": self.params,
         }
         return self.success(response)
+
+    def failed_job(self):
+        """获取失败任务"""
+        res = RedisTaskQueue.get_failed_job()
+        return self.success(res)
 
     def check_config(self):
         """检查常规配置"""
