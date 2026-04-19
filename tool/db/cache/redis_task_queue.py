@@ -109,9 +109,6 @@ class RedisTaskQueue:
             from rq import Queue
             from rq.job import Job
             queue = Queue(qn, connection=redis_conn)
-            job_id = queue.failed_job_registry.get_job_ids()
-            job = queue.fetch_job(job_id)
-            job.latest_result()
             if not RedisTaskQueue.QUEUE_LIST.get(qn):
                 RedisTaskQueue.QUEUE_LIST[qn] = queue
             job: Job = queue.enqueue(
@@ -136,7 +133,7 @@ class RedisTaskQueue:
             job_id_list = queue.failed_job_registry.get_job_ids()
             for job_id in job_id_list:
                 job = queue.fetch_job(job_id)
-                fail = {"id": job_id, "des": job.description, "res": job.latest_result()}
+                fail = {"id": job_id, "des": str(job.description), "res": str(job.latest_result())}
                 failed_job_list.append(fail)
         return failed_job_list
 
