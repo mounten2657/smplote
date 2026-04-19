@@ -13,7 +13,7 @@ from model.wechat.wechat_user_model import WechatUserModel
 from model.wechat.wechat_msg_model import WechatMsgModel
 from model.wechat.wechat_api_log_model import WechatApiLogModel
 from tool.db.cache.redis_client import RedisClient
-from tool.core import Logger, Time, Error, Attr, Config, Str, Sys
+from tool.core import Logger, Time, Error, Attr, Config, Str
 
 logger = Logger()
 redis = RedisClient()
@@ -121,10 +121,10 @@ class VpCallbackService:
         res['rev_handler'], data = VpCallbackHandler.rev_handler(params)
         logger.debug(res['rev_handler'], 'VP_CALL_HD_RES')
         data['pid'] = pid
-        # 消息数据入库 - 异步
-        res['ins_handler'] = Sys.delayed_task(VpCallbackService.insert_handler, data, timeout=300)
-        # 消息指令处理 - 异步
-        res['cmd_handler'] = Sys.delayed_task(VpCallbackService.command_handler, data, timeout=300)
+        # 消息数据入库
+        res['ins_handler'] = VpCallbackService.insert_handler(data)
+        # 消息指令处理
+        res['cmd_handler'] = VpCallbackService.command_handler(data)
         update_data = {"process_result": res, "process_params": data}
         if res['rev_handler']:
             update_data.update({"is_succeed": 1})
@@ -322,7 +322,7 @@ class VpCallbackService:
                     "user_list": user_list,
                     "room": room
                 }
-                res['update_user'] = Sys.delayed_task(VpCallbackService.update_user, t_data, timeout=900)
+                res['update_user'] = VpCallbackService.update_user(t_data)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0
@@ -355,7 +355,7 @@ class VpCallbackService:
             err = Error.handle_exception_info(e)
             logger.error(f"消息入库失败[{pid}] - {err}", "VP_INS_ERR")
             qdb.set_succeed(pid, 0)
-            Sys.delayed_task(VpCallbackService.insert_handler_retry, [pid], delay_seconds=5)
+            VpCallbackService.insert_handler_retry([pid])
             return False
 
     @staticmethod
