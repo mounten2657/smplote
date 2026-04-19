@@ -18,9 +18,10 @@ class VpCallbackHandler(VpBaseFactory):
             return False
         # 延迟一小时后请求重连 - 仅白天
         if not Time.is_night():
+            logger.debug(f"on error: 发生错误重连中 - {data}", 'VP_WAR')
             base_url = Http.get_base_url()
             url = f"{base_url}/callback/vp_callback/start_ws"
-            Sys.delayed_task(Http.send_request, 'GET', url, delay_seconds=3600)
+            Sys.delayed_task(Http.send_request, 'GET', url, delay_seconds=360)
         return {'rgu': False, 'err': data}
 
     def on_message(self, data):
