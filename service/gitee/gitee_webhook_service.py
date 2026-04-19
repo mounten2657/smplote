@@ -42,6 +42,7 @@ class GiteeWebhookService():
             # 更新处理结果
             update_data['process_result'] = res
             if res['send_msg']:
+                update_data['send_msg'] = True
                 update_data['is_succeed'] = 1
             res['update_db'] = db.update_process(int(pid), update_data)
         return res
