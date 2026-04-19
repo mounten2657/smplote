@@ -25,7 +25,7 @@ class VpCallbackHandler(VpBaseFactory):
             Sys.delayed_task(Http.send_request, 'GET', url, delay_seconds=3)
             # 延迟开始
             url = f"{base_url}/callback/vp_callback/start_ws"
-            Sys.delayed_task(Http.send_request, 'GET', url, delay_seconds=360)
+            Sys.delayed_task(Http.send_request, 'GET', url, delay_seconds=3600)
         return {'rgu': False, 'err': data}
 
     def on_message(self, data):
