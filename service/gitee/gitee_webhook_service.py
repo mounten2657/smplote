@@ -35,14 +35,14 @@ class GiteeWebhookService():
         db.set_processed(pid)
         if status == 200 and 'markdown' in data:
             # 发送企业应用消息
-            res['send_msg'] = QyClient().send_msg(data['markdown'])
+            qy = QyClient().send_msg(data['markdown'])
+            res['send_msg'] = True if qy else False
             if Config.is_prod():
                 # 延迟拉取最新代码并重启 flask
                 res['git_pull'] = Sys.delay_git_pull()
             # 更新处理结果
             update_data['process_result'] = res
             if res['send_msg']:
-                update_data['send_msg'] = True
                 update_data['is_succeed'] = 1
             res['update_db'] = db.update_process(int(pid), update_data)
         return res
