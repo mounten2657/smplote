@@ -1,5 +1,4 @@
 import subprocess
-import gevent
 import threading
 import time
 import uuid
@@ -23,27 +22,11 @@ logger = Logger()
 
 
 class Sys:
-    """异步任务执行器"""
-
-    GREENLETS = []
+    """异步线程执行器"""
 
     @staticmethod
-    def close_sys():
-        """关闭本例协程"""
-        gevent.killall(Sys.GREENLETS, block=False)
-        Sys.GREENLETS = []
-        return True
-
-    @staticmethod
-    def run_greenlets():
-        """保持协程运行"""
-        gevent.sleep(0.1)
-        #gevent.get_hub().join()
-        return True
-
-    @staticmethod
-    def _generate_task_id(func: Callable, *args, **kwargs) -> str:
-        """生成任务唯一ID（用于去重）"""
+    def _generate_thread_id(func: Callable, *args, **kwargs) -> str:
+        """生成线程唯一ID（用于去重）"""
         try:
             # 序列化函数和参数生成哈希
             func_name = func.__name__
@@ -60,20 +43,20 @@ class Sys:
             return str(uuid.uuid4())
 
     @staticmethod
-    def _task_lock(task_id: str, fn: str, ag: str):
-        """分布式锁装饰器"""
+    def _thread_lock(thread_id: str, fn: str, ag: str):
+        """线程锁装饰器"""
         def decorator(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
                 # 获取Redis锁（原子操作）
-                acquired = _redis.set_nx(_lock_key, 1, [task_id])
+                acquired = _redis.set_nx(_lock_key, 1, [thread_id])
                 if not acquired:
-                    logger.debug(f"任务[{task_id}]已在执行，跳过重复执行 - {fn}: {str(ag)[:256]}", 'SYS_TASK_LOCK')
+                    logger.debug(f"线程[{thread_id}]已在执行，跳过重复执行 - {fn}: {str(ag)[:256]}", 'SYS_THD_LOCK')
                     return None  # 其他进程已处理
                 try:
                     return func(*args, **kwargs)
                 finally:
-                    # _redis.delete(_lock_key, [task_id])  # 等自动过期
+                    # _redis.delete(_lock_key, [thread_id])  # 等自动过期
                     pass
             return wrapper
         return decorator
@@ -81,7 +64,7 @@ class Sys:
     @staticmethod
     def delayed_task(func: Callable, *args, **kwargs) -> str:
         """
-        延迟执行函数，立即返回task_id
+        延迟执行函数，立即返回 thread_id
          - [!] 严禁套娃 - 否则无效
          - 比如在 RTQ 队列回调中使用 delayed_task
          - 比如在 delayed_task 回调中使用 delayed_task
@@ -91,39 +74,35 @@ class Sys:
         :param kwargs: 函数参数 - p1=11, p2=22
         :return: 任务ID
         """
-        # 生成任务ID（去重依据）
-        task_id = Sys._generate_task_id(func, *args, **kwargs)
+        # 生成线程ID（去重依据）
+        thread_id = Sys._generate_thread_id(func, *args, **kwargs)
         delay_seconds = kwargs.pop('delay_seconds', 0.1)
         timeout = kwargs.pop('timeout', _timeout)
         def _delay_wrapper():
             if delay_seconds > 0:
                 time.sleep(delay_seconds)
-            @Sys._task_lock(task_id, str(func), str(args))
-            def _run_task():
-                logger.debug(f"任务[{task_id}]正在执行 - {func}: {args}", 'SYS_TASK_RUN')
+            @Sys._thread_lock(thread_id, str(func), str(args))
+            def _run_thread():
+                logger.debug(f"线程[{thread_id}]正在执行 - {func}: {args}", 'SYS_THD_RUN')
                 return func(*args, **kwargs)
             try:
-                future = _executor.submit(_run_task)
+                future = _executor.submit(_run_thread)
                 future.result(timeout=timeout)  # 超时控制
             except FutureTimeoutError:
-                logger.error(f"任务[{task_id}]执行超时（>{timeout}秒） - {func}: {args}", 'SYS_TASK_TIMEOUT')
+                logger.error(f"线程[{thread_id}]执行超时（>{timeout}秒） - {func}: {args}", 'SYS_THD_TIMEOUT')
             except Exception as e:
                 err = Error.handle_exception_info(e)
-                logger.error(f"任务[{task_id}]执行失败: {func}: {args} - {err}", 'SYS_TASK_ERROR')
+                logger.error(f"线程[{thread_id}]执行失败: {func}: {args} - {err}", 'SYS_THD_ERROR')
         # 启动延迟线程（立即返回）
+        # 由于 gevent 需要先 spawn 再 join 或 sleep 才能真正执行，用起来太麻烦，故舍弃
         # gevent / threading 只有一个进程 - 会生成多个协程 - 所有协程共享内存 - 伪并发
         threading.Thread(target=_delay_wrapper, daemon=True).start()
-        # 由于 gevent 需要先 spawn 再 join 或 sleep 才能真正执行，用起来太麻烦，故舍弃
-        # g = gevent.spawn(_delay_wrapper)
-        # Sys.GREENLETS.append(g)
-        # Sys.run_greenlets()
-        return task_id
+        return thread_id
 
     @staticmethod
     def shutdown():
         """程序退出时关闭线程池"""
         _executor.shutdown(wait=False)
-        Sys.close_sys()
 
     @staticmethod
     def run_command(command):
