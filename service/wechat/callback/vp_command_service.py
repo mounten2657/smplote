@@ -9,7 +9,7 @@ from tool.unit.song.music_search_client import MusicSearchClient
 from tool.db.cache.redis_client import RedisClient
 from utils.wechat.qywechat.qy_client import QyClient
 from utils.wechat.vpwechat.vp_client import VpClient
-from tool.core import Config, Attr, Sys, Dir, Transfer, Time, Str
+from tool.core import Config, Attr, Dir, Transfer, Time, Str
 
 redis = RedisClient()
 
@@ -138,7 +138,7 @@ class VpCommandService:
             self.extra.update({"file": file})
             def self_voice_msg(f, g, e):
                 return self.client.send_voice_message(f, g, e)
-            Sys.delayed_task(self_voice_msg, fp, self.g_wxid, self.extra, delay_seconds=15)
+            self_voice_msg(fp, self.g_wxid, self.extra)
         return self.client.send_msg(response, self.g_wxid, self.at_list, self.extra)
 
     def vp_sky_rw(self, content='', is_all=0):

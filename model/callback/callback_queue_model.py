@@ -63,5 +63,6 @@ class CallbackQueueModel(MysqlBaseModel):
             return False
         if data.get('process_params') and not is_force:
             info['process_params'] = info['process_params'] if info['process_params'] else {}
-            data['process_params'] = info['process_params'] | data['process_params']
+            info['process_params'].update(data['process_params'])
+            data['process_params'] = info['process_params']
         return self.update({'id': pid}, data)
