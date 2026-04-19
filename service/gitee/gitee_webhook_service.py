@@ -36,8 +36,7 @@ class GiteeWebhookService():
         db.set_processed(pid)
         if status == 200 and 'markdown' in data:
             # 发送企业应用消息
-            qy = QyClient().send_msg(data['markdown'])
-            res['send_msg'] = True if qy else False
+            res['send_msg'] = QyClient().send_msg(data['markdown'])
             if Config.is_prod():
                 # 延迟拉取最新代码并重启 flask
                 res['git_pull'] = Sys.delay_git_pull()
