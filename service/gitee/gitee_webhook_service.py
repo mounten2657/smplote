@@ -1,5 +1,4 @@
-from tool.core import *
-from tool.db.cache.redis_task_queue import RedisTaskQueue
+from tool.core import Logger, Config, Sys
 from tool.unit.md.gitee_webhook_md import GiteeWebhookMd
 from utils.wechat.qywechat.qy_client import QyClient
 from model.callback.callback_queue_model import CallbackQueueModel
