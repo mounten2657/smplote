@@ -39,7 +39,7 @@ class GiteeWebhookService():
             res['send_msg'] = QyClient().send_msg(data['markdown'])
             if Config.is_prod():
                 # 延迟拉取最新代码并重启 flask
-                res['git_pull'] = Sys.delay_git_pull()
+                res['git_pull'] = Sys.delayed_task(Sys.delay_reload_gu, delay_seconds=3)
             # 更新处理结果
             update_data['process_result'] = res
             if res['send_msg']:

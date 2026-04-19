@@ -97,6 +97,7 @@ class Sys:
                 time.sleep(delay_seconds)
             @Sys._task_lock(task_id, str(func), str(args))
             def _run_task():
+                logger.debug(f"任务[{task_id}]正在执行 - {func}: {args}", 'SYS_TASK_RUN')
                 return func(*args, **kwargs)
             try:
                 future = _executor.submit(_run_task)
@@ -174,25 +175,22 @@ class Sys:
             return None
 
     @staticmethod
-    def delay_git_pull():
-        """延迟三秒后，拉取最新代码，并重启 flask """
-        # 重启后会自动拉取最新代码
-        return Sys.delayed_task(Sys.delay_reload_gu, delay_seconds=3)
-
-    @staticmethod
     def delay_kill_gu():
         """终止gu """
+        logger.warning(f"正在停止GUNICORN", 'SYS_KGU')
         container = Sys.get_docker_container('www-python')
         return container.stop()
 
     @staticmethod
     def delay_reload_gu(is_force=0):
         """重载gu """
+        logger.warning(f"正在重启GUNICORN - {is_force}", 'SYS_RGU')
         container = Sys.get_docker_container('www-python')
         return container.restart()
 
     @staticmethod
     def delay_reload_vp():
         """重载vp """
+        logger.warning(f"正在重启WECHATPAD", 'SYS_RVP')
         container = Sys.get_docker_container('wechatpad')
         return container.restart()
