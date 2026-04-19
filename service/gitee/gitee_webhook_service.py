@@ -30,7 +30,8 @@ class GiteeWebhookService():
     @staticmethod
     def gitee_push_handler(pid, status, data):
         """推送事件处理"""
-        res = update_data = {}
+        res = {}
+        update_data = {}
         db = CallbackQueueModel()
         db.set_processed(pid)
         if status == 200 and 'markdown' in data:
