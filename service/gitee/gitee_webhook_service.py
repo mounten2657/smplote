@@ -23,8 +23,8 @@ class GiteeWebhookService():
         # 更新处理数据
         update_data = {"process_params": {"status": status, "data": data}}
         res['update_db'] = db.update_process(int(pid), update_data)
-        # 入队列
-        res['que_sub'] = RedisTaskQueue.add_task('QY_GIT', pid, status, data)
+        # 入队列 - 改为同步了
+        res['que_sub'] = GiteeWebhookService.gitee_push_handler(pid, status, data)
         return res
 
     @staticmethod
@@ -45,4 +45,4 @@ class GiteeWebhookService():
             if res['send_msg']:
                 update_data['is_succeed'] = 1
             res['update_db'] = db.update_process(int(pid), update_data)
-        return res
+        return res.get('git_pull', '0')
