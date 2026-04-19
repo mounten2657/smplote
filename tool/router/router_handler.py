@@ -26,6 +26,7 @@ class RouterHandler:
         'gpl/symbol/info',
         'gpl/symbol/daily',
         'callback/gitee_callback/smplote',
+        'callback/vp_callback/close_ws',
         'callback/vp_callback/start_ws',
     ]
 

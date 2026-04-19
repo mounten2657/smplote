@@ -20,6 +20,10 @@ class VpCallbackHandler(VpBaseFactory):
         if not Time.is_night():
             logger.warning(f"on error: 发生错误重连中 - {data}", 'VP_WAR')
             base_url = Http.get_base_url()
+            # 优先关闭
+            url = f"{base_url}/callback/vp_callback/close_ws"
+            Sys.delayed_task(Http.send_request, 'GET', url, delay_seconds=3)
+            # 延迟开始
             url = f"{base_url}/callback/vp_callback/start_ws"
             Sys.delayed_task(Http.send_request, 'GET', url, delay_seconds=360)
         return {'rgu': False, 'err': data}

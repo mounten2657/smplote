@@ -24,6 +24,7 @@ class VpClient(VpBaseFactory):
         def ws_start():
             Time.sleep(Str.randint(5, 10))
             # 确保只能有一个 socket
+            logger.debug('websocket loading', 'WS_LOD')
             if not redis.set_nx('LOCK_WSS_CNT', 1):
                 return False
             logger.debug('websocket starting', 'WS_STA')

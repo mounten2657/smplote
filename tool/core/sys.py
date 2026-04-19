@@ -82,6 +82,9 @@ class Sys:
     def delayed_task(func: Callable, *args, **kwargs) -> str:
         """
         延迟执行函数，立即返回task_id
+         - [!] 严禁套娃 - 否则无效
+         - 比如在 RTQ 队列回调中使用 delayed_task
+         - 比如在 delayed_task 回调中使用 delayed_task
 
         :param func: 目标函数
         :param args: 函数参数 - p1, p2
