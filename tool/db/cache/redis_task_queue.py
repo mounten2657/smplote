@@ -135,7 +135,13 @@ class RedisTaskQueue:
             job_id_list = queue.failed_job_registry.get_job_ids()
             for job_id in job_id_list:
                 job = queue.fetch_job(job_id)
-                fail = {"id": job_id, "des": str(job.description), "res": str(job.latest_result().exc_string)}
+                fail = {
+                    "id": job_id,
+                    "des": str(job.description),
+                    "res": str(job.latest_result().exc_string),
+                    "meta": str(job.meta),
+                    "time": str(job.started_at)
+                }
                 failed_job_list.append(fail)
         return failed_job_list
 
