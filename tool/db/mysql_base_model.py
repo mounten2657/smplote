@@ -371,6 +371,7 @@ class MysqlBaseModel:
             if conn:
                 conn.rollback()
             err = Error.handle_exception_info(e)
+            err['par'] = {"conditions": conditions, "update_data": str(update_data)}
             run_time = Str.round(Time.now(0) - start_time, 3)
             self.logger.exception(err, f'DB_EXP_UPDATE[RT.{run_time}]@0', 'mysql')
             return 0
