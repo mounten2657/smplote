@@ -125,6 +125,8 @@ class RedisTaskQueue:
     @staticmethod
     def get_failed_job():
         """获取失败任务"""
+        if not Config.is_prod():
+            return []
         from rq import Queue
         failed_job_list = []
         queue_list = RedisTaskQueue.get_queue_list()
@@ -157,7 +159,6 @@ class RedisTaskQueue:
             process.start()
             cors.append(process)
         RedisTaskQueue.PROCESS.extend(cors)
-        # [c.join() for c in cors]
         return True
 
     @staticmethod

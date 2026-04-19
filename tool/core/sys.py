@@ -1,5 +1,6 @@
 import subprocess
 import gevent
+import threading
 import time
 import uuid
 import hashlib
@@ -31,6 +32,13 @@ class Sys:
         """关闭本例协程"""
         gevent.killall(Sys.GREENLETS, block=False)
         Sys.GREENLETS = []
+        return True
+
+    @staticmethod
+    def run_greenlets():
+        """保持协程运行"""
+        gevent.sleep(0.1)
+        #gevent.get_hub().join()
         return True
 
     @staticmethod
@@ -99,9 +107,12 @@ class Sys:
                 err = Error.handle_exception_info(e)
                 logger.error(f"任务[{task_id}]执行失败: {func}: {args} - {err}", 'SYS_TASK_ERROR')
         # 启动延迟线程（立即返回）
-        g = gevent.spawn(_delay_wrapper)
-        Sys.GREENLETS.append(g)
-        gevent.sleep(0.1)
+        # gevent / threading 只有一个进程 - 会生成多个协程 - 所有协程共享内存 - 伪并发
+        threading.Thread(target=_delay_wrapper, daemon=True).start()
+        # 由于 gevent 需要先 spawn 再 join 或 sleep 才能真正执行，用起来太麻烦，故舍弃
+        # g = gevent.spawn(_delay_wrapper)
+        # Sys.GREENLETS.append(g)
+        # Sys.run_greenlets()
         return task_id
 
     @staticmethod

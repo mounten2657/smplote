@@ -52,10 +52,9 @@ class ParseHandler:
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS']
         list(map(lambda key: redis.delete(key, ['*']), key_list))
         not Config.is_prod() and 0 and bs.logout()  # bs 登出 - 停用
-        # Gevent 子协程释放
-        Ins.close_ins()
+        # 队列消费释放
         RedisTaskQueue.stop_consumer()
-        print(f"PID[{pid}]: 子程序协程已释放")
+        print(f"PID[{pid}]: 队列消费已释放")
         # 清理系统任务
         Sys.shutdown()
         print(f"PID[{pid}]: 清理完成，主程序结束")

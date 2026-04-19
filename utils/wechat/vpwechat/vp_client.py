@@ -1,4 +1,3 @@
-import gevent
 import baostock as bs
 from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.factory.vp_socket_factory import VpSocketFactory
@@ -14,7 +13,6 @@ redis = RedisClient()
 class VpClient(VpBaseFactory):
 
     ARGS_UNIQUE_KEY = True
-    GREENLETS = []
 
     def __init__(self, app_key='a1'):
         super().__init__(app_key)
@@ -32,10 +30,8 @@ class VpClient(VpBaseFactory):
             not Config.is_prod() and 0 and bs.logout()  # bs 登录 - 停用
             ws = VpSocketFactory(self.app_key)
             return ws.start()
-        g = gevent.spawn(ws_start)
-        VpClient.GREENLETS.append(g)
-        gevent.sleep(0.1)
-        logger.debug(f'websocket start done', 'WS_END')
+        res = Sys.delayed_task(ws_start)
+        logger.debug(f'websocket start done - {res}', 'WS_END')
         return True
 
     def close_websocket(self, is_all=0):
@@ -51,8 +47,6 @@ class VpClient(VpBaseFactory):
             ws = VpSocketFactory(self.app_key)
             return ws.close()
         res = Sys.delayed_task(ws_close, delay_seconds=1)
-        gevent.killall(VpClient.GREENLETS, block=False, exception=gevent.GreenletExit, timeout=5)
-        VpClient.GREENLETS = []
         logger.debug(f'websocket close done {is_all} - {res}', 'WS_END')
         return res
 

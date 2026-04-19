@@ -1,7 +1,6 @@
 import time
 import random
 import hashlib
-import gevent
 import queue
 from functools import wraps
 from typing import TypeVar, Type, Any
@@ -9,6 +8,7 @@ from tool.core.attr import Attr
 from tool.core.str import Str
 from tool.core.error import Error
 from tool.core.logger import Logger
+from tool.core.sys import Sys
 from tool.db.cache.redis_client import RedisClient
 
 T = TypeVar('T')
@@ -17,15 +17,6 @@ redis = RedisClient()
 
 
 class Ins:
-
-    GREENLETS = []
-
-    @staticmethod
-    def close_ins():
-        """关闭本例协程"""
-        gevent.killall(Ins.GREENLETS, block=False)
-        Ins.GREENLETS = []
-        return True
 
     @staticmethod
     def singleton(cls: Type[T]) -> Type[T]:
@@ -117,13 +108,8 @@ class Ins:
                         task_queue.task_done()
                         time.sleep(0.001)  # 1ms休息减少CPU竞争
                 # 创建有限的工作线程
-                cors = []  # gevent 只有一个进程 - 会生成多个协程 - 所有协程共享内存 - 伪并发
                 for i in range(min(max_workers, len(task_list))):
-                    g = gevent.spawn(worker)
-                    cors.append(g)
-                    gevent.sleep(0.1)
-                Ins.GREENLETS.extend(cors)
-                # 等待所有任务完成
+                    Sys.delayed_task(worker)
                 task_queue.join()
                 results = {}
                 while not result_queue.empty():
