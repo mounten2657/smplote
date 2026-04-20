@@ -109,6 +109,6 @@ class NatService:
                     redis.incr(total_key, [f'{date}:fal'])
                     redis.incr(total_key, [f'{date}:fal_{port}'])
                     # redis.incr(failed_key, [f"{date}:{uuid}_e"])
-                    redis.set_nx(failed_key, par, [f"{date}:{uuid}_e_{i}"])
+                    # redis.set_nx(failed_key, par, [f"{date}:{uuid}_e_{i}"])
                     return err, r_type, proxy, node
         return res, r_type, proxy, node
