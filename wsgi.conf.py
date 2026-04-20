@@ -14,7 +14,7 @@ from pathlib import Path
 # 基础配置
 # ---------------------------
 # 绑定地址和端口 (可配置多个)
-bind = ['0.0.0.0:990']  # 可同时监听端口和Unix socket， 如 'unix:/tmp/gunicorn.sock'
+bind = ['0.0.0.0:2090']  # 可同时监听端口和Unix socket， 如 'unix:/tmp/gunicorn.sock'
 
 # 工作进程数 (推荐: CPU核心数*2 + 1)
 # import multiprocessing
