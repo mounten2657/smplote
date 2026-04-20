@@ -120,7 +120,7 @@ class VpFileApi:
     def silk2mp3(file_path):
         """微信语音文件转mp3"""
         base_path, file_ext = str(file_path).rsplit('.', 1)
-        if 0 == os.system(f'sudo /opt/tool/silk-v3-decoder/converter.sh {file_path} mp3'):
+        if 0 == os.system(f'/opt/tool/silk-v3-decoder/converter.sh {file_path} mp3'):
             # os.system(f'rm -f {file_path}')  # 暂时保留，也不占多少空间
             return f"{base_path}.mp3"
         return ''
