@@ -1,16 +1,17 @@
-import subprocess
-import threading
-import time
+import dis
 import uuid
 import hashlib
-import pickle
 import inspect
-import dis
+import pickle
 import docker
+import threading
+import subprocess
 from typing import Callable
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from tool.db.cache.redis_client import RedisClient
+from tool.core.http import Http
+from tool.core.time import Time
 from tool.core.error import Error
 from tool.core.logger import Logger
 
@@ -80,7 +81,7 @@ class Sys:
         timeout = kwargs.pop('timeout', _timeout)
         def _delay_wrapper():
             if delay_seconds > 0:
-                time.sleep(delay_seconds)
+                Time.sleep(delay_seconds)
             @Sys._thread_lock(thread_id, str(func), str(args))
             def _run_thread():
                 logger.debug(f"线程[{thread_id}]正在执行 - {func}: {args}", 'SYS_THD_RUN')
@@ -98,6 +99,16 @@ class Sys:
         # gevent / threading 只有一个进程 - 会生成多个协程 - 所有协程共享内存 - 伪并发
         threading.Thread(target=_delay_wrapper, daemon=True).start()
         return thread_id
+
+    @staticmethod
+    def delay_http(uri: str, params=None, method='GET', delay_seconds=3):
+        """延迟发起 http 请求"""
+        if not uri.startswith('http'):
+            uri = f"/{uri}" if not uri.endswith('/') else uri
+            url = f"{Http.get_base_url()}{uri}"
+        else:
+            url = uri
+        return Sys.delayed_task(Http.send_request, method, url, params, delay_seconds=delay_seconds)
 
     @staticmethod
     def shutdown():
@@ -159,20 +170,35 @@ class Sys:
     @staticmethod
     def delay_kill_gu():
         """终止gu """
-        logger.warning(f"正在停止GUNICORN", 'SYS_KGU')
-        container = Sys.get_docker_container('www-python')
-        return container.stop()
+        def kgu():
+            logger.warning(f"正在停止GUNICORN", 'SYS_KGU')
+            container = Sys.get_docker_container('www-python')
+            return container.stop()
+        return Sys.delayed_task(kgu, delay_seconds=3)
 
     @staticmethod
     def delay_reload_gu(is_force=0):
         """重载gu """
-        logger.warning(f"正在重启GUNICORN - {is_force}", 'SYS_RGU')
-        container = Sys.get_docker_container('www-python')
-        return container.restart()
+        def rgu():
+            logger.warning(f"正在重启GUNICORN - {is_force}", 'SYS_RGU')
+            container = Sys.get_docker_container('www-python')
+            return container.restart()
+        return Sys.delayed_task(rgu, delay_seconds=3)
 
     @staticmethod
     def delay_reload_vp():
         """重载vp """
-        logger.warning(f"正在重启WECHATPAD", 'SYS_RVP')
-        container = Sys.get_docker_container('wechatpad')
-        return container.restart()
+        def rvp():
+            logger.warning(f"正在重启WECHATPAD", 'SYS_RVP')
+            container = Sys.get_docker_container('wechatpad')
+            return container.restart()
+        return Sys.delayed_task(rvp, delay_seconds=3)
+
+    @staticmethod
+    def delay_reload_cf():
+        """重载cf """
+        def rcf():
+            logger.warning(f"正在重启CLOUDFLARED", 'SYS_RCF')
+            container = Sys.get_docker_container('cloudflared')
+            return container.restart()
+        return Sys.delayed_task(rcf, delay_seconds=3)

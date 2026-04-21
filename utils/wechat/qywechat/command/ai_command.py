@@ -1,4 +1,5 @@
-from tool.core import Ins, Http, Env
+from tool.core import Ins, Http
+from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.qywechat.command.base_command import BaseCommand
 from service.ai.command.ai_command_service import AiCommandService
 
@@ -36,4 +37,10 @@ class AiCommand(BaseCommand):
     def qy_sci(self):
         """AI 百科"""
         response, aid = AiCommandService.science(self.content, self.user, 'QY_SCI')
+        return self.send_content(response)
+
+    def qy_wvp(self):
+        """VP 唤醒登录"""
+        res = VpClient().wakeup()
+        response = f"正在执行 WVP 命令 - {res}\r\n\r\n请保持微信打开……"
         return self.send_content(response)

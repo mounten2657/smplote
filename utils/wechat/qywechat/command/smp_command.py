@@ -25,9 +25,9 @@ class SmpCommand(BaseCommand):
         return self.send_content(content)
 
     def exec_2_3(self):
-        """SMP WLV"""
-        res = VpClient().wakeup()
-        content = f"{res}"
+        """SMP RCF"""
+        res = Sys.delay_reload_cf()
+        content = f"正在执行 RCF 命令 - {res}\r\n\r\n请稍后查看结果……"
         return self.send_content(content)
 
     def exec_2_4(self):

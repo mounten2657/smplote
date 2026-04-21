@@ -44,11 +44,11 @@ class QyCallbackHandler:
         method = 'exec_null'
         logger.debug([msg_type, msg_event, msg_user, content], 'QY_MSG_DIS_STA')
         if msg_type == 'text':
-            # 用户回复消息
-            # commands = qy_config['command_list'].split(',')
+            # 用户回复消息 - [!] 同时需要在 config/qy.json 里新增命令配置
             commands_map = {
                 "#提问": "qy_que",
                 "#百科": "qy_sci",
+                "#唤醒": "qy_wvp",
             }
             admins = qy_config['admin_list'].split(',')
             if msg_user in admins:
