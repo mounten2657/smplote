@@ -134,7 +134,7 @@ class RedisTaskQueue:
             if is_clear:
                 expire_time = Time.now() + 365 * 86400
                 failed_registry.cleanup(expire_time)  # 删除 failed
-                queue.finished_job_registry.clear(expire_time)  # 删除 finished
+                queue.finished_job_registry.cleanup(expire_time)  # 删除 finished
                 logger.warning(f'队列清除完毕 - {qn}', 'RQT_TASK_WAR')
                 continue
             job_id_list = failed_registry.get_job_ids()
