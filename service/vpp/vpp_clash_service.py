@@ -202,7 +202,11 @@ class VppClashService:
             redis.set(self.cache_key, len(node_list), [f'{port}:{tomorrow}:len'])
             logger.info(f"东财节点缓存成功<{port}> - {len(node_list)}", "CVE_INF")
             i += 1
-            self.get_vpn_port(1)  # 每次都刷新一下端口概率缓存 - 即使第一次报错也无所谓，有后面的兜底
+            try:
+                self.get_vpn_port(1)  # 每次都刷新一下端口概率缓存 - 即使第一次报错也无所谓，有后面的兜底
+            except Exception as e:
+                logger.warning(f"该订阅无可用节点<{port}> - {e}", "CVE_WAR")
+                continue
         return i
 
     def switch_vpn_node(self, port, node_name, sleep_time=None):
