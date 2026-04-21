@@ -19,7 +19,8 @@ class Index(BaseAppWx):
 
     def failed_job(self):
         """获取失败任务"""
-        res = RedisTaskQueue.get_failed_job()
+        is_clear = self.params.get('is_clear', 0)
+        res = RedisTaskQueue.get_failed_job(int(is_clear))
         return self.success(res)
 
     def check_config(self):

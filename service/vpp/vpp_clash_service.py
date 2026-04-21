@@ -271,14 +271,13 @@ class VppClashService:
                 t_stat[sub] = stat
                 np = rv_list.pop() if rv_list else 0
                 npy = rv_list_y.pop() if rv_list_y else 0
-                percent = Str.round(np / rv_sum * 100)
                 used = Str.round(stat['upload'] + stat['download'])
                 t_stat[sub]['used'] = used
                 y_used = Attr.get_by_point(y_stat, f'{sub}.used', 0)
                 changed = Str.round(used - y_used)
                 t_stat[sub]['changed'] = changed
                 used = f"{round(used / 1024, 3):.3f}G" if used >= 1024 else f"{used:.2f}M"
-                stat = f"{used}/{changed}M/{stat['total']}G | {np}/{npy}/{percent} | {stat['expire'] if stat['expire'] else 9999}天 "
+                stat = f"{changed}M/{used}/{stat['total']}G | {npy}/{np}/{rv_sum} | {stat['expire'] if stat['expire'] else 9999}天 "
             md += f"   - {sub}: {stat}\r\n"
         # 更新今日统计缓存
         redis.set(self.cache_key,  t_stat, [f'traffic_stat:{today}'])

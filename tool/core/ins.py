@@ -109,7 +109,7 @@ class Ins:
                         time.sleep(0.001)  # 1ms休息减少CPU竞争
                 # 创建有限的工作线程
                 for i in range(min(max_workers, len(task_list))):
-                    Sys.delayed_task(worker)
+                    Sys.delayed_task(worker, timeout=86400)
                 task_queue.join()
                 results = {}
                 while not result_queue.empty():
