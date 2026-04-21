@@ -13,7 +13,6 @@ class RedisTaskQueue:
     """基于 RQ 的分布式任务队列. - LIFO"""
 
     ARGS_UNIQUE_KEY = True
-    QUEUE_LIST = {}
     PROCESS = []
 
     def _queue_worker(self, queue_name):
@@ -108,16 +107,14 @@ class RedisTaskQueue:
             # 生产 Linux 环境下推送到 RQ 队列
             from rq import Queue
             queue = Queue(qn, connection=redis_conn)
-            if not RedisTaskQueue.QUEUE_LIST.get(qn):
-                RedisTaskQueue.QUEUE_LIST[qn] = queue
             job = queue.enqueue(
                 RedisTaskQueue._execute_task,
                 args=(RedisTaskQueue, service_name, *args,),
                 kwargs=kwargs,
                 ttl=3600,  # 任务排队的最大时间，超时将被取消
-                timeout=86400,  # 任务的最大运行时间，超时将被丢弃
-                result_ttl=86400,  # 任务结果过期时间
-                failure_ttl=7*86400,  # 失败结果过期时间
+                timeout=7*86400,  # 任务的最大运行时间，超时将被丢弃
+                result_ttl=3600,  # 任务结果过期时间
+                failure_ttl=3*86400,  # 失败结果过期时间
                 retry=0  # 不重试
             )
             logger.debug(f"任务提交成功: {qn} - {job.id}","RQT_TASK_SUBMIT")
@@ -128,16 +125,12 @@ class RedisTaskQueue:
         """获取失败任务"""
         if not Config.is_prod():
             return []
-        # from rq import Queue
+        from rq import Queue
         failed_job_list = []
         queue_list = RedisTaskQueue.get_queue_list()
         for qn in queue_list:
-            # queue = Queue(qn, connection=redis_conn)
-            queue = RedisTaskQueue.QUEUE_LIST.get(qn)
-            if queue is None:
-                logger.warning(f'获取队列失败 - {qn}', 'RQT_TASK_WAR')
-                continue
-            failed_registry = queue.failed_registry
+            queue = Queue(qn, connection=redis_conn)
+            failed_registry = queue.failed_job_registry
             if is_clear:
                 failed_registry.empty()
                 logger.warning(f'队列清除完毕 - {qn}', 'RQT_TASK_WAR')
