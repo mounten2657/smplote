@@ -86,7 +86,7 @@ class Ins:
                 # 填充任务队列
                 for task in task_list:
                     task_queue.put(task)
-                def worker():
+                def worker(uid):
                     while True:
                         try:
                             task = task_queue.get_nowait()
@@ -100,6 +100,7 @@ class Ins:
                             except Exception as e:
                                 err = Error.handle_exception_info(e)
                                 err['ext'] = args[1:]
+                                err['uid'] = uid
                                 if attempt < retries - 1:
                                     time.sleep(random.uniform(1, 3))
                                 else:
@@ -109,7 +110,7 @@ class Ins:
                         time.sleep(0.001)  # 1ms休息减少CPU竞争
                 # 创建有限的工作线程
                 for i in range(min(max_workers, len(task_list))):
-                    Sys.delayed_task(worker, timeout=86400)
+                    Sys.delayed_task(worker, Str.uuid(), timeout=86400)
                 task_queue.join()
                 results = {}
                 while not result_queue.empty():
