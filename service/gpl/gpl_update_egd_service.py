@@ -57,7 +57,7 @@ class GPLUpdateEgdService:
         biz_list = ['EM_GD_TOP10',  'EM_GD_TOP10_FREE']
         sc_list = Attr.chunk_list(symbol_list, 25)
 
-        @Ins.multiple_executor(16)
+        @Ins.multiple_executor(4)
         def _fix_gd_exec(s_list):
             rc = 0
             Time.sleep(Str.randint(1, 10) / 100)
