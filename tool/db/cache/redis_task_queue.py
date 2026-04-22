@@ -1,11 +1,12 @@
 import multiprocessing
-from tool.core import Logger, Ins, Config, Str, Time, Attr, Error
+from tool.core import Logger, Ins, Str, Time, Attr, Error
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_keys import RedisTaskKeys
 
 logger = Logger()
 redis = RedisClient()
 redis_conn = redis.client
+is_use_rq = False  # Config.is_prod()  # rq 复杂且不好用 - 故障太多管理太少 - 故暂时不用
 
 
 @Ins.singleton
@@ -19,7 +20,7 @@ class RedisTaskQueue:
         """队列消费工作"""
         print(f'heartbeat - {queue_name}')
         logger.debug(f'redis task queue starting - {queue_name}', 'RTQ_STA')
-        if not Config.is_prod():
+        if not is_use_rq:
             # 本地 Windows 环境下直接 while True 消费
             try:
                 while True:
@@ -86,7 +87,7 @@ class RedisTaskQueue:
         service = RedisTaskKeys.RTQ_QUEUE_LIST.get(sk)
         service_name = service.get('s')
         qn = RedisTaskQueue.get_queue_list(sk)
-        if not Config.is_prod():
+        if not is_use_rq:
             # 本地 Windows 环境下推送到 Redis 队列
             uuid = Str.uuid()
             task_data = {
@@ -123,7 +124,7 @@ class RedisTaskQueue:
     @staticmethod
     def get_failed_job(is_clear=0):
         """获取失败任务"""
-        if not Config.is_prod():
+        if not is_use_rq:
             return []
         from rq import Queue
         failed_job_list = []
