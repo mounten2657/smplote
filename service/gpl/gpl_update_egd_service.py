@@ -53,6 +53,8 @@ class GPLUpdateEgdService:
 
     def fix_gd_em(self, symbol_list):
         """top10股东数据修复 - 一次性程序 - 用于修复之前的老数据"""
+        if True:  # 已修复完毕 - 禁用
+            return False
         jdb = GPLSeasonModel()
         biz_list = ['EM_GD_TOP10',  'EM_GD_TOP10_FREE']
         sc_list = Attr.chunk_list(symbol_list, 25)

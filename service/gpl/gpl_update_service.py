@@ -86,7 +86,7 @@ class GPLUpdateService:
         s_list = sdb.get_symbol_list(symbol_list)
         s_list = {f"{d['symbol']}": d for d in s_list}
 
-        @Ins.multiple_executor(1)
+        #@Ins.multiple_executor(1)
         def _up_sym_exec(code):
             res = {'td': current_date, 'ul': []}
             Time.sleep(Str.randint(1, 10) / 100)
@@ -170,7 +170,7 @@ class GPLUpdateService:
         l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
         l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
-        @Ins.multiple_executor(1)
+        #@Ins.multiple_executor(1)
         def _up_day_exec(code):
             res = []
             symbol = self.formatter.sft.add_stock_prefix(code)
