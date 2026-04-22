@@ -111,10 +111,10 @@ class RedisTaskQueue:
                 RedisTaskQueue._execute_task,
                 args=(RedisTaskQueue, service_name, *args,),
                 kwargs=kwargs,
-                ttl=3600,  # 任务排队的最大时间，超时将被取消
-                result_ttl=3600,  # 任务结果过期时间
-                failure_ttl=80400,  # 失败结果过期时间
-                job_timeout=3 * 86400,  # 任务的最大运行时间，超时将被丢弃
+                ttl=3600,  # 任务排队入队列的最大时间
+                result_ttl=3600,  # 任务结果保存时间
+                failure_ttl=80400,  # 失败结果保存时间
+                job_timeout=3 * 86400,  # 任务的最大运行时间
                 retry=0  # 不重试
             )
             logger.debug(f"任务提交成功: {qn} - {job.id}","RQT_TASK_SUBMIT")
