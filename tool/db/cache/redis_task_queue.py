@@ -112,9 +112,9 @@ class RedisTaskQueue:
                 args=(RedisTaskQueue, service_name, *args,),
                 kwargs=kwargs,
                 ttl=3600,  # 任务排队的最大时间，超时将被取消
-                timeout=7*86400,  # 任务的最大运行时间，超时将被丢弃
                 result_ttl=3600,  # 任务结果过期时间
-                failure_ttl=3*86400,  # 失败结果过期时间
+                failure_ttl=80400,  # 失败结果过期时间
+                job_timeout=3 * 86400,  # 任务的最大运行时间，超时将被丢弃
                 retry=0  # 不重试
             )
             logger.debug(f"任务提交成功: {qn} - {job.id}","RQT_TASK_SUBMIT")
@@ -135,6 +135,7 @@ class RedisTaskQueue:
                 expire_time = Time.now() + 365 * 86400
                 failed_registry.cleanup(expire_time)  # 删除 failed
                 queue.finished_job_registry.cleanup(expire_time)  # 删除 finished
+                # queue.delete(delete_jobs=True)
                 logger.warning(f'队列清除完毕 - {qn}', 'RQT_TASK_WAR')
                 continue
             job_id_list = failed_registry.get_job_ids()
