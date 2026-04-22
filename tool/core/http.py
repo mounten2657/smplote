@@ -323,7 +323,7 @@ class Http:
             response.raise_for_status()
             traffic_header = response.headers.get("subscription-userinfo")
             if not traffic_header:
-                return f"订阅链接 {sub_url} 未返回流量信息头"
+                return f"订阅链接未返回流量信息头"
             traffic_dict = {}
             ts =  int(time.time())
             for item in traffic_header.split(";"):
@@ -339,5 +339,5 @@ class Http:
             }
             return result
         except Exception as e:
-            return f"订阅链接 {sub_url} 解析失败：{str(e)}"
+            return f"订阅链接解析失败：{str(e)}"
 
