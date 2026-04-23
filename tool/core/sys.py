@@ -117,7 +117,7 @@ class Sys:
         """多协程执行函数 - 同步"""
         def _multy_run(c_list):
             for tid in c_list:
-                gevent.sleep(0.01)
+                #gevent.sleep(0.01)
                 try:
                     res = func(tid, *args, **kwargs)
                     logger.debug(f"协程执行结果[{tid}] - {res} - {func}: {args}", 'SYS_MUL_RES')
@@ -126,12 +126,13 @@ class Sys:
                     logger.error(f"协程]执行失败[{tid}]: {func}: {args} - {err}", 'SYS_MUL_ERROR')
                     continue
             return True
-        g_list = []
+        #g_list = []
         chunk_list = Attr.chunk_list(chunk_list, chunk_size)
         for cl in chunk_list:
-            g = gevent.spawn(_multy_run, cl)
-            g_list.append(g)
-        gevent.joinall(g_list)
+            Sys.multy_thread(_multy_run, cl)
+        #     g = gevent.spawn(_multy_run, cl)
+        #     g_list.append(g)
+        # gevent.joinall(g_list)
         return True
 
     @staticmethod
