@@ -130,7 +130,9 @@ class GPLUpdateService:
                 logger.error(f"更新股票数据出错<{symbol}> - {err}", 'UP_SYM_ERR')
             return res
 
-        return _up_sym_exec(code_list)
+        [ _up_sym_exec(code) for code in code_list ]  # 单线程 - 需要注释装饰器
+        return True
+        #return _up_sym_exec(code_list)  # 多线程 - 需要解开装饰器注释
 
     def update_symbol_daily(self, code_str, is_force=0, current_date=None):
         """
@@ -236,7 +238,9 @@ class GPLUpdateService:
                              f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
-        return _up_day_exec(code_list)
+        [ _up_day_exec(code) for code in code_list ]  # 单线程 - 需要注释装饰器
+        return True
+        #return _up_day_exec(code_list)  # 多线程 - 需要解开装饰器注释
 
     def clear_api_log(self):
         """清理api日志 - 保留10万条记录"""

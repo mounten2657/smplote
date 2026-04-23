@@ -167,5 +167,6 @@ class GPLUpdateExtService:
 
             return ret
 
-        # return {code: _up_ext_exec(code) for code in code_list}  # 单线程，调试专用，注释装饰器
-        return _up_ext_exec(code_list)  # 多线程
+        [ _up_ext_exec(code) for code in code_list ]  # 单线程 - 需要注释装饰器
+        return True
+        #return _up_ext_exec(code_list)  # 多线程 - 需要解开装饰器注释
