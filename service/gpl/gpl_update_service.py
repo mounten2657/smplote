@@ -172,7 +172,7 @@ class GPLUpdateService:
         l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
         l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
-        #@Ins.multiple_executor(1)
+        @Ins.multiple_executor(4)
         def _up_day_exec(code):
             res = []
             symbol = self.formatter.sft.add_stock_prefix(code)
@@ -238,9 +238,9 @@ class GPLUpdateService:
                              f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
-        [ _up_day_exec(code) for code in code_list ]  # 单线程 - 需要注释装饰器
-        return True
-        #return _up_day_exec(code_list)  # 多线程 - 需要解开装饰器注释
+        # [ _up_day_exec(code) for code in code_list ]  # 单线程 - 需要注释装饰器
+        # return True
+        return _up_day_exec(code_list)  # 多线程 - 需要解开装饰器注释
 
     def clear_api_log(self):
         """清理api日志 - 保留10万条记录"""
