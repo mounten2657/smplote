@@ -126,8 +126,8 @@ class Sys:
             return True
         chunk_list = Attr.chunk_list(chunk_list, chunk_size)
         for cl in chunk_list:
-            Time.sleep(12 * chunk_size)
             Sys.delayed_thread(_multy_run, cl, timeout=3600)
+            Time.sleep(12 * chunk_size)
         return True
 
     @staticmethod
