@@ -59,7 +59,6 @@ class GPLUpdateEgdService:
         biz_list = ['EM_GD_TOP10',  'EM_GD_TOP10_FREE']
         sc_list = Attr.chunk_list(symbol_list, 25)
 
-        @Ins.multiple_executor(4)
         def _fix_gd_exec(s_list):
             rc = 0
             Time.sleep(Str.randint(1, 10) / 100)
@@ -84,7 +83,8 @@ class GPLUpdateEgdService:
                     rc += 1
             return rc
 
-        return _fix_gd_exec(sc_list)
+        [_fix_gd_exec(s_list) for s_list in sc_list]
+        return True
 
     def up_gdn_em(self, symbol, gdn_list, day_list, n, is_special):
         """更新股票股东人数"""

@@ -31,7 +31,7 @@ class VpClient(VpBaseFactory):
             not Config.is_prod() and 0 and bs.logout()  # bs 登录 - 停用
             ws = VpSocketFactory(self.app_key)
             return ws.start()
-        res = Sys.delayed_task(ws_start, timeout=86400)
+        res = Sys.delayed_thread(ws_start, timeout=86400)
         logger.debug(f'websocket start done - {res}', 'WS_END')
         return True
 
@@ -47,7 +47,7 @@ class VpClient(VpBaseFactory):
                 return True
             ws = VpSocketFactory(self.app_key)
             return ws.close()
-        res = Sys.delayed_task(ws_close, delay_seconds=1)
+        res = Sys.delayed_thread(ws_close, delay_seconds=1)
         logger.debug(f'websocket close done {is_all} - {res}', 'WS_END')
         return res
 

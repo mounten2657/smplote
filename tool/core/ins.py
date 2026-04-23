@@ -1,14 +1,8 @@
-import time
-import random
 import hashlib
-import queue
 from functools import wraps
 from typing import TypeVar, Type, Any
 from tool.core.attr import Attr
-from tool.core.str import Str
-from tool.core.error import Error
 from tool.core.logger import Logger
-from tool.core.sys import Sys
 from tool.db.cache.redis_client import RedisClient
 
 T = TypeVar('T')
@@ -71,53 +65,5 @@ class Ins:
                     if save_cache:
                         redis.set(cache_key, data, tuple(args))
                 return data
-            return wrapper
-        return decorator
-
-    @staticmethod
-    def multiple_executor(max_workers=4, retries=2):
-        """并行执行装饰器 - 队列"""
-        def decorator(func):
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                task_list = args[0]
-                result_queue = queue.Queue()
-                task_queue = queue.Queue()
-                # 填充任务队列
-                for task in task_list:
-                    task_queue.put(task)
-                def worker(uid):
-                    while True:
-                        try:
-                            task = task_queue.get_nowait()
-                        except queue.Empty:
-                            break
-                        for attempt in range(retries):
-                            try:
-                                result = func(task, *args[1:], **kwargs)
-                                result_queue.put((task, result))
-                                break
-                            except Exception as e:
-                                err = Error.handle_exception_info(e)
-                                err['ext'] = args[1:]
-                                err['uid'] = uid
-                                if attempt < retries - 1:
-                                    time.sleep(random.uniform(1, 3))
-                                else:
-                                    logger.error(err, 'LGT_EXEC_ERR', 'system')
-                                    result_queue.put((task, err))
-                        task_queue.task_done()
-                        time.sleep(0.001)  # 1ms休息减少CPU竞争
-                # 创建有限的工作线程
-                for i in range(min(max_workers, len(task_list))):
-                    uuid = Str.md5(f"{i}{str(func)}{str(args)}{str(kwargs)}")
-                    Sys.delayed_task(worker, uuid, timeout=86400)
-                task_queue.join()
-                results = {}
-                while not result_queue.empty():
-                    task, result = result_queue.get()
-                    tk = Str.md5(str(task)) if not isinstance(task, (str, int)) else task
-                    results[tk] = result
-                return results
             return wrapper
         return decorator

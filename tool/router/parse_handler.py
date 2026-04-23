@@ -34,7 +34,7 @@ class ParseHandler:
         not Config.is_prod() and 0 and bs.logout()  # bs 登录 - 停用
         # 延迟启动
         res['clean_log'] = clean_old_logs(30 if Config.is_prod() else 7)
-        res['delay_task'] = Sys.delayed_task(hot_load, delay_seconds=1, timeout=86400)
+        res['delayed_thread'] = Sys.delayed_thread(hot_load, delay_seconds=1, timeout=86400)
         return res
 
     @staticmethod

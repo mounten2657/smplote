@@ -4,12 +4,14 @@ import hashlib
 import inspect
 import pickle
 import docker
+import gevent
 import threading
 import subprocess
 from typing import Callable
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from tool.db.cache.redis_client import RedisClient
+from tool.core.attr import Attr
 from tool.core.http import Http
 from tool.core.time import Time
 from tool.core.error import Error
@@ -63,7 +65,7 @@ class Sys:
         return decorator
 
     @staticmethod
-    def delayed_task(func: Callable, *args, **kwargs) -> str:
+    def delayed_thread(func: Callable, *args, **kwargs) -> str:
         """
         延迟执行函数，立即返回 thread_id
          - [!] 严禁套娃 - 否则无效
@@ -108,7 +110,29 @@ class Sys:
             url = f"{Http.get_base_url()}{uri}"
         else:
             url = uri
-        return Sys.delayed_task(Http.send_request, method, url, params, delay_seconds=delay_seconds)
+        return Sys.delayed_thread(Http.send_request, method, url, params, delay_seconds=delay_seconds)
+
+    @staticmethod
+    def multy_thread(func: Callable, chunk_list, chunk_size=10, *args, **kwargs):
+        """多协程执行函数 - 同步"""
+        def _multy_run(c_list):
+            for tid in c_list:
+                gevent.sleep(0.01)
+                try:
+                    res = func(tid, *args, **kwargs)
+                    logger.debug(f"协程执行结果[{tid}] - {res} - {func}: {args}", 'SYS_MUL_RES')
+                except Exception as e:
+                    err = Error.handle_exception_info(e)
+                    logger.error(f"协程]执行失败[{tid}]: {func}: {args} - {err}", 'SYS_MUL_ERROR')
+                    continue
+            return True
+        g_list = []
+        chunk_list = Attr.chunk_list(chunk_list, chunk_size)
+        for cl in chunk_list:
+            g = gevent.spawn(_multy_run, cl)
+            g_list.append(g)
+        gevent.joinall(g_list)
+        return True
 
     @staticmethod
     def shutdown():
@@ -174,7 +198,7 @@ class Sys:
             logger.warning(f"正在停止GUNICORN", 'SYS_KGU')
             container = Sys.get_docker_container('www-python')
             return container.stop()
-        return Sys.delayed_task(kgu, delay_seconds=3)
+        return Sys.delayed_thread(kgu, delay_seconds=3)
 
     @staticmethod
     def delay_reload_gu(is_force=0):
@@ -183,7 +207,7 @@ class Sys:
             logger.warning(f"正在重启GUNICORN - {is_force}", 'SYS_RGU')
             container = Sys.get_docker_container('www-python')
             return container.restart()
-        return Sys.delayed_task(rgu, delay_seconds=3)
+        return Sys.delayed_thread(rgu, delay_seconds=3)
 
     @staticmethod
     def delay_reload_vp():
@@ -192,7 +216,7 @@ class Sys:
             logger.warning(f"正在重启WECHATPAD", 'SYS_RVP')
             container = Sys.get_docker_container('wechatpad')
             return container.restart()
-        return Sys.delayed_task(rvp, delay_seconds=3)
+        return Sys.delayed_thread(rvp, delay_seconds=3)
 
     @staticmethod
     def delay_reload_cf():
@@ -201,4 +225,4 @@ class Sys:
             logger.warning(f"正在重启CLOUDFLARED", 'SYS_RCF')
             container = Sys.get_docker_container('cloudflared')
             return container.restart()
-        return Sys.delayed_task(rcf, delay_seconds=3)
+        return Sys.delayed_thread(rcf, delay_seconds=3)

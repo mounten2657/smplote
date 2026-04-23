@@ -109,7 +109,6 @@ class GPLUpdateExtService:
         # 加载固定执行且不需要原始数据的
         season_data['scl'] = None
 
-        #@Ins.multiple_executor(1)
         def _up_ext_exec(code):
             Time.sleep(Str.randint(1, 10) / 100)
             ret = {}
@@ -167,6 +166,5 @@ class GPLUpdateExtService:
 
             return ret
 
-        [ _up_ext_exec(code) for code in code_list ]  # 单线程 - 需要注释装饰器
+        [ _up_ext_exec(code) for code in code_list ]
         return True
-        #return _up_ext_exec(code_list)  # 多线程 - 需要解开装饰器注释

@@ -5,7 +5,7 @@ from model.gpl.gpl_daily_model import GPLDailyModel
 from model.gpl.gpl_api_log_model import GplApiLogModel
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
-from tool.core import Ins, Logger, Str, Time, Attr, Error, Env
+from tool.core import Ins, Logger, Str, Time, Attr, Error, Env, Sys
 
 logger = Logger()
 redis = RedisClient()
@@ -86,7 +86,6 @@ class GPLUpdateService:
         s_list = sdb.get_symbol_list(symbol_list)
         s_list = {f"{d['symbol']}": d for d in s_list}
 
-        #@Ins.multiple_executor(1)
         def _up_sym_exec(code):
             res = {'td': current_date, 'ul': []}
             Time.sleep(Str.randint(1, 10) / 100)
@@ -130,9 +129,8 @@ class GPLUpdateService:
                 logger.error(f"更新股票数据出错<{symbol}> - {err}", 'UP_SYM_ERR')
             return res
 
-        [ _up_sym_exec(code) for code in code_list ]  # 单线程 - 需要注释装饰器
+        [ _up_sym_exec(code) for code in code_list ]
         return True
-        #return _up_sym_exec(code_list)  # 多线程 - 需要解开装饰器注释
 
     def update_symbol_daily(self, code_str, is_force=0, current_date=None):
         """
@@ -172,7 +170,6 @@ class GPLUpdateService:
         l_list['f1'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f1']}
         l_list['f2'] = {f"{d['h_event']}_{d['h_value']}": d for d in l_list['f2']}
 
-        @Ins.multiple_executor(16)
         def _up_day_exec(code):
             res = []
             symbol = self.formatter.sft.add_stock_prefix(code)
@@ -238,9 +235,7 @@ class GPLUpdateService:
                              f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
-        # [ _up_day_exec(code) for code in code_list ]  # 单线程 - 需要注释装饰器
-        # return True
-        return _up_day_exec(code_list)  # 多线程 - 需要解开装饰器注释
+        return Sys.multy_thread(_up_day_exec, code_list)  # 分成多组同时执行
 
     def clear_api_log(self):
         """清理api日志 - 保留10万条记录"""
