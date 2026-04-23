@@ -129,7 +129,8 @@ class Sys:
         #g_list = []
         chunk_list = Attr.chunk_list(chunk_list, chunk_size)
         for cl in chunk_list:
-            Sys.multy_thread(_multy_run, cl)
+            Time.sleep(5)
+            Sys.delayed_thread(_multy_run, cl)
         #     g = gevent.spawn(_multy_run, cl)
         #     g_list.append(g)
         # gevent.joinall(g_list)
