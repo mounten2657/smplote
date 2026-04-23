@@ -24,7 +24,7 @@ class RedisTaskQueue:
             # 本地 Windows 环境下直接 while True 消费
             try:
                 while True:
-                    Time.sleep(1)
+                    Time.sleep(0.1)
                     res = redis_conn.blpop(queue_name, timeout=3)
                     if not res:
                         continue

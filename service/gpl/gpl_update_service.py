@@ -185,7 +185,7 @@ class GPLUpdateService:
                 if is_force == 99 and log_info:
                     logger.debug(f"日线数据已入库[{v}]<{symbol}><{tds}>{percent}", 'UP_DAY_SKP')
                     continue
-                Time.sleep(Str.randint(5, 9) / 10)
+                Time.sleep(Str.randint(5, 9) / 100)
                 if log_info and is_force != 99:
                     day_list = log_info['process_params']
                 else:
