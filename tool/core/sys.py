@@ -127,7 +127,7 @@ class Sys:
         chunk_list = Attr.chunk_list(chunk_list, chunk_size)
         for i, cl in enumerate(chunk_list):
             Sys.delayed_thread(_multy_run, cl, timeout=86400)
-            Time.sleep((6 + i * chunk_size) if not sleep_time else sleep_time)
+            Time.sleep(chunk_size if not sleep_time else sleep_time)
         return True
 
     @staticmethod
