@@ -17,7 +17,7 @@ from tool.core.error import Error
 from tool.core.logger import Logger
 
 _timeout = 180  # 超时时间，默认180秒
-_executor = ThreadPoolExecutor(max_workers=100, thread_name_prefix="SysTaskExecutor")  # 线程池：控制并发（默认100）
+_executor = ThreadPoolExecutor(max_workers=1000, thread_name_prefix="SysTaskExecutor")
 _lock_key = "LOCK_SYS_CNS"  # 并发去重锁
 _redis = RedisClient()
 logger = Logger()
@@ -112,7 +112,7 @@ class Sys:
         return Sys.delayed_thread(Http.send_request, method, url, params, delay_seconds=delay_seconds)
 
     @staticmethod
-    def multy_thread(func: Callable, chunk_list, chunk_size=1, sleep_time=0, *args, **kwargs):
+    def multy_thread(func: Callable, chunk_list, chunk_size=5, sleep_time=0, *args, **kwargs):
         """多协程执行函数"""
         def _multy_run(c_list):
             for tid in c_list:
