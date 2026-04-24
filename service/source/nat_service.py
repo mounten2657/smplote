@@ -13,6 +13,7 @@ class NatService:
 
     # 混合模式下各种请求的概率
     _PROXY_RAND = Env.get('PROXY_RAND', '')
+    _PROXY_VPS_LIST = Env.get('PROXY_VPS_LIST', '')
 
     def __init__(self):
         self.ppr = VppPxqService()
@@ -35,6 +36,13 @@ class NatService:
     def vps_request(self, method, url, params=None, headers=None):
         """利用vps发起请求"""
         return self.vps.send_http_request(method, url, params, headers)
+
+    def vpr_request(self, method, url, params=None, headers=None):
+        """利用vps代理池发起请求"""
+        proxy = Attr.random_choice(Attr.parse_json_ignore(self._PROXY_VPS_LIST))
+        if not proxy:
+            Error.throw_exception('获取代理池失败，请先配置vps代理名单')
+        return Http.send_request(method, url, params, headers, proxy)
 
     def get_mixed_rand(self):
         """获取混合模式下的随机值 - [l, z, v, x]"""
