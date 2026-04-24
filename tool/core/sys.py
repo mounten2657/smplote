@@ -112,7 +112,7 @@ class Sys:
         return Sys.delayed_thread(Http.send_request, method, url, params, delay_seconds=delay_seconds)
 
     @staticmethod
-    def multy_thread(func: Callable, chunk_list, chunk_size=5, sleep_time=0, *args, **kwargs):
+    def multy_thread(func: Callable, chunk_list, chunk_size=1, sleep_time=0, *args, **kwargs):
         """多协程执行函数"""
         def _multy_run(c_list):
             for tid in c_list:
