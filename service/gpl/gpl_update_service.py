@@ -240,7 +240,7 @@ class GPLUpdateService:
                              f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
-        sleep_time = 15 if vip == 2 else 0
+        sleep_time = 5 if vip == 2 else 0
         return Sys.multy_thread(_up_day_exec, code_list, sleep_time=sleep_time)  # 分成多组同时执行
 
     def clear_api_log(self):
