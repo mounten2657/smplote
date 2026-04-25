@@ -2,6 +2,7 @@ import re
 import time
 import json
 import html
+import string
 import random
 import base64
 import hashlib
@@ -157,6 +158,21 @@ class Str:
         md5.update(data.encode('utf-8'))
         # 获取十六进制表示的哈希值
         return md5.hexdigest()
+
+    @staticmethod
+    def random_hex(n: int) -> str:
+        """生成n位16进制随机串"""
+        return ''.join(random.choice('0123456789abcdef') for _ in range(n))
+
+    @staticmethod
+    def random_str(n: int) -> str:
+        """生成n位字母数字随机串"""
+        return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(n))
+
+    @staticmethod
+    def random_digits(n: int) -> str:
+        """生成n位数字随机串"""
+        return ''.join(random.choice('0123456789') for _ in range(n))
 
     @staticmethod
     def filter_target_chars(input_str: str) -> str:

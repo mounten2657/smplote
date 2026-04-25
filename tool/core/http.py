@@ -4,6 +4,7 @@ import requests
 import uuid
 import time
 import random
+import subprocess
 from flask import request
 from urllib.parse import urlencode, urlparse
 from typing import Union, Dict, Optional
@@ -118,7 +119,8 @@ class Http:
             url: str,
             params: Union[Dict, str, None] = None,
             headers: Optional[Dict] = None,
-            proxy = None
+            proxy = None,
+            timeout = 120,
     ) -> Union[Dict, str]:
         """
         发送HTTP请求并自动处理JSON响应
@@ -128,10 +130,11 @@ class Http:
         :param params: 查询参数，可以是字典或"a=1&b=2"格式字符串
         :param headers: 请求头字典
         :param proxy: 代理
+        :param timeout: 超时时间
         :return: 如果响应是JSON则返回字典，否则返回原始文本
         """
         method = method.upper()
-        if method not in ('GET', 'POST', 'JSON', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'):
+        if method not in ('GET', 'POST', 'JSON', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS', 'CURL', 'CURL_POST'):
             raise ValueError(f"Unsupported HTTP method: {method}")
         if not url:
             raise ValueError("URL cannot be None")
@@ -139,7 +142,7 @@ class Http:
             'method': method,
             'url': url,
             'headers': headers or {},
-            'timeout': 120,
+            'timeout': timeout,
         }
         if proxy:  # 新增代理
             request_kwargs['proxies'] = {'http': proxy, 'https': proxy}
@@ -158,11 +161,34 @@ class Http:
         else:
             request_kwargs.update({'data': params_str})
         try:
-            rep = requests.request(**request_kwargs)
-            rep.raise_for_status()  # 检查HTTP错误
-            if 'application/json' in rep.headers.get('Content-Type', ''): # 自动处理JSON响应
-                return rep.json()
-            return Attr.parse_json_ignore(rep.text)
+            if 'CURL' in method:
+                cmd_parts = "curl -s"
+                headers = headers or {}
+                for key, value in headers.items():
+                    if key not in ['Cookie']:
+                        cmd_parts += f' -H "{key}: {value}"'
+                cookie = headers.get('Cookie', '').strip()
+                if cookie:
+                    cmd_parts += f' -b "{cookie}"'
+                if params:
+                    param_str = "&".join([f"{k}={v}" for k, v in params.items()])
+                    if method.upper() == 'CURL_POST':
+                        cmd_parts += f' -X POST -d "{str(param_str)}"'
+                    else:
+                        url = f"{url}&{param_str}" if "?" in url else f"{url}?{param_str}"
+                curl_cmd = cmd_parts + f' "{str(url)}"'
+                try:
+                    rep = subprocess.check_output(curl_cmd, shell=True, timeout=timeout).decode('utf-8')
+                except Exception as e:
+                    err = str(e).replace(curl_cmd, '<curl>')  # curl: (56) Failure when receiving data from the peer
+                    rep = f"curl failed: {err}"  # curl failed: Command '<curl>' returned non-zero exit status 56
+            else:
+                rep = requests.request(**request_kwargs)
+                rep.raise_for_status()  # 检查HTTP错误
+                if 'application/json' in rep.headers.get('Content-Type', ''): # 自动处理JSON响应
+                    return rep.json()
+                rep = rep.text
+            return Attr.parse_json_ignore(rep)
         except (json.JSONDecodeError,requests.exceptions.RequestException) as e:
             # raise requests.exceptions.RequestException( f"HTTP request failed: {str(e)}") from e
             # 直接返回，没必要抛异常了

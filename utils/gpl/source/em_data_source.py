@@ -36,6 +36,7 @@ class EmDataSource:
         if cookie:
             self.headers['Cookie'] = cookie  # 重要的属性，传递Cookie能快速解禁，但次数有限
         self.ldb = GplApiLogModel()
+        self.formatter = StockStrFormatterService()
 
     def _get(self, url: str, params: Dict = None, biz_code='', ext=None, method='GET'):
         """
@@ -65,6 +66,8 @@ class EmDataSource:
                 else:
                     info = pid
                     pid = pid['id']
+        # if biz_code == 'EM_DAILY':
+        #     headers['Cookie'] = self.formatter.gen_em_cookie()
         if vip == 2:  # vpr 通道 - 试运行 - 不常用
             data = self.nat.vpr_request(method, url, params, headers)
             r_type, proxy, node = 'r', '', ''
@@ -93,8 +96,8 @@ class EmDataSource:
 
     def _format_stock_code(self, stock_code):
         """格式化股票代码"""
-        stock_code = StockStrFormatterService.remove_stock_prefix(stock_code)
-        prefix = StockStrFormatterService.get_stock_prefix(stock_code)
+        stock_code = self.formatter.remove_stock_prefix(stock_code)
+        prefix = self.formatter.get_stock_prefix(stock_code)
         prefix_int = 1 if 'SH' == prefix else 0
         return stock_code, prefix, prefix_int
 

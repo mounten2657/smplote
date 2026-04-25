@@ -1,4 +1,4 @@
-from tool.core import Str
+from tool.core import Str, Time
 
 
 class StockStrFormatterService:
@@ -134,3 +134,31 @@ class StockStrFormatterService:
         stock_code = StockStrFormatterService.remove_stock_prefix(stock_code)
         stock_symbol = StockStrFormatterService.add_stock_prefix(stock_code)
         return stock_symbol.replace(stock_code, '').replace('.', '')
+
+    @staticmethod
+    def gen_em_cookie() -> str:
+        """生成东财随机Cookie"""
+        timestamp = int(Time.now(0) * 1000)
+        now_str = Time.date()
+        qgqp_b_id = Str.random_hex(32)
+        st_nvi = Str.random_str(28)
+        st_si = Str.random_digits(14)
+        nid18 = Str.random_hex(32)
+        gviem = Str.random_str(24)
+        st_pvi = Str.random_digits(14)
+        st_psi = f"{timestamp}{Str.random_digits(4)}"
+        cookie = (
+            f"qgqp_b_id={qgqp_b_id}; "
+            "fullscreengg=1; fullscreengg2=1; "
+            f"st_nvi={st_nvi}; st_si={st_si}; st_asi=delete; "
+            f"nid18={nid18}; nid18_create_time={timestamp}; "
+            f"gviem={gviem}; gviem_create_time={timestamp}; "
+            f"websitepoptg_api_time={timestamp}; "
+            f"st_pvi={st_pvi}; st_sp={now_str.replace(' ', '%20')}; "
+            "st_inirUrl=https%3A%2F%2Fdata.eastmoney.com%2F; "
+            "st_sn=16; "
+            f"st_psi={st_psi}"
+        )
+        return cookie
+
+
