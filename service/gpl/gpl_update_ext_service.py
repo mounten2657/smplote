@@ -34,10 +34,10 @@ class GPLUpdateExtService:
         self.efn = GPLUpdateEfnService()
         self.egd = GPLUpdateEgdService()
 
-    def update_symbol_ext(self, code_str, is_force=0, current_date=None):
+    def update_symbol_ext(self, code_str, is_force=0, current_date=None, vip=0):
         """更新股票额外数据 - 多线程"""
         code_list = [self.formatter.sft.remove_stock_prefix(c) for c in code_str.split(',') if c.strip()]
-        if not code_list:
+        if not code_list or vip < 0:
             return False
 
         # 初始化数据库实例

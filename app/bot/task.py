@@ -115,5 +115,6 @@ class Task(BaseAppVp):
         code_str = self.params.get('code_str', '')
         is_force = self.params.get('is_force', 0)
         td = self.params.get('td', '')
-        res = self.gpl.quick_update_symbol(code_str, int(is_force), 'GPL_DAY', td)
+        vip = self.params.get('vip', 1)
+        res = self.gpl.quick_update_symbol(code_str, int(is_force), 'GPL_DAY', td, int(vip))
         return self.success(res)

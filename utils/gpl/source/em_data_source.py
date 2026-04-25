@@ -53,6 +53,7 @@ class EmDataSource:
         headers = Http.get_random_headers() | self.headers  # 每次都是随机的 header
         headers['Referer'] = Http.get_request_base_url(url)    # 来源固定
         headers['Host'] = Http.get_request_host_url(url)        # 主机固定
+        vip = Attr.get(ext, 'vip', 0)  # 0 本地通道 | 1 vpn 通道 | 2 vpr 通道
         # 如果已经有了日志数据就不用请求接口了
         if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
             pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
@@ -64,7 +65,10 @@ class EmDataSource:
                 else:
                     info = pid
                     pid = pid['id']
-        if any(c in biz_code for c in ['EM_DAILY', 'EM_XXX']):  # 非常重要业务才使用混合模式
+        if vip == 2:  # vpr 通道 - 试运行 - 不常用
+            data = self.nat.vpr_request(method, url, params, headers)
+            r_type, proxy, node = 'r', '', ''
+        elif vip == 1:  # vpn 通道 - 非常重要业务才使用混合模式
             # 概率分配和重试机制在里面实现了
             data, r_type, proxy, node = self.nat.mixed_request(method, url, params, headers)
         else:  # 本地请求
@@ -186,7 +190,7 @@ class EmDataSource:
         res = Attr.get_by_point(data, 'result.data', {})
         return self._ret(res, pid, start_time)
 
-    def get_daily_quote(self, stock_code: str, sd: str = "20000101", ed: str = "20990101", adjust: str = "", period: str = "daily") -> List[Dict]:
+    def get_daily_quote(self, stock_code: str, sd: str = "20000101", ed: str = "20990101", adjust: str = "", period: str = "daily", vip: int=0) -> List[Dict]:
         """
         获取股票日线行情
 
@@ -195,6 +199,7 @@ class EmDataSource:
         :param str ed: 结束日期 - Ymd 或 Y-m-d（如： 2025-03-02）
         :param str adjust: key of {"qfq": "前复权", "hfq": "后复权", "": "不复权"}
         :param str period: key of {"daily": "101", "weekly": "102", "monthly": "103"}
+        :param int vip: 是否使用特殊节点请求
         :return: 日线行情数据列表，每个元素为一个交易日数据字典
         [{'date': '2025-06-27', 'open': 7.13, 'close': 7.19, 'high': 7.19, 'low': 7.06, 'volume': 41573, 'amount': 29676241.0, 'amplitude': 1.83, 'pct_change': 1.13, 'price_change': 0.08, 'turnover_rate': 1.97}]
         """
@@ -216,7 +221,7 @@ class EmDataSource:
             "isSecurity": "0",
             "lmt": "10000",
         }
-        data, pid = self._get(url, params, f'EM_DAILY_{adjust_dict[adjust]}', {'he': f'{prefix}{stock_code}', 'hv': f'{sd}~{ed}'})
+        data, pid = self._get(url, params, f'EM_DAILY_{adjust_dict[adjust]}', {'he': f'{prefix}{stock_code}', 'hv': f'{sd}~{ed}', 'vip': vip})
         kline_list = Attr.get_by_point(data, 'data.klines', [])
         if not kline_list:
             return self._ret([], pid, start_time, 0)

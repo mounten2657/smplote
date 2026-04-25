@@ -25,7 +25,7 @@ class GPLUpdateService:
     def __init__(self):
         self.formatter = GplFormatterService()
 
-    def quick_update_symbol(self, code_str='', is_force=0, sk='GPL_SYM', td=None):
+    def quick_update_symbol(self, code_str='', is_force=0, sk='GPL_SYM', td=None, vip=0):
         """
         多进程快速更新股票基础数据
 
@@ -33,6 +33,7 @@ class GPLUpdateService:
         :param is_force: 是否强制更新
         :param sk: 更新类型
         :param str td: 当前日期 - %Y-%m-%d
+        :param int vip: 是否使用特殊节点请求
         :return:
         """
         # 周末不更新
@@ -61,24 +62,27 @@ class GPLUpdateService:
             # 重置计数缓存
             r1 = redis.delete('PROXY_STAT_TOL', ["*"])
             r2 = redis.delete('PROXY_STAT_FAL', ["*"])
-            logger.warning(f"重置计数缓存 - {r1} - {r2}", 'UP_DAY_CDL')
+            if vip ==1:
+                sk = 'GPL_DAY_VPN'
+            logger.warning(f"重置计数缓存 - {r1} - {r2} - {sk}", 'UP_DAY_CDL')
         # 快速转入批量队列中执行
         for c_list in chunk_list:
-            RedisTaskQueue.add_task(sk, ','.join(c_list), is_force, current_date)
+            RedisTaskQueue.add_task(sk, ','.join(c_list), is_force, current_date, vip)
         return True
 
-    def update_symbol(self, code_str, is_force=0, current_date=None):
+    def update_symbol(self, code_str, is_force=0, current_date=None, vip=0):
         """
         更新股票基础数据
 
         :param str code_str: 股票代码，不带市场前缀，多个用英文逗号隔开
         :param int is_force: 是否强制更新
         :param str current_date: 当前日期 - %Y-%m-%d
+        :param int vip: 是否使用特殊节点请求
         :return: 更新结果
         """
         sdb = GPLSymbolModel()
         code_list = code_str.split(',')
-        if not code_list:
+        if not code_list or vip < 0:
             return False
         all_code_list = self.formatter.get_stock_code_all()
         code_list = [self.formatter.sft.remove_stock_prefix(c) for c in code_list]
@@ -132,13 +136,14 @@ class GPLUpdateService:
         [ _up_sym_exec(code) for code in code_list ]
         return True
 
-    def update_symbol_daily(self, code_str, is_force=0, current_date=None):
+    def update_symbol_daily(self, code_str, is_force=0, current_date=None, vip=1):
         """
         更新股票日线数据
 
         :param code_str: 股票代码列表，一般是50个
         :param is_force:  99: 仅拉取股票历史数据 | 98: 对历史数据入库 | 10: 今日 | 0,15: 更新最近五天  | 17: 最近一周
         :param str current_date: 当前日期 - %Y-%m-%d
+        :param int vip: 是否使用特殊节点请求
         :return:
         """
         code_list = code_str.split(',')
@@ -186,7 +191,7 @@ class GPLUpdateService:
                 if log_info and is_force != 99:
                     day_list = log_info['process_params']
                 else:
-                    day_list = self.formatter.em.get_daily_quote(code, st, et, k)  # 内含Nat自动分流
+                    day_list = self.formatter.em.get_daily_quote(code, st, et, k, vip=vip)  # 内含Nat自动分流
                 res.append(len(day_list))
                 logger.debug(f"接口请求日线数据[{v}]<{symbol}><{tds}>{percent} - {k}"
                              f" - [{len(day_list)}]", 'UP_DAY_SKP')
@@ -235,7 +240,8 @@ class GPLUpdateService:
                              f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
-        return Sys.multy_thread(_up_day_exec, code_list)  # 分成多组同时执行
+        sleep_time = 15 if vip == 2 else 0
+        return Sys.multy_thread(_up_day_exec, code_list, sleep_time=sleep_time)  # 分成多组同时执行
 
     def clear_api_log(self):
         """清理api日志 - 保留10万条记录"""
