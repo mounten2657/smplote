@@ -15,7 +15,7 @@ class Nat(BaseApp):
         url = self.params.get('u', '')
         params = Attr.parse_json_ignore(self.params.get('p', ''))
         headers = Attr.parse_json_ignore(self.params.get('h', ''))
-        o = self.params.get('o', '0')
+        o = self.params.get('o') if self.params.get('o') else '0'
         return method, url, params, headers, o
 
     def ppr(self):

@@ -66,8 +66,8 @@ class EmDataSource:
                 else:
                     info = pid
                     pid = pid['id']
-        # if biz_code == 'EM_DAILY':
-        #     headers['Cookie'] = self.formatter.gen_em_cookie()
+        if biz_code == 'EM_DAILY':
+            headers['Cookie'] = self.formatter.gen_em_cookie()
         if vip == 2:  # vpr 通道 - 试运行 - 不常用
             data = self.nat.vpr_request(method, url, params, headers)
             r_type, proxy, node = 'r', '', ''

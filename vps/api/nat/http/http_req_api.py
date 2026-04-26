@@ -39,8 +39,6 @@ class HttpReqApi:
             if not method.startswith('CURL'):
                 rep = requests.request(**request_kwargs)
                 rep.raise_for_status()
-                if 'application/json' in rep.headers.get('Content-Type', ''):
-                    return rep.json()
                 rep = rep.text
             else:
                 cmd_parts = "curl -s"
@@ -59,7 +57,8 @@ class HttpReqApi:
                     cmd_parts += f' -b "{cookie}"'
                 curl_cmd = cmd_parts + f' "{str(url)}"'
                 try:
-                    rep = subprocess.check_output(curl_cmd, shell=True, timeout=timeout).decode('utf-8')
+                    rep = subprocess.check_output(curl_cmd, shell=True, timeout=timeout)
+                    rep = str(rep.decode('utf-8')) if rep else ''
                 except Exception as e:
                     err = str(e).replace(curl_cmd, '<curl>')
                     rep = f"curl failed: {err}"
