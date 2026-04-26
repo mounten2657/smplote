@@ -64,5 +64,9 @@ class OpenNatServer(OpenNatServerServicer):
         add_OpenNatServerServicer_to_server(OpenNatServer(), server)
         server.add_insecure_port('0.0.0.0:30390')
         server.start()
-        print("gRPC Server is running")
-        server.wait_for_termination()
+        print("gRPC Server is running (Ctrl+C to stop)")
+        try:
+            server.wait_for_termination()
+        except KeyboardInterrupt:
+            server.stop(0)
+            print("\r\ngRPC server stopped gracefully")
