@@ -232,7 +232,7 @@ class VppClashService:
             Time.sleep(Str.randint(3, 9) / 10 + sleep_time)
         return True
 
-    def send_http_request_pro(self, method, url, params=None, headers=None, port=None, node=None, ctype='em', timeout=None):
+    def send_http_request_pro(self, method, url, params=None, headers=None, port=None, node=None, timeout=None):
         """发起http请求改进版 - 节点利用最大化 - 同端口请求串行化"""
         port = int(port)
         if not port:  # 代理端口必传
@@ -240,8 +240,8 @@ class VppClashService:
         # 使用 Semaphore 确保同一端口的请求串行
         with self.port_semaphores[port]:
             proxy = self.get_vpn_url(port)
-            if not node:
-                node = self.get_vpn_node(port, ctype) # 随机选出一个可用节点并切换过去
+            if not node:  # 传入的节点为空才会进入这个逻辑
+                node = self.get_vpn_node(port, 'all') # 随机选出一个节点并切换过去
                 if not node:
                     Error.throw_exception(f'empty node cache - {url} - {proxy} - {params}')
             self.switch_vpn_node(port, node, 0.1)  # 给切换节点一点反应时间
