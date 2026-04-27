@@ -71,10 +71,4 @@ class OpenNatClient:
                 headers=headers,
                 timeout=timeout
         )))
-        #return res['data']
-        ret = res['data']
-        if isinstance(ret, dict):
-            ret = ret | {"_vc": self.vc}
-        elif isinstance(ret, str):
-            ret += f' - <_vc={self.vc}>'
-        return ret
+        return res['data']
