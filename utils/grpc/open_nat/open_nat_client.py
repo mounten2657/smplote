@@ -13,8 +13,8 @@ class OpenNatClient:
     ARGS_UNIQUE_KEY = True
 
     def __init__(self, vc):
-        vc = vc if vc else 'z1'
-        host, port = self.get_vps_config(vc)
+        self.vc = vc if vc else 'z1'
+        host, port = self.get_vps_config(self.vc)
         self.channel = grpc.insecure_channel(
             f"{host}:{port}",
             options=[
@@ -71,4 +71,10 @@ class OpenNatClient:
                 headers=headers,
                 timeout=timeout
         )))
-        return res['data']
+        #return res['data']
+        ret = res['data']
+        if isinstance(ret, dict):
+            ret = ret | {"_vc": self.vc}
+        elif isinstance(ret, str):
+            ret += f' - <_vc={self.vc}>'
+        return ret
