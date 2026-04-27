@@ -118,7 +118,7 @@ class NatService:
                     # if port:
                     #     redis.incr(failed_key, [f"{date}:{uuid}_w"])
                     #     redis.set_nx(failed_key, par, [f"{date}:{uuid}_w_{i}"])
-                    Time.sleep(5 +  i * 12)  # 稍微等待一下，总计145秒，而节点刷新时间为2分钟
+                    Time.sleep(round((5 +  i * 12) / 10, 2))  # 稍微等待一下，总计14.5秒，而节点刷新时间为2分钟
                 else:
                     logger.error(f"请求错误，已超过最大重试次数<{uuid}><{r_type}>[{i + 1}/{retry_times}][{proxy}][{node}]: {url} - {params} - {err}", 'MIXED_ERR')
                     redis.incr(total_key, [f'{date}:fal'])

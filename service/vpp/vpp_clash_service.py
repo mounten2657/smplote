@@ -101,16 +101,17 @@ class VppClashService:
         n_list = redis.get(self.cache_key, [f'{port}:{today}:{c_type}'])  # 从缓存中读取
         if not n_list:
             return ''
-        n_list = self.filter_invalid_node(n_list, port)
+        n_list = self.filter_invalid_node(n_list, port, False)
         return Attr.random_choice(n_list)
 
-    def filter_invalid_node(self, node_list, port=None):
+    def filter_invalid_node(self, node_list, port=None, is_log=True):
         """过滤无效节点"""
         n_list = []
         filter_list = ['自动', '剩余', '到期', '故障', '直连', '文档', '客户端', '随机', '放假', '丢失', '频道', '订阅', '套餐', '网址', '邮箱', '请', 'Auto', 'auto']
         for node in node_list:
             if any(c in node for c in filter_list):
-                logger.warning(f"过滤无效节点<{port}><{node}>", "CVE_WAR")
+                if is_log:
+                    logger.warning(f"过滤无效节点<{port}><{node}>", "CVE_WAR")
                 continue
             n_list.append(node)
         return n_list
