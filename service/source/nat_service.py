@@ -82,7 +82,7 @@ class NatService:
                 if r_type == 'x':  # 代理池 - 0%   # 收费太贵且效果不佳，暂不考虑
                     proxy = self.ppr.get_proxy_cache()
                     res = self.ppr_request(method, url, params, headers, proxy)
-                elif r_type == 'v':  # VPN - 89.7%
+                elif r_type == 'v':  # VPN - 90%
                     port = self.vpn.get_vpn_port()  # 随机端口
                     proxy = self.vpn.get_vpn_url(port)
                     c_type = 'em' if i in [0, retry_times - 1] else 'all' # 除了第一次和最后一次使用高效节点，其它重试次数从全部节点中抽取随机节点
@@ -92,10 +92,10 @@ class NatService:
                 elif r_type == 'r':   # VPR - 0%  # tiny proxy 并不好用
                     proxy = 'vpr'
                     res = self.vpr_request(method, url, params, headers)
-                elif r_type == 'z1':   # VPS - 0.2%
+                elif r_type == 'z1':   # VPS - 3.9%
                     proxy = 'vps'
                     res = self.vps_request(method, url, params, headers)
-                elif r_type == 'z2':   # VPS - 10%
+                elif r_type == 'z2':   # VPS - 6%
                     proxy = 'vps'
                     res = self.vps_request(method, url, params, headers, vc=r_type)
                 else:  # l - 本地 - 0.1%
