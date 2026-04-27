@@ -30,10 +30,11 @@ class OpenNatClient:
     @staticmethod
     def _exec_api(func: Callable, *args, **kwargs):
         """调用api接口"""
-        response = func(*args, **kwargs)
-        return {
-            "code": response.code,"msg": response.msg,"data": Attr.parse_json_ignore(response.data)
-        }
+        try:
+            response = func(*args, **kwargs)
+            return {"code": response.code,"msg": response.msg,"data": Attr.parse_json_ignore(response.data)}
+        except Exception as e:
+            return {"code": 9997, "msg": 'failed', "data": f"gRPC exec error: {e}"}
 
     @staticmethod
     def get_vps_config(vc):
