@@ -4,7 +4,7 @@ import importlib
 import signal
 import logging
 import baostock as bs
-from tool.core import Logger, Time, Http, Error, Attr, Config, Sys, Str, Ins
+from tool.core import Logger, Time, Http, Error, Attr, Config, Sys, Str
 from tool.db.cache.redis_client import RedisClient
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from utils.wechat.vpwechat.vp_client import VpClient
@@ -31,7 +31,7 @@ class ParseHandler:
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS', 'LOCK_SQL_CNT', 'LOCK_WSS_CNT']
         list(map(lambda key: redis.delete(key, ['*']), key_list))
         app_config = Config.app_config()
-        not Config.is_prod() and 0 and bs.logout()  # bs 登录 - 停用
+        not Config.is_prod() and 0 and bs.login()  # bs 登录 - 停用
         # 延迟启动
         res['clean_log'] = clean_old_logs(30 if Config.is_prod() else 7)
         res['delayed_thread'] = Sys.delayed_thread(hot_load, delay_seconds=1, timeout=86400)
@@ -62,7 +62,7 @@ class ParseHandler:
 
     @staticmethod
     def parse_args():
-        parser = argparse.ArgumentParser(description='微信工具集，提供各种个人微信号的玩法')
+        parser = argparse.ArgumentParser(description='个人工具集，量身定做各种功能')
         parser.add_argument('-m', '--method', type=str,
                             help='方法路径：格式为 module.control.method，用于指定要执行的方法所在的模块和方法名')
         parser.add_argument('-p', '--params', type=str, default='',
