@@ -16,32 +16,33 @@ class Nat(BaseApp):
         params = Attr.parse_json_ignore(self.params.get('p', ''))
         headers = Attr.parse_json_ignore(self.params.get('h', ''))
         o = self.params.get('o') if self.params.get('o') else '0'
-        return method, url, params, headers, o
+        vc = self.params.get('vc') if self.params.get('vc') else 'z1'
+        return method, url, params, headers, o, vc
 
     def ppr(self):
         """利用代理池发起请求"""
-        method, url, params, headers, o = self._get_nat_params()
+        method, url, params, headers, o, vc = self._get_nat_params()
         if not url:
             return self.error('Invalid url')
         return self.success(self.nat.ppr_request(method, url, params, headers))
 
     def vpp(self):
         """利用vpp发起请求"""
-        method, url, params, headers, o = self._get_nat_params()
+        method, url, params, headers, o, vc = self._get_nat_params()
         if not url:
             return self.error('Invalid url')
         return self.success(self.nat.vpp_request(method, url, params, headers, int(o)))
 
     def vps(self):
         """利用vps发起请求"""
-        method, url, params, headers, o = self._get_nat_params()
+        method, url, params, headers, o, vc = self._get_nat_params()
         if not url:
             return self.error('Invalid url')
-        return self.success(self.nat.vps_request(method, url, params, headers))
+        return self.success(self.nat.vps_request(method, url, params, headers, vc))
 
     def vpr(self):
         """利用vps代理池发起请求"""
-        method, url, params, headers, o = self._get_nat_params()
+        method, url, params, headers, o, vc = self._get_nat_params()
         if not url:
             return self.error('Invalid url')
         return self.success(self.nat.vpr_request(method, url, params, headers))

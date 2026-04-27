@@ -10,9 +10,11 @@ logger = Logger()
 @Ins.singleton
 class OpenNatClient:
 
-    def __init__(self, host='', port=''):
-        if not host or not port:
-            host, port = self.get_vps_config()
+    ARGS_UNIQUE_KEY = True
+
+    def __init__(self, vc):
+        vc = vc if vc else 'z1'
+        host, port = self.get_vps_config(vc)
         self.channel = grpc.insecure_channel(
             f"{host}:{port}",
             options=[
@@ -34,10 +36,11 @@ class OpenNatClient:
         }
 
     @staticmethod
-    def get_vps_config():
+    def get_vps_config(vc):
         """获取默认配置"""
-        host = Env.get('GRPC_HOST_ZGY')
-        port = Env.get('GRPC_PORT_ZGY')
+        vc = vc.upper()
+        host = Env.get(f'GRPC_HOST_{vc}')
+        port = Env.get(f'GRPC_PORT_{vc}')
         return host, port
 
     @staticmethod

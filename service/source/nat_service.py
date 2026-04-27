@@ -33,9 +33,9 @@ class NatService:
         proxy = self.vpn.get_vpn_url(port)
         return self.vpn.send_http_request(method, url, params, headers, proxy, timeout)
 
-    def vps_request(self, method, url, params=None, headers=None):
+    def vps_request(self, method, url, params=None, headers=None, vc=None):
         """利用vps发起请求"""
-        return self.vps.send_http_request(method, url, params, headers)
+        return self.vps.send_http_request(method, url, params, headers, vc=vc)
 
     def vpr_request(self, method, url, params=None, headers=None):
         """利用vps代理池发起请求"""
@@ -45,7 +45,7 @@ class NatService:
         return Http.send_request(method, url, params, headers, proxy)
 
     def get_mixed_rand(self):
-        """获取混合模式下的随机值 - [l, z, r, v, x]"""
+        """获取混合模式下的随机值 - [l, z1, z2, r, v, x]"""
         nc_list = Attr.nc_list(Attr.parse_json_ignore(self._PROXY_RAND))
         return Attr.random_choice(nc_list)
 
@@ -81,19 +81,22 @@ class NatService:
                 if r_type == 'x':  # 代理池 - 0%   # 收费太贵且效果不佳，暂不考虑
                     proxy = self.ppr.get_proxy_cache()
                     res = self.ppr_request(method, url, params, headers, proxy)
-                elif r_type == 'v':  # VPN - 55.5%
+                elif r_type == 'v':  # VPN - 89.7%
                     port = self.vpn.get_vpn_port()  # 随机端口
                     node = self.vpn.get_vpn_node(port)  # 随机节点
                     proxy = self.vpn.get_vpn_url(port)
                     redis.incr(total_key, [f'{date}:cnt_{port}'])
                     c_type = 'em' if i in [0, retry_times - 1] else 'all' # 除了第一次和最后一次使用高效节点，其它重试次数从全部节点中抽取随机节点
                     res = self.vpn.send_http_request_pro(method, url, params, headers, port, node, c_type)  # 使用进阶版，节点最大化利用
-                elif r_type == 'r':   # VPS - 33.3%
+                elif r_type == 'r':   # VPR - 0%  # tiny proxy 并不好用
                     proxy = 'vpr'
                     res = self.vpr_request(method, url, params, headers)
-                elif r_type == 'z':   # VPS - 11.1%
+                elif r_type == 'z1':   # VPS - 0.2%
                     proxy = 'vps'
                     res = self.vps_request(method, url, params, headers)
+                elif r_type == 'z2':   # VPS - 10%
+                    proxy = 'vps'
+                    res = self.vps_request(method, url, params, headers, vc=r_type)
                 else:  # l - 本地 - 0.1%
                     proxy = '_'
                     res = Http.send_request(method, url, params, headers)

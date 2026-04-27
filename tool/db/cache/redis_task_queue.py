@@ -13,7 +13,6 @@ is_use_rq = False  # Config.is_prod()  # rq 复杂且不好用 - 故障太多管
 class RedisTaskQueue:
     """基于 RQ 的分布式任务队列. - LIFO"""
 
-    ARGS_UNIQUE_KEY = True
     PROCESS = []
 
     def _queue_worker(self, queue_name):
