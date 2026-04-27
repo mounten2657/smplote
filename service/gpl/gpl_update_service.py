@@ -238,6 +238,11 @@ class GPLUpdateService:
                              f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
+        # 同步执行
+        [ _up_day_exec(code) for code in code_list ]
+        return True
+
+        # 异步执行
         sleep_time = 10 if vip == 2 else 0
         return Sys.multy_thread(_up_day_exec, code_list, sleep_time=sleep_time)  # 分成多组同时执行
 
