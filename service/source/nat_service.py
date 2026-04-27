@@ -78,6 +78,7 @@ class NatService:
             redis.incr(total_key, [f'{date}:cnt'])
             redis.incr(total_key, [f'{date}:cnt_{r_type}'])
             try:
+                port, node = 0, ''
                 if r_type == 'x':  # 代理池 - 0%   # 收费太贵且效果不佳，暂不考虑
                     proxy = self.ppr.get_proxy_cache()
                     res = self.ppr_request(method, url, params, headers, proxy)
