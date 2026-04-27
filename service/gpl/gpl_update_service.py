@@ -62,8 +62,6 @@ class GPLUpdateService:
             # 重置计数缓存
             r1 = redis.delete('PROXY_STAT_TOL', ["*"])
             r2 = redis.delete('PROXY_STAT_FAL', ["*"])
-            if vip ==1:
-                sk = 'GPL_DAY_VPN'
             logger.warning(f"重置计数缓存 - {r1} - {r2} - {sk}", 'UP_DAY_CDL')
         # 快速转入批量队列中执行
         for c_list in chunk_list:
@@ -240,7 +238,7 @@ class GPLUpdateService:
                              f" - END - {len(ik)} - {iid}", 'UP_DAY_INF')
             return res
 
-        sleep_time = 5 if vip == 2 else 0
+        sleep_time = 10 if vip == 2 else 0
         return Sys.multy_thread(_up_day_exec, code_list, sleep_time=sleep_time)  # 分成多组同时执行
 
     def clear_api_log(self):
