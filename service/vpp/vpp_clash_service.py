@@ -2,6 +2,7 @@ from threading import Semaphore
 from tool.core import Logger, Env, Attr, Error, Time, Str, Http, File
 from tool.db.cache.redis_client import RedisClient
 from utils.grpc.vpp_serve.vpp_serve_client import VppServeClient
+from utils.gpl.formatter.stock_str_formatter import StockStrFormatterService
 
 logger = Logger()
 redis = RedisClient()
@@ -190,7 +191,12 @@ class VppClashService:
                 if not self.switch_vpn_node(port, node, 1):
                     continue
                 proxy = self.get_vpn_url(port)
-                res = self.send_http_request("GET", em_url, em_par, None, proxy)
+                # 新增 header 成功率会更高
+                headers = Http.get_random_headers()
+                headers['Referer'] = Http.get_request_base_url(em_url)
+                headers['Host'] = Http.get_request_host_url(em_url)
+                headers['Cookie'] = StockStrFormatterService.gen_em_cookie()
+                res = self.send_http_request("GET", em_url, em_par, headers, proxy)
                 if not Attr.get_by_point(res, 'data.klines'):
                     logger.warning(f"该节点无法获取东财数据<{port}><{node}> - {res}", "CVE_WAR")
                     continue
