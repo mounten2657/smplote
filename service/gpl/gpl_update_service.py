@@ -60,8 +60,9 @@ class GPLUpdateService:
             logger.warning(f"删除昨日板块 - {d_count}", 'UP_SYM_YST')
         if 'GPL_DAY' == sk and not code_str:
             # 重置计数缓存
-            r1 = redis.delete('PROXY_STAT_TOL', ["*"])
-            r2 = redis.delete('PROXY_STAT_FAL', ["*"])
+            date = Time.date('%Y-%m-%d')
+            r1 = redis.delete('PROXY_STAT_TOL', [f"{date}*"])
+            r2 = redis.delete('PROXY_STAT_FAL', [f"{date}*"])
             logger.warning(f"重置计数缓存 - {r1} - {r2} - {sk}", 'UP_DAY_CDL')
         # 快速转入批量队列中执行
         for c_list in chunk_list:
