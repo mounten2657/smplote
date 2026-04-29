@@ -1,9 +1,10 @@
 from model.gpl.gpl_symbol_model import GPLSymbolModel
+from model.gpl.gpl_daily_model import GPLDailyModel
 from utils.gpl.source.ak_data_source import AkDataSource
 from utils.gpl.source.bs_data_source import BsDataSource
 from utils.gpl.source.em_data_sub_source import EmDataSubSource
 from utils.gpl.formatter.stock_str_formatter import StockStrFormatterService
-from tool.core import Ins, Logger, Str, Time, Attr, Error
+from tool.core import Ins, Logger, Str, Time, Attr, Error, File, Dir
 
 logger = Logger()
 
@@ -21,6 +22,19 @@ class GplFormatterService:
         self.em = EmDataSubSource()
         self.sft = StockStrFormatterService()
         self.sdb = GPLSymbolModel()
+        self.ddb = GPLDailyModel()
+
+    def get_td_list(self):
+        """从数据库中获取所有交易日"""
+        return self.ddb.get_trade_date_list(self.INIT_ST)
+
+    def refresh_td_list(self):
+        """刷新交易日期列表"""
+        file = Dir.static_dir('website/gpl/trade_date.list')
+        td_list = self.get_td_list()
+        if td_list and len(td_list[0]) == 10:
+            return File.save_file(','.join(td_list), file)
+        return False
 
     def get_stock(self, code):
         """从数据库中获取股票信息"""

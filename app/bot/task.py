@@ -4,6 +4,7 @@ from service.gpl.gpl_update_service import GPLUpdateService
 from service.vpp.vpp_pxq_service import VppPxqService
 from service.vpp.vpp_clash_service import VppClashService
 from service.vpp.vpp_note_service import VppNoteService
+from service.gpl.gpl_formatter_service import GplFormatterService
 from tool.router.base_app_vp import BaseAppVp
 from tool.core import Time, Sys
 
@@ -15,6 +16,7 @@ class Task(BaseAppVp):
         super().__init__(**kwargs)
         self.vp = VpCallbackService
         self.gpl = GPLUpdateService()
+        self.gpl_formatter = GplFormatterService()
 
     def sky_rw(self):
         """sky任务 - 每天上午的06点36分"""
@@ -62,13 +64,15 @@ class Task(BaseAppVp):
 
     def vp_log(self):
         """清理历史日志 - 每天上午的06点06分"""
-        res = {}
-        res['vp'] = self.vp.clear_api_log()
-        res['gpl'] = self.gpl.clear_api_log()
+        res = {
+            'vp': Sys.delayed_thread(self.vp.clear_api_log, timeout=300),
+            'gpl': Sys.delayed_thread(self.gpl.clear_api_log, delay_seconds=30, timeout=300),
+            'rtd': Sys.delayed_thread(self.gpl_formatter.refresh_td_list, delay_seconds=60),
+        }
         return self.success(res)
 
     def rf_proxy(self):
-        """刷新代理服务 - 每小时的第11分钟"""
+        """刷新代理服务 - 每小时的第11分钟 - 已禁用"""
         res = VppPxqService.init_proxy()
         return self.success(res)
 

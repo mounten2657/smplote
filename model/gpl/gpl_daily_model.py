@@ -115,3 +115,12 @@ class GPLDailyModel(MysqlBaseModel):
             return self.where_in('trade_date', trade_date).where({'symbol': symbol}).get()
         else:
             return self.where({'symbol': symbol, 'trade_date': trade_date}).first()
+
+    def get_trade_date_list(self, start_date):
+        """获取交易日列表"""
+        td_list = (self.where({'trade_date': {'opt': '>=', 'val': start_date}})
+                   .group('trade_date')
+                   .order('trade_date', 'asc')
+                   .select(['trade_date as td'])
+                   .get())
+        return [d['td'] for d in td_list]
