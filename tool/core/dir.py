@@ -32,6 +32,11 @@ class Dir:
         return full_path
 
     @staticmethod
+    def storage_dir(relative_path):
+        """storage文件夹"""
+        return Dir.abs_dir(f'storage/{relative_path}')
+
+    @staticmethod
     def static_dir(relative_path):
         """静态资源文件夹"""
         return Dir.abs_dir(f'storage/upload/static/{relative_path}')
