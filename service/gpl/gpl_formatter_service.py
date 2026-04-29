@@ -24,6 +24,7 @@ class GplFormatterService:
         self.sdb = GPLSymbolModel()
         self.ddb = GPLDailyModel()
 
+    @Ins.cached('GPL_STOCK_TD_LIST')
     def get_td_list(self):
         """从数据库中获取所有交易日"""
         return self.ddb.get_trade_date_list(self.INIT_ST)
@@ -70,15 +71,6 @@ class GplFormatterService:
         code_list = [str(item['code']) for item in code_list]
         db_list = self.sdb.get_code_list_all()
         return sorted(list(dict.fromkeys(code_list + db_list)))
-
-    @Ins.cached('GPL_STOCK_TD_LIST')
-    def get_trade_day_all(self):
-        """
-        获取所有有效的交易日期 - 待优化，这里只是个大概
-        :return: 股票有效交易日期
-        """
-        p_list = self.em.get_daily_quote('000001', '2000-01-01', Time.date('%Y-%m-%d'))
-        return [p['date'] for p in p_list]
 
     @Ins.cached('GPL_STOCK_INFO_EM')
     def get_stock_em(self, code):
