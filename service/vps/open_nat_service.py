@@ -8,8 +8,8 @@ class OpenNatService:
         return OpenNatClient.init_config_qy()
 
     @staticmethod
-    def send_text_msg(content, app_key='a1', user_list=None, vc=None):
-        """发送文本消息 - 对外方法"""
+    def send_text_msg(content, app_key='a1', user_list=None, vc='z2'):
+        """发送企业文本消息 - 默认使用  z2 - IP 不常变"""
         return OpenNatClient(vc).send_wechat_text(content, app_key, user_list)
 
     @staticmethod
