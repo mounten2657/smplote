@@ -253,7 +253,7 @@ class GPLUpdateService:
         current_date = current_date if current_date else Time.dnd(-63)  # 默认只检查最近三个月
         today = Time.dnd(-4)  # 留点间隙 - 普通日线每周同步一次
         ddb = GPLDailyModel()
-        cache_key = 'GPL_STOCK_CHECK_LIST'
+        # cache_key = 'GPL_STOCK_CHECK_LIST'
         all_code_list = self.formatter.get_stock_code_all()
         code_list = code_str.split(',') if code_str else self.formatter.get_stock_code_all()
         td_list = self.formatter.get_td_list()
