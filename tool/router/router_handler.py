@@ -23,6 +23,7 @@ class RouterHandler:
         'bot/task/gpl_info',
         'bot/task/gpl_ext',
         'bot/task/gpl_daily',
+        'bot/task/gpl_check',
         'gpl/symbol/info',
         'gpl/symbol/daily',
         'callback/gitee_callback/smplote',
