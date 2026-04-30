@@ -89,36 +89,47 @@ class Task(BaseAppVp):
         # if not ports and Time.is_week():
         #     return self.error('周末不执行')
         p_list = [int(p) + 10 for p in ports.split(',')] if ports else []  # 转为api端口
-        res = Sys.delayed_thread(VppClashService().init_vpn_node, p_list, timeout=10800)
+        res = Sys.delayed_thread(VppClashService().init_vpn_node, p_list, timeout=7200)
         return self.success(res)
 
-    def gpl_info(self):
-        """更新股票基础信息 - 每天凌晨的01点11分"""
+    def _get_gpl_par(self):
+        """获取gpl参数"""
         code_str = self.params.get('code_str', '')
         is_force = self.params.get('is_force', 0)
         td = self.params.get('td', '')
+        vip = self.params.get('vip', 1)
+        return code_str, is_force, td, vip
+
+    def gpl_info(self):
+        """更新股票基础信息 - 每天凌晨的01点11分"""
+        code_str, is_force, td, vip = self._get_gpl_par()
         res = self.gpl.quick_update_symbol(code_str, int(is_force), 'GPL_SYM', td)
         return self.success(res)
 
     def gpl_ext(self):
         """更新股票额外信息 - 每天凌晨的04点11分"""
-        code_str = self.params.get('code_str', '')
-        is_force = self.params.get('is_force', 0)
-        td = self.params.get('td', '')
+        code_str, is_force, td, vip = self._get_gpl_par()
         res = self.gpl.quick_update_symbol(code_str, int(is_force), 'GPL_EXT', td)
         return self.success(res)
 
     def gpl_daily(self):
         """
         更新股票日线信息
-          - 每周六的04点31分 - 全股更新 - is_force=41
-          - 每周一的04点32分 - 全股复查 - is_force=41&td=-2
+          - 每周二的04点31分 - 全股更新 - is_force=41
+          - 每周五的04点32分 - 全股复查 - is_force=41&td=-3
           - 每天的15点31分 - 重股更新 - code_str=zd
           - 每天的15点55分 - 重股复查 - code_str=zd
         """
-        code_str = self.params.get('code_str', '')
-        is_force = self.params.get('is_force', 0)
-        td = self.params.get('td', '')
-        vip = self.params.get('vip', 1)
+        code_str, is_force, td, vip = self._get_gpl_par()
         res = self.gpl.quick_update_symbol(code_str, int(is_force), 'GPL_DAY', td, int(vip))
         return self.success(res)
+
+    def gpl_check(self):
+        """
+        检查股票日线信息
+          - 每周六的04点33分 - 全股检查
+        """
+        code_str, is_force, td, vip = self._get_gpl_par()
+        res = Sys.delayed_thread(self.gpl.check_daily_data, code_str, int(is_force), td, int(vip), timeout=3600)
+        return self.success(res)
+

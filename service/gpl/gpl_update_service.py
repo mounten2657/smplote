@@ -250,8 +250,8 @@ class GPLUpdateService:
     def check_daily_data(self, code_str, is_force=0, current_date=None, vip=1):
         """检查日线数据是否完整"""
         current_date = current_date if is_force != 99 else self.formatter.INIT_ST  # 99 代表初始化
-        current_date = current_date if current_date else Time.dnd(-61)  # 默认只检查最近两个月
-        today = Time.dnd(0)
+        current_date = current_date if current_date else Time.dnd(-186)  # 默认只检查最近三个月
+        today = Time.dnd(-16)  # 留点间隙 - 普通日线每个月才同步两次
         ddb = GPLDailyModel()
         cache_key = 'GPL_STOCK_CHECK_LIST'
         all_code_list = self.formatter.get_stock_code_all()
@@ -259,7 +259,6 @@ class GPLUpdateService:
         td_list = self.formatter.get_td_list()
 
         def _check_day_exec(code):
-            res = []
             Time.sleep(Str.randint(5, 9) / 100)
             symbol = self.formatter.sft.add_stock_prefix(code)
             percent = self.formatter.get_percent(code, code_list, all_code_list)
@@ -269,24 +268,23 @@ class GPLUpdateService:
                 logger.warning(f"未查询到日线数据<{symbol}>[{current_date}]{percent}", 'CHK_DAY_WAR')
                 return False
             d_list = {d['trade_date']: d for d in d_list}
+            m_date = min(d_list.keys())
             for td in td_list:  # 检查每个交易日是否都有数据了
+                if td < m_date or td > today:  # 小于第一条数据之前的日期就不管了
+                    continue
                 d = d_list.get(td)
                 if not d:  # 连记录都没有
-                    # 塞入队列的逻辑
-                    res.append(td)
-                    par = {"date": td, "code": code, "type": "all"}
-                    redis.set(cache_key, par, [f"{str(td).replace('-', ':')}:{symbol}"])
+                    RedisTaskQueue.add_task('GPL_DAY', code, is_force, td, vip)
+                    #redis.set(cache_key, {"d": td, "c": code, "t": f"{v}"}, [f"{str(td).replace('-', ':')}:{symbol}"])
                     logger.warning(f"交易日无日线数据<{symbol}>[{td}]{percent}", 'CHK_DAY_NON')
                     continue
-                for k, v in fq_list.items():  # 有记录但是值为空
-                    if not d.get(f"f{v}_open") and not d.get(f"f{v}_close"):
-                        # 塞入队列的逻辑
-                        res.append(td)
-                        par = {"date": td, "code": code, "type": f"{v}"}
-                        redis.set(cache_key, par, [f"{str(td).replace('-', ':')}:{symbol}"])
+                for k, v in fq_list.items():
+                    if not d.get(f"f{v}_open") and not d.get(f"f{v}_close"):  # 有记录但是值为空
+                        RedisTaskQueue.add_task('GPL_DAY', code, is_force, td, vip)
+                        #redis.set(cache_key, {"d": td, "c": code, "t": f"{v}"}, [f"{str(td).replace('-', ':')}:{symbol}"])
                         logger.warning(f"交易日日线数据无效<{symbol}>[{td}]{percent} - {v} - {d['id']}", 'CHK_DAY_INV')
                         continue
-            return len(res)
+            return True
 
         # 同步执行
         [ _check_day_exec(code) for code in code_list ]
