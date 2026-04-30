@@ -250,8 +250,8 @@ class GPLUpdateService:
     def check_daily_data(self, code_str, is_force=0, current_date=None, vip=1):
         """检查日线数据是否完整"""
         current_date = current_date if is_force != 99 else self.formatter.INIT_ST  # 99 代表初始化
-        current_date = current_date if current_date else Time.dnd(-186)  # 默认只检查最近三个月
-        today = Time.dnd(-16)  # 留点间隙 - 普通日线每个月才同步两次
+        current_date = current_date if current_date else Time.dnd(-63)  # 默认只检查最近三个月
+        today = Time.dnd(-4)  # 留点间隙 - 普通日线每周同步一次
         ddb = GPLDailyModel()
         cache_key = 'GPL_STOCK_CHECK_LIST'
         all_code_list = self.formatter.get_stock_code_all()
