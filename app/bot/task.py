@@ -115,10 +115,10 @@ class Task(BaseAppVp):
     def gpl_daily(self):
         """
         更新股票日线信息
-          - 每周六的04点31分 - 全股更新 - is_force=41&td=-1
-          - 每周一的04点32分 - 全股复查 - is_force=41&td=-3
           - 每天的15点31分 - 重股更新 - code_str=zd
           - 每天的15点55分 - 重股复查 - code_str=zd
+          - 每周六的04点31分 - 全股更新 - is_force=41&td=-1
+          - 每周一的04点32分 - 全股复查 - is_force=41&td=-3
         """
         code_str, is_force, td, vip = self._get_gpl_par()
         res = self.gpl.quick_update_symbol(code_str, int(is_force), 'GPL_DAY', td, int(vip))
