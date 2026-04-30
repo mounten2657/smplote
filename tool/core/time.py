@@ -85,6 +85,7 @@ class Time:
         """
         if not date_str:
             return 0
+        date_format = "%Y-%m-%d" if len(date_str) == 10 else date_format
         try:
             dt = datetime.strptime(date_str, date_format)
             return int(dt.timestamp())

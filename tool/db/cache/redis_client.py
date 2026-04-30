@@ -6,6 +6,7 @@ from tool.core.config import Config
 from tool.core.attr import Attr
 from tool.core.str import Str
 from tool.core.logger import Logger
+from tool.core.time import Time
 
 logger = Logger()
 
@@ -114,7 +115,7 @@ class RedisClient:
         formatted_key = key_info["key"] % tuple(args) if args else key_info["key"]
         ttl = key_info["ttl"]
         if 'today' == ttl:
-            ttl = (86400 - datetime.datetime.now().timestamp() % 86400 - 8 * 3600)
+            ttl = Time.tfd(Time.dnd(1)) - Time.now()
         # ttl 必然有值，随机加上一个时间，避免所有缓存在同一时间失效
         ttl = int(ttl)
         if ttl >= 900:
