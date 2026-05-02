@@ -133,6 +133,13 @@ class Time:
         raise ValueError(f"无法解析时间字符串 '{date_str}'，请检查格式")
 
     @staticmethod
+    def parse_iso_time(time_str, date_format="%Y-%m-%d %H:%M:%S"):
+        """将iso时间转为标准格式 - 2026-05-01T16:00:24.66359757Z"""
+        dt = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
+        dt = dt.strftime("%Y-%m-%d %H:%M:%S")
+        return Time.dft(Time.tfd(dt) + 8 * 3600, date_format)
+
+    @staticmethod
     def dnd(n=0, sd='', date_format="%Y-%m-%d"):
         """
         相对日期快捷计算

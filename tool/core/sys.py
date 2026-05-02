@@ -203,12 +203,14 @@ class Sys:
             containers = Sys.get_docker_client().list(all=True)
             result = []
             for c in containers:
+                created = c.attrs['Created'] if c.attrs.get("Created") else ""
+                created = Time.parse_iso_time(created) if created else "-"
                 result.append({
                     "id": c.short_id,
                     "name": c.name,
                     "status": c.status,
                     "image": c.image.tags[0] if c.image.tags else c.image.id,
-                    "created": c.attrs.get("Created", "-")
+                    "created": created
                 })
             return result
         except Exception as e:
@@ -222,7 +224,7 @@ class Sys:
             containers = Sys.get_docker_client().list(all=True)
             result = {}
             for c in containers:
-                result[c.name] = c.stats(decode=True, stream=True)
+                result[c.name] = str(c.stats(decode=False, stream=True))
             return result
         except Exception as e:
             Error.throw_exception(f"执行 docker stats 命令失败 - {e}")
