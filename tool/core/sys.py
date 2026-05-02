@@ -188,30 +188,44 @@ class Sys:
             return None
 
     @staticmethod
-    def docker_ps():
-        """查看容器列表"""
-        try:
-            return Sys.run_command(f'sudo docker ps -a')
-        except Exception as e:
-            Error.throw_exception(f"执行 docker ps 命令失败 - {e}")
-            return None
-
-    @staticmethod
-    def docker_stats():
-        """查看容器实时性能"""
-        try:
-            return Sys.run_command(f'sudo docker stats -a --no-stream')
-        except Exception as e:
-            Error.throw_exception(f"执行 docker stats 命令失败 - {e}")
-            return None
-
-    @staticmethod
     def get_docker_container(container_name):
         """获取宿主机 docker 容器对象"""
         try:
             return Sys.get_docker_client().get(container_name)
         except Exception as e:
             Error.throw_exception(f"获取 docker 容器失败 - {container_name} - {e}")
+            return None
+
+    @staticmethod
+    def docker_ps():
+        """查看容器列表 - sudo docker ps -a"""
+        try:
+            containers = Sys.get_docker_client().list(all=True)
+            result = []
+            for c in containers:
+                result.append({
+                    "id": c.short_id,
+                    "name": c.name,
+                    "status": c.status,
+                    "image": c.image.tags[0] if c.image.tags else c.image.id,
+                    "created": c.attrs.get("Created", "-")
+                })
+            return result
+        except Exception as e:
+            Error.throw_exception(f"执行 docker ps 命令失败 - {e}")
+            return None
+
+    @staticmethod
+    def docker_stats():
+        """查看容器实时性能 - sudo docker stats -a --no-stream"""
+        try:
+            containers = Sys.get_docker_client().list(all=True)
+            result = {}
+            for c in containers:
+                result[c.name] = c.stats(decode=True, stream=True)
+            return result
+        except Exception as e:
+            Error.throw_exception(f"执行 docker stats 命令失败 - {e}")
             return None
 
     @staticmethod
