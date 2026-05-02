@@ -9,19 +9,19 @@ class GplCommand(BaseCommand):
     def exec_1_0(self):
         """GPL CMD-1"""
         res = VppClashService().get_traffic_stat()
-        content = f"正在执行 VSS 命令 - {res}\r\n\r\n请稍后查看结果……"
+        content = f"VSS执行结果:\r\n{res}\r\n"
         return self.send_content(content)
 
     def exec_1_1(self):
         """GPL CMD-2"""
         res = Sys.docker_stats()
-        content = f"正在执行 DSS 命令 - {res}\r\n\r\n请稍后查看结果……"
+        content = f"DSS执行结果:\r\n{res}\r\n"
         return self.send_content(content)
 
     def exec_1_2(self):
         """GPL CMD-3"""
         res = Sys.docker_ps()
-        content = f"正在执行 DPS 命令 - {res}\r\n\r\n请稍后查看结果……"
+        content = f"DPS执行结果:\r\n{res}\r\n"
         return self.send_content(content)
 
     def exec_1_3(self):
