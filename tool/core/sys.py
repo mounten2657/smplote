@@ -222,10 +222,29 @@ class Sys:
         """查看容器实时性能 - sudo docker stats -a --no-stream"""
         try:
             containers = Sys.get_docker_client().list(all=True)
-            result = {}
+            result = []
             for c in containers:
                 stats = c.stats(decode=False, stream=False)
-                result[c.name] = str(stats)
+                # CPU使用
+                cpu_percent = 0
+                if 'cpu_stats' in stats and 'cpu_usage' in stats['cpu_stats']:
+                    cpu_delta = stats['cpu_stats']['cpu_usage']['total_usage'] - stats.get('precpu_stats', {}).get('cpu_usage', {}).get('total_usage', 0)
+                    system_delta = stats['cpu_stats'].get('system_cpu_usage', 0) - stats.get('precpu_stats', {}).get('system_cpu_usage', 0)
+                    if system_delta > 0 and cpu_delta > 0:
+                        cpu_percent = round((cpu_delta / system_delta) * stats['cpu_stats'].get('online_cpus', 1) * 100, 2)
+                # 内存使用
+                mem_usage = stats['memory_stats'].get('usage', 0)
+                mem_limit = stats['memory_stats'].get('limit', 0)
+                mem_percent = round((mem_usage / mem_limit) * 100, 2) if mem_limit > 0 else 0
+                # 组合有用的信息
+                result.append({
+                    "id": c.short_id,
+                    "name": c.name,
+                    "cpu_percent": f"{cpu_percent:>8.2f}%",
+                    "mem_usage": f"{mem_usage/1024/1024:>6.1f}MiB",
+                    "mem_limit": f"{mem_limit/1024/1024:>6.1f}MiB",
+                    "mem_percent": f"{mem_percent:>8.2f}%",
+                })
             return result
         except Exception as e:
             Error.throw_exception(f"执行 docker stats 命令失败 - {e}")
