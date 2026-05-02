@@ -224,7 +224,8 @@ class Sys:
             containers = Sys.get_docker_client().list(all=True)
             result = {}
             for c in containers:
-                result[c.name] = str(c.stats(decode=True, stream=False))
+                stats = c.stats(decode=True, stream=True)
+                result[c.name] = {"cpu": stats.get('cpu_stats'), "memory": stats.get('memory_stats')}
             return result
         except Exception as e:
             Error.throw_exception(f"执行 docker stats 命令失败 - {e}")
