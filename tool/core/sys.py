@@ -178,13 +178,40 @@ class Sys:
         return Sys.run_command(f'{sudo} cp -af {src_dir} {dst_dir}')
 
     @staticmethod
+    def get_docker_client():
+        """获取宿主机 docker 容器客户端"""
+        try:
+            client = docker.DockerClient(base_url='unix:///var/run/docker.sock')
+            return client.containers
+        except Exception as e:
+            Error.throw_exception(f"获取 docker 客户端失败 - {e}")
+            return None
+
+    @staticmethod
     def get_docker_container(container_name):
         """获取宿主机 docker 容器对象"""
         try:
-            client = docker.DockerClient(base_url='unix:///var/run/docker.sock')
-            return client.containers.get(container_name)
-        except Exception:
-            Error.throw_exception(f"获取 docker 容器失败 - {container_name}")
+            return Sys.get_docker_client().get(container_name)
+        except Exception as e:
+            Error.throw_exception(f"获取 docker 容器失败 - {container_name} - {e}")
+            return None
+
+    @staticmethod
+    def docker_ps():
+        """查看容器列表"""
+        try:
+            return Sys.get_docker_client().list(all=True)
+        except Exception as e:
+            Error.throw_exception(f"执行 docker ps 命令失败 - {e}")
+            return None
+
+    @staticmethod
+    def docker_stats():
+        """查看容器实时性能"""
+        try:
+            return Sys.get_docker_client().model().stats(stream=True)
+        except Exception as e:
+            Error.throw_exception(f"执行 docker stats 命令失败 - {e}")
             return None
 
     @staticmethod

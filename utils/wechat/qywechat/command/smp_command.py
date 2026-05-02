@@ -8,14 +8,14 @@ class SmpCommand(BaseCommand):
 
     def exec_2_0(self):
         """SMP KGU"""
-        res = Sys.delay_kill_gu()
-        content = f"请点击上方链接执行 KGU 命令 - {res}\r\n\r\n并稍后查看结果……"
+        # res = Sys.delay_kill_gu()  # 自动回复里有链接
+        content = f"请点击上方链接执行 KGU 命令 - \r\n\r\n并稍后查看结果……"
         return self.send_content(content)
 
     def exec_2_1(self):
         """SMP RGU"""
-        res = Sys.delay_reload_gu()
-        content = f"请点击上方链接执行 RGU 命令 - {res}\r\n\r\n并稍后查看结果……"
+        # res = Sys.delay_reload_gu()  # 自动回复里有链接
+        content = f"请点击上方链接执行 RGU 命令 - \r\n\r\n并稍后查看结果……"
         return self.send_content(content)
 
     def exec_2_2(self):
