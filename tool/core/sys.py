@@ -240,10 +240,10 @@ class Sys:
                 result.append({
                     "id": c.short_id,
                     "name": c.name,
-                    "cpu_percent": f"{cpu_percent:>8.2f}%",
-                    "mem_usage": f"{mem_usage/1024/1024:>6.1f}MiB",
-                    "mem_limit": f"{mem_limit/1024/1024:>6.1f}MiB",
-                    "mem_percent": f"{mem_percent:>8.2f}%",
+                    "cpu_percent": f"{cpu_percent:^6.2f}%",
+                    "mem_usage": f"{mem_usage/1024/1024:^6.1f}MiB",
+                    "mem_limit": f"{mem_limit/1024/1024:^6.1f}MiB",
+                    "mem_percent": f"{mem_percent:^6.2f}%",
                 })
             return result
         except Exception as e:
