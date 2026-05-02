@@ -7,21 +7,21 @@ from utils.wechat.qywechat.command.base_command import BaseCommand
 class GplCommand(BaseCommand):
 
     def exec_1_0(self):
-        """GPL CMD-1"""
+        """GPL CMD-1 - VSS"""
         res = VppClashService().get_traffic_stat()
         content = f"VSS执行结果:\r\n{res}\r\n"
         return self.send_content(content)
 
     def exec_1_1(self):
-        """GPL CMD-2"""
+        """GPL CMD-2 - DSS"""
         res = Sys.docker_stats()
         if Attr.get_by_point(res, '0.id'):
-            res = "\r\n".join([f"{d['name']} | {d['cpu_percent']} | {d['mem_usage']} | {d['mem_limit']} | {d['mem_percent']}" for d in res])
+            res = "\r\n".join([f"{d['name']} | {d['cpu_percent']} | {d['mem_usage']} / {d['mem_limit']} | {d['mem_percent']}" for d in res])
         content = f"DSS执行结果:\r\n{res}\r\n"
         return self.send_content(content)
 
     def exec_1_2(self):
-        """GPL CMD-3"""
+        """GPL CMD-3 - DPS"""
         res = Sys.docker_ps()
         if Attr.get_by_point(res, '0.id'):
             res = "\r\n".join([f"{d['name']} | {d['status']} | {d['created']}" for d in res])
