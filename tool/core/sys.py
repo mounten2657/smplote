@@ -86,7 +86,9 @@ class Sys:
             @Sys._thread_lock(thread_id, str(func), str(args))
             def _run_thread():
                 logger.debug(f"线程[{thread_id}]正在执行 - {func}: {args}", 'SYS_THD_RUN')
-                return func(*args, **kwargs)
+                res = func(*args, **kwargs)
+                logger.debug(f"线程[{thread_id}]执行结束 - {func}: {args} - {res}", 'SYS_THD_FNS')
+                return res
             try:
                 future = _executor.submit(_run_thread)
                 future.result(timeout=timeout)  # 超时控制

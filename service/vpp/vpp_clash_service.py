@@ -281,6 +281,8 @@ class VppClashService:
             if isinstance(stat, dict):
                 t_stat[sub] = stat
                 np = rv_list.pop() if rv_list else 0
+                if np == 0:
+                    logger.error(f"[!] VPN预警: <{sub}>已无可用节点", 'TSN_ERR')
                 npy = rv_list_y.pop() if rv_list_y else 0
                 used = Str.round(stat['upload'] + stat['download'])
                 t_stat[sub]['used'] = used
