@@ -278,6 +278,10 @@ class VppClashService:
             sub_list = {sn: sub_list[sn]}
         for sub, url in sub_list.items():
             stat = Http.get_subscription_traffic(url)
+            stat_err = "订阅链接解析失败"
+            if str(stat).startswith(stat_err):
+                logger.error(f"[!] VPN预警: <{sub}>{stat}", 'TSN_ERR')
+                stat = stat_err
             if isinstance(stat, dict):
                 t_stat[sub] = stat
                 np = rv_list.pop() if rv_list else 0
