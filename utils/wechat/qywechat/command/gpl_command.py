@@ -18,7 +18,7 @@ class GplCommand(BaseCommand):
         res = Sys.docker_stats()
         if Attr.get_by_point(res, '0.id'):
             res = "\r\n".join([f"{d['name']} | {d['cpu_percent']} | {d['mem_usage']} / {d['mem_limit']} | {d['mem_percent']}" for d in res])
-        content = f"docker stat 执行结果:\r\n{res}"
+        content = f"docker stats 执行结果:\r\n{res}"
         return self.send_content(content)
 
     def exec_1_2(self):
