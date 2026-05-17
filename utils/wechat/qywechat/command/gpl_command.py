@@ -1,4 +1,5 @@
 from service.vpp.vpp_clash_service import VppClashService
+from service.source.nat_service import NatService
 from tool.core import Ins, Sys, Attr
 from utils.wechat.qywechat.command.base_command import BaseCommand
 
@@ -7,13 +8,13 @@ from utils.wechat.qywechat.command.base_command import BaseCommand
 class GplCommand(BaseCommand):
 
     def exec_1_0(self):
-        """GPL CMD-1 - VSS"""
+        """GPL VSS"""
         res = VppClashService().get_traffic_stat()
         content = f"VSS执行结果:\r\n{res}\r\n"
         return self.send_content(content)
 
     def exec_1_1(self):
-        """GPL CMD-2 - DSS"""
+        """GPL DSS"""
         res = Sys.docker_stats()
         if Attr.get_by_point(res, '0.id'):
             res = "\r\n".join([f"{d['name']} | {d['cpu_percent']} | {d['mem_usage']} / {d['mem_limit']} | {d['mem_percent']}" for d in res])
@@ -21,7 +22,7 @@ class GplCommand(BaseCommand):
         return self.send_content(content)
 
     def exec_1_2(self):
-        """GPL CMD-3 - DPS"""
+        """GPL DPS"""
         res = Sys.docker_ps()
         if Attr.get_by_point(res, '0.id'):
             res = "\r\n".join([f"{d['name']} | {d['status']} | {d['created']}" for d in res])
@@ -29,9 +30,11 @@ class GplCommand(BaseCommand):
         return self.send_content(content)
 
     def exec_1_3(self):
-        """GPL CMD-4"""
-        return self.send_content()
+        """GPL CLR"""
+        res = NatService().clean_mixed_request()
+        content = f"CLR执行结果:\r\n{res}\r\n"
+        return self.send_content(content)
 
     def exec_1_4(self):
-        """GPL CMD-5"""
+        """GPL STA"""
         return self.send_content()

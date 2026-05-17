@@ -68,7 +68,7 @@ class EmDataSource:
                     pid = pid['id']
         if 'EM_DAILY' in biz_code:  # 日线请求单独加 cookie
             headers['Cookie'] = self.formatter.gen_em_cookie()
-        if vip == 2:  # vpr 通道 - 试运行 - 不常用
+        if vip == 2:  # vpr 通道 - 废弃状态 - 几乎不起作用
             data = self.nat.vpr_request(method, url, params, headers)
             r_type, proxy, node = 'r', '', ''
         elif vip == 1:  # vpn 通道 - 非常重要业务才使用混合模式

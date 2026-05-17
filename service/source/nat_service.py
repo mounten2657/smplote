@@ -14,6 +14,7 @@ class NatService:
     # 混合模式下各种请求的概率
     _PROXY_RAND = Env.get('PROXY_RAND', '')
     _PROXY_VPS_LIST = Env.get('PROXY_VPS_LIST', '')
+    _PROXY_STOP_FLAG = 'PROXY_STOP_FLAG'
 
     def __init__(self):
         self.ppr = VppPxqService()
@@ -49,6 +50,10 @@ class NatService:
         nc_list = Attr.nc_list(Attr.parse_json_ignore(self._PROXY_RAND))
         return Attr.random_choice(nc_list)
 
+    def clean_mixed_request(self):
+        """清空混合请求"""
+        return redis.set_nx(self._PROXY_STOP_FLAG, 1)
+
     def mixed_request(self, method: str, url: str, params=None, headers=None, retry_times=9):
         """
         发送HTTP请求 - 混合模式
@@ -74,6 +79,8 @@ class NatService:
         failed_key = "PROXY_STAT_FAL"  # 失败统计
         redis.incr(total_key, [f'{date}:sig'])
         for i in range(0, retry_times):
+            if redis.get(NatService._PROXY_STOP_FLAG):  # 收到了停止信号 - 由外部请求触发 - 一般是接口出现大量错误没有必要继续执行下去的场景
+                return 'Termination signal', r_type, proxy, node
             r_type = self.get_mixed_rand() if i else r_type
             redis.incr(total_key, [f'{date}:cnt'])
             redis.incr(total_key, [f'{date}:cnt_{r_type}'])
@@ -125,5 +132,5 @@ class NatService:
                     redis.incr(total_key, [f'{date}:fal_{port}'])
                     # redis.incr(failed_key, [f"{date}:{uuid}_e"])
                     # redis.set_nx(failed_key, par, [f"{date}:{uuid}_e_{i}"])
-                    return err, r_type, proxy, node
+                    return str(e), r_type, proxy, node
         return res, r_type, proxy, node

@@ -47,3 +47,7 @@ class Nat(BaseApp):
             return self.error('Invalid url')
         return self.success(self.nat.vpr_request(method, url, params, headers))
 
+    def clr(self):
+        """停止混合请求"""
+        return self.success(self.nat.clean_mixed_request())
+

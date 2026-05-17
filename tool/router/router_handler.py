@@ -26,6 +26,7 @@ class RouterHandler:
         'bot/task/gpl_check',
         'gpl/symbol/info',
         'gpl/symbol/daily',
+        'src/nat/clr',
         'callback/gitee_callback/smplote',
         'callback/vp_callback/close_ws',
         'callback/vp_callback/start_ws',
