@@ -10,7 +10,7 @@ class GplCommand(BaseCommand):
     def exec_1_0(self):
         """GPL VSS"""
         res = VppClashService().get_traffic_stat()
-        content = f"vpn 流量统计结果:\r\n{res}\r\n"
+        content = f"VPN 流量统计结果:\r\n{res}\r\n"
         return self.send_content(content)
 
     def exec_1_1(self):
@@ -32,7 +32,7 @@ class GplCommand(BaseCommand):
     def exec_1_3(self):
         """GPL CLR"""
         res = NatService().clean_mixed_request()
-        content = f"清空混合请求队列结果:\r\n{res}\r\n"
+        content = f"清空混合请求队列结果:\r\n{res}"
         return self.send_content(content)
 
     def exec_1_4(self):
