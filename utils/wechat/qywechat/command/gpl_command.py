@@ -10,7 +10,7 @@ class GplCommand(BaseCommand):
     def exec_1_0(self):
         """GPL VSS"""
         res = VppClashService().get_traffic_stat()
-        content = f"VSS执行结果:\r\n{res}\r\n"
+        content = f"vpn 流量统计结果:\r\n{res}\r\n"
         return self.send_content(content)
 
     def exec_1_1(self):
@@ -18,7 +18,7 @@ class GplCommand(BaseCommand):
         res = Sys.docker_stats()
         if Attr.get_by_point(res, '0.id'):
             res = "\r\n".join([f"{d['name']} | {d['cpu_percent']} | {d['mem_usage']} / {d['mem_limit']} | {d['mem_percent']}" for d in res])
-        content = f"DSS执行结果:\r\n{res}"
+        content = f"docker stat 执行结果:\r\n{res}"
         return self.send_content(content)
 
     def exec_1_2(self):
@@ -26,13 +26,13 @@ class GplCommand(BaseCommand):
         res = Sys.docker_ps()
         if Attr.get_by_point(res, '0.id'):
             res = "\r\n".join([f"{d['name']} | {d['status']} | {d['created']}" for d in res])
-        content = f"DPS执行结果:\r\n{res}"
+        content = f"docker ps 执行结果:\r\n{res}"
         return self.send_content(content)
 
     def exec_1_3(self):
         """GPL CLR"""
         res = NatService().clean_mixed_request()
-        content = f"CLR执行结果:\r\n{res}\r\n"
+        content = f"清空混合请求队列结果:\r\n{res}\r\n"
         return self.send_content(content)
 
     def exec_1_4(self):
