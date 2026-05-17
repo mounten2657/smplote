@@ -51,7 +51,7 @@ class NatService:
         return Attr.random_choice(nc_list)
 
     def clean_mixed_request(self):
-        """清空混合请求"""
+        """清空混合请求队列"""
         return redis.set_nx(self._PROXY_STOP_FLAG, 1)
 
     def mixed_request(self, method: str, url: str, params=None, headers=None, retry_times=9):
