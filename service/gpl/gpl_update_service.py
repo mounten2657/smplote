@@ -47,6 +47,7 @@ class GPLUpdateService:
             code_list = GPLUpdateService._S_ZD_LIST  # 走快速通道的股票列表
             # 统一格式 - 去除前缀
             code_list = [self.formatter.sft.remove_stock_prefix(c) for c in code_list]
+            vip=0  # 快速通道使用本地请求
         else:
             code_list = code_str.split(',') if code_str else self.formatter.get_stock_code_all()
         logger.warning(f"[{current_date}]总股票数据 - {len(code_list)}", 'UP_SYM_TOL')
