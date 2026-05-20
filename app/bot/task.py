@@ -116,7 +116,7 @@ class Task(BaseAppVp):
         """
         更新股票日线信息
           - 每天的15点31分 - 重股更新 - code_str=zd
-          - 每天的15点55分 - 重股复查 - code_str=zd
+          - 每天的15点55分 - 重股复查 - code_str=zd&vip=0
           - 每月10号的04点31分 - 全股更新 - is_force=41&td=-1
           - 每月15号的04点32分 - 全股复查 - is_force=41&td=-6
         """
