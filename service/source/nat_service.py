@@ -46,7 +46,7 @@ class NatService:
         return Http.send_request(method, url, params, headers, proxy)
 
     def get_mixed_rand(self):
-        """获取混合模式下的随机值 - [l, z1, z2, r, v, x]"""
+        """获取混合模式下的随机值 - [l, z1, z2, v, x]"""
         nc_list = Attr.nc_list(Attr.parse_json_ignore(self._PROXY_RAND))
         return Attr.random_choice(nc_list)
 

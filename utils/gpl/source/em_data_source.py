@@ -54,7 +54,7 @@ class EmDataSource:
         headers = Http.get_random_headers() | self.headers  # 每次都是随机的 header
         headers['Referer'] = Http.get_request_base_url(url)    # 来源固定
         headers['Host'] = Http.get_request_host_url(url)        # 主机固定
-        vip = Attr.get(ext, 'vip', 0)  # 0 本地通道 | 1 vpn 通道 | 2 vpr 通道
+        vip = Attr.get(ext, 'vip', 0)  # 0 本地通道 | 1 vpn 通道 | 2 vps 通道
         # 如果已经有了日志数据就不用请求接口了
         if any(c in biz_code for c in ['EM_DAILY', 'EM_GD', 'EM_DV', 'EM_ZY', 'EM_FN', 'EM_NEWS']):
             pid = self.ldb.add_gpl_api_log(url, params, biz_code, ext)
@@ -68,9 +68,10 @@ class EmDataSource:
                     pid = pid['id']
         if 'EM_DAILY' in biz_code:  # 日线请求单独加 cookie
             headers['Cookie'] = self.formatter.gen_em_cookie()
-        if vip == 2:  # vpr 通道 - 废弃状态 - 几乎不起作用
-            data = self.nat.vpr_request(method, url, params, headers)
-            r_type, proxy, node = 'r', '', ''
+        if vip == 2:  # vps 通道
+            vc = Attr.random_choice(['z1', 'z2'])
+            data = self.nat.vps_request(method, url, params, headers, vc)
+            r_type, proxy, node = vc, '', ''
         elif vip == 1:  # vpn 通道 - 非常重要业务才使用混合模式
             # 概率分配和重试机制在里面实现了
             data, r_type, proxy, node = self.nat.mixed_request(method, url, params, headers)
