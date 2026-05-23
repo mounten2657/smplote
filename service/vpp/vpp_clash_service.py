@@ -294,7 +294,7 @@ class VppClashService:
                 changed = Str.round(used - y_used)
                 t_stat[sub]['changed'] = changed
                 used = f"{round(used / 1024, 3):.3f}G" if used >= 1024 else f"{used:.2f}M"
-                stat = f"{changed}M/{used}/{stat['total']}G | {npy}/{np}/{rv_sum} | {stat['expire'] if stat['expire'] else 9999}天 "
+                stat = f"{changed}M/{used}/{stat['total']}G | {np}/{npy}/{rv_sum} | {stat['expire'] if stat['expire'] else 9999}天 "
             md += f"   - {sub}: {stat}\r\n"
         # 更新今日统计缓存
         redis.set(self.cache_key,  t_stat, [f'traffic_stat:{today}'])
