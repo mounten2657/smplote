@@ -354,7 +354,7 @@ class EmDataSubSource(EmDataSource):
         ret = {k: ret[k][0] for k in sorted(ret.keys())}
         return self._ret(ret, pid, start_time)
 
-    def get_fn_dupont(self, stock_code: str, sd: str, limit=0, vip: int=0) -> Dict:
+    def get_fn_dupont(self, stock_code: str, sd: str, limit=0, vip: int=2) -> Dict:
         """
         获取股票财务杜邦分析
 
@@ -385,7 +385,7 @@ class EmDataSubSource(EmDataSource):
         ret = {k: ret[k][0] for k in sorted(ret.keys())}
         return self._ret(ret, pid, start_time)
 
-    def get_fn_notice_file(self, stock_code: str, sd: str, pn=1, ps=50, vip: int=0) -> Dict:
+    def get_fn_notice_file(self, stock_code: str, sd: str, pn=1, ps=50, vip: int=2) -> Dict:
         """
         获取股票财务公告文件
 
