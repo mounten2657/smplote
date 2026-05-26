@@ -36,14 +36,14 @@ class GPLUpdateEfnService:
         ret['ifi'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 
-    def up_fnd_em(self, symbol, fnd_list, td, n):
+    def up_fnd_em(self, symbol, fnd_list, td, n, vip=0):
         """更新股票财务杜邦分析"""
         ret = {}
         jdb = GPLSeasonModel()
         Time.sleep(Str.randint(1, 3) / 10)
         des = '财务杜邦分析'
         biz_code = 'EM_FN_DP'
-        d_info = self.formatter.em.get_fn_dupont(symbol, td, n)
+        d_info = self.formatter.em.get_fn_dupont(symbol, td, n, vip)
         if not d_info:
             logger.warning(f"暂无财务杜邦分析数据<{symbol}><{td}> - {n}", 'UP_FND_WAR')
             return ret
@@ -57,7 +57,7 @@ class GPLUpdateEfnService:
         ret['ifd'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 
-    def up_fnn_em(self, symbol, fnn_list, td, n):
+    def up_fnn_em(self, symbol, fnn_list, td, n, vip=0):
         """更新股票财务公告文件"""
         d_list = []
         jdb = GPLSeasonModel()
@@ -68,7 +68,7 @@ class GPLUpdateEfnService:
         n = 50 if is_all else n
 
         def get_fn_file(pn, ps):
-            d = self.formatter.em.get_fn_notice_file(symbol, td, pn, ps)
+            d = self.formatter.em.get_fn_notice_file(symbol, td, pn, ps, vip)
             t, d = Attr.get(d, "total"), Attr.get(d, "data")
             if not d or not t:
                 logger.warning(f"暂无财务公告文件数据<{symbol}><{td}> - {pn}/{ps}", 'UP_FNN_WAR')

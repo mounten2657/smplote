@@ -146,8 +146,8 @@ class GPLUpdateExtService:
                 "dvp": (self.edv.up_dvp_em, "分红股利支付率", "DVP", (sd, td,)),
                 "zyi": (self.edv.up_zyi_em, "主营构成列表", "ZYI", (is_all,)),
                 "fni": (self.efn.up_fni_em, "财务主要指标", "FNI", (td, n,)),
-                "fnd": (self.efn.up_fnd_em, "财务杜邦分析", "FND", (td, n,)),
-                "fnn": (self.efn.up_fnn_em, "财务公告文件", "FNN", (td, n,)),
+                "fnd": (self.efn.up_fnd_em, "财务杜邦分析", "FND", (td, n, 2,)),  # vps
+                "fnn": (self.efn.up_fnn_em, "财务公告文件", "FNN", (td, n, 2,)),  # vps
                 "sfn": (self.efn.save_fnn_em_txt, "保存财务公告文本", "SFN", (td, sd,)),
                 "dfn": (self.efn.download_fnn_em, "下载财务公告文件", "DFN", (td, sd, info,)),
                 # 特殊规则 - 一次性 或 固定执行
