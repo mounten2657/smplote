@@ -36,7 +36,7 @@ class GPLUpdateEfnService:
         ret['ifi'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 
-    def up_fnd_em(self, symbol, fnd_list, td, n, vip=0):
+    def up_fnd_em(self, symbol, fnd_list, td, n, vip):
         """更新股票财务杜邦分析"""
         ret = {}
         jdb = GPLSeasonModel()
@@ -57,7 +57,7 @@ class GPLUpdateEfnService:
         ret['ifd'] = jdb.add_season_list(symbol, biz_code, des, d_info)
         return ret
 
-    def up_fnn_em(self, symbol, fnn_list, td, n, vip=0):
+    def up_fnn_em(self, symbol, fnn_list, td, n, vip):
         """更新股票财务公告文件"""
         d_list = []
         jdb = GPLSeasonModel()
