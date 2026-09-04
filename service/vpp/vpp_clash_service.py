@@ -281,7 +281,13 @@ class VppClashService:
             stat_err = "订阅链接解析失败"
             if str(stat).startswith(stat_err):
                 logger.error(f"[!] VPN预警: <{sub}>{stat}", 'TSN_ERR')
-                stat = stat_err
+                # stat = stat_err # 与其显示报错，不如保持结构一致
+                stat = {
+                    "upload": 0,
+                    "download": 0,
+                    "total": 8888,
+                    "expire": 8888,
+                }
             if isinstance(stat, dict):
                 t_stat[sub] = stat
                 np = rv_list.pop() if rv_list else 0
