@@ -74,6 +74,7 @@ class VpCallbackService:
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
         u_list = str(u_wxid_str).split(',')
+        u_list = udb.get_user_list(u_list)
         room = client.get_room(g_wxid) if g_wxid else {}
         for wxid in u_list:
             if not wxid:
