@@ -73,10 +73,10 @@ class VpCallbackService:
         vus = VpUserService()
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
-        u_list = str(u_wxid_str).split(',')
-        u_list = udb.get_user_list(u_list)
+        p_list = str(u_wxid_str).split(',')
+        u_list = udb.get_user_list(p_list)
         room = client.get_room(g_wxid) if g_wxid else {}
-        for wxid in u_list:
+        for wxid in p_list:
             if not wxid:
                 continue
             u_info = Attr.select_item_by_where(u_list, {"wxid": wxid})
