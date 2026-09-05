@@ -50,16 +50,30 @@ class Task(BaseAppVp):
         """vp消息重试 - 每小时的第10分钟"""
         if Time.is_night():
             return self.success(True)
-        ids = self.params.get('ids', '-1')
-        res = self.vp.callback_handler_retry(self.app_key, {"ids": ids})
+        id_list = self.params.get('ids', '-1').split(',')
+        res = self.vp.insert_handler_retry(id_list)
         return self.success(res)
 
     def vp_room(self):
-        """刷新群聊的信息 - 每小时的第58分钟"""
+        """刷新群聊的信息 - 每小时的第18分钟"""
         if Time.is_night():
             return self.success(True)
         g_wxid_str = self.params.get('g_wxid_str', '')
         res = self.vp.refresh_room_info(self.app_key, g_wxid_str)
+        return self.success(res)
+
+    def vp_user(self):
+        """刷新用户的信息 - 每小时的第20分钟"""
+        if Time.is_night():
+            return self.success(True)
+        u_wxid_str = self.params.get('u_wxid_str', '')
+        g_wxid = self.params.get('g_wxid', '')
+        res = self.vp.refresh_user_info(self.app_key, u_wxid_str, g_wxid)
+        return self.success(res)
+
+    def vp_user_all(self):
+        """刷新所有用户的信息 - 每天上午的03点03分"""
+        res = self.vp.refresh_user_all(self.app_key)
         return self.success(res)
 
     def vp_log(self):

@@ -78,7 +78,11 @@ class WechatUserModel(MysqlBaseModel):
         """获取用户信息"""
         return self.where({"wxid": wxid}).first()
 
-    def get_user_list(self, wxid_list, chunk_size=50):
+    def get_friend_list(self, app_key='a1'):
+        """获取朋友列表"""
+        return self.where({'user_type': 1, 'app_key': app_key}).get()
+
+    def get_user_list(self, wxid_list, chunk_size=50, app_key='a1'):
         """获取用户列表（自动分块查询避免SQL语句过长）"""
         if not wxid_list:
             return []
@@ -88,7 +92,7 @@ class WechatUserModel(MysqlBaseModel):
         result = []
         for chunk in chunks:
             # 查询当前分块的数据
-            chunk_result = self.where_in("wxid", chunk).get()
+            chunk_result = self.where_in("wxid", chunk).where({'app_key': app_key}).get()
             if chunk_result:
                 result.extend(chunk_result)
         return result

@@ -13,7 +13,7 @@ from model.wechat.wechat_user_model import WechatUserModel
 from model.wechat.wechat_msg_model import WechatMsgModel
 from model.wechat.wechat_api_log_model import WechatApiLogModel
 from tool.db.cache.redis_client import RedisClient
-from tool.core import Logger, Time, Error, Attr, Config, Str
+from tool.core import Logger, Time, Error, Attr, Config, Str, Sys
 
 logger = Logger()
 redis = RedisClient()
@@ -38,27 +38,6 @@ class VpCallbackService:
         return VpClient(app_key).close_websocket()
 
     @staticmethod
-    def callback_handler_retry(app_key, params):
-        """消息回放 - 多用于调试"""
-        # vp_callback -> vp_callback_service -> vp_callback_handler -> vp_callback_service.callback_handler
-        if params.get('ids'):  # 通过ID批量重试， 多个英文逗号隔开
-            res = {}
-            db = WechatQueueModel()
-            id_list = str(params.get('ids')).split(',')
-            queue_list = db.get_list_by_id(id_list)
-            for queue in queue_list:
-                queue['params'].update({
-                    'is_retry': 1,
-                    'is_force': params.get('is_force', 0),
-                })
-                res[queue['id']] = VpCallbackHandler(app_key).on_message(queue['params'])
-                Time.sleep(0.1)
-            return res
-        else:  # 单个更新
-            params.update({'is_retry': 1})
-            return VpCallbackHandler(app_key).on_message(params)
-
-    @staticmethod
     def refresh_room_info(app_key, g_wxid_str):
         """刷新群聊信息"""
         res = {}
@@ -68,14 +47,85 @@ class VpCallbackService:
         config = Config.vp_config()
         app_config = config['app_list'][app_key]
         is_force = 1 if g_wxid_str else 0
-        g_wxid_str = g_wxid_str if g_wxid_str else app_config['g_wxid']  # 只刷新已入驻的群聊
+        g_wxid_str = g_wxid_str if g_wxid_str else app_config['g_wxid']  # 默认只刷新常驻群聊
         g_list = str(g_wxid_str).split(',')
         for g_wxid in g_list:
             client.refresh_room(g_wxid)
             room = client.get_room(g_wxid)
+            if not room.get('g_wxid'):
+                logger.warning(f"获取群聊信息失败 - 跳过 - [{g_wxid}]", 'VP_INS_ROOM')
+                return False
             r_info = rdb.get_room_info(g_wxid)
+            if not r_info:
+                rdb.add_room(room, app_key)
+                r_info = rdb.get_room_info(g_wxid)
             res[g_wxid] = vrs.check_room_info(room, r_info, is_force)
         return res
+
+    @staticmethod
+    def refresh_user_info(app_key, u_wxid_str, g_wxid, is_force=0):
+        """刷新用户信息"""
+        res = {}
+        if not u_wxid_str:
+            return res
+        client = VpClient(app_key)
+        udb = WechatUserModel()
+        vus = VpUserService()
+        config = Config.vp_config()
+        app_config = config['app_list'][app_key]
+        u_list = str(u_wxid_str).split(',')
+        room = client.get_room(g_wxid) if g_wxid else {}
+        for wxid in u_list:
+            if not wxid:
+                continue
+            u_info = Attr.select_item_by_where(u_list, {"wxid": wxid})
+            user = client.get_user(wxid, g_wxid)
+            if not user.get('wxid'):
+                logger.warning(f"获取用户信息失败 - 跳过 - [{wxid}]", 'VP_INS_USER')
+                continue
+            u_room_list = {g_wxid: room['nickname']} if room else {}
+            user['room_list'] = user['room_list'] | u_room_list
+            user['is_friend'] = client.get_user_is_friend(wxid)
+            user['user_type'] = 1 if user['is_friend'] else 2
+            user['wx_nickname'] = user['nickname']
+            if not u_info:
+                udb.add_user(user, app_key)
+                u_info = udb.get_user_info(wxid)
+                vus.check_img_info(u_info, u_info['head_img_url'], u_info['sns_img_url'])
+            if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 3600):
+                # 特定群才更新
+                if g_wxid and g_wxid not in str(app_config['g_wxid']).split(',') and not is_force:
+                    continue
+                res[wxid] = vus.check_user_info(user, u_info, g_wxid)
+        return res
+
+    @staticmethod
+    def refresh_user_all(app_key):
+        """刷新所有用户信息
+             - 7天内之只更新一次 - 每天按7取余
+             - 先刷新标签列表
+             - 只刷新朋友信息
+             - 群聊里面的成员没必要刷新
+        """
+        client = VpClient(app_key)
+        config = Config.vp_config()
+        app_config = config['app_list'][app_key]
+        self_wxid = app_config['wxid']
+        # 标签列表更新
+        ldb = WechatUserLabelModel()
+        u_label = ldb.get_label(self_wxid)
+        label = client.get_user_frd_lab()
+        label = Attr.get_by_point(label, 'Data.labelPairList', [])
+        if len(u_label) != len(label):
+            ldb.add_label(label, self_wxid)
+        # 朋友信息更新
+        udb = WechatUserModel()
+        friend_list = udb.get_friend_list(app_key)  # 获取所有朋友列表
+        wxid_list = []
+        for friend in friend_list:
+            if friend['id'] % 7 == (Time.week() - 1):  # 每天只取七分之一，一周下来刚好取完
+                wxid_list.append(friend['wxid'])
+        return VpCallbackService.refresh_user_info(app_key, wxid_list, '', 1)
 
     @staticmethod
     def clear_api_log():
@@ -155,7 +205,7 @@ class VpCallbackService:
             if Time.now() - Time.tfd(msg_time) > 900:
                 return False
             commands = ",".join([config['command_list'], config['command_list_tj'], config['command_list_yl'], config['command_list_sky']]).split(',')
-            content = VpCallbackService._remove_at_user(content).strip()
+            content = re.sub(r'^(@[^\s@]+[\s]*)*', '', content)  # 去除前面艾特的用户
             #先去掉#号再加上#号，这样不管带不带#号都能兼容
             n_list = ['提问', '点歌', '身高查询', '今日任务', '今日红石', '礼包查询', '光翼查询']  # 可省略 # 号的命令
             content = f"#{content.replace('#', '')}" if content.startswith(tuple(n_list)) else content
@@ -287,42 +337,14 @@ class VpCallbackService:
             # 只有一个消费者，所以不用加锁
             client = VpClient(app_key)
             res['upd_cnt_1'] = qdb.set_retry_count(pid, 1)
-            user_list = [{"wxid": s_wxid}, {"wxid": t_wxid}]
-            room = r_info = {}
-            # 群聊入库
-            if g_wxid:
-                room = client.get_room(g_wxid)
-                if not room.get('g_wxid'):
-                    logger.warning(f"获取群聊信息失败 - 跳过 - [{g_wxid}]", 'VP_INS_ING')
-                    return False
-                rdb = WechatRoomModel()
-                r_info = rdb.get_room_info(g_wxid)
-                if not r_info:
-                    res['ins_room'] = rdb.add_room(room, app_key)
-                    r_info = rdb.get_room_info(g_wxid)
-                user_list = room['member_list']
-            # 标签更新
-            ldb = WechatUserLabelModel()
-            u_label = ldb.get_label(self_wxid)
-            label = client.get_user_frd_lab()
-            label = Attr.get_by_point(label, 'Data.labelPairList', [])
-            if len(u_label) != len(label):
-                res['ins_label'] = ldb.add_label(label, self_wxid)
-            # 批量获取用户
-            udb = WechatUserModel()
-            wxid_list = [d["wxid"] for d in user_list]
-            u_list = udb.get_user_list(wxid_list)
+            room = {}  # 这里先留空，由定时任务批量去补充群聊名和用户名
 
-            # 用户入库耗时 - 改为异步执行
-            if (g_wxid and r_info) or not g_wxid:
-                t_data = {
-                    "app_key": app_key,
-                    "g_wxid": g_wxid,
-                    "u_list": u_list,
-                    "user_list": user_list,
-                    "room": room
-                }
-                res['update_user'] = VpCallbackService.update_user(t_data)
+            # 异步通知一下更新群聊信息和用户信息 - 同一个目标六小时只触发一次
+            if g_wxid and not redis.set_nx('VP_ROOM_USR_LOCK', 1, [g_wxid]):
+                Sys.delay_http(f'/bot/task/vp_room?g_wxid_str={g_wxid}', delay_seconds=1)
+            if not redis.set_nx('VP_ROOM_USR_LOCK', 1, [s_wxid]):
+                ts = f'{s_wxid},{t_wxid}' if t_wxid != self_wxid else f'{s_wxid}'
+                Sys.delay_http(f'/bot/task/vp_user?u_wxid_str={ts}&g_wxid={g_wxid}', delay_seconds=3)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0
@@ -354,61 +376,8 @@ class VpCallbackService:
         except Exception as e:
             err = Error.handle_exception_info(e)
             logger.error(f"消息入库失败[{pid}] - {err}", "VP_INS_ERR")
-            qdb.set_succeed(pid, 0)
-            VpCallbackService.insert_handler_retry([pid])
+            qdb.set_succeed(pid, 0) # 更新队列状态，失败后的重试由定时任务去触发
             return False
-
-    @staticmethod
-    def update_user(data):
-        """用户入库与更新"""
-        res = {}
-        app_key = data['app_key']
-        g_wxid = data['g_wxid']
-        u_list = data['u_list']
-        user_list = data['user_list']
-        room = data['room']
-        client = VpClient(app_key)
-        udb = WechatUserModel()
-        vus = VpUserService()
-        config = Config.vp_config()
-        app_config = config['app_list'][app_key]
-        if g_wxid:
-            Time.sleep(Str.randint(1, 10) / 10)
-            # 群聊更新限速 - 六小时检查更新一次 - 不能依赖这个进行全部的用户更新 - 此处基本等效于初始化
-            if not redis.set_nx('VP_ROOM_USR_LOCK', 1, [g_wxid]):
-                return False
-        for u in user_list:
-            wxid = u['wxid']
-            if not wxid:
-                continue
-            u_info = Attr.select_item_by_where(u_list, {"wxid": wxid})
-            if not u_info:
-                user = client.get_user(wxid, g_wxid)
-                if not user.get('wxid'):
-                    logger.warning(f"获取用户信息失败 - 跳过 - [{wxid}]", 'VP_INS_ING')
-                    continue
-                user['room_list'] = {g_wxid: room['nickname']} if room else {}
-                user['is_friend'] = client.get_user_is_friend(wxid)
-                user['user_type'] = 1 if user['is_friend'] else 2
-                user['wx_nickname'] = user['nickname']
-                res['ins_user'] = udb.add_user(user, app_key)
-                u_info = udb.get_user_info(wxid)
-                vus.check_img_info(u_info, u_info['head_img_url'], u_info['sns_img_url'])
-            if u_info and (Time.now() - Time.tfd(str(u_info['update_at'])) > 3600):
-                # 特定群才更新
-                if g_wxid and g_wxid not in str(app_config['g_wxid']).split(','):
-                    continue
-                user = client.get_user(wxid, g_wxid)
-                if not user.get('wxid'):
-                    logger.warning(f"获取用户信息失败 - 跳过 - [{wxid}]", 'VP_INS_ING')
-                    continue
-                user['room_list'] = {g_wxid: room['nickname']} if room else {}
-                if g_wxid:
-                    user['is_friend'] = client.get_user_is_friend(wxid)
-                user['user_type'] = 1 if user['is_friend'] else 2
-                user['room_list'].update(u_info['room_list'])
-                res['chk_user'] = vus.check_user_info(user, u_info, g_wxid)
-        return res
 
     @staticmethod
     def insert_handler_retry(id_list):
@@ -436,6 +405,26 @@ class VpCallbackService:
         return res
 
     @staticmethod
-    def _remove_at_user(content):
-        """去除前面艾特的用户"""
-        return re.sub(r'^(@[^\s@]+[\s]*)*', '', content)
+    def callback_handler_retry(app_key, params):
+        """消息回放 - 多用于调试"""
+        # [!] 已废弃，暂时不再使用
+        # 改版 - 执行路线简化 - vp_callback_service.insert_handler_retry -> .insert_handler
+        # id_list = params.get('ids')
+        # return VpCallbackService.insert_handler_retry(id_list)
+        # vp_callback -> vp_callback_service -> vp_callback_handler -> vp_callback_service.callback_handler
+        # if params.get('ids'):  # 通过ID批量重试， 多个英文逗号隔开
+        #     res = {}
+        #     db = WechatQueueModel()
+        #     id_list = str(params.get('ids')).split(',')
+        #     queue_list = db.get_list_by_id(id_list)
+        #     for queue in queue_list:
+        #         queue['params'].update({
+        #             'is_retry': 1,
+        #             'is_force': params.get('is_force', 0),
+        #         })
+        #         res[queue['id']] = VpCallbackHandler(app_key).on_message(queue['params'])
+        #         Time.sleep(0.1)
+        #     return res
+        # else:  # 单个更新
+        #     params.update({'is_retry': 1})
+        #     return VpCallbackHandler(app_key).on_message(params)

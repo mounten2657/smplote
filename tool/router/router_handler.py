@@ -16,6 +16,8 @@ class RouterHandler:
         'bot/task/sky_rw',
         'bot/task/vp_msg',
         'bot/task/vp_room',
+        'bot/task/vp_user',
+        'bot/task/vp_user_all',
         'bot/task/vp_log',
         'bot/task/rf_proxy',
         'bot/task/note_html',

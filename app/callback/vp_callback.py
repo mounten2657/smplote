@@ -6,8 +6,7 @@ class VpCallback(BaseApp):
 
     def collect_retry(self):
         """消息回放入口"""
-        res = VpCallbackService.callback_handler_retry(self.app_key, self.params)
-        return self.success(res)
+        return self.insert_retry()
 
     def command_retry(self):
         """指令回放入口"""
