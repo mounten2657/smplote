@@ -2,7 +2,8 @@ from utils.wechat.vpwechat.factory.vp_base_factory import VpBaseFactory
 from utils.wechat.vpwechat.formatter.vp_msg_formatter import VpMsgFormatter
 from tool.db.cache.redis_task_queue import RedisTaskQueue
 from tool.db.cache.redis_client import RedisClient
-from tool.core import Logger, Error, Time, Sys, Str
+from tool.core import Logger, Error, Time, Str
+from service.source.nat_service import NatService
 
 logger = Logger()
 redis = RedisClient()
@@ -20,8 +21,8 @@ class VpCallbackHandler(VpBaseFactory):
         if not Time.is_night():
             logger.warning(f"on error: 发生错误重连中 - {data}", 'VP_WAR')
             # 先关闭再开启
-            Sys.delay_http('/callback/vp_callback/close_ws', delay_seconds=3)
-            Sys.delay_http('/callback/vp_callback/start_ws', delay_seconds=3600)
+            NatService.delay_http('/callback/vp_callback/close_ws', delay_seconds=3)
+            NatService.delay_http('/callback/vp_callback/start_ws', delay_seconds=3600)
         return {'rgu': False, 'err': data}
 
     def on_message(self, data):

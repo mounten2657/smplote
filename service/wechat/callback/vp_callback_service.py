@@ -3,6 +3,7 @@ from service.wechat.callback.vp_command_service import VpCommandService
 from service.wechat.reply.vp_msg_service import VpMsgService
 from service.wechat.sync.vp_room_service import VpRoomService
 from service.wechat.sync.vp_user_service import VpUserService
+from service.source.nat_service import NatService
 from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.vpwechat.callback.vp_callback_handler import VpCallbackHandler
 from model.wechat.wechat_queue_model import WechatQueueModel
@@ -13,7 +14,7 @@ from model.wechat.wechat_user_model import WechatUserModel
 from model.wechat.wechat_msg_model import WechatMsgModel
 from model.wechat.wechat_api_log_model import WechatApiLogModel
 from tool.db.cache.redis_client import RedisClient
-from tool.core import Logger, Time, Error, Attr, Config, Str, Sys
+from tool.core import Logger, Time, Error, Attr, Config, Str
 
 logger = Logger()
 redis = RedisClient()
@@ -342,10 +343,10 @@ class VpCallbackService:
 
             # 异步通知一下更新群聊信息和用户信息 - 同一个目标六小时只触发一次
             if g_wxid and not redis.set_nx('VP_ROOM_USR_LOCK', 1, [g_wxid]):
-                Sys.delay_http(f'/bot/task/vp_room?g_wxid_str={g_wxid}', delay_seconds=1)
+                NatService.delay_http(f'/bot/task/vp_room?g_wxid_str={g_wxid}', delay_seconds=1)
             if not redis.set_nx('VP_ROOM_USR_LOCK', 1, [s_wxid]):
                 ts = f'{s_wxid},{t_wxid}' if t_wxid != self_wxid else f'{s_wxid}'
-                Sys.delay_http(f'/bot/task/vp_user?u_wxid_str={ts}&g_wxid={g_wxid}', delay_seconds=3)
+                NatService.delay_http(f'/bot/task/vp_user?u_wxid_str={ts}&g_wxid={g_wxid}', delay_seconds=3)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0

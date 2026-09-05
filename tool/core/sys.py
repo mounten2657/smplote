@@ -11,7 +11,6 @@ from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from tool.db.cache.redis_client import RedisClient
 from tool.core.attr import Attr
-from tool.core.http import Http
 from tool.core.time import Time
 from tool.core.error import Error
 from tool.core.logger import Logger
@@ -102,19 +101,6 @@ class Sys:
         # gevent / threading 只有一个进程 - 会生成多个协程 - 所有协程共享内存 - 伪并发
         threading.Thread(target=_delay_wrapper, daemon=True).start()
         return thread_id
-
-    @staticmethod
-    def delay_http(uri: str, params=None, method='GET', delay_seconds=3, authentic=0):
-        """延迟发起 http 请求"""
-        if not uri.startswith('http'):
-            uri = f"/{uri}" if not uri.endswith('/') else uri
-            url = f"{Http.get_base_url()}{uri}"
-        else:
-            url = uri
-        if not authentic:
-            return Sys.delayed_thread(Http.send_request, method, url, params, delay_seconds=delay_seconds)
-        else:
-            return Sys.delayed_thread(Http.send_request_auth, method, url, params, delay_seconds=delay_seconds)
 
     @staticmethod
     def multy_thread(func: Callable, chunk_list, chunk_size=5, sleep_time=0, *args, **kwargs):

@@ -1,5 +1,6 @@
 from tool.core import Http, Error, Logger, Str, Time, Attr, Env
 from tool.db.cache.redis_client import RedisClient
+from tool.db.cache.redis_task_queue import RedisTaskQueue
 from service.vpp.vpp_pxq_service import VppPxqService
 from service.vpp.vpp_clash_service import VppClashService
 from service.vps.open_nat_service import OpenNatService
@@ -20,6 +21,24 @@ class NatService:
         self.ppr = VppPxqService()
         self.vpn = VppClashService()
         self.vps = OpenNatService()
+
+    @staticmethod
+    def delay_http(uri: str, params=None, method='GET', delay_seconds=3, authentic=0):
+        """延迟发起 http 请求"""
+        if not uri.startswith('http'):
+            uri = f"/{uri}" if not uri.endswith('/') else uri
+            url = f"{Http.get_base_url()}{uri}"
+        else:
+            url = uri
+        headers = {} if not authentic else Http.get_auth_header()
+        # 加入队列 - 异步启动
+        return RedisTaskQueue.add_task('NAT_REQ', method, url, params, headers, delay_seconds)
+
+    def delay_http_handler(self, method, url, params=None, headers=None, delay_seconds=None):
+        """延迟发起 http 请求处理器 - 由队列自动触发"""
+        if delay_seconds:
+            Time.sleep(delay_seconds)
+        return Http.send_request(method, url, params, headers)
 
     def ppr_request(self, method, url, params=None, headers=None, proxy=None):
         """利用代理池发起请求"""
