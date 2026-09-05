@@ -85,7 +85,7 @@ class VpCallbackService:
                 logger.warning(f"获取用户信息失败 - 跳过 - [{wxid}]", 'VP_INS_USER')
                 continue
             u_room_list = {g_wxid: room['nickname']} if room else {}
-            user['room_list'] = user['room_list'] | u_room_list
+            user['room_list'] = Attr.get(user, 'room_list', {}) | u_room_list
             user['is_friend'] = client.get_user_is_friend(wxid)
             user['user_type'] = 1 if user['is_friend'] else 2
             user['wx_nickname'] = user['nickname']
