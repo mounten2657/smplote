@@ -60,7 +60,8 @@ class VpRoomService:
         if change:
             update_data = {}
             for k, v in change.items():
-                update_data[k] = room[k]
+                if room[k]:  # 有值才更新，避免获取失败被覆盖成空信息
+                    update_data[k] = room[k]
             change['_dt'] = Time.date()
             change_log.append(change)
             if len(change_log) > 60:

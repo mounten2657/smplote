@@ -96,7 +96,7 @@ class RouterHandler:
                 # API 鉴权
                 headers = Http.get_request_headers()
                 authcode = Attr.get(headers, 'Authcode')
-                if not (Env.get('APP_AUTH_KEY') == authcode
+                if not (Config.auth_code() == authcode
                         or method_path in self.OPEN_API_LIST
                         or method_path in self.IGNORE_API_LIST):
                     Error.throw_exception('Permission denied', 99)  # 抛出异常以告警

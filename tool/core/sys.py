@@ -104,14 +104,17 @@ class Sys:
         return thread_id
 
     @staticmethod
-    def delay_http(uri: str, params=None, method='GET', delay_seconds=3):
+    def delay_http(uri: str, params=None, method='GET', delay_seconds=3, authentic=0):
         """延迟发起 http 请求"""
         if not uri.startswith('http'):
             uri = f"/{uri}" if not uri.endswith('/') else uri
             url = f"{Http.get_base_url()}{uri}"
         else:
             url = uri
-        return Sys.delayed_thread(Http.send_request, method, url, params, delay_seconds=delay_seconds)
+        if not authentic:
+            return Sys.delayed_thread(Http.send_request, method, url, params, delay_seconds=delay_seconds)
+        else:
+            return Sys.delayed_thread(Http.send_request_auth, method, url, params, delay_seconds=delay_seconds)
 
     @staticmethod
     def multy_thread(func: Callable, chunk_list, chunk_size=5, sleep_time=0, *args, **kwargs):

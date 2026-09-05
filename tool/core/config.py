@@ -37,6 +37,10 @@ class Config:
         return Env.get('APP_ROOT_DIR')
 
     @staticmethod
+    def auth_code():
+        return Env.get('APP_AUTH_KEY')
+
+    @staticmethod
     def base_url(is_prod=0):
         app = Config.app_config()
         if Config.is_prod() or is_prod:

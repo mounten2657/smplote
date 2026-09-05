@@ -320,7 +320,9 @@ class SkyDataService:
         """
         url = f"https://60s.viki.moe/v2/60s?encoding=text"  # 备用，但是这个域名好像只有本地能够使用
         # url = f"https://60s-api-cf.114128.xyz/v2/60s?encoding=text"  # 把 encoding 去掉就是 json 格式 - 已失效
-        res = Http.send_request('GET', url)
-        text = res  # 直接返回文字
+        # 改用 vps 转发获取结果
+        url = f'/src/nat/vps?u={url}'
+        res = Http.send_request_auth('GET', url, {})
+        text = res.get('data') if isinstance(res, dict) else res  # 直接返回文字
         return {"title": "每日新闻", "main": "【莫简报】 " + text}
 

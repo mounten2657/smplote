@@ -134,6 +134,8 @@ class Http:
         :return: 如果响应是JSON则返回字典，否则返回原始文本
         """
         method = method.upper()
+        params = params or {}
+        headers = headers or {}
         if method not in ('GET', 'POST', 'JSON', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS', 'CURL', 'CURL_POST'):
             raise ValueError(f"Unsupported HTTP method: {method}")
         if not url:
@@ -141,7 +143,7 @@ class Http:
         request_kwargs = {
             'method': method,
             'url': url,
-            'headers': headers or {},
+            'headers': headers,
             'timeout': timeout,
         }
         if proxy:  # 新增代理
@@ -149,9 +151,9 @@ class Http:
         # 处理params参数
         params_str = None
         if isinstance(params, dict):
-            params_str = urlencode(params)
+            params_str = urlencode(params) if params else ''
         elif isinstance(params, str):
-            params_str = params if '=' in params else None
+            params_str = params if '=' in params else ''
         if 'GET' == method:
             request_kwargs.update({'params': params_str})
         elif 'PUT' == method:
@@ -163,7 +165,6 @@ class Http:
         try:
             if 'CURL' in method:
                 cmd_parts = "curl -s"
-                headers = headers or {}
                 for key, value in headers.items():
                     if key not in ['Cookie']:
                         cmd_parts += f' -H "{key}: {value}"'
@@ -193,6 +194,17 @@ class Http:
             # raise requests.exceptions.RequestException( f"HTTP request failed: {str(e)}") from e
             # 直接返回，没必要抛异常了
             return f"HTTP request failed: {str(e)}"
+
+    @staticmethod
+    def send_request_auth(method, url, params=None, headers=None):
+        """发送请求 - 含认证"""
+        headers = (headers or {}) | Http.get_auth_header()
+        return Http.send_request(method, url, params, headers)
+
+    @staticmethod
+    def get_auth_header():
+        """获取认证头"""
+        return {"Authcode": Config.auth_code()}
 
     @staticmethod
     def is_http_request():
