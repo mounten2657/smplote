@@ -9,7 +9,7 @@ class RedisTaskKeys:
         # qy wechat
         "QY_CAL": {"s": "service.wechat.callback.qy_callback_service@QyCallbackService.qy_push_handler", "n": 2, "t": "vp"},
         # nat request
-        "NAT_REQ": {"s": "service.source.nat_service.nat_service@NatService.delay_http_handler", "n": 1, "t": "nat"},
+        "NAT_REQ": {"s": "service.source.nat_service@NatService.delay_http_handler", "n": 1, "t": "nat"},
         # gpl batch
         "GPL_SYM": {"s": "service.gpl.gpl_update_service@GPLUpdateService.update_symbol", "n": 1, "t": "gpl_sym"},
         "GPL_EXT": {"s": "service.gpl.gpl_update_ext_service@GPLUpdateExtService.update_symbol_ext", "n": 1, "t": "gpl_ext"},
