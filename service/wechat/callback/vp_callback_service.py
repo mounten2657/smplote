@@ -127,7 +127,8 @@ class VpCallbackService:
         for friend in friend_list:
             if friend['id'] % 7 == (Time.week() - 1):  # 每天只取七分之一，一周下来刚好取完
                 wxid_list.append(friend['wxid'])
-        return VpCallbackService.refresh_user_info(app_key, wxid_list, '', 1)
+        u_wxid_str = ','.join(wxid_list)
+        return VpCallbackService.refresh_user_info(app_key, u_wxid_str, '', 1)
 
     @staticmethod
     def clear_api_log():
@@ -343,10 +344,11 @@ class VpCallbackService:
 
             # 异步通知一下更新群聊信息和用户信息 - 同一个目标六小时只触发一次
             if g_wxid and not redis.set_nx('VP_ROOM_USR_LOCK', 1, [g_wxid]):
-                NatService.delay_http(f'/bot/task/vp_room?g_wxid_str={g_wxid}', delay_seconds=1)
+                NatService.delay_http(f'/bot/task/vp_room', {"g_wxid_str": g_wxid},  delay_seconds=1)
             if not redis.set_nx('VP_ROOM_USR_LOCK', 1, [s_wxid]):
                 ts = f'{s_wxid},{t_wxid}' if t_wxid != self_wxid else f'{s_wxid}'
-                NatService.delay_http(f'/bot/task/vp_user?u_wxid_str={ts}&g_wxid={g_wxid}', delay_seconds=3)
+                par = {"g_wxid_str": g_wxid, "u_wxid_str": ts}
+                NatService.delay_http(f'/bot/task/vp_user', par, delay_seconds=3)
 
             # 文件下载 - 由于消息是单次入库的，所以文件下载就不用重复判断了
             fid = 0
