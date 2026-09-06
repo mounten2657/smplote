@@ -377,5 +377,8 @@ class Http:
             }
             return result
         except Exception as e:
-            return f"订阅链接解析失败：{str(e)}"
+            # token 脱敏
+            pattern = re.compile(r"(token=)([^&\s]+)", re.IGNORECASE)
+            msg = pattern.sub(r"\1f1e3d5", str(e))
+            return f"订阅链接解析失败：{msg}"
 

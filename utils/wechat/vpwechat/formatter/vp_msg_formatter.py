@@ -177,6 +177,8 @@ class VpMsgFormatter(VpBaseFactory):
             send_wxid, content = [s_wxid, '']
         elif 'wx_app' == content_type:  # 应用
             send_wxid, content = [s_wxid, f"[应用消息] [{content_link['title']}{content_link['des']}]({content_link['url']})"]
+        elif 'others' == content_type:  # 其它可以忽略的消息
+            send_wxid, content = [s_wxid, f"[可忽略消息] ..."]
         elif self.is_my or self.is_sl:  # 自己的消息 或 私聊消息 - "{content}"
             content_type = 'text'
             content_link = {}
@@ -449,6 +451,9 @@ class VpMsgFormatter(VpBaseFactory):
                 content_link['title'], content_link['des'], content_link['url'] = nickname, desc, url
             if not content_link['url']:
                 content_link['url'] = self.extract_xml_attr(content_text, 'tpurl').replace('&amp;', '&')
+        elif any(key in content_text for key in ('sysmsg', 'paymsg', 'appmsg')):  # 其它不要的数据 - 后续随时补充 - "{<others_xml>}"
+            content_type = 'others'
+            content_link = {"c": content_text[:81]}  # 有限内容预览
         else:  # 未识别 - 不放行
             content_type = 'unknown'
             content_link = {}
