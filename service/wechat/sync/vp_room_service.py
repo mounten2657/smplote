@@ -67,7 +67,7 @@ class VpRoomService:
             if len(change_log) > 60:
                 change_log.pop(0)
             m_len = len(Attr.get(update_data, 'member_list', []))
-            if not m_len and not update_data.get('head_img_url'):
+            if not m_len and not update_data.get('head_img_url') and not update_data.get('notice'):
                 logger.error(f"获取群成员失败 - {pid} - {update_data} - {change}", 'ROOM_EMP_MEM')
                 # 获取失败分两个原因 - 一是接口返回失败，二是缓存里存的数据是错误的 - 不论是哪种，都应该删除缓存以重新请求接口
                 redis.delete('VP_ROOM_INFO', [g_wxid])
