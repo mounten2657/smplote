@@ -280,7 +280,7 @@ class VppClashService:
             stat = Http.get_subscription_traffic(url)
             stat_err = "订阅链接解析失败"
             if str(stat).startswith(stat_err):
-                logger.error(f"[!] VPN预警: <{sub}>{stat}", 'TSN_ERR')
+                # logger.error(f"[!] VPN预警: <{sub}>{stat}", 'TSN_ERR')  # 屏蔽不重要的预警
                 # stat = stat_err # 与其显示报错，不如保持结构一致
                 stat = {
                     "upload": 0,
