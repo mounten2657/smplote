@@ -79,7 +79,7 @@ class VppClashService:
         url_list = Str.extract_url(File.read_file(self._VPN_SUB_FILE))
         u_list = []
         for i, url in enumerate(url_list):
-            if i in [0, 3, 5, 8, 10, 11]  or i > 11:  # 过滤不必要的节点
+            if i in [0, 3, 10, 11]  or i > 11:
                 continue
             u_list.append(url)
         u_list.reverse()
