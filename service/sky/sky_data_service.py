@@ -1,6 +1,3 @@
-import random
-from urllib.parse import urlencode
-
 from service.vpp.vpp_serve_service import VppServeService
 from model.wechat.wechat_file_model import WechatFileModel
 from tool.core import Time, Http, Env, Attr, Str

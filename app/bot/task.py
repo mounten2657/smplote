@@ -1,7 +1,6 @@
-from service.wechat.callback.vp_command_service import VpCommandService
-from service.wechat.callback.vp_callback_service import VpCallbackService
+from service.wechat.reply.qy_msg_service import QyMsgService
+from service.sky.sky_data_service import SkyDataService
 from service.gpl.gpl_update_service import GPLUpdateService
-from service.vpp.vpp_pxq_service import VppPxqService
 from service.vpp.vpp_clash_service import VppClashService
 from service.vpp.vpp_note_service import VppNoteService
 from service.gpl.gpl_formatter_service import GplFormatterService
@@ -14,81 +13,16 @@ class Task(BaseAppVp):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.vp = VpCallbackService
         self.gpl = GPLUpdateService()
         self.gpl_formatter = GplFormatterService()
 
-    def sky_rw(self):
-        """sky任务 - 每天上午的06点36分"""
-        res = {}
-        app_key = self.app_key
-        s_wxid = self.wxid
-        g_list = self.g_wxid_list.split(',')
-        def sky_task_exec(gid, sid, method, *args):
-            client = VpCommandService(app_key, gid, sid)
-            func = getattr(client, method, None)
-            if not func or not callable(func):
-                raise ValueError(f"不存在的vp方法: {method}")
-            return func(*args)
-        i = 0
-        for g_wxid in g_list:
-            ad = int(i == 0)  # 是否为管理员群
-            res[g_wxid] = {}
-            # res[g_wxid]['vp_good_morning'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_good_morning', delay_seconds=0.1 + i) if not ad else 0 # > 10
-            # res[g_wxid]['vp_rank'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_rank', '#昨日榜', delay_seconds=10 + i) if not ad else 0  # > 20  # 反响不好，暂时屏蔽
-            res[g_wxid]['vp_xw'] = Sys.delayed_thread(sky_task_exec, g_wxid, s_wxid, 'vp_xw', '', 0, delay_seconds=30 + i) if ad else 0  # > 15  # 0: 仅新闻 | 1: 新闻 + 历史上的今天
-            # res[g_wxid]['vp_sky_rl'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rl', '', 2, delay_seconds=45 + i) if not ad else 0 # > 15  # 管理员群不发
-            # res[g_wxid]['vp_sky_rw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw', '', 2, delay_seconds=60 + i) # > 40  # 0: 仅任务图片 | 1: 所有任务相关图片 | 2: 文字版 | 20: 图片+文字 | 21: 所有图片+文字
-            # res[g_wxid]['vp_sky_hs'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 2, delay_seconds=100 + i) # > 30  # 0: 图片(每天发) | 1: 图片(仅周末发) | 2: 文字版(仅周末发)
-            res[g_wxid]['vp_ov_wa'] = Sys.delayed_thread(sky_task_exec, g_wxid, s_wxid, 'vp_ov_wa', delay_seconds=130 + i) if ad else 0  # > 15
-            res[g_wxid]['vp_ov_bz'] = Sys.delayed_thread(sky_task_exec, g_wxid, s_wxid, 'vp_ov_bz', '', 2, delay_seconds=145 + i) if ad else 0  # > 20  # # 壁纸类型：1:二次元 | 2:必应 | 3:cosplay
-            res[g_wxid]['vp_sub_stat'] = Sys.delayed_thread(sky_task_exec, g_wxid, s_wxid, 'vp_sub_stat', '', delay_seconds=175 + i) if ad else 0  # vpn 节点流量统计 - 只有管理群发
-            i += 120
-        return self.success(res)
-
-    def vp_msg(self):
-        """vp消息重试 - 每小时的第10分钟"""
-        if Time.is_night():
-            return self.success(True)
-        id_list = self.params.get('ids', '-1').split(',')
-        res = self.vp.insert_handler_retry(id_list)
-        return self.success(res)
-
-    def vp_room(self):
-        """刷新群聊的信息 - 每小时的第18分钟"""
-        if Time.is_night():
-            return self.success(True)
-        g_wxid_str = self.params.get('g_wxid_str', '')
-        res = self.vp.refresh_room_info(self.app_key, g_wxid_str)
-        return self.success(res)
-
-    def vp_user(self):
-        """刷新用户的信息 - 每小时的第20分钟"""
-        if Time.is_night():
-            return self.success(True)
-        u_wxid_str = self.params.get('u_wxid_str', '')
-        g_wxid = self.params.get('g_wxid', '')
-        res = self.vp.refresh_user_info(self.app_key, u_wxid_str, g_wxid)
-        return self.success(res)
-
-    def vp_user_all(self):
-        """刷新所有用户的信息 - 每天上午的03点03分"""
-        res = self.vp.refresh_user_all(self.app_key)
-        return self.success(res)
-
-    def vp_log(self):
-        """清理历史日志 - 每天上午的06点06分"""
-        res = {
-            'vp': Sys.delayed_thread(self.vp.clear_api_log, timeout=300),
-            'gpl': Sys.delayed_thread(self.gpl.clear_api_log, delay_seconds=30, timeout=300),
-            'rtd': Sys.delayed_thread(self.gpl_formatter.refresh_td_list, delay_seconds=60),
-        }
-        return self.success(res)
-
-    def rf_proxy(self):
-        """刷新代理服务 - 每小时的第11分钟 - 已禁用"""
-        res = VppPxqService.init_proxy()
-        return self.success(res)
+    def _get_gpl_par(self):
+        """获取gpl参数"""
+        code_str = self.params.get('code_str', '')
+        is_force = self.params.get('is_force', 0)
+        td = self.params.get('td', '')
+        vip = self.params.get('vip', 1)
+        return code_str, is_force, td, vip
 
     def note_html(self):
         """刷新笔记html - 每天凌晨的00点25分"""
@@ -100,19 +34,9 @@ class Task(BaseAppVp):
     def rf_vpn(self):
         """刷新vpn节点 - 每天凌晨的00点36分"""
         ports = self.params.get('p', '')  # 是代理端口不是api端口
-        # if not ports and Time.is_week():
-        #     return self.error('周末不执行')
         p_list = [int(p) + 10 for p in ports.split(',')] if ports else []  # 转为api端口
         res = Sys.delayed_thread(VppClashService().init_vpn_node, p_list, timeout=7200)
         return self.success(res)
-
-    def _get_gpl_par(self):
-        """获取gpl参数"""
-        code_str = self.params.get('code_str', '')
-        is_force = self.params.get('is_force', 0)
-        td = self.params.get('td', '')
-        vip = self.params.get('vip', 1)
-        return code_str, is_force, td, vip
 
     def gpl_info(self):
         """更新股票基础信息 - 每天凌晨的01点11分"""
@@ -139,11 +63,104 @@ class Task(BaseAppVp):
         return self.success(res)
 
     def gpl_check(self):
-        """
-        检查股票日线信息
-          - 每月20号的04点33分 - 全股检查
-        """
+        """检查股票日线信息 - 每月20号的04点33分"""
         code_str, is_force, td, vip = self._get_gpl_par()
         res = Sys.delayed_thread(self.gpl.check_daily_data, code_str, int(is_force), td, int(vip), timeout=3600)
         return self.success(res)
 
+    def vp_log(self):
+        """清理历史日志 - 每天上午的06点06分"""
+        res = {
+            'gpl': Sys.delayed_thread(self.gpl.clear_api_log, delay_seconds=30, timeout=300),
+            'rtd': Sys.delayed_thread(self.gpl_formatter.refresh_td_list, delay_seconds=60),
+        }
+        return self.success(res)
+
+    def daily_report(self):
+        """每日早报 - 每天上午的06点36分"""
+        res = msgs = {}
+        day_svr = SkyDataService()
+        # 60s 看世界
+        content = day_svr.get_daily_news()
+        if content.get('main'):
+            msgs['n60'] = content.get('main')
+        # bing 每日壁纸
+        content = day_svr.get_sky_file('bz', {'r_type': 2})
+        if content.get('url'):
+            msgs['bing'] = content.get('url')
+        # vpn 流量统计
+        content = VppClashService().get_traffic_stat()
+        if content:
+            msgs['vpn'] = content
+        # 循环发送 - 仅支持文字形式
+        for k, v in msgs.items():
+            res[k] = QyMsgService.send_qy_msg(self.app_key, v)
+            Time.sleep(6)
+        return self.success(res)
+
+
+    # ----------------------------------------------【已禁用备份区】---------------------------------------------- #
+
+    # def sky_rw(self):
+    #     """sky任务 - 每天上午的06点36分"""
+    #     res = {}
+    #     app_key = self.app_key
+    #     s_wxid = self.wxid
+    #     g_list = self.g_wxid_list.split(',')
+    #     def sky_task_exec(gid, sid, method, *args):
+    #         client = VpCommandService(app_key, gid, sid)
+    #         func = getattr(client, method, None)
+    #         if not func or not callable(func):
+    #             raise ValueError(f"不存在的vp方法: {method}")
+    #         return func(*args)
+    #     i = 0
+    #     for g_wxid in g_list:
+    #         ad = int(i == 0)  # 是否为管理员群
+    #         res[g_wxid] = {}
+    #         # res[g_wxid]['vp_good_morning'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_good_morning', delay_seconds=0.1 + i) if not ad else 0 # > 10
+    #         # res[g_wxid]['vp_rank'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_rank', '#昨日榜', delay_seconds=10 + i) if not ad else 0  # > 20  # 反响不好，暂时屏蔽
+    #         res[g_wxid]['vp_xw'] = Sys.delayed_thread(sky_task_exec, g_wxid, s_wxid, 'vp_xw', '', 0, delay_seconds=30 + i) if ad else 0  # > 15  # 0: 仅新闻 | 1: 新闻 + 历史上的今天
+    #         # res[g_wxid]['vp_sky_rl'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rl', '', 2, delay_seconds=45 + i) if not ad else 0 # > 15  # 管理员群不发
+    #         # res[g_wxid]['vp_sky_rw'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_rw', '', 2, delay_seconds=60 + i) # > 40  # 0: 仅任务图片 | 1: 所有任务相关图片 | 2: 文字版 | 20: 图片+文字 | 21: 所有图片+文字
+    #         # res[g_wxid]['vp_sky_hs'] = Sys.delayed_task(sky_task_exec, g_wxid, s_wxid, 'vp_sky_hs', '', 2, delay_seconds=100 + i) # > 30  # 0: 图片(每天发) | 1: 图片(仅周末发) | 2: 文字版(仅周末发)
+    #         res[g_wxid]['vp_ov_wa'] = Sys.delayed_thread(sky_task_exec, g_wxid, s_wxid, 'vp_ov_wa', delay_seconds=130 + i) if ad else 0  # > 15
+    #         res[g_wxid]['vp_ov_bz'] = Sys.delayed_thread(sky_task_exec, g_wxid, s_wxid, 'vp_ov_bz', '', 2, delay_seconds=145 + i) if ad else 0  # > 20  # # 壁纸类型：1:二次元 | 2:必应 | 3:cosplay
+    #         res[g_wxid]['vp_sub_stat'] = Sys.delayed_thread(sky_task_exec, g_wxid, s_wxid, 'vp_sub_stat', '', delay_seconds=175 + i) if ad else 0  # vpn 节点流量统计 - 只有管理群发
+    #         i += 120
+    #     return self.success(res)
+
+    # def vp_msg(self):
+    #     """vp消息重试 - 每小时的第10分钟"""
+    #     if Time.is_night():
+    #         return self.success(True)
+    #     id_list = self.params.get('ids', '-1').split(',')
+    #     res = self.vp.insert_handler_retry(id_list)
+    #     return self.success(res)
+
+    # def vp_room(self):
+    #     """刷新群聊的信息 - 每小时的第18分钟"""
+    #     if Time.is_night():
+    #         return self.success(True)
+    #     g_wxid_str = self.params.get('g_wxid_str', '')
+    #     res = self.vp.refresh_room_info(self.app_key, g_wxid_str)
+    #     return self.success(res)
+
+    # def vp_user(self):
+    #     """刷新用户的信息 - 每小时的第20分钟"""
+    #     if Time.is_night():
+    #         return self.success(True)
+    #     u_wxid_str = self.params.get('u_wxid_str', '')
+    #     g_wxid = self.params.get('g_wxid', '')
+    #     res = self.vp.refresh_user_info(self.app_key, u_wxid_str, g_wxid)
+    #     return self.success(res)
+
+    # def vp_user_all(self):
+    #     """刷新所有用户的信息 - 每天上午的03点03分"""
+    #     Sys.delayed_thread(self.vp.clear_api_log, timeout=300) # 先清理日志
+    #     res = self.vp.refresh_user_all(self.app_key)
+    #     return self.success(res)
+
+    # def rf_proxy(self):
+    #     """刷新代理服务 - 每小时的第11分钟 - 已禁用"""
+    #     res = VppPxqService.init_proxy()
+    #     return self.success(res)

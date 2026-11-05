@@ -21,8 +21,6 @@ class ParseHandler:
         """初始化程序"""
         def hot_load():
             """程序预热"""
-            if int(app_config['APP_AUTO_START_WS']):
-                res['ws_start'] = VpClient().start_websocket()           # 启动 wechatpad ws
             res['que_start'] = RedisTaskQueue.run_consumer()     # 启动 redis task queue
         res = {}
         # 注册结束处理
@@ -30,8 +28,6 @@ class ParseHandler:
         # 程序开始前先释放锁
         key_list = ['LOCK_SYS_CNS', 'LOCK_RTQ_CNS', 'LOCK_SQL_CNT', 'LOCK_WSS_CNT']
         list(map(lambda key: redis.delete(key, ['*']), key_list))
-        app_config = Config.app_config()
-        not Config.is_prod() and 0 and bs.login()  # bs 登录 - 停用
         # 延迟启动
         res['clean_log'] = clean_old_logs(30 if Config.is_prod() else 7)
         res['delayed_thread'] = Sys.delayed_thread(hot_load, delay_seconds=1, timeout=86400)
