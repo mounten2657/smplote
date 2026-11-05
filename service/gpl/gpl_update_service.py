@@ -284,10 +284,10 @@ class GPLUpdateService:
         [ _check_day_exec(code) for code in code_list ]
         return True
 
-    def clear_api_log(self):
+    def clean_api_log(self):
         """清理api日志 - 保留10万条记录"""
         if True:
-            return GplApiLogModel().clear_history() # 先用这个方式看看是否会超时，不行再用下面的方法
+            return GplApiLogModel().clean_history() # 先用这个方式看看是否会超时，不行再用下面的方法
         r = 0
         save_count = 1000000
         ldb = GplApiLogModel()

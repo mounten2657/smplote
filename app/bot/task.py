@@ -68,10 +68,10 @@ class Task(BaseAppVp):
         res = Sys.delayed_thread(self.gpl.check_daily_data, code_str, int(is_force), td, int(vip), timeout=3600)
         return self.success(res)
 
-    def vp_log(self):
+    def clean_log(self):
         """清理历史日志 - 每天上午的06点06分"""
         res = {
-            'gpl': Sys.delayed_thread(self.gpl.clear_api_log, delay_seconds=30, timeout=300),
+            'gpl': Sys.delayed_thread(self.gpl.clean_api_log, delay_seconds=30, timeout=300),
             'rtd': Sys.delayed_thread(self.gpl_formatter.refresh_td_list, delay_seconds=60),
         }
         return self.success(res)

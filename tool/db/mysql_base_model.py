@@ -544,7 +544,7 @@ class MysqlBaseModel:
         mid = Attr.get_by_point(ret, '0.mid')
         return mid or 0
 
-    def clear_history(self, save_count=100000):
+    def clean_history(self, save_count=100000):
         """清除历史数据"""
         mid = self.get_max_id()
         if not mid:
