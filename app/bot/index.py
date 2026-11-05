@@ -12,7 +12,6 @@ class Index(BaseAppWx):
             "timestamp": Time.now(),
             "version": Config.app_config().get('SYS_VERSION'),
             "is_prod": Config.is_prod(),
-            "app_key": self.app_key,
             "params": self.params,
         }
         return self.success(response)
