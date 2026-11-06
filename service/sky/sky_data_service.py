@@ -323,5 +323,10 @@ class SkyDataService:
         u = Http.get_base_url() + f'/src/nat/vps'
         res = Http.send_request_auth('GET', u, {"u": url})
         text = res.get('data') if isinstance(res, dict) else res  # 直接返回文字
-        return {"title": "每日新闻", "main": "【莫简报】 " + text}
+        # 失败则本地再试一次
+        if text.startswith('HTTP request failed'):
+            Time.sleep(10)
+            res = Http.send_request('GET', url)
+            text = res.get('data') if isinstance(res, dict) else res
+        return {"title": "每日新闻", "main": text}
 

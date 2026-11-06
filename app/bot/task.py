@@ -83,11 +83,11 @@ class Task(BaseAppVp):
         # 60s 看世界
         content = day_svr.get_daily_news()
         if content.get('main'):
-            msgs['n60'] = content.get('main')
+            msgs['n60'] = "【60秒看世界】 " + content.get('main')
         # bing 每日壁纸
         content = day_svr.get_sky_file('bz', {'r_type': 2})
         if content.get('url'):
-            msgs['bing'] = content.get('url')
+            msgs['bing'] = "【精选风景图】 " + content.get('file_name') + "\r\n" + content.get('url')
         # vpn 流量统计
         content = VppClashService().get_traffic_stat()
         if content:
