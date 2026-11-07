@@ -54,7 +54,7 @@ class GiteeWebhookMd:
             # 生成 Markdown 消息
             md_message = f"""🚀 **Gitee {str(app_name).capitalize()} 代码推送通知**  
 
-    📦 仓库: [{repo}]({payload['repository']['html_url']})  
+    📦 仓库: [{repo}] {payload['repository']['html_url']}  
     🌿 分支: {branch}
     🦸‍♂️ 成员: {author}
 
@@ -64,7 +64,7 @@ class GiteeWebhookMd:
             for i, commit in enumerate(commits[:3]):  # 最多显示3个提交
                 for file in commit['modified']:
                     md_message += f"     - {file}\r\n"
-                md_message += f"     - [{commit['id'][:7]}]({commit['url']})\r\n"
+                md_message += f"     - [{commit['id'][:8]}] {commit['url']}\r\n"
                 md_message += f"    ℹ️ {commit['message']}"  # 自带换行符号
                 md_message += f"    ⏱️️ {str(commit['timestamp']).replace('T', ' ')[:19]}\r\n"
                 if i < len(commits[:3]) - 1:
