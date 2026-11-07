@@ -35,7 +35,7 @@ class DayDataService:
                 text += f" - {Attr.get(r1[i], 'title')}\r\n"
             if Attr.get(r2, i):
                 text += f" - {Attr.get(r2[i], 'title')}\r\n"
-        return text
+        return text.strip()
 
     def get_random_text(self):
         """
