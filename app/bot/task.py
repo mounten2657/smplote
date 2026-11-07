@@ -85,7 +85,7 @@ class Task(BaseAppVp):
         if content:
             msgs['n60'] = "【看世界】 " + content
         # bing 每日壁纸
-        content = day_svr.get_biz_file('VP_WP', 'bing')
+        content = day_svr.get_bing_image()
         if content.get('url'):
             msgs['bing'] = "【看风景】 " + content.get('file_name') + "\r\n" + content.get('url')
         # vpn 流量统计
