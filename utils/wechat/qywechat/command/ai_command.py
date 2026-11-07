@@ -2,6 +2,7 @@ from tool.core import Ins, Http
 from utils.wechat.vpwechat.vp_client import VpClient
 from utils.wechat.qywechat.command.base_command import BaseCommand
 from service.ai.command.ai_command_service import AiCommandService
+from service.third.day_data_service import DayDataService
 
 
 @Ins.singleton
@@ -44,3 +45,9 @@ class AiCommand(BaseCommand):
         res = VpClient().wakeup()
         response = f"正在执行 WVP 命令 - {res}\r\n\r\n请保持微信打开……"
         return self.send_content(response)
+
+    def qy_wa(self):
+        """随机文案"""
+        response = DayDataService().get_random_text()
+        return self.send_content(response)
+

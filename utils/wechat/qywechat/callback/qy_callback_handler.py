@@ -49,6 +49,7 @@ class QyCallbackHandler:
                 "#提问": "qy_que",
                 "#百科": "qy_sci",
                 "#唤醒": "qy_wvp",
+                "#文案": "qy_wa",
             }
             admins = qy_config['admin_list'].split(',')
             if msg_user in admins:

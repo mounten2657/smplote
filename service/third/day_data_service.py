@@ -34,5 +34,15 @@ class DayDataService:
             text = res.get('data') if isinstance(res, dict) else res
         return text
 
+    def get_random_text(self):
+        """
+        获取随机文案 - 用于测试网络和连通性
+        :return: 接口结果
+        """
+        url = f"https://uapis.cn/api/v1/saying"
+        res = Http.send_request('GET', url)
+        text = res.get('text', str(res))
+        return text
+
 
 
