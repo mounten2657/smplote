@@ -1,6 +1,6 @@
 import time
 import random
-from service.sky.sky_data_service import SkyDataService
+from service.third.sky_data_service import SkyDataService
 from service.wechat.reply.vp_msg_service import VpMsgService
 from service.ai.command.ai_command_service import AiCommandService
 from service.ai.report.ai_report_gen_service import AIReportGenService

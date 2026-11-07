@@ -207,6 +207,11 @@ class Http:
         return {"Authcode": Config.auth_code()}
 
     @staticmethod
+    def get_ua_header():
+        """获取普通浏览器 ua 头"""
+        return {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"}
+
+    @staticmethod
     def is_http_request():
         """
         判断当前是否处于 HTTP 请求上下文中

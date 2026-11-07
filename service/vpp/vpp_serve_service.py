@@ -27,7 +27,7 @@ class VppServeService:
         """
         下载外部网站文件 - 对外方法
         :param str url: 文件url
-        :param str biz_code: 业务码
+        :param str biz_code: 业务码 - 最好是 VP_ 开头，用于二级文件夹起名
         :param str file_name: 文件名 - 无路径 - 带后缀
         :param str file_dir: 文件路径 - 默认月份 - / 结尾
         :param int fty: 文件下载方式: 5001: http | 5002: curl  # 因为 5002 可以忽略证书验证，所以将其设为默认值

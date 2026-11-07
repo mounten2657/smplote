@@ -321,13 +321,7 @@ class SkyDataService:
         # url = f"https://60s-api-cf.114128.xyz/v2/60s?encoding=text"  # 把 encoding 去掉就是 json 格式 - 已失效
         # 改用 vps 转发获取结果
         u = Http.get_base_url() + f'/src/nat/vps'
-        headers = Http.get_random_headers()
-        res = Http.send_request_auth('GET', u, {"u": url}, headers)
+        res = Http.send_request_auth('GET', u, {"u": url})
         text = res.get('data') if isinstance(res, dict) else res  # 直接返回文字
-        # 失败则本地再试一次
-        if text.startswith('HTTP request failed'):
-            Time.sleep(10)
-            res = Http.send_request('GET', url, {}, headers)
-            text = res.get('data') if isinstance(res, dict) else res
         return {"title": "每日新闻", "main": text}
 

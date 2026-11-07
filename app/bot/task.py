@@ -1,5 +1,5 @@
 from service.wechat.reply.qy_msg_service import QyMsgService
-from service.sky.sky_data_service import SkyDataService
+from service.third.day_data_service import DayDataService
 from service.gpl.gpl_update_service import GPLUpdateService
 from service.vpp.vpp_clash_service import VppClashService
 from service.vpp.vpp_note_service import VppNoteService
@@ -79,15 +79,15 @@ class Task(BaseAppVp):
     def daily_report(self):
         """每日早报 - 每天上午的06点36分"""
         res = msgs = {}
-        day_svr = SkyDataService()
+        day_svr = DayDataService()
         # 60s 看世界
         content = day_svr.get_daily_news()
-        if content.get('main'):
-            msgs['n60'] = "【60秒看世界】 " + content.get('main')
+        if content:
+            msgs['n60'] = "【看世界】 " + content
         # bing 每日壁纸
-        content = day_svr.get_sky_file('bz', {'r_type': 2})
+        content = day_svr.get_biz_file('VP_WP', 'bing')
         if content.get('url'):
-            msgs['bing'] = "【精选风景图】 " + content.get('file_name') + "\r\n" + content.get('url')
+            msgs['bing'] = "【看风景】 " + content.get('file_name') + "\r\n" + content.get('url')
         # vpn 流量统计
         content = VppClashService().get_traffic_stat()
         if content:
