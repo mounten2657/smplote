@@ -51,3 +51,8 @@ class AiCommand(BaseCommand):
         response = DayDataService().get_random_text()
         return self.send_content(response)
 
+    def qy_xw(self):
+        """实时新闻"""
+        response = DayDataService().get_daily_news()
+        return self.send_content(response)
+

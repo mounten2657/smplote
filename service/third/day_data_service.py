@@ -19,19 +19,22 @@ class DayDataService:
 
     def get_daily_news(self):
         """
-        获取每日新闻 - 文字版
+        获取实时新闻 - 文字版
         :return: 接口结果
         """
-        url = f"https://60s.viki.moe/v2/60s?encoding=text"  # 把 encoding 去掉就是 json 格式
-        u = Http.get_base_url() + f'/src/nat/vps'  # 用 vps 转发获取结果
-        headers = Http.get_ua_header()
-        res = Http.send_request_auth('GET', u, {"u": url}, headers)
-        text = res.get('data') if isinstance(res, dict) else res  # 直接返回文字
-        # 失败则本地再试一次
-        if text.startswith('HTTP request failed'):
-            Time.sleep(10)
-            res = Http.send_request('GET', url, headers=headers)
-            text = res.get('data') if isinstance(res, dict) else res
+        url1 = f"https://news.orz.ai/api/v1/dailynews/?platform=douyin"
+        url2 = f"https://news.orz.ai/api/v1/dailynews/?platform=eastmoney"
+        res = Http.send_request('GET', url1)
+        r1 = res.get('data') if isinstance(res, dict) else res
+        Time.sleep(1)
+        res = Http.send_request('GET', url2)
+        r2 = res.get('data') if isinstance(res, dict) else res
+        text = f"{Time.date()} 实时热点速览\r\n"
+        for i in range(10):
+            if Attr.get(r1, i):
+                text += f" - {Attr.get(r1[i], 'title')}\r\n"
+            if Attr.get(r2, i):
+                text += f" - {Attr.get(r2[i], 'title')}\r\n"
         return text
 
     def get_random_text(self):
