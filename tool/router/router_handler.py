@@ -2,7 +2,7 @@ import os
 import logging
 from flask import Flask, request, g, send_from_directory
 from tool.router.parse_handler import ParseHandler
-from tool.core import Logger, Attr, Api, Dir, Config, Error, Http, Env, Time, Str
+from tool.core import Logger, Attr, Api, Dir, Config, Error, Http, Time, Str
 from service.source.preview.file_preview_service import FilePreviewService
 
 logger = Logger()
