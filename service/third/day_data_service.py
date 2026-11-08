@@ -29,7 +29,7 @@ class DayDataService:
         Time.sleep(1)
         res = Http.send_request('GET', url2)
         r2 = res.get('data') if isinstance(res, dict) else res
-        text = f"{Time.date('%Y%m%d"')} 实时热点速览\r\n"
+        text = f"{Time.date('%Y%m%d')} 实时热点速览\r\n"
         for i in range(10):
             if Attr.get(r1, i):
                 text += f" - {Attr.get(r1[i], 'title')}\r\n"
